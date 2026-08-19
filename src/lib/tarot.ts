@@ -14,13 +14,71 @@ export interface DrawnCard extends TarotCard {
   isReversed: boolean;
 }
 
-export const SPREADS = {
-  single: { name: '单牌指引', positions: ['今日指引'], count: 1 },
-  three: { name: '三牌阵', positions: ['过去', '现在', '未来'], count: 3 },
-  celtic: { name: '凯尔特十字', positions: ['现状', '挑战', '基础', '过去', '可能', '未来', '自我', '环境', '希望与恐惧', '结果'], count: 10 }
-} as const;
+export interface Spread {
+  name: string;
+  count: number;
+  subtitle: string;
+  description: string;
+  theme: string;
+  positions: readonly string[];
+}
 
-export type SpreadType = keyof typeof SPREADS;
+export const SPREAD_THEMES: Record<string, { name: string; icon: string; intro: string }> = {
+  general: { name: '综合', icon: '✦', intro: '适合初次接触塔罗，或希望快速获得整体指引的问题；覆盖时间、现状、复杂局面等通用场景。' },
+  love: { name: '感情', icon: '💕', intro: '适合爱情、关系、暧昧、复合、择偶等感情相关的问题，从双方状态到趋势走向全面梳理。' },
+  career: { name: '事业', icon: '💼', intro: '适合工作、职业发展、求职、跳槽、项目推进、职场关系等事业相关的问题。' },
+  wealth: { name: '财富', icon: '💰', intro: '适合财务状况、收入机会、投资风险、消费习惯等金钱与资源相关的问题。' },
+  choice: { name: '抉择', icon: '⚖️', intro: '适合面临选择、风险判断、问题解决、去留决策等需要权衡多个方案的复杂决策场景。' },
+  growth: { name: '成长', icon: '🌱', intro: '适合自我探索、内在课题、优势天赋、未来运势、阶段性成长方向等长期视角的问题。' },
+};
+
+export const SPREADS: Record<string, Spread> = {
+  single: { name: '单牌指引', count: 1, subtitle: '抓住此刻最重要的一点', description: '从 78 张牌中抽取一张，给出当下最核心的指引。适合日常一问、临时起意的提问，或希望快速获得一句话点拨时使用。', theme: 'general', positions: ['核心指引'] },
+  three: { name: '三牌时间流', count: 3, subtitle: '看过去、现在和未来', description: '经典的三牌阵，从过去的影响、当前的状况到未来的走向，串成一条清晰的时间线，帮助你看清事物的演化脉络。', theme: 'general', positions: ['过去', '现在', '未来'] },
+  situation: { name: '现状解局', count: 5, subtitle: '拆开表面与隐藏因素', description: '五张牌从核心问题、已显见因素、未显见因素、主要阻碍到下一步行动，帮你拆解当下局面的各个面向，找到关键症结。', theme: 'general', positions: ['核心问题', '已经看见', '尚未看见', '主要阻碍', '下一步'] },
+  horseshoe: { name: '七牌马蹄阵', count: 7, subtitle: '完整梳理问题全貌', description: '马蹄形七牌阵，覆盖过去、现在、隐藏因素、阻碍、外部影响、建议和最终可能结果，适合需要全景式梳理的中等复杂度问题。', theme: 'general', positions: ['过去', '现在', '隐藏因素', '阻碍', '外部影响', '建议', '可能结果'] },
+  celtic: { name: '凯尔特十字', count: 10, subtitle: '深入复杂问题的根源', description: '塔罗最经典、最完整的牌阵。十个位置层层深入，从现状、挑战、根基、过去到最终走向，剖析复杂问题的根源与脉络，适合需要全面、深度解读的重要议题。', theme: 'general', positions: ['现状', '挑战', '根基', '过去', '可能性', '近期', '自我', '环境', '期待与担忧', '最终走向'] },
+  relationship: { name: '关系现状', count: 5, subtitle: '看双方状态与关系连接', description: '聚焦两人关系的整体状态，看你、对方、连接点、阻碍与未来方向，适合已有明确关系需要看清现状的问题。', theme: 'love', positions: ['你的状态', '对方状态', '关系连接', '主要阻碍', '发展方向'] },
+  feelings: { name: '对方心意', count: 5, subtitle: '区分表现、倾向与顾虑', description: '探究对方对你的真实感受，区分外在表现、内在倾向、顾虑和下一步倾向，帮助你看清对方心底的态度。', theme: 'love', positions: ['你给出的感受', '对方外在表现', '对方内在倾向', '对方顾虑', '下一步倾向'] },
+  ambiguity: { name: '暧昧走向', count: 5, subtitle: '判断吸引、迟疑和趋势', description: '在暧昧不明的阶段使用，看当前信号、吸引来源、迟疑原因、外部影响和近期走向，判断这段暧昧是否值得继续投入。', theme: 'love', positions: ['当前信号', '吸引来源', '迟疑原因', '外部影响', '近期走向'] },
+  reconciliation: { name: '复合可能', count: 6, subtitle: '看旧问题与修复条件', description: '六张牌梳理分开原因、双方状态、仍存连接、修复条件和复合趋势，判断是否还有修复的机会以及需要做什么。', theme: 'love', positions: ['分开原因', '你的状态', '对方状态', '仍存连接', '修复条件', '复合趋势'] },
+  new_love: { name: '新恋情', count: 5, subtitle: '寻找机会与识别信号', description: '当你渴望一段新感情时使用，看你的准备度、感情阻碍、相遇机会、需要识别的信号和你应采取的行动。', theme: 'love', positions: ['你的准备度', '感情阻碍', '相遇机会', '识别信号', '你的行动'] },
+  love_choice: { name: '感情二选一', count: 5, subtitle: '比较两段关系的走向', description: '当你同时面对两段感情不知如何选择时使用，看你的真实需要、A 与 B 两段关系各自的走向，做出更清晰的决定。', theme: 'love', positions: ['你的真实需要', '关系 A', 'A 的走向', '关系 B', 'B 的走向'] },
+  career_growth: { name: '事业发展', count: 5, subtitle: '找到优势、限制和机会', description: '整体性看事业当前阶段、可用优势、主要限制、发展机会和关键行动，适合需要梳理职业方向的问题。', theme: 'career', positions: ['当前阶段', '可用优势', '主要限制', '发展机会', '关键行动'] },
+  job_search: { name: '求职面试', count: 5, subtitle: '看匹配、印象和改进点', description: '正在找工作或面试时使用，看求职状态、岗位匹配度、对方印象、需要补足和结果趋势。', theme: 'career', positions: ['求职状态', '岗位匹配', '对方印象', '需要补足', '结果趋势'] },
+  job_change: { name: '跳槽去留', count: 5, subtitle: '比较留下与离开的代价', description: '在留下和离开之间纠结时使用，对比两种选择各自的收获与代价，以及决策的关键点。', theme: 'career', positions: ['留下的收获', '留下的代价', '离开的收获', '离开的代价', '决策关键'] },
+  project: { name: '项目走向', count: 6, subtitle: '分析资源、协作和阻碍', description: '聚焦当前负责或参与的项目，看目标、资源、协作、阻碍、关键转折和结果趋势。', theme: 'career', positions: ['项目目标', '可用资源', '协作状态', '主要阻碍', '关键转折', '结果趋势'] },
+  workplace: { name: '职场关系', count: 5, subtitle: '看互动、边界和方向', description: '处理与同事、上级或下属的关系时使用，看双方立场、隐藏互动、需要守住的边界和相处方向。', theme: 'career', positions: ['你的立场', '对方立场', '隐藏互动', '需要守住', '相处方向'] },
+  breakthrough: { name: '能力突破', count: 5, subtitle: '找到瓶颈和第一步', description: '感觉自己停滞不前时使用，看当前瓶颈、未充分使用的能力、需要补足的地方、突破机会和第一步行动。', theme: 'career', positions: ['当前瓶颈', '未充分使用', '需要补足', '突破机会', '第一步'] },
+  finance_status: { name: '财务现状', count: 5, subtitle: '整理收入、支出和盲点', description: '梳理当前的财务全貌，看收入状态、支出状态、财务盲点、可用资源和调整重点。', theme: 'wealth', positions: ['收入状态', '支出状态', '财务盲点', '可用资源', '调整重点'] },
+  income_opportunity: { name: '收入机会', count: 5, subtitle: '识别机会、门槛和风险', description: '关注新的赚钱或增加收入的机会时使用，看现有渠道、潜在机会、进入门槛、需要防范和验证行动。', theme: 'wealth', positions: ['现有渠道', '潜在机会', '进入门槛', '需要防范', '验证行动'] },
+  side_business: { name: '副业方向', count: 5, subtitle: '判断能力与需求匹配', description: '考虑做副业时使用，看真实动机、能力匹配度、外部需求、投入代价和最小尝试方案。', theme: 'wealth', positions: ['真实动机', '能力匹配', '外部需求', '投入代价', '最小尝试'] },
+  spending_blindspot: { name: '消费盲点', count: 4, subtitle: '看见触发和资金漏洞', description: '觉察自己乱花钱或资金流失时使用，看消费触发、资金漏洞、真实需要和需要建立的新边界。', theme: 'wealth', positions: ['消费触发', '资金漏洞', '真实需要', '新的边界'] },
+  finance_three_months: { name: '三月财务', count: 5, subtitle: '观察阶段趋势和重点', description: '看未来三个月的财务走向：当前基础、每个月的发展以及需要稳住的重点。', theme: 'wealth', positions: ['当前基础', '第一个月', '第二个月', '第三个月', '稳住重点'] },
+  choice: { name: '二选一', count: 5, subtitle: '平行比较A与B', description: '在两个明确选项之间抉择时使用，平行比较 A 与 B 各自的走向，帮助你做出不偏不倚的决定。', theme: 'choice', positions: ['当前处境', '选择 A', 'A 的走向', '选择 B', 'B 的走向'] },
+  stay_or_leave: { name: '去留决策', count: 5, subtitle: '澄清需要与隐藏条件', description: '面对一段关系、工作或生活的去留问题时使用，澄清你的真实需要、留下的影响、离开的影响、隐藏条件和判断关键。', theme: 'choice', positions: ['你的真实需要', '留下的影响', '离开的影响', '隐藏条件', '判断关键'] },
+  timing: { name: '时机判断', count: 4, subtitle: '判断准备度和行动信号', description: '在等待还是行动之间犹豫时使用，看自身准备度、外部窗口、等待风险和行动信号。', theme: 'choice', positions: ['自身准备', '外部窗口', '等待风险', '行动信号'] },
+  problem_solving: { name: '问题解决', count: 5, subtitle: '从根源走到解决动作', description: '面对具体难题想找解决方案时使用，从问题根源走到表面症状，再到可用资源和解决动作。', theme: 'choice', positions: ['问题根源', '表面症状', '可用资源', '解决动作', '改善方向'] },
+  risk_blindspot: { name: '风险盲点', count: 5, subtitle: '识别隐藏风险和边界', description: '感觉某件事有风险但说不清时使用，看已知风险、隐藏风险、容易忽略的点、安全边界和应对动作。', theme: 'choice', positions: ['已知风险', '隐藏风险', '容易忽略', '安全边界', '应对动作'] },
+  multi_choice: { name: '多方案比较', count: 7, subtitle: '比较三个方案的得失', description: '三个或多个方案放在一起比较时使用，看核心标准以及每个方案的收获与代价。', theme: 'choice', positions: ['核心标准', '方案 A 收获', '方案 A 代价', '方案 B 收获', '方案 B 代价', '方案 C 收获', '方案 C 代价'] },
+  weekly: { name: '本周运势', count: 7, subtitle: '观察一周节奏与主题', description: '看本周一到周末每天的节奏与主题，捕捉关键节点和本周的整体主题。', theme: 'growth', positions: ['周一', '周二', '周三', '周四', '周五', '周末', '本周主题'] },
+  month: { name: '未来30天', count: 5, subtitle: '看机会、挑战和行动', description: '未来一个月的主题、机会、挑战、人际影响和需要采取的行动重点。', theme: 'growth', positions: ['本月主题', '主要机会', '主要挑战', '人际影响', '行动重点'] },
+  quarter: { name: '未来三个月', count: 7, subtitle: '读取阶段变化与转折', description: '未来三个月的走向，看每个月的发展、关键转折、可用支持和阶段建议。', theme: 'growth', positions: ['当前状态', '第一个月', '第二个月', '第三个月', '关键转折', '可用支持', '阶段建议'] },
+  new_stage: { name: '新阶段指引', count: 5, subtitle: '看清告别、进入和第一步', description: '当生命进入一个新阶段时使用，看正在离开的、正在进入的、内在担忧、已有资源和第一步。', theme: 'growth', positions: ['正在离开', '正在进入', '内在担忧', '已有资源', '第一步'] },
+  talents: { name: '优势天赋', count: 5, subtitle: '发现能力与适合环境', description: '寻找自己的优势天赋，看自然优势、后天能力、尚未使用的部分、适合的环境和培养方式。', theme: 'growth', positions: ['自然优势', '后天能力', '尚未使用', '适合环境', '培养方式'] },
+  inner_lesson: { name: '内在课题', count: 5, subtitle: '理解情绪、需要和模式', description: '探索当下的内在课题，看表层情绪、深层需要、重复模式、需要建立的品质和成长行动。', theme: 'growth', positions: ['表层情绪', '深层需要', '重复模式', '需要建立', '成长行动'] },
+};
+
+export type SpreadType = string;
+
+export type TarotStyle = 'moonlight' | 'crystal' | 'shadow' | 'stardust';
+
+export const STYLE_PRESETS: Record<TarotStyle, { name: string; symbol: string }> = {
+  moonlight: { name: '月光之镜', symbol: '🌙' },
+  crystal: { name: '水晶幻境', symbol: '💎' },
+  shadow: { name: '暗影之焰', symbol: '🔥' },
+  stardust: { name: '星辰轨迹', symbol: '✨' },
+};
 
 export const TAROT_DECK: TarotCard[] = [
   // 大阿卡纳 0-21
@@ -107,6 +165,14 @@ export const TAROT_DECK: TarotCard[] = [
   { id:76, name:"星币王后", numeral:"Queen", element:"土", zodiac:"", emoji:"🌾", upright:"滋养、丰盛、实际、安全感", reversedMeaning:"过度物质、控制、吝啬", keywords:["滋养","丰盛","实际","安全"] },
   { id:77, name:"星币国王", numeral:"King", element:"土", zodiac:"", emoji:"🏦", upright:"成功、商业智慧、稳定、慷慨", reversedMeaning:"贪婪、物质主义、固执、吝啬", keywords:["成功","商业","稳定","慷慨"] }
 ];
+
+/**
+ * 返回原版伟特塔罗（Rider-Waite）牌面的本地图片路径。
+ * 牌面图片位于 public/cards/card_XX.jpg（78 张完整牌库，公有领域）。
+ */
+export function getCardImage(id: number): string {
+  return `/cards/card_${String(id).padStart(2, '0')}.jpg`;
+}
 
 export function shuffleDraw(count: number): DrawnCard[] {
   const deck = [...TAROT_DECK];

@@ -36,7 +36,7 @@ export default function StarsCanvas() {
         if (s.alpha <= 0.1 || s.alpha >= 1) s.da *= -1;
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(212, 180, 100, ${s.alpha * 0.6})`;
+        ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha * 0.6})`;
         ctx.fill();
       });
       requestAnimationFrame(draw);
