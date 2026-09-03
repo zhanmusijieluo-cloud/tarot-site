@@ -3,6 +3,7 @@ import { shuffleDraw, SPREADS } from '@/lib/tarot';
 import { getCardTraits, CARD_TRAITS } from '@/lib/card-traits';
 import { CARD_MYSTIC } from '@/lib/card-mystic';
 import { localizedCardName } from '@/lib/card-names';
+import { createClient } from '@supabase/supabase-js';
 
 // AI 解读引擎：按优先级依次尝试。B.AI（免费 deepseek-v4-flash 视觉版）额度用尽/报错时自动回退 agnes。
 const ENGINES = [
@@ -112,9 +113,59 @@ function humanizeRaw(raw: string): string {
   return s;
 }
 
-/** 取某张牌的静态牌性文本（按站点语言），缺失时回退到 AI 生成值或空串 */
-function traitsFor(card: any, lang: 'zh' | 'en' | 'ja'): string {
-  const staticTraits = typeof card?.id === 'number' ? getCardTraits(card.id)?.[lang] : undefined;
+/** 内容数据库读取结果（存活内容） */
+interface DbMeaning {
+  name: string;
+  traits: string;
+  mystic_image: string;
+  mystic_items: string[];
+  mystic_deep: string;
+}
+
+let _supabaseClient: any = null;
+/** 惰性创建 Supabase 客户端（用 NEXT_PUBLIC 公钥读取即可，公开读取策略已放行）。无环境变量时返回 null。 */
+function getSupabaseClient(): any {
+  if (_supabaseClient) return _supabaseClient;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  try { _supabaseClient = createClient(url, key); } catch { _supabaseClient = null; }
+  return _supabaseClient;
+}
+
+/** 从内容数据库读取指定牌 + 语言的牌意/牌性/象征。读不到（无环境变量/无表/网络错）返回空 map，调用方回退代码库。 */
+async function loadDbMeanings(ids: number[], lang: string): Promise<Map<number, DbMeaning>> {
+  const map = new Map<number, DbMeaning>();
+  const client = getSupabaseClient();
+  if (!client || ids.length === 0) return map;
+  try {
+    const { data, error } = await client
+      .from('card_meanings')
+      .select('card_id,lang,name,traits,mystic_image,mystic_items,mystic_deep')
+      .in('card_id', ids)
+      .eq('lang', lang);
+    if (error || !data) return map;
+    for (const row of data) {
+      map.set(row.card_id, {
+        name: row.name || '',
+        traits: row.traits || '',
+        mystic_image: row.mystic_image || '',
+        mystic_items: Array.isArray(row.mystic_items) ? row.mystic_items : [],
+        mystic_deep: row.mystic_deep || '',
+      });
+    }
+  } catch {
+    return map;
+  }
+  return map;
+}
+
+/** 取某张牌的静态牌性文本：优先数据库（存活内容），其次代码库，再回退 AI 生成值 */
+function traitsFor(card: any, ctx: ReadingCtx): string {
+  const lang = ctx.lang;
+  const id = typeof card?.id === 'number' ? card.id : -1;
+  const db = id >= 0 ? ctx.dbMeanings.get(id) : undefined;
+  const staticTraits = db?.traits || (id >= 0 ? getCardTraits(id)?.[lang] : undefined);
   return staticTraits || (typeof card?.traitsFallback === 'string' ? card.traitsFallback : '');
 }
 
@@ -125,14 +176,18 @@ interface ReadingCtx {
   prompt: string;
   system: string;
   SECTION_TITLES: Record<string, string>;
+  dbMeanings: Map<number, DbMeaning>;
 }
 
 /** 构建 cardsContext + 三语 prompt + system 指令（读牌与流式共用） */
-function buildReadingInputs(args: TarotReadingRequest): ReadingCtx {
+async function buildReadingInputs(args: TarotReadingRequest): Promise<ReadingCtx> {
   const positions = args.positions ?? [];
   const lang = (args.lang === 'en' || args.lang === 'ja' ? args.lang : 'zh') as 'zh' | 'en' | 'ja';
   const useEn = lang !== 'zh';
   const n = args.cards.length;
+  // 从内容数据库读取本次抽到的牌意/牌性/象征（存活内容），读不到回退代码库
+  const ids = args.cards.map((c: any) => (typeof c?.id === 'number' ? c.id : -1)).filter((i: number) => i >= 0);
+  const dbMeanings = await loadDbMeanings(ids, lang);
 
   const cardsContext = args.cards.map((card: any, index: number) => {
     const position = positions[index] || card.position || (useEn ? '(No fixed position)' : '（无固定牌位）');
@@ -141,9 +196,13 @@ function buildReadingInputs(args: TarotReadingRequest): ReadingCtx {
     const cardName = localizedCardName(card, lang);
     const elem = ELEMENT_EN[card.element] || card.element || 'Unknown';
     const rev = card.isReversed;
-    const staticTraits = getCardTraits(cardId)?.[lang] || '';
-    // 大阿卡纳象征深度解读（取自 waite 手稿，权威资料供模型融入画面象征与深层哲理）
-    const mystic = cardId >= 0 && cardId < 22 ? CARD_MYSTIC[cardId] : undefined;
+    const db = dbMeanings.get(cardId);
+    const staticTraits = db?.traits || getCardTraits(cardId)?.[lang] || '';
+    // 大阿卡纳象征深度解读：优先数据库（存活内容），其次 waite 手稿代码库
+    const dbMystic = db && (db.mystic_image || db.mystic_deep)
+      ? { image: db.mystic_image, items: db.mystic_items, deep: db.mystic_deep }
+      : null;
+    const mystic = dbMystic || (cardId >= 0 && cardId < 22 ? CARD_MYSTIC[cardId] : undefined);
     const mysticText = mystic
       ? `\n  象征深度解构（权威资料，解读时请融入画面象征与深层哲理）：画面：${mystic.image}；意象：${mystic.items.join('；')}；深层：${mystic.deep.replace(/-{2,}/g, ' ').replace(/\s+/g, ' ')}`
       : '';
@@ -316,7 +375,7 @@ ${cardsContext}
         ? 'あなたはプロのタロット読解師です。有効な JSON のみを出力してください。簡潔に、無駄な長考をせず直接答えること。重要：すべての内容を日本語で出力すること。中国語や英語は使用しないこと。'
         : '你是一位专业塔罗解读师。你必须只输出合法 JSON，不输出任何其他文字。所有解读内容必须使用简体中文书写。';
 
-  return { positions, lang, n, prompt, system, SECTION_TITLES };
+  return { positions, lang, n, prompt, system, SECTION_TITLES, dbMeanings };
 }
 
 /** 结构化结果 → 固定模板 Markdown（格式由代码保证，标题随站点语言切换） */
@@ -337,7 +396,7 @@ function assembleNarrative(
     sections.push(`**${T.posLabel}**：${positionLabel}\n`);
     sections.push(c.position.trim() + '\n');
     sections.push(`#### ${T.traitsLabel}\n\n`);
-    sections.push(toListMd(traitsFor(card, lang) || c.traits || '') + '\n');
+    sections.push(toListMd(traitsFor(card, ctx) || c.traits || '') + '\n');
     sections.push(`#### ${T.summaryLabel}\n\n`);
     sections.push(toParagraphMd(c.summary.trim()));
     if (i < structured.cards.length - 1) sections.push('\n---\n');
@@ -444,7 +503,7 @@ function createIncrementalEmitter(ctx: ReadingCtx, cards: any[]) {
           state.queue = ['position', 'summary'];
           out.push(cardHeader(0));
           // 静态牌性即时拼入（无需等模型生成）
-          const st = traitsFor(cards[0], ctx.lang);
+          const st = traitsFor(cards[0], ctx);
           if (st) out.push(`#### ${T.traitsLabel}\n\n` + toListMd(st) + '\n');
           progressed = true;
         } else if (state.queue.length === 0) {
@@ -454,7 +513,7 @@ function createIncrementalEmitter(ctx: ReadingCtx, cards: any[]) {
             if (state.card < n) {
               state.queue = ['position', 'summary'];
               out.push(cardHeader(state.card));
-              const st2 = traitsFor(cards[state.card], ctx.lang);
+              const st2 = traitsFor(cards[state.card], ctx);
               if (st2) out.push(`#### ${T.traitsLabel}\n\n` + toListMd(st2) + '\n');
             } else {
               state.phase = 'tail';
@@ -587,7 +646,7 @@ export class TarotMcpServer {
     }
     const startedAt = Date.now();
     try {
-      const ctx = buildReadingInputs(args);
+      const ctx = await buildReadingInputs(args);
       const emitter = createIncrementalEmitter(ctx, args.cards);
       let lastRaw = '';
 
@@ -634,7 +693,7 @@ export class TarotMcpServer {
     }
 
     try {
-      const ctx = buildReadingInputs(args);
+      const ctx = await buildReadingInputs(args);
 
       // 串行重试：最多尝试 2 次，均失败则降级为纯文本兜底
       let structured: StructuredReading | null = null;
