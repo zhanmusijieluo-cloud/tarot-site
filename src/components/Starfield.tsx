@@ -84,9 +84,9 @@ export default function Starfield({ count = 220 }: { count?: number }) {
         x: Math.random() * w,
         y: Math.random() * h,
         z: Math.random() * 2 + 0.5,
-        size: Math.random() * 1.2 + 0.3,
+        size: Math.random() * 1.5 + 0.45,
         speed: Math.random() * 0.15 + 0.02,
-        opacity: Math.random() * 0.5 + 0.15,
+        opacity: Math.random() * 0.45 + 0.4,
         twinkleSpeed: Math.random() * 0.02 + 0.005,
         twinklePhase: Math.random() * Math.PI * 2,
         hueShift: Math.random() < 0.3,
@@ -121,7 +121,7 @@ export default function Starfield({ count = 220 }: { count?: number }) {
 
       for (const s of stars) {
         s.twinklePhase += s.twinkleSpeed;
-        const twinkle = 0.6 + 0.4 * Math.sin(s.twinklePhase);
+        const twinkle = 0.78 + 0.22 * Math.sin(s.twinklePhase);
         const alpha = s.opacity * twinkle;
 
         s.y -= s.speed * s.z;
@@ -139,7 +139,7 @@ export default function Starfield({ count = 220 }: { count?: number }) {
         // 少量大星带微光晕
         if (s.z > 2.2 && s.size > 1.2) {
           const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.size * 4);
-          g.addColorStop(0, `rgba(${paletteA}, ${alpha * 0.3})`);
+          g.addColorStop(0, `rgba(${paletteA}, ${alpha * 0.5})`);
           g.addColorStop(1, 'rgba(0,0,0,0)');
           ctx.fillStyle = g;
           ctx.fillRect(s.x - s.size * 4, s.y - s.size * 4, s.size * 8, s.size * 8);
@@ -183,7 +183,7 @@ export default function Starfield({ count = 220 }: { count?: number }) {
       // 近距离微弱连线 —— 优化：降采样到子集，避免 O(n²) 全量检测（220 星≈2.4万次/帧）
       // 只对每 3 颗星抽样检测，视觉几乎无差别，CPU 消耗降为 1/9
       const lineSample = 3;
-      ctx.strokeStyle = `rgba(${paletteA}, 0.045)`;
+      ctx.strokeStyle = `rgba(${paletteA}, 0.07)`;
       ctx.lineWidth = 0.5;
       for (let i = 0; i < stars.length; i += lineSample) {
         for (let j = i + 1; j < stars.length; j += lineSample) {
