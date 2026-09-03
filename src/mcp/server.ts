@@ -1,6 +1,7 @@
 import { TarotReadingRequest } from './types';
 import { shuffleDraw, SPREADS } from '@/lib/tarot';
 import { getCardTraits, CARD_TRAITS } from '@/lib/card-traits';
+import { CARD_MYSTIC } from '@/lib/card-mystic';
 import { localizedCardName } from '@/lib/card-names';
 
 // AI 解读引擎：按优先级依次尝试。B.AI（免费 deepseek-v4-flash 视觉版）额度用尽/报错时自动回退 agnes。
@@ -67,6 +68,50 @@ function validateStructured(obj: any, n: number): obj is StructuredReading {
     ['elementEnergy', 'links', 'rootCause', 'trend', 'conclusion', 'advice'].every((k) => typeof obj[k] === 'string' && obj[k].trim());
 }
 
+/** 宽松结构化：AI 输出偶有不完整/缺字段时，仍尽力装成可渲染的解读，避免直接暴露原始 JSON */
+function normalizeStructured(obj: any, n: number): StructuredReading | null {
+  if (!obj || !Array.isArray(obj.cards) || obj.cards.length === 0) return null;
+  const cards = obj.cards.slice(0, n).map((c: any) => ({
+    position: typeof c?.position === 'string' ? c.position : '',
+    traits: typeof c?.traits === 'string' ? c.traits : undefined,
+    summary: typeof c?.summary === 'string' ? c.summary : '',
+  }));
+  while (cards.length < n) cards.push({ position: '', summary: '' });
+  const pick = (k: string) => (typeof obj[k] === 'string' ? obj[k] : '');
+  return {
+    cards,
+    elementEnergy: pick('elementEnergy'),
+    links: pick('links'),
+    rootCause: pick('rootCause'),
+    trend: pick('trend'),
+    conclusion: pick('conclusion'),
+    advice: pick('advice'),
+  };
+}
+
+/** 宽松兜底：AI 输出无法解析为严格 JSON 时，把原始 JSON 转成干净的 Markdown 段落，避免暴露 position/summary 代码块或结构符 */
+function humanizeRaw(raw: string): string {
+  let s = (raw || '').replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+  if (!s) return s;
+  const labels: Record<string, string> = {
+    position: '**位置**：', summary: '**摘要**：', cards: '',
+    elementEnergy: '**元素能量**：', links: '**牌阵联动**：', rootCause: '**深层根源**：',
+    trend: '**趋势推演**：', conclusion: '**综合总结**：', advice: '**落地建议**：',
+  };
+  // 字段名 + 冒号 + 开引号 → 中文标签（去掉引号冒号）
+  s = s.replace(/"(position|summary|cards|elementEnergy|links|rootCause|trend|conclusion|advice)"\s*:\s*"/g, (_, k) => labels[k] ?? '');
+  // 去掉结构符：花括号、方括号、尖括号
+  s = s.replace(/[\[\]{}<>]/g, '');
+  // 值结尾的孤立引号（后跟逗号/结束括号/行尾）去掉
+  s = s.replace(/"(?=\s*[,}\]]|$)/g, '');
+  // 行首孤立逗号去掉
+  s = s.replace(/^[，,]\s*/gm, '');
+  // 去转义 + 压缩连续换行
+  s = s.replace(/\\n/g, '\n').replace(/\\"/g, '"');
+  s = s.replace(/\n{3,}/g, '\n\n').trim();
+  return s;
+}
+
 /** 取某张牌的静态牌性文本（按站点语言），缺失时回退到 AI 生成值或空串 */
 function traitsFor(card: any, lang: 'zh' | 'en' | 'ja'): string {
   const staticTraits = typeof card?.id === 'number' ? getCardTraits(card.id)?.[lang] : undefined;
@@ -97,11 +142,16 @@ function buildReadingInputs(args: TarotReadingRequest): ReadingCtx {
     const elem = ELEMENT_EN[card.element] || card.element || 'Unknown';
     const rev = card.isReversed;
     const staticTraits = getCardTraits(cardId)?.[lang] || '';
+    // 大阿卡纳象征深度解读（取自 waite 手稿，权威资料供模型融入画面象征与深层哲理）
+    const mystic = cardId >= 0 && cardId < 22 ? CARD_MYSTIC[cardId] : undefined;
+    const mysticText = mystic
+      ? `\n  象征深度解构（权威资料，解读时请融入画面象征与深层哲理）：画面：${mystic.image}；意象：${mystic.items.join('；')}；深层：${mystic.deep.replace(/-{2,}/g, ' ').replace(/\s+/g, ' ')}`
+      : '';
     if (useEn) {
-      return `- Card ${index + 1} "${cardName}" (${rev ? 'Reversed' : 'Upright'}, Element: ${elem}) —— Position【${position}】${staticTraits ? '\n  Known card nature (authoritative, cite freely): ' + staticTraits.replace(/\n+/g, ' ') : ''}`;
+      return `- Card ${index + 1} "${cardName}" (${rev ? 'Reversed' : 'Upright'}, Element: ${elem}) —— Position【${position}】${staticTraits ? '\n  Known card nature (authoritative, cite freely): ' + staticTraits.replace(/\n+/g, ' ') : ''}${mysticText}`;
     } else {
       const zhElem = card.element || '未知';
-      return `- 第${index + 1}张牌「${cardName}」(${rev ? '逆位' : '正位'}，元素：${zhElem}) —— 牌位【${position}】：${card.upright}${staticTraits ? '\n  该牌牌性（权威资料，可直接引用）：' + staticTraits.replace(/\n+/g, ' ') : ''}`;
+      return `- 第${index + 1}张牌「${cardName}」(${rev ? '逆位' : '正位'}，元素：${zhElem}) —— 牌位【${position}】：${card.upright}${staticTraits ? '\n  该牌牌性（权威资料，可直接引用）：' + staticTraits.replace(/\n+/g, ' ') : ''}${mysticText}`;
     }
   }).join('\n');
 
@@ -188,7 +238,8 @@ Hard requirements:
 2. Every field value must be a string; when a field contains multiple points, each point must start with 「• 」 and be separated by \\n;
 3. When you reference a card position in your writing, TRANSLATE the position name into English (e.g. 「过去」→ "Past", 「现在」→ "Present") instead of quoting it verbatim;
 4. Bold the concrete signal details themselves (**specific manifestations/numbers/times/behaviors/signs**, not generic labels), 1-2 in each card summary, 1-3 in other fields;
-5. The reading must show insight, engage with card details and the querent's specific question, no generic filler; do not manufacture anxiety, emphasize that the person's own choices can change the direction.`
+5. The reading must show insight, engage with card details and the querent's specific question, no generic filler; do not manufacture anxiety, emphasize that the person's own choices can change the direction.
+6. **JSON escaping (CRITICAL): Within every string value, newlines must be written as literal \n and double quotes as \"; never output a raw newline or an unescaped " inside a JSON string, or the JSON becomes invalid and the reading fails.**`
     : lang === 'ja'
       ? `あなたはプロのシニアタロット読解師で、ライダー・ウェイトとトートのタロット体系に精通しています。
 
@@ -222,7 +273,8 @@ ${cardsContext}
 2. 各フィールドの値は文字列であること。フィールド内に複数の要点がある場合は、各要点を「• 」で始め、\\n で改行して区切ること；
 3. カードのポジションを文中で引用する際は、日本語に翻訳して書くこと（例：「过去」→「過去」、「现在」→「現在」）。そのまま引用しないこと；
 4. 具体的なシグナルそのものを太字にする（**具体的な兆候・数字・時間・行動・サイン**、抽象的なラベルではなく）、各カードのsummaryに1〜2箇所、他のフィールドに1〜3箇所；
-5. 洞察のある深い解釈を心がけ、カードの細部と相談者の具体的な質問に結びつけること。紋切り型の空論は禁止。不安を煽らず、人の主体的な選択で流れは変わると強調すること。`
+5. 洞察のある深い解釈を心がけ、カードの細部と相談者の具体的な質問に結びつけること。紋切り型の空論は禁止。不安を煽らず、人の主体的な選択で流れは変わると強調すること。
+6. **JSONエスケープ（重要）**：すべての文字列値内の改行はリテラル \n、引用符は \" と書くこと。文字列値内に実際の改行やエスケープされていない引用符を出力しないこと。JSONが無効になり、解釈が失敗します。`
       : `你是一位专业资深塔罗解读师，精通韦特塔罗、透特塔罗体系。
 
 **占卜信息：**
@@ -254,7 +306,8 @@ ${cardsContext}
 1. "cards" 数组长度必须等于 ${n}（与抽牌结果一一对应），第 N 个元素解读第 N 张牌；其余六个字段的值都必须是非空字符串；
 2. 每个字段的值必须是字符串；字段内部需要分点时，每一点必须以「• 」开头并用 \\n 分隔换行；
 3. 关键语句加粗：把**具体的信号内容本身**用加粗标出（具体表现/数字/时间/行为/征兆，不是概括性标签），每张牌 summary 1-2 处，其余字段 1-3 处；
-4. 解读要有洞察层次，结合牌面细节与问卜者的具体问题展开，禁止空泛套话；不制造焦虑，强调人的主观选择会改变走向。`;
+4. 解读要有洞察层次，结合牌面细节与问卜者的具体问题展开，禁止空泛套话；不制造焦虑，强调人的主观选择会改变走向。
+5. **JSON 转义（关键）**：所有字符串值内的换行必须写成字面 \n、双引号写成 \"；禁止在字符串值内输出真实的换行符或未转义的双引号，否则 JSON 无效并导致解读失败。`;
 
   const system =
     lang === 'en'
@@ -594,10 +647,13 @@ export class TarotMcpServer {
         if (!msg) continue;
         lastRaw = (msg.content && msg.content.trim()) || msg.reasoning_content || '';
         const parsed = parseLooseJSON(lastRaw);
-        if (parsed && validateStructured(parsed, ctx.n)) structured = parsed;
+        if (parsed) {
+          const norm = normalizeStructured(parsed, ctx.n);
+          if (norm) structured = norm;
+        }
       }
       if (!structured) {
-        if (lastRaw.trim()) return { result: { content: lastRaw, cards: args.cards, question: args.question, spreadName: args.spreadName } };
+        if (lastRaw.trim()) return { result: { content: humanizeRaw(lastRaw), cards: args.cards, question: args.question, spreadName: args.spreadName } };
         return { error: { code: -32001, message: 'AI 解读失败：未获取到有效响应' } };
       }
 
