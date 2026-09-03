@@ -18,8 +18,8 @@ body {
 :root,
 [data-theme="rose-mist"] {
   /* Rose Mist —— 近黑 + 低饱和雾粉 + 冷白 */
-  --void: #120f15;
-  --void-deep: #0b090e;
+  --void: #080709;
+  --void-deep: #040304;
   --surface: #0e0b0e;
   --mystic: #150d12;
   --accent: #d9a8b8;
@@ -42,8 +42,8 @@ body {
 }
 
 [data-theme="astral-void"] {
-  --void: #0d0e13;
-  --void-deep: #0a0a10;
+  --void: #050505;
+  --void-deep: #030308;
   --surface: #0f1115;
   --mystic: #1b1830;
   --accent: #9b8cff;
@@ -66,8 +66,8 @@ body {
 }
 
 [data-theme="matcha-sanctuary"] {
-  --void: #0d0e13;
-  --void-deep: #0a0a10;
+  --void: #050505;
+  --void-deep: #030308;
   --surface: #0a0a0c;
   --mystic: #081018;
   --accent: #a8d4ff;
@@ -88,8 +88,8 @@ body {
 }
 
 [data-theme="solar-archive"] {
-  --void: #0d0e13;
-  --void-deep: #0a0a10;
+  --void: #050505;
+  --void-deep: #030308;
   --surface: #0a0a0c;
   --mystic: #0a0c14;
   --accent: #c8d8f0;
