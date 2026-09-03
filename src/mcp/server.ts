@@ -1,8 +1,445 @@
-import { TarotReadingRequest, TarotReadingResponse } from './types';
-import { shuffleDraw, SPREADS, DrawnCard } from '@/lib/tarot';
+import { TarotReadingRequest } from './types';
+import { shuffleDraw, SPREADS } from '@/lib/tarot';
+import { getCardTraits, CARD_TRAITS } from '@/lib/card-traits';
+import { localizedCardName } from '@/lib/card-names';
 
-const API_KEY = process.env.AGNES_API_KEY;
-const API_URL = 'https://apihub.agnes-ai.com/v1/chat/completions';
+// AI 解读引擎：按优先级依次尝试。B.AI（免费 deepseek-v4-flash 视觉版）额度用尽/报错时自动回退 agnes。
+const ENGINES = [
+  { name: 'bai', apiKey: process.env.BAI_API_KEY, url: 'https://api.b.ai/v1/chat/completions', model: 'deepseek-v4-flash-vision-exp' },
+  { name: 'agnes', apiKey: process.env.AGNES_API_KEY, url: 'https://apihub.agnes-ai.com/v1/chat/completions', model: 'agnes-2.5-flash' },
+].filter((e): e is { name: string; apiKey: string; url: string; model: string } => !!e.apiKey);
+
+// ══════════════════ 共享构建逻辑（非流式与流式共用） ══════════════════
+
+const ELEMENT_EN: Record<string, string> = { '风':'Air','火':'Fire','水':'Water','土':'Earth','未知':'Unknown' };
+
+interface StructuredReading {
+  cards: { position: string; traits?: string; summary: string }[];
+  elementEnergy: string; links: string; rootCause: string; trend: string; conclusion: string; advice: string;
+}
+
+/** 「• 」分点转标准 Markdown 列表行 */
+function toListMd(s: string): string {
+  return s
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => (line.startsWith('•') ? '- ' + line.replace(/^•\s*/, '') : line))
+    .join('\n\n');
+}
+
+/**
+ * 把整段总结按句子切分为多个段落（每句一段，保证前端逐句提行显示）。
+ * 支持中/英/日句末标点；已有换行或列表标记的文本原样保留分点结构。
+ */
+function toParagraphMd(s: string): string {
+  const text = s.trim();
+  if (!text) return '';
+  // 真正的分点结构（•/-/* 开头的列表行）才保留列表；正文中的零散换行一律抹平后按句切分，
+  // 避免模型随手输出的单个换行导致整段不再逐句提行
+  if (/^[•*-]\s/m.test(text)) return toListMd(text);
+  // 抹平所有换行（含首尾空白），按句末标点切句（保留标点），过滤空段
+  const flat = text.replace(/\s*\n+\s*/g, '');
+  // 去掉模型照抄 prompt 的字段说明前缀（如「针对问卜者的总结：」），避免和已渲染的标签重复
+  const noPrefix = flat.replace(/^(?:针对问卜者的总结|总结|Summary (?:for the Querent|for the querent)|依頼者へのまとめ)[：:\s]*/, '');
+  const sentences = noPrefix.split(/(?<=[。！？；.!?;])\s*/).map((x) => x.trim()).filter(Boolean);
+  return sentences.join('\n\n');
+}
+
+/** 兼容 ```json 包裹 / 前后杂文的宽松 JSON 提取 */
+function parseLooseJSON(raw: string): any | null {
+  if (!raw) return null;
+  const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
+  if (start === -1 || end <= start) return null;
+  try {
+    return JSON.parse(cleaned.slice(start, end + 1));
+  } catch {
+    return null;
+  }
+}
+
+function validateStructured(obj: any, n: number): obj is StructuredReading {
+  return !!obj &&
+    Array.isArray(obj.cards) && obj.cards.length === n &&
+    obj.cards.every((c: any) => c && typeof c.position === 'string' && typeof c.summary === 'string') &&
+    ['elementEnergy', 'links', 'rootCause', 'trend', 'conclusion', 'advice'].every((k) => typeof obj[k] === 'string' && obj[k].trim());
+}
+
+/** 取某张牌的静态牌性文本（按站点语言），缺失时回退到 AI 生成值或空串 */
+function traitsFor(card: any, lang: 'zh' | 'en' | 'ja'): string {
+  const staticTraits = typeof card?.id === 'number' ? getCardTraits(card.id)?.[lang] : undefined;
+  return staticTraits || (typeof card?.traitsFallback === 'string' ? card.traitsFallback : '');
+}
+
+interface ReadingCtx {
+  positions: readonly string[];
+  lang: 'zh' | 'en' | 'ja';
+  n: number;
+  prompt: string;
+  system: string;
+  SECTION_TITLES: Record<string, string>;
+}
+
+/** 构建 cardsContext + 三语 prompt + system 指令（读牌与流式共用） */
+function buildReadingInputs(args: TarotReadingRequest): ReadingCtx {
+  const positions = args.positions ?? [];
+  const lang = (args.lang === 'en' || args.lang === 'ja' ? args.lang : 'zh') as 'zh' | 'en' | 'ja';
+  const useEn = lang !== 'zh';
+  const n = args.cards.length;
+
+  const cardsContext = args.cards.map((card: any, index: number) => {
+    const position = positions[index] || card.position || (useEn ? '(No fixed position)' : '（无固定牌位）');
+    const cardId = typeof card.id === 'number' ? card.id : -1;
+    // 牌名按语言本地化：ja 用日语名、en 用英文名、zh 用原名（此前 ja 误用英文名导致混杂）
+    const cardName = localizedCardName(card, lang);
+    const elem = ELEMENT_EN[card.element] || card.element || 'Unknown';
+    const rev = card.isReversed;
+    const staticTraits = getCardTraits(cardId)?.[lang] || '';
+    if (useEn) {
+      return `- Card ${index + 1} "${cardName}" (${rev ? 'Reversed' : 'Upright'}, Element: ${elem}) —— Position【${position}】${staticTraits ? '\n  Known card nature (authoritative, cite freely): ' + staticTraits.replace(/\n+/g, ' ') : ''}`;
+    } else {
+      const zhElem = card.element || '未知';
+      return `- 第${index + 1}张牌「${cardName}」(${rev ? '逆位' : '正位'}，元素：${zhElem}) —— 牌位【${position}】：${card.upright}${staticTraits ? '\n  该牌牌性（权威资料，可直接引用）：' + staticTraits.replace(/\n+/g, ' ') : ''}`;
+    }
+  }).join('\n');
+
+  const LANG_INSTRUCTION =
+    lang === 'en'
+      ? '**OUTPUT LANGUAGE (CRITICAL): Write EVERY field of the JSON in English. All card readings, analyses and advice must be entirely in English.**'
+      : lang === 'ja'
+        ? '**出力言語（最重要）：JSON の全フィールドを日本語で書いてください。カード解釈・分析・アドバイスはすべて日本語で出力すること。**'
+        : '**输出语言（重要）：所有字段必须使用简体中文书写。**';
+  const SECTION_TITLES: Record<string, string> =
+    lang === 'en'
+      ? {
+          s1: 'Part 1: Card-by-Card Breakdown',
+          posLabel: 'Position',
+          traitsLabel: 'Card Nature & Traits',
+          summaryLabel: 'Summary for the Querent',
+          s2: 'Part 2: Elemental Energy & Orientation',
+          s3: 'Part 3: Interplay Between Cards',
+          s4: 'Part 4: Deep Root Cause Analysis',
+          s5: 'Part 5: Trend Forecast',
+          s6: 'Part 6: Overall Conclusion',
+          s7: 'Part 7: Actionable Advice',
+        }
+      : lang === 'ja'
+        ? {
+            s1: 'セクション1：カード別解読',
+            posLabel: 'ポジション',
+            traitsLabel: 'カードの性質',
+            summaryLabel: '依頼者へのまとめ',
+            s2: 'セクション2：元素エネルギーと方向性',
+            s3: 'セクション3：カード間の連動関係',
+            s4: 'セクション4：現状の深層原因分析',
+            s5: 'セクション5：情勢の推移予測',
+            s6: 'セクション6：総合まとめ',
+            s7: 'セクション7：行動アドバイス',
+          }
+        : {
+            s1: '板块1：基础卡牌拆解',
+            posLabel: '牌位',
+            traitsLabel: '牌性特质',
+            summaryLabel: '针对问卜者的总结',
+            s2: '板块2：整体元素与朝向能量',
+            s3: '板块3：牌阵联动关系',
+            s4: '板块4：现状深层根源分析',
+            s5: '板块5：局势发展趋势推演',
+            s6: '板块6：综合全局总结',
+            s7: '板块7：落地行动建议',
+          };
+
+  const spreadDisplay = typeof args.spreadName === 'string'
+    ? args.spreadName
+    : (args.spreadName as any)?.name || (lang === 'en' ? 'Single Card' : lang === 'ja' ? '単一カード' : '单牌');
+
+  const prompt = lang === 'en'
+    ? `You are a professional senior tarot reader, well-versed in the Rider-Waite and Thoth tarot systems.
+
+**Reading information:**
+- Question: ${args.question || 'Not specified'}
+- Querent background: ${args.background || '(Not provided)'}
+- Spread: ${spreadDisplay}
+- Drawn cards (each card is labeled with its position — interpret strictly according to this correspondence, do not mix them up):
+${cardsContext}
+
+Based on the above, provide a complete in-depth reading covering ALL seven parts in one pass. **You must output ONLY a single valid JSON object, no text other than JSON, no Markdown code fences**:
+{
+  "cards": [
+    {
+      "position": "Position explanation: this card sits at 【position name】, addressing the aspect of the client's question about XX, 2-3 sentences",
+      "summary": "Summary for the querent: combine the client's question and background, explain what this card means in the client's specific situation, 3-4 sentences"
+    }
+  ],
+  "elementEnergy": "Overall elemental energy and orientation: tally the distribution of the four elements and their meaning (e.g. much Fire suggests action-prone and conflict-prone), upright/reversed ratio and how smoothly the energy flows, how the elements generate/overcome each other and affect the situation",
+  "links": "Interplay between cards: where energies support or clash, and the logical links between positions",
+  "rootCause": "Deep root cause analysis: the internal reasons behind the current situation, hidden emotions, past influences",
+  "trend": "Trend forecast: short-term and medium/long-term direction, distinguishing controllable factors from uncontrollable external ones",
+  "conclusion": "Overall conclusion: overall fortune, core contradiction, core opportunity",
+  "advice": "Actionable advice: what to do short-term and how to adjust long-term. MUST be listed as separate points, each starting with 「• 」 and separated by \\n"
+}
+
+Hard requirements:
+0. ${LANG_INSTRUCTION}
+0.5. Each drawn card comes with "Known card nature" (authoritative card traits: element, numerology, planetary correspondence, upright/reversed difference). Treat it as established fact — cite it when analyzing links, root causes and trends, do NOT re-derive or contradict it. Do not output the card nature itself in any JSON field (it is added to the final report separately).
+1. The "cards" array must have exactly ${n} elements (one-to-one with the drawn cards), the Nth element interprets the Nth card; the other six fields must all be non-empty strings;
+2. Every field value must be a string; when a field contains multiple points, each point must start with 「• 」 and be separated by \\n;
+3. When you reference a card position in your writing, TRANSLATE the position name into English (e.g. 「过去」→ "Past", 「现在」→ "Present") instead of quoting it verbatim;
+4. Bold the concrete signal details themselves (**specific manifestations/numbers/times/behaviors/signs**, not generic labels), 1-2 in each card summary, 1-3 in other fields;
+5. The reading must show insight, engage with card details and the querent's specific question, no generic filler; do not manufacture anxiety, emphasize that the person's own choices can change the direction.`
+    : lang === 'ja'
+      ? `あなたはプロのシニアタロット読解師で、ライダー・ウェイトとトートのタロット体系に精通しています。
+
+**占い情報：**
+- 質問：${args.question || '指定なし'}
+- 相談者の背景：${args.background || '（提供なし）'}
+- スプレッド：${spreadDisplay}
+- 引いたカード（各カードにポジションが明記されています。この対応関係に厳密に従って解釈し、混同しないこと）：
+${cardsContext}
+
+上記の情報に基づき、全7セクションを一度にまとめて深く解釈してください。**有効な JSON オブジェクトのみを出力すること。JSON 以外の文字・Markdown のコードブロックは禁止**：
+{
+  "cards": [
+    {
+      "position": "ポジション説明：このカードは【ポジション名】に位置し、相談者の質問のうちXXの側面に答えるものです、2〜3文",
+      "summary": "相談者へのまとめ：相談者の質問と背景を踏まえ、このカードが相談者の具体的な問題において意味することを説明、3〜4文"
+    }
+  ],
+  "elementEnergy": "全体の元素エネルギーと方向性：風火水土の分布とその意味（例：火が多いと行動的で衝突しやすい）、正逆の割合とエネルギーの流れの良さ、元素の相生相剋が状況に与える影響",
+  "links": "カード間の連動：カード同士のエネルギーの相生・相剋、ポジション間の論理的関連",
+  "rootCause": "現状の深層原因分析：今の状況が生まれた内的理由、隠れた感情、過去の影響",
+  "trend": "情勢の推移予測：短期・中期・長期の行方、コントロール可能な要素と不可避な外部要因の区別",
+  "conclusion": "総合まとめ：全体の吉凶、核心的な矛盾、核心的なチャンス",
+  "advice": "実行可能なアドバイス：短期的にどうするか、長期的にどう調整するか。必ず箇条書きにし、各項目を「• 」で始め、\\n で改行して区切ること"
+}
+
+必須要件：
+0. ${LANG_INSTRUCTION}
+0.5. 各カードには「該当カードの性質」（権威ある資料：元素・数秘・惑星対応・正逆位の違い）が付与されています。これを既知の事実として扱い、連動・深層原因・趨勢の分析で自由に引用すること。再導出したり矛盾させたりしないこと。カードの性質そのものは JSON のどのフィールドにも出力しないこと（最終レポートには別途反映されます）。
+1. "cards" 配列の長さは ${n} ちょうど（引いたカードと一対一対応）、N番目の要素はN番目のカードを解釈すること。他の6つのフィールドはすべて空でない文字列であること；
+2. 各フィールドの値は文字列であること。フィールド内に複数の要点がある場合は、各要点を「• 」で始め、\\n で改行して区切ること；
+3. カードのポジションを文中で引用する際は、日本語に翻訳して書くこと（例：「过去」→「過去」、「现在」→「現在」）。そのまま引用しないこと；
+4. 具体的なシグナルそのものを太字にする（**具体的な兆候・数字・時間・行動・サイン**、抽象的なラベルではなく）、各カードのsummaryに1〜2箇所、他のフィールドに1〜3箇所；
+5. 洞察のある深い解釈を心がけ、カードの細部と相談者の具体的な質問に結びつけること。紋切り型の空論は禁止。不安を煽らず、人の主体的な選択で流れは変わると強調すること。`
+      : `你是一位专业资深塔罗解读师，精通韦特塔罗、透特塔罗体系。
+
+**占卜信息：**
+- 问题：${args.question || '未指定'}
+- 问卜者背景：${args.background || '（未提供）'}
+- 牌阵：${spreadDisplay}
+- 抽牌结果（每张牌已标注其所在牌位，必须严格按此对应关系解读，不得混淆）：
+${cardsContext}
+
+请基于以上信息做完整深度解读，一次性输出全部七大板块。**必须只输出一个合法的 JSON 对象，禁止输出 JSON 以外的任何文字，禁止用 Markdown 代码块包裹**：
+{
+  "cards": [
+    {
+      "position": "牌位说明：这张牌位于【某牌位】，回答的是客户问题中关于XX的层面，2-3句",
+      "summary": "针对问卜者的总结：结合客户所问的问题与背景，说明这张牌在客户的具体问题中表达的意思，3-4句"
+    }
+  ],
+  "elementEnergy": "整体元素与朝向能量：统计风火水土四元素分布及其含义（如火多主行动易冲突）、正逆位比例与能量顺畅度、元素相生相克对局势的影响",
+  "links": "牌阵联动关系：牌与牌之间能量相生/相冲、位置之间的逻辑关联",
+  "rootCause": "现状深层根源分析：当下局面产生的内在原因、隐藏情绪、过往影响",
+  "trend": "局势发展趋势推演：短期与中长期走向，区分可控因素与不可控外部因素",
+  "conclusion": "综合全局总结：整体吉凶、核心矛盾、核心机遇",
+  "advice": "落地行动建议：短期怎么做、长期调整方向。必须分条列出，每条以「• 」开头、用\\n换行分隔"
+}
+
+硬性要求：
+0. ${LANG_INSTRUCTION}
+0.5. 每张牌附有「该牌牌性」（权威资料：元素、灵数、行星星座对应、正逆位差异）。将其视为既定事实，在联动、深层原因、趋势分析中直接引用，不要重新推导，也不要与之矛盾。牌性本身不要输出到 JSON 的任何字段中（最终报告会单独拼入）。
+1. "cards" 数组长度必须等于 ${n}（与抽牌结果一一对应），第 N 个元素解读第 N 张牌；其余六个字段的值都必须是非空字符串；
+2. 每个字段的值必须是字符串；字段内部需要分点时，每一点必须以「• 」开头并用 \\n 分隔换行；
+3. 关键语句加粗：把**具体的信号内容本身**用加粗标出（具体表现/数字/时间/行为/征兆，不是概括性标签），每张牌 summary 1-2 处，其余字段 1-3 处；
+4. 解读要有洞察层次，结合牌面细节与问卜者的具体问题展开，禁止空泛套话；不制造焦虑，强调人的主观选择会改变走向。`;
+
+  const system =
+    lang === 'en'
+      ? 'You are a professional tarot reader. You must output ONLY valid JSON, no other text. Be concise and direct; skip lengthy deliberation. CRITICAL: Write ALL content in English — card readings, analysis and advice must be entirely in English. Never use Chinese or Japanese in your output.'
+      : lang === 'ja'
+        ? 'あなたはプロのタロット読解師です。有効な JSON のみを出力してください。簡潔に、無駄な長考をせず直接答えること。重要：すべての内容を日本語で出力すること。中国語や英語は使用しないこと。'
+        : '你是一位专业塔罗解读师。你必须只输出合法 JSON，不输出任何其他文字。所有解读内容必须使用简体中文书写。';
+
+  return { positions, lang, n, prompt, system, SECTION_TITLES };
+}
+
+/** 结构化结果 → 固定模板 Markdown（格式由代码保证，标题随站点语言切换） */
+function assembleNarrative(
+  structured: StructuredReading,
+  cards: any[],
+  ctx: ReadingCtx
+): string {
+  const { positions, lang, SECTION_TITLES: T } = ctx;
+  const sections: string[] = [];
+  sections.push(`## ${T.s1}`);
+  structured.cards.forEach((c, i) => {
+    const card = cards[i];
+    const positionLabel = positions[i] || '—';
+    const reversedLabel = lang === 'en' ? (card.isReversed ? 'Reversed' : 'Upright') : lang === 'ja' ? (card.isReversed ? '逆位置' : '正位置') : (card.isReversed ? '逆位' : '正位');
+    const displayName = localizedCardName(card, lang);
+    sections.push(`### ${i + 1}. ${displayName}（${reversedLabel}）`);
+    sections.push(`**${T.posLabel}**：${positionLabel}\n`);
+    sections.push(c.position.trim() + '\n');
+    sections.push(`#### ${T.traitsLabel}\n\n`);
+    sections.push(toListMd(traitsFor(card, lang) || c.traits || '') + '\n');
+    sections.push(`#### ${T.summaryLabel}\n\n`);
+    sections.push(toParagraphMd(c.summary.trim()));
+    if (i < structured.cards.length - 1) sections.push('\n---\n');
+  });
+  const sectionMeta: [string, string][] = [
+    [T.s2, structured.elementEnergy],
+    [T.s3, structured.links],
+    [T.s4, structured.rootCause],
+    [T.s5, structured.trend],
+    [T.s6, structured.conclusion],
+    [T.s7, structured.advice],
+  ];
+  for (const [title, body] of sectionMeta) {
+    sections.push(`\n## ${title}\n`);
+    sections.push(toListMd(body));
+  }
+  return sections.join('\n\n');
+}
+
+/** 上游 OpenAI 风格 SSE → 正文增量异步迭代 */
+async function* upstreamContentDeltas(body: ReadableStream<Uint8Array>): AsyncGenerator<string> {
+  const reader = body.getReader();
+  const dec = new TextDecoder();
+  let buf = '';
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let nl: number;
+    while ((nl = buf.indexOf('\n')) >= 0) {
+      const line = buf.slice(0, nl).trim();
+      buf = buf.slice(nl + 1);
+      if (!line.startsWith('data:')) continue;
+      const data = line.slice(5).trim();
+      if (data === '[DONE]') return;
+      try {
+        const j = JSON.parse(data);
+        const d = j?.choices?.[0]?.delta;
+        if (typeof d?.content === 'string' && d.content) yield d.content;
+      } catch { /* 忽略心跳/残块 */ }
+    }
+  }
+}
+
+/**
+ * 增量 Markdown 提取器：随原始文本累积，从已完成的 JSON 字符串字段中
+ * 实时提取内容并按最终版式拼成 Markdown 增量下发。
+ * 依赖模型按 schema 顺序输出（prompt 已强约束），最终仍以完整校验后的
+ * 规范全文为准（done 事件覆盖前端显示）。
+ */
+function createIncrementalEmitter(ctx: ReadingCtx, cards: any[]) {
+  const { SECTION_TITLES: T, positions, n } = ctx;
+  const state = { idx: 0, card: -1, phase: 'wait-cards' as 'wait-cards' | 'fields' | 'tail', queue: [] as string[] };
+  const TAIL_KEYS = ['elementEnergy', 'links', 'rootCause', 'trend', 'conclusion', 'advice'];
+  const TAIL_TITLE: Record<string, string> = { elementEnergy: T.s2, links: T.s3, rootCause: T.s4, trend: T.s5, conclusion: T.s6, advice: T.s7 };
+  const reversedLabelOf = (card: any) =>
+    ctx.lang === 'en' ? (card.isReversed ? 'Reversed' : 'Upright')
+      : ctx.lang === 'ja' ? (card.isReversed ? '逆位置' : '正位置')
+      : (card.isReversed ? '逆位' : '正位');
+
+  /** 从 from 开始找 `"key":"`，返回字符串内容起始下标 */
+  const findStringStart = (raw: string, from: number, key: string): number => {
+    const re = new RegExp(`"${key}"\\s*:\\s*"`, 'g');
+    re.lastIndex = from;
+    const m = re.exec(raw);
+    return m ? m.index + m[0].length : -1;
+  };
+  /** 扫描到未转义的收尾引号 */
+  const findStringEnd = (raw: string, start: number): number => {
+    let i = start;
+    while (i < raw.length) {
+      const c = raw[i];
+      if (c === '\\') { i += 2; continue; }
+      if (c === '"') return i;
+      i++;
+    }
+    return -1;
+  };
+  const decode = (v: string): string => { try { return JSON.parse('"' + v.replace(/"/g, '\\"') + '"'); } catch { return v; } };
+  const cardHeader = (i: number): string => {
+    const card = cards[i];
+    const name = localizedCardName(card, ctx.lang);
+    const parts: string[] = [];
+    parts.push(`### ${i + 1}. ${name}（${reversedLabelOf(card)}）`);
+    parts.push(`**${T.posLabel}**：${positions[i] || '—'}\n`);
+    return (i === 0 ? `## ${T.s1}\n\n` : '\n---\n\n') + parts.join('\n');
+  };
+
+  return {
+    /** 传入累积原文，返回新增可显示的 Markdown 文本（可能为空串） */
+    feed(raw: string): string {
+      const out: string[] = [];
+      let progressed = true;
+      while (progressed) {
+        progressed = false;
+        if (state.phase === 'wait-cards') {
+          const re = /"cards"\s*:\s*\[\s*\{/g;
+          re.lastIndex = state.idx;
+          const m = re.exec(raw);
+          if (!m) break;
+          state.idx = m.index + m[0].length;
+          state.card = 0;
+          state.phase = 'fields';
+          state.queue = ['position', 'summary'];
+          out.push(cardHeader(0));
+          // 静态牌性即时拼入（无需等模型生成）
+          const st = traitsFor(cards[0], ctx.lang);
+          if (st) out.push(`#### ${T.traitsLabel}\n\n` + toListMd(st) + '\n');
+          progressed = true;
+        } else if (state.queue.length === 0) {
+          // 当前卡完成 / 卡组结束 → 推进
+          if (state.phase === 'fields') {
+            state.card++;
+            if (state.card < n) {
+              state.queue = ['position', 'summary'];
+              out.push(cardHeader(state.card));
+              const st2 = traitsFor(cards[state.card], ctx.lang);
+              if (st2) out.push(`#### ${T.traitsLabel}\n\n` + toListMd(st2) + '\n');
+            } else {
+              state.phase = 'tail';
+              state.queue = [...TAIL_KEYS];
+            }
+            progressed = true;
+          } else break; // tail 全部完成
+        } else {
+          const key = state.queue[0];
+          const start = findStringStart(raw, state.idx, key);
+          if (start < 0) break;
+          const end = findStringEnd(raw, start);
+          if (end < 0) break; // 字段还没写完
+          const value = decode(raw.slice(start, end));
+          state.idx = end + 1;
+          state.queue.shift();
+          if (state.phase === 'fields') {
+            if (key === 'position') out.push(value.trim() + '\n');
+            else out.push(`#### ${T.summaryLabel}\n\n` + toParagraphMd(value));
+          } else {
+            out.push(`\n## ${TAIL_TITLE[key]}\n` + toListMd(value));
+          }
+          progressed = true;
+        }
+      }
+      return out.length ? out.join('\n\n').replace(/\n{3,}/g, '\n\n') : '';
+    },
+  };
+}
+
+// ══════════════════ 流式事件类型 ══════════════════
+
+export type TarotStreamEvent =
+  | { type: 'delta'; text: string }
+  | { type: 'retry' }
+  | { type: 'done'; narrative: string }
+  | { type: 'fallback'; text: string }
+  | { type: 'error'; message: string };
 
 /**
  * MCP 服务端 - 塔罗解读服务
@@ -44,8 +481,99 @@ export class TarotMcpServer {
     }
   }
 
+  /** 单次 AI 调用（stream 决定是否开上游 SSE 流式）；按引擎优先级依次尝试，失败自动回退下一个 */
+  private async callAI(system: string, prompt: string, stream: boolean): Promise<Response> {
+    let lastError = '';
+    for (const engine of ENGINES) {
+      try {
+        const response = await fetch(engine.url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${engine.apiKey}`,
+          },
+          body: JSON.stringify({
+            model: engine.model,
+            messages: [
+              { role: 'system', content: system },
+              { role: 'user', content: prompt },
+            ],
+            temperature: 0.7,
+            ...(stream ? { stream: true } : {}),
+            // 推理模型：reasoning 与正文共享 max_tokens 配额。
+            // 质量优先：给足配额让模型充分思考与展开，避免深度被压缩。
+            max_tokens: 10000,
+          }),
+          // 单次 AI 调用上限 250s：日语大牌阵实测 138s，需留足余量；Vercel Hobby 函数上限 300s
+          signal: AbortSignal.timeout(250000),
+        });
+        if (response.ok) return response;
+        const errBody = await response.json().catch(() => null);
+        lastError = errBody?.error?.message || `HTTP ${response.status}`;
+        console.warn(`[AI] 引擎 ${engine.model} 失败（${lastError}），回退下一个引擎`);
+      } catch (e: any) {
+        lastError = e?.message || '网络错误';
+        console.warn(`[AI] 引擎 ${engine.model} 异常（${lastError}），回退下一个引擎`);
+      }
+    }
+    throw new Error('所有 AI 引擎均失败' + (lastError ? '：' + lastError : '（未配置任何引擎）'));
+  }
+
   /**
-   * 塔罗解读
+   * 流式塔罗解读：SSE 事件生成器
+   * - delta：增量 Markdown（已按最终版式拼装）
+   * - retry：首次 JSON 校验失败，前端应清空已显示文本后继续接收
+   * - done：完整规范全文（前端以此覆盖显示）
+   * - fallback：两次均失败时的纯文本兜底
+   * - error：不可恢复错误
+   */
+  async *streamTarotReading(args: TarotReadingRequest): AsyncGenerator<TarotStreamEvent> {
+    if (!args.cards || args.cards.length === 0) {
+      yield { type: 'error', message: '需要至少一张牌' };
+      return;
+    }
+    const startedAt = Date.now();
+    try {
+      const ctx = buildReadingInputs(args);
+      const emitter = createIncrementalEmitter(ctx, args.cards);
+      let lastRaw = '';
+
+      for (let attempt = 0; attempt < 2; attempt++) {
+        if (attempt > 0) {
+          // 重试预算保护：总耗时接近函数上限时不再重试
+          if (Date.now() - startedAt > 230000) break;
+          yield { type: 'retry' };
+        }
+        const response = await this.callAI(ctx.system, ctx.prompt, true);
+        if (!response.ok || !response.body) {
+          const msg = await response.json().catch(() => null);
+          yield { type: 'error', message: 'AI 解读失败：' + (msg?.error?.message || '服务暂不可用') };
+          return;
+        }
+        let raw = '';
+        for await (const delta of upstreamContentDeltas(response.body)) {
+          raw += delta;
+          const md = emitter.feed(raw);
+          if (md) yield { type: 'delta', text: md };
+        }
+        lastRaw = raw;
+        const parsed = parseLooseJSON(raw);
+        if (parsed && validateStructured(parsed, ctx.n)) {
+          yield { type: 'done', narrative: assembleNarrative(parsed, args.cards, ctx) };
+          return;
+        }
+      }
+
+      // 两次均失败：有原文则纯文本兜底，否则报错
+      if (lastRaw.trim()) yield { type: 'fallback', text: lastRaw.trim() };
+      else yield { type: 'error', message: 'AI 解读失败：未获取到有效响应' };
+    } catch (error: any) {
+      yield { type: 'error', message: error?.message || 'AI 解读失败' };
+    }
+  }
+
+  /**
+   * 塔罗解读（非流式）
    */
   private async handleTarotReading(args: TarotReadingRequest): Promise<any> {
     if (!args.cards || args.cards.length === 0) {
@@ -53,77 +581,34 @@ export class TarotMcpServer {
     }
 
     try {
-      const cardsContext = args.cards.map((card: any, index: number) => {
-        const position = typeof args.spreadName === 'object'
-          ? (args.spreadName as any[])[index]
-          : card.position || '';
-        return `- ${card.name} (${card.isReversed ? '逆位' : '正位'}) - ${position}: ${card.upright}`;
-      }).join('\n');
+      const ctx = buildReadingInputs(args);
 
-      const prompt = `你是一位专业资深塔罗解读师，精通韦特塔罗、透特塔罗体系。
-
-**占卜信息：**
-- 问题：${args.question || '未指定'}
-- 牌阵：${typeof args.spreadName === 'string' ? args.spreadName : (args.spreadName as any)?.name || '单牌'}
-- 抽牌结果：
-${cardsContext}
-
-请严格按照以下六大板块进行深度解读：
-
-## 板块1：基础卡牌拆解
-逐张解析单张牌含义，标注对应元素（风火水土）、灵数寓意、对应行星/星座、正逆位核心差异。
-
-## 板块2：牌阵联动关系
-分析牌与牌之间能量相生/相冲，位置之间逻辑关联。
-
-## 板块3：现状深层根源分析
-挖掘当下局面产生的内在原因、隐藏情绪、过往影响。
-
-## 板块4：局势发展趋势推演
-客观推演事情短期、中长期走向，区分可控因素与不可控外部因素。
-
-## 板块5：综合全局总结
-精简汇总整体吉凶、核心矛盾、核心机遇。
-
-## 板块6：落地行动建议
-给出具体可执行的实操方案，分短期怎么做、长期调整方向。`;
-
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: 'agnes-2.5-flash',
-          messages: [
-            { role: 'system', content: '你是一位专业塔罗解读师，擅长深度解读塔罗牌，结合占星、元素、神话等多维度分析。解读要客观、深度、完整，不制造焦虑，强调人的主观选择会改变走向。' },
-            { role: 'user', content: prompt }
-          ],
-          temperature: 0.7,
-          max_tokens: 2000,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        const errMsg = data?.error?.message || response.statusText;
-        return { error: { code: -32001, message: `API 调用失败: ${errMsg}` } };
+      // 串行重试：最多尝试 2 次，均失败则降级为纯文本兜底
+      let structured: StructuredReading | null = null;
+      let lastRaw = '';
+      for (let attempt = 0; attempt < 2 && !structured; attempt++) {
+        const response = await this.callAI(ctx.system, ctx.prompt, false);
+        const data = await response.json();
+        if (!response.ok) return { error: { code: -32001, message: 'AI 解读失败：' + (data?.error?.message || '服务暂不可用') } };
+        const msg = data?.choices?.[0]?.message;
+        if (!msg) continue;
+        lastRaw = (msg.content && msg.content.trim()) || msg.reasoning_content || '';
+        const parsed = parseLooseJSON(lastRaw);
+        if (parsed && validateStructured(parsed, ctx.n)) structured = parsed;
+      }
+      if (!structured) {
+        if (lastRaw.trim()) return { result: { content: lastRaw, cards: args.cards, question: args.question, spreadName: args.spreadName } };
+        return { error: { code: -32001, message: 'AI 解读失败：未获取到有效响应' } };
       }
 
-      if (data.choices && data.choices[0]) {
-        return {
-          result: {
-            content: data.choices[0].message.content,
-            cards: args.cards,
-            question: args.question,
-            spreadName: args.spreadName
-          }
-        };
-      }
-
-      return { error: { code: -32001, message: 'AI 解读失败：未获取到有效响应' } };
+      return {
+        result: {
+          content: assembleNarrative(structured, args.cards, ctx),
+          cards: args.cards,
+          question: args.question,
+          spreadName: args.spreadName
+        }
+      };
     } catch (error: any) {
       return { error: { code: -32001, message: error.message } };
     }
@@ -167,7 +652,7 @@ ${cardsContext}
       tools: [
         {
           name: 'tarot.reading',
-          description: '塔罗牌深度解读（六大板块）'
+          description: '塔罗牌深度解读（结构化七大板块）'
         },
         {
           name: 'tarot.draw',

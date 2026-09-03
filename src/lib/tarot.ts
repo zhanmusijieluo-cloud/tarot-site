@@ -35,15 +35,21 @@ export const SPREAD_THEMES: Record<string, { name: string; icon: string; intro: 
 export const SPREADS: Record<string, Spread> = {
   single: { name: '单牌指引', count: 1, subtitle: '抓住此刻最重要的一点', description: '从 78 张牌中抽取一张，给出当下最核心的指引。适合日常一问、临时起意的提问，或希望快速获得一句话点拨时使用。', theme: 'general', positions: ['核心指引'] },
   three: { name: '三牌时间流', count: 3, subtitle: '看过去、现在和未来', description: '经典的三牌阵，从过去的影响、当前的状况到未来的走向，串成一条清晰的时间线，帮助你看清事物的演化脉络。', theme: 'general', positions: ['过去', '现在', '未来'] },
+  holy_triangle: { name: '圣三角牌阵', count: 3, subtitle: '倒三角问是非因果', description: '塔罗入门必学的经典牌阵，三张牌摆成倒三角形：左下过去与原因、右下现状与症结、顶端未来与结果。适合问「可不可以」「会不会」这类短平快的问题，答案清晰明确。', theme: 'general', positions: ['过去与原因', '现状与症结', '未来与结果'] },
   situation: { name: '现状解局', count: 5, subtitle: '拆开表面与隐藏因素', description: '五张牌从核心问题、已显见因素、未显见因素、主要阻碍到下一步行动，帮你拆解当下局面的各个面向，找到关键症结。', theme: 'general', positions: ['核心问题', '已经看见', '尚未看见', '主要阻碍', '下一步'] },
   horseshoe: { name: '七牌马蹄阵', count: 7, subtitle: '完整梳理问题全貌', description: '马蹄形七牌阵，覆盖过去、现在、隐藏因素、阻碍、外部影响、建议和最终可能结果，适合需要全景式梳理的中等复杂度问题。', theme: 'general', positions: ['过去', '现在', '隐藏因素', '阻碍', '外部影响', '建议', '可能结果'] },
-  celtic: { name: '凯尔特十字', count: 10, subtitle: '深入复杂问题的根源', description: '塔罗最经典、最完整的牌阵。十个位置层层深入，从现状、挑战、根基、过去到最终走向，剖析复杂问题的根源与脉络，适合需要全面、深度解读的重要议题。', theme: 'general', positions: ['现状', '挑战', '根基', '过去', '可能性', '近期', '自我', '环境', '期待与担忧', '最终走向'] },
+  hexagram: { name: '六芒星牌阵', count: 7, subtitle: '所罗门之星面面俱到', description: '又称所罗门之星，七张牌构成六芒星图案：时间线上的过去、现在、未来，加上应对策略、周遭环境、自身态度与最终结果，是适合任何问题的万用牌阵。', theme: 'general', positions: ['过去状况', '现在状况', '未来状况', '应对策略', '周遭环境', '自身态度', '最终结果'] },
   relationship: { name: '关系现状', count: 5, subtitle: '看双方状态与关系连接', description: '聚焦两人关系的整体状态，看你、对方、连接点、阻碍与未来方向，适合已有明确关系需要看清现状的问题。', theme: 'love', positions: ['你的状态', '对方状态', '关系连接', '主要阻碍', '发展方向'] },
   feelings: { name: '对方心意', count: 5, subtitle: '区分表现、倾向与顾虑', description: '探究对方对你的真实感受，区分外在表现、内在倾向、顾虑和下一步倾向，帮助你看清对方心底的态度。', theme: 'love', positions: ['你给出的感受', '对方外在表现', '对方内在倾向', '对方顾虑', '下一步倾向'] },
   ambiguity: { name: '暧昧走向', count: 5, subtitle: '判断吸引、迟疑和趋势', description: '在暧昧不明的阶段使用，看当前信号、吸引来源、迟疑原因、外部影响和近期走向，判断这段暧昧是否值得继续投入。', theme: 'love', positions: ['当前信号', '吸引来源', '迟疑原因', '外部影响', '近期走向'] },
   reconciliation: { name: '复合可能', count: 6, subtitle: '看旧问题与修复条件', description: '六张牌梳理分开原因、双方状态、仍存连接、修复条件和复合趋势，判断是否还有修复的机会以及需要做什么。', theme: 'love', positions: ['分开原因', '你的状态', '对方状态', '仍存连接', '修复条件', '复合趋势'] },
   new_love: { name: '新恋情', count: 5, subtitle: '寻找机会与识别信号', description: '当你渴望一段新感情时使用，看你的准备度、感情阻碍、相遇机会、需要识别的信号和你应采取的行动。', theme: 'love', positions: ['你的准备度', '感情阻碍', '相遇机会', '识别信号', '你的行动'] },
   love_choice: { name: '感情二选一', count: 5, subtitle: '比较两段关系的走向', description: '当你同时面对两段感情不知如何选择时使用，看你的真实需要、A 与 B 两段关系各自的走向，做出更清晰的决定。', theme: 'love', positions: ['你的真实需要', '关系 A', 'A 的走向', '关系 B', 'B 的走向'] },
+  inspiration: { name: '灵感对应', count: 6, subtitle: '直击双方的真实想法', description: '经典的灵感对应牌阵，左右两列平行对照：你与对方的看法、各自认为的关系现状、以及对未来的期待一一对应，是看清彼此真心的高频牌阵，恋爱、友情、职场关系都适用。', theme: 'general', positions: ['你对对方的看法', '对方对你的看法', '你认为目前的关系', '对方认为目前的关系', '你期望将来的发展', '对方期望将来的发展'] },
+  venus_love: { name: '维纳斯之爱', count: 8, subtitle: '爱神金星符号深度解局', description: '以爱神维纳斯的金星符号♀为阵形的经典爱情牌阵，八张牌细致呈现双方的看法与相互影响、关系障碍、恋情结果以及两人各自的未来心境，是针对亲密关系最细致的传统牌阵之一。', theme: 'love', positions: ['你对问题的看法', '对方对你的心态', '你对对方的影响', '对方对你的影响', '双方之间的障碍', '恋情的结果', '你未来的心境', '对方未来的心境'] },
+  lovers_pyramid: { name: '恋人金字塔', count: 4, subtitle: '四张牌看清一段关系', description: '简洁实用的经典爱情牌阵：你的心态、对方的心态、目前的关系状况与未来发展，四张牌构成金字塔，处理单恋、暧昧问题时尤其好用。', theme: 'love', positions: ['你的心态', '对方的心态', '目前的关系', '未来发展'] },
+  voice_of_heart: { name: '心之声牌阵', count: 8, subtitle: '掳获意中人的心', description: '专为亲密关系设计的八张牌阵：双方现状与不久后的未来、对方对你的内在与外在印象、对方的处境与期望、你自己的状态，以及这段关系的核心建议，特别强化「如何走进对方心里」。', theme: 'love', positions: ['双方现在状况', '不久后的未来', '对方的内在印象', '对方的外在印象', '对方的状况', '对方的期望', '自己的状况', '关系的建言'] },
+  gypsy_cross: { name: '吉普赛十字', count: 5, subtitle: '十字五张问感情', description: '流传极广的经典爱情牌阵，中央成十字的五张牌依次揭示：对方的心情想法、你的现状、最佳相处方式、周遭环境与情敌阻碍、以及两人关系的最终结果，简单易用且准确。', theme: 'love', positions: ['对方的心情想法', '自己的现状', '相处方式与态度', '环境与阻碍', '关系的最终结果'] },
   career_growth: { name: '事业发展', count: 5, subtitle: '找到优势、限制和机会', description: '整体性看事业当前阶段、可用优势、主要限制、发展机会和关键行动，适合需要梳理职业方向的问题。', theme: 'career', positions: ['当前阶段', '可用优势', '主要限制', '发展机会', '关键行动'] },
   job_search: { name: '求职面试', count: 5, subtitle: '看匹配、印象和改进点', description: '正在找工作或面试时使用，看求职状态、岗位匹配度、对方印象、需要补足和结果趋势。', theme: 'career', positions: ['求职状态', '岗位匹配', '对方印象', '需要补足', '结果趋势'] },
   job_change: { name: '跳槽去留', count: 5, subtitle: '比较留下与离开的代价', description: '在留下和离开之间纠结时使用，对比两种选择各自的收获与代价，以及决策的关键点。', theme: 'career', positions: ['留下的收获', '留下的代价', '离开的收获', '离开的代价', '决策关键'] },
@@ -173,6 +179,31 @@ export const TAROT_DECK: TarotCard[] = [
 export function getCardImage(id: number): string {
   return `/cards/card_${String(id).padStart(2, '0')}.jpg`;
 }
+
+/** 78 张韦特标准英文名（id → 英文名）。服务端拼装解读与前端匹配牌名共用。 */
+export const CARD_EN_NAMES: Record<number, string> = {
+  0:'The Fool',1:'The Magician',2:'The High Priestess',3:'The Empress',4:'The Emperor',
+  5:'The Hierophant',6:'The Lovers',7:'The Chariot',8:'Strength',9:'The Hermit',
+  10:'Wheel of Fortune',11:'Justice',12:'The Hanged Man',13:'Death',14:'Temperance',
+  15:'The Devil',16:'The Tower',17:'The Star',18:'The Moon',19:'The Sun',
+  20:'Judgement',21:'The World',
+  22:'Ace of Wands',23:'Two of Wands',24:'Three of Wands',25:'Four of Wands',
+  26:'Five of Wands',27:'Six of Wands',28:'Seven of Wands',29:'Eight of Wands',
+  30:'Nine of Wands',31:'Ten of Wands',32:'Page of Wands',33:'Knight of Wands',
+  34:'Queen of Wands',35:'King of Wands',
+  36:'Ace of Cups',37:'Two of Cups',38:'Three of Cups',39:'Four of Cups',
+  40:'Five of Cups',41:'Six of Cups',42:'Seven of Cups',43:'Eight of Cups',
+  44:'Nine of Cups',45:'Ten of Cups',46:'Page of Cups',47:'Knight of Cups',
+  48:'Queen of Cups',49:'King of Cups',
+  50:'Ace of Swords',51:'Two of Swords',52:'Three of Swords',53:'Four of Swords',
+  54:'Five of Swords',55:'Six of Swords',56:'Seven of Swords',57:'Eight of Swords',
+  58:'Nine of Swords',59:'Ten of Swords',60:'Page of Swords',61:'Knight of Swords',
+  62:'Queen of Swords',63:'King of Swords',
+  64:'Ace of Pentacles',65:'Two of Pentacles',66:'Three of Pentacles',67:'Four of Pentacles',
+  68:'Five of Pentacles',69:'Six of Pentacles',70:'Seven of Pentacles',71:'Eight of Pentacles',
+  72:'Nine of Pentacles',73:'Ten of Pentacles',74:'Page of Pentacles',75:'Knight of Pentacles',
+  76:'Queen of Pentacles',77:'King of Pentacles',
+};
 
 export function shuffleDraw(count: number): DrawnCard[] {
   const deck = [...TAROT_DECK];

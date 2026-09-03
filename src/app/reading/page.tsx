@@ -1,53 +1,79 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { ArrowRight, BookOpen, CalendarDays, LayoutGrid, Sparkles } from 'lucide-react';
 import PageShell, { Reveal } from '@/components/PageShell';
+import { useI18n } from '@/i18n';
 
 const ENTRIES = [
-  { icon: '🔮', title: '在线占卜', desc: '线上抽牌 · 即时解读', route: '/online' },
-  { icon: '✦', title: '推荐牌阵', desc: '多种牌阵 · 按场景选择', route: '/spreads' },
-  { icon: '🌙', title: '每日运势', desc: '今日指引 · 星象解读', route: '/daily' },
-  { icon: '📚', title: '学习专区', desc: '塔罗知识 · 入门进阶', route: '/learn' },
-  { icon: '🔍', title: '牌面解读', desc: '22 张大阿卡纳牌义速查', route: '/tarot' },
+  {
+    icon: <Sparkles className="h-5 w-5" aria-hidden="true" />,
+    titleKey: 'tarot.entries.online',
+    en: 'Online Reading',
+    descKey: 'tarot.entries.onlineDesc',
+    route: '/online',
+  },
+  {
+    icon: <LayoutGrid className="h-5 w-5" aria-hidden="true" />,
+    titleKey: 'tarot.entries.spreads',
+    en: 'Spreads',
+    descKey: 'tarot.entries.spreadsDesc',
+    route: '/spreads',
+  },
+  {
+    icon: <BookOpen className="h-5 w-5" aria-hidden="true" />,
+    titleKey: 'tarot.entries.learn',
+    en: 'Learn',
+    descKey: 'tarot.entries.learnDesc',
+    route: '/learn',
+  },
+  {
+    icon: <CalendarDays className="h-5 w-5" aria-hidden="true" />,
+    titleKey: 'tarot.entries.daily',
+    en: 'Daily',
+    descKey: 'tarot.entries.dailyDesc',
+    route: '/online?spread=daily',
+  },
 ];
 
 export default function ReadingPage() {
   const router = useRouter();
+  const { t } = useI18n();
 
   return (
     <PageShell
-      label="Reading · Home"
-      title="命运之镜"
-      subtitle="探索你的命运 · 选择你的探索方式，开启与宇宙的对话"
+      label={t('page.reading.label')}
+      title={t('page.reading.title')}
+      subtitle={t('page.reading.subtitle')}
       footer={
-        <p className="text-[11px] leading-relaxed text-muted/90">
-          「塔罗不是预言，而是反映你内心深处的镜子」
+        <p className="text-sm leading-relaxed text-muted/90">
+          「{t('page.learn.footer').replace(/[「」]/g, '')}」
         </p>
       }
     >
-      <Reveal className="mt-12">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {ENTRIES.map((e, i) => (
-            <Reveal key={e.title} delay={i * 100}>
-              <button
-                onClick={() => router.push(e.route)}
-                className="group h-full w-full rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 text-left transition-all duration-300 hover:border-accent/30 hover:bg-accent/[0.05]"
-              >
-                <span className="text-2xl opacity-80 transition-transform duration-300 group-hover:scale-110">
-                  {e.icon}
-                </span>
-                <h3 className="font-display mt-4 text-base tracking-[0.12em] text-frost">
-                  {e.title}
+      {/* 桌面：2 列大卡片；移动：1 列（四窗口等宽对齐） */}
+      <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">
+        {ENTRIES.map((e, i) => (
+          <Reveal key={e.titleKey} delay={i * 90}>
+            <button
+              onClick={() => router.push(e.route)}
+              className="group flex w-full items-center gap-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-8 text-left transition-all duration-300 hover:border-accent/30 hover:bg-white/[0.04] lg:p-10"
+            >
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-accent/20 bg-accent/10 text-accent transition-transform duration-300 group-hover:scale-105">
+                {e.icon}
+              </span>
+              <div className="flex-1">
+                <p className="text-[11px] tracking-[0.25em] text-muted/70 uppercase">{e.en}</p>
+                <h3 className="font-display mt-1.5 text-xl tracking-[0.08em] text-frost lg:text-2xl">
+                  {t(e.titleKey)}
                 </h3>
-                <p className="mt-2 text-sm text-muted">{e.desc}</p>
-                <span className="mt-4 inline-flex items-center gap-1 text-xs tracking-[0.1em] text-accent/80 transition-all group-hover:gap-2">
-                  进入 →
-                </span>
-              </button>
-            </Reveal>
-          ))}
-        </div>
-      </Reveal>
+                <p className="mt-2 text-sm text-muted lg:text-base">{t(e.descKey)}</p>
+              </div>
+              <ArrowRight className="h-5 w-5 shrink-0 text-muted transition-all group-hover:translate-x-1 group-hover:text-accent" aria-hidden="true" />
+            </button>
+          </Reveal>
+        ))}
+      </div>
     </PageShell>
   );
 }

@@ -190,8 +190,8 @@ export default function WillowBranches() {
     }
 
     const resize = () => {
-      c.width = window.innerWidth;
-      c.height = window.innerHeight;
+      c.width = document.documentElement.clientWidth || window.innerWidth;
+      c.height = document.documentElement.clientHeight || window.innerHeight;
       initBranches();
     };
     resize();

@@ -20,9 +20,12 @@ export interface McpTool {
 export interface TarotReadingRequest {
   cards: any[];
   question?: string;
+  background?: string;
   spreadName?: string | any[];
   positions?: readonly string[];
   mode?: 'auto' | 'manual';
+  /** 输出语言（跟随站点语言）：en/zh/ja，缺省 zh */
+  lang?: string;
 }
 
 export interface TarotReadingResponse {

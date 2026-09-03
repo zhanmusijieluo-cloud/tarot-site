@@ -47,8 +47,8 @@ export default function Starfield({ count = 220 }: { count?: number }) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let w = window.innerWidth;
-    let h = window.innerHeight;
+    let w = document.documentElement.clientWidth || window.innerWidth;
+    let h = document.documentElement.clientHeight || window.innerHeight;
     let paletteA = '138,130,212';
     let paletteB = '240,238,255';
 
@@ -66,8 +66,8 @@ export default function Starfield({ count = 220 }: { count?: number }) {
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      w = window.innerWidth;
-      h = window.innerHeight;
+      w = document.documentElement.clientWidth || window.innerWidth;
+      h = document.documentElement.clientHeight || window.innerHeight;
       canvas.width = w * dpr;
       canvas.height = h * dpr;
       canvas.style.width = w + 'px';
@@ -92,7 +92,6 @@ export default function Starfield({ count = 220 }: { count?: number }) {
         hueShift: Math.random() < 0.3,
       });
     }
-
     // 流星：低频随机生成，斜向划过
     const meteors: Meteor[] = [];
     let nextMeteorAt = performance.now() + 2500 + Math.random() * 4000;
@@ -181,11 +180,13 @@ export default function Starfield({ count = 220 }: { count?: number }) {
         ctx.fill();
       }
 
-      // 近距离微弱连线
+      // 近距离微弱连线 —— 优化：降采样到子集，避免 O(n²) 全量检测（220 星≈2.4万次/帧）
+      // 只对每 3 颗星抽样检测，视觉几乎无差别，CPU 消耗降为 1/9
+      const lineSample = 3;
       ctx.strokeStyle = `rgba(${paletteA}, 0.045)`;
       ctx.lineWidth = 0.5;
-      for (let i = 0; i < stars.length; i++) {
-        for (let j = i + 1; j < stars.length; j++) {
+      for (let i = 0; i < stars.length; i += lineSample) {
+        for (let j = i + 1; j < stars.length; j += lineSample) {
           const dx = stars[i].x - stars[j].x;
           const dy = stars[i].y - stars[j].y;
           if (Math.abs(dx) > 80 || Math.abs(dy) > 80) continue;

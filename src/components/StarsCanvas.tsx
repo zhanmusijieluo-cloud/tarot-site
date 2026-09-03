@@ -14,8 +14,8 @@ export default function StarsCanvas() {
     if (!ctx) return;
 
     const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      canvas.width = document.documentElement.clientWidth || window.innerWidth;
+      canvas.height = document.documentElement.clientHeight || window.innerHeight;
     };
 
     const initStars = () => {

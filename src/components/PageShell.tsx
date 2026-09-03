@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import Navbar from '@/components/Navbar';
 
-/** 滚动显现：进入视口后上浮淡入 */
+/** 滚动显现 */
 export function Reveal({
   children,
   delay = 0,
@@ -37,7 +37,7 @@ export function Reveal({
   return (
     <div
       ref={ref}
-      className={className}
+      className={`w-full ${className}`}
       style={{
         opacity: shown ? 1 : 0,
         transform: shown ? 'translateY(0)' : 'translateY(28px)',
@@ -61,18 +61,18 @@ export function SectionHead({
   sub?: string;
 }) {
   return (
-    <Reveal className="mb-10 sm:mb-14">
-      <div className="flex items-baseline gap-4 sm:gap-6">
-        <span className="font-display text-xs tracking-[0.3em] text-accent/70">
+    <Reveal className="mb-12 sm:mb-16">
+      <div className="flex min-w-0 flex-wrap items-baseline gap-3 sm:gap-6">
+        <span className="font-display text-xs tracking-[0.3em] text-accent/70 sm:text-sm">
           {no}
         </span>
-        <h2 className="font-display text-xl font-light tracking-[0.12em] text-frost sm:text-2xl md:text-[1.75rem]">
+        <h2 className="font-display min-w-0 break-words text-2xl font-light tracking-[0.1em] text-frost sm:text-3xl lg:text-4xl">
           {title}
         </h2>
         <span className="hairline-glow hidden flex-1 sm:block" />
       </div>
       {sub && (
-        <p className="mt-3 pl-9 text-xs leading-relaxed text-muted sm:pl-10 sm:text-sm">
+        <p className="mt-4 pl-9 text-sm leading-relaxed text-muted sm:pl-10 sm:text-base">
           {sub}
         </p>
       )}
@@ -80,7 +80,7 @@ export function SectionHead({
   );
 }
 
-/** 编辑式页面骨架：返回导航 + Hero + 内容 + 页脚 */
+/** 子页面骨架：桌面优先 · 大气居中 · 与首页同款导航 */
 export default function PageShell({
   label,
   title,
@@ -88,6 +88,7 @@ export default function PageShell({
   children,
   footer,
   wide = false,
+  compact = false,
 }: {
   label: string;
   title: string;
@@ -95,62 +96,41 @@ export default function PageShell({
   children: ReactNode;
   footer?: ReactNode;
   wide?: boolean;
+  compact?: boolean;
 }) {
-  const router = useRouter();
-
   return (
-    <div className="relative min-h-[100dvh] w-full">
-      {/* 顶部导航 */}
-      <header className="fixed top-0 right-0 left-0 z-50 px-4 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <nav className="glass-panel mx-auto flex max-w-2xl items-center justify-between rounded-full px-4 py-2.5 lg:max-w-[64.75rem]">
-          <button
-            onClick={() => router.push('/')}
-            className="group flex items-center gap-2 py-1"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              className="h-3.5 w-3.5 text-muted transition-all duration-300 group-hover:-translate-x-0.5 group-hover:text-frost"
-            >
-              <path d="M19 12H5M11 18l-6-6 6-6" />
-            </svg>
-            <span className="text-xs tracking-[0.18em] text-muted transition-colors group-hover:text-frost">
-              返回首页
-            </span>
-          </button>
-          <span className="font-display text-sm tracking-[0.18em] text-frost/90 uppercase">
-            Oracle
-          </span>
-        </nav>
-      </header>
+    <div className="relative min-h-[56.25rem] w-full">
+      <Navbar />
 
-      {/* Hero */}
-      <section className="relative overflow-hidden px-5 pt-[max(7.5rem,calc(env(safe-area-inset-top)+6rem))] pb-4">
-        <div
-          className="glow-breathe-slow pointer-events-none absolute left-1/2 top-[-30%] h-[min(70vw,560px)] w-[min(70vw,560px)] -translate-x-1/2 rounded-full blur-[120px] opacity-40"
-          style={{ background: 'var(--glow-primary)' }}
-          aria-hidden="true"
-        />
-        <div className={`relative mx-auto ${wide ? 'max-w-6xl' : 'max-w-4xl'} text-center`}>
-          <p className="rise rise-1 mb-4 text-[10px] tracking-[0.42em] text-accent/75 uppercase">
-            {label}
-          </p>
-          <h1 className="rise rise-2 font-display text-[1.75rem] font-extralight tracking-[0.08em] text-frost sm:text-[2.5rem] md:text-[3rem]">
-            {title}
-          </h1>
-          {subtitle && (
-            <p className="rise rise-3 mx-auto mt-5 max-w-xl text-xs leading-relaxed text-muted sm:text-sm">
-              {subtitle}
+      {/* Hero — 大留白居中（compact 模式下隐藏，内容直接顶上来） */}
+      {!compact && (
+        <section className="relative overflow-hidden px-5 pt-[max(9rem,calc(env(safe-area-inset-top)+7rem))] pb-8">
+          <div
+            className="pointer-events-none absolute left-1/2 top-[-20%] h-[min(60vw,520px)] w-[min(60vw,520px)] -translate-x-1/2 rounded-full blur-[120px] opacity-40"
+            style={{ background: 'var(--glow-primary)' }}
+            aria-hidden="true"
+          />
+          <div className="relative mx-auto w-[92%] max-w-[106.25rem] text-center">
+            <p className="mb-5 text-xs tracking-[0.35em] text-accent/75 uppercase sm:text-sm">
+              {label}
             </p>
-          )}
-          <div className="rise rise-4 hairline-glow mx-auto mt-8 w-40" />
-        </div>
-      </section>
+            <h1 className="font-display text-[clamp(1.75rem,3.5vw,3.5rem)] font-extralight tracking-[0.08em] text-frost">
+              {title}
+            </h1>
+            {subtitle && (
+              <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted sm:text-lg">
+                {subtitle}
+              </p>
+            )}
+            <div className="hairline-glow mx-auto mt-10 w-48" />
+          </div>
+        </section>
+      )}
 
       {/* 内容 */}
-      <main className={`relative mx-auto w-full px-5 pb-24 ${wide ? 'max-w-6xl' : 'max-w-4xl'}`}>
+      <main className={`relative ${
+        compact ? 'pt-[max(4.5rem,calc(env(safe-area-inset-top)+3.5rem))]' : ''
+      } mx-auto w-[92%] max-w-[106.25rem] min-w-0 px-0 pb-28`}>
         {children}
       </main>
 
@@ -158,7 +138,7 @@ export default function PageShell({
       {footer && (
         <footer className="relative px-5 pb-16">
           <div className="mx-auto max-w-4xl text-center">
-            <div className="hairline-glow mx-auto mb-8 w-24" />
+            <div className="hairline-glow mx-auto mb-8 w-32" />
             {footer}
           </div>
         </footer>

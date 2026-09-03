@@ -1,136 +1,208 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import PageShell, { Reveal, SectionHead } from '@/components/PageShell';
-import { useRouter } from 'next/navigation';
+import { Suspense, useMemo, useRef, useState } from 'react';
+import { ChevronRight, Compass, Gem, Lightbulb, RotateCcw, Sparkles } from 'lucide-react';
+import PageShell, { Reveal } from '@/components/PageShell';
+import { useRouter, useSearchParams } from 'next/navigation';
 import TarotScene from '@/components/TarotScene';
-import { TAROT_DECK, shuffleDraw, SPREADS, getCardImage, type DrawnCard, type Spread } from '@/lib/tarot';
-import { getMcpClient } from '@/mcp/client';
+import { TAROT_DECK, SPREADS, type DrawnCard, type Spread } from '@/lib/tarot';
+import { spreadSubtitle, spreadPositions } from '@/lib/spread-i18n';
+import { useI18n } from '@/i18n';
 
-type Stage = 'catalogue' | 'shuffle' | 'draw' | 'reveal' | 'result-loading' | 'result';
+type Stage = 'catalogue' | 'draw';
+
+/** 自定义牌阵格位：与 /online/custom 布阵页、解读室共用结构 */
+interface CustomCell {
+  row: number;
+  col: number;
+  cols: number;
+  name?: string;
+}
 
 const SPREAD_OPTIONS = [
-  { id: 'single', name: '单牌指引', count: 1, subtitle: '抓住此刻最重要的一点', theme: 'general' },
-  { id: 'three', name: '三牌时间流', count: 3, subtitle: '看过去、现在和未来', theme: 'general' },
-  { id: 'situation', name: '现状解局', count: 5, subtitle: '拆开表面与隐藏因素', theme: 'general' },
-  { id: 'horseshoe', name: '七牌马蹄阵', count: 7, subtitle: '完整梳理问题全貌', theme: 'general' },
-  { id: 'celtic', name: '凯尔特十字', count: 10, subtitle: '深入复杂问题的根源', theme: 'general' },
+  { id: 'single', nameKey: 'online.spread.single', count: 1, subtitleKey: 'online.spread.singleSub', theme: 'general' },
+  { id: 'three', nameKey: 'online.spread.three', count: 3, subtitleKey: 'online.spread.threeSub', theme: 'general' },
+  { id: 'situation', nameKey: 'online.spread.situation', count: 5, subtitleKey: 'online.spread.situationSub', theme: 'general' },
+  { id: 'horseshoe', nameKey: 'online.spread.horseshoe', count: 7, subtitleKey: 'online.spread.horseshoeSub', theme: 'general' },
 ];
 
-export default function OnlinePage() {
+function OnlineInner() {
   const router = useRouter();
-  const [stage, setStage] = useState<Stage>('catalogue');
-  const [selectedSpread, setSelectedSpread] = useState('three');
-  const [question, setQuestion] = useState('');
+  const { t, lang } = useI18n();
+  const searchParams = useSearchParams();
+  const isQuick = searchParams.get('spread') === 'quick';
+  // 每日运势：固定 1 张牌 + 固定问题「我今天的运势？从各个方面解释」，进入即抽牌
+  const isDaily = searchParams.get('spread') === 'daily';
+  // 来自推荐牌阵页（/spreads）的指定牌阵：URL 带 spread=key 时直接预选
+  const presetSpread = useMemo(() => {
+    const s = searchParams.get('spread');
+    return s && s !== 'quick' && s !== 'custom' && SPREADS[s] ? s : null;
+  }, [searchParams]);
+  // 自定义牌阵：布阵页传来的格位布局（row/col/name），决定抽几张与解读室摆放位置
+  const customLayout = useMemo<CustomCell[] | null>(() => {
+    if (searchParams.get('spread') !== 'custom') return null;
+    try {
+      const raw = searchParams.get('layout');
+      if (!raw) return null;
+      const arr = JSON.parse(decodeURIComponent(raw)) as CustomCell[];
+      if (!Array.isArray(arr) || !arr.length) return null;
+      return arr.filter((c) => Number.isFinite(c?.row) && Number.isFinite(c?.col));
+    } catch {
+      return null;
+    }
+  }, [searchParams]);
+  // 自定义牌阵：布阵页直接带 layout 参数进来，跳过牌阵目录直接进入抽牌
+  const [stage, setStage] = useState<Stage>(isQuick || isDaily || presetSpread || customLayout ? 'draw' : 'catalogue');
+  const [selectedSpread, setSelectedSpread] = useState(isQuick ? 'quick' : isDaily ? 'daily' : customLayout ? 'custom' : presetSpread ?? 'three');
+  // 每日运势：固定问题；其余从 URL 或目录流程带入
+  const [question, setQuestion] = useState(isDaily ? t('daily.fixedQuestion') : (searchParams.get('q') ?? ''));
+  const [background, setBackground] = useState(searchParams.get('bg') ?? '');
   const [cards, setCards] = useState<DrawnCard[]>([]);
-  const [revealedIdx, setRevealedIdx] = useState(-1);
-  const [interpretation, setInterpretation] = useState('');
-  const [error, setError] = useState('');
+  const [selectedCount, setSelectedCount] = useState(0);
   const deckRef = useRef<number[]>([]);
   const selectedRef = useRef<Set<number>>(new Set());
 
   const spread: Spread | null = useMemo(
-    () => selectedSpread === 'custom' ? null : SPREADS[selectedSpread],
+    () => (selectedSpread === 'custom' || selectedSpread === 'quick' || selectedSpread === 'daily') ? null : SPREADS[selectedSpread],
     [selectedSpread]
   );
-  const drawCount = useMemo(() => spread?.count ?? 1, [spread]);
+  const drawCount = useMemo(
+    () => (selectedSpread === 'quick' ? 3 : selectedSpread === 'daily' ? 1 : selectedSpread === 'custom' ? (customLayout?.length ?? 1) : spread?.count ?? 1),
+    [spread, selectedSpread, customLayout]
+  );
 
-  // 洗牌阶段：点击洗牌
+  // 快速占卜：进入即预抽三张（无牌阵）；每日运势：单牌
+  const spreadNameForResult = useMemo(
+    () => selectedSpread === 'quick' ? t('tarot.entries.quick') : selectedSpread === 'daily' ? t('page.daily.title') : spread?.name ?? 'Single',
+    [selectedSpread, spread, t]
+  );
+
+  // 自定义牌阵牌位名：布阵时客户命名（未命名用「第 N 张」兜底），随站点语言微调
+  const customPositionNames = useMemo(() => {
+    if (selectedSpread !== 'custom' || !customLayout) return [];
+    return customLayout.map((c, i) => {
+      if (c.name) return lang === 'en' ? `Position ${i + 1} (${c.name})` : c.name;
+      return lang === 'en' ? `Position ${i + 1}` : t('custom.position', { n: i + 1 });
+    });
+  }, [customLayout, selectedSpread, lang, t]);
+
+  // 牌位名跟随站点语言（共享辅助：从 i18n 的 spreadPos.<key>.<i> 提取「」内牌位名，缺键回退原文）
+  const localizePositions = useMemo(() => {
+    return (positionsZh: readonly string[]): string[] =>
+      spreadPositions(selectedSpread, positionsZh, lang, t);
+  }, [lang, selectedSpread, t]);
+
+  // 开始抽牌：清空牌池，直接进入抽牌阶段（牌序完全由 draw 阶段点选决定）
   const doShuffle = () => {
-    deckRef.current = [...TAROT_DECK].map((c) => c.id).sort(() => Math.random() - 0.5).slice(0, drawCount);
+    deckRef.current = [];
     selectedRef.current.clear();
+    setSelectedCount(0);
     setCards([]);
-    setRevealedIdx(-1);
     setStage('draw');
   };
 
-  // 选牌
+  // 选牌（quick 模式从空牌池直接点选，同步维护 deckRef）
   const toggleCard = (id: number) => {
     const s = selectedRef.current;
-    if (s.has(id)) s.delete(id);
-    else if (s.size < drawCount) s.add(id);
+    if (s.has(id)) {
+      s.delete(id);
+      deckRef.current = deckRef.current.filter((x) => x !== id);
+    } else if (s.size < drawCount) {
+      s.add(id);
+      if (!deckRef.current.includes(id)) deckRef.current.push(id);
+    }
+    setSelectedCount(s.size);
     setCards([...s].map((uid) => {
       const base = TAROT_DECK.find((c) => c.id === uid)!;
       return { ...base, isReversed: false } as DrawnCard;
     }));
-    setRevealedIdx(-1);
   };
 
-  // 进入解读
+  // 选完牌：立即写入会话（正文留空）并跳转解读室，由解读室内流式生成解读
   const doReveal = () => {
     const drawn = deckRef.current.map((uid) => {
       const base = TAROT_DECK.find((c) => c.id === uid)!;
       return { ...base, isReversed: Math.random() < 0.5 } as DrawnCard;
     });
-    setCards(drawn);
-    setRevealedIdx(0);
-    setStage('reveal');
-  };
-
-  // 翻下一张
-  const nextCard = () => {
-    setRevealedIdx((i) => {
-      const next = i + 1;
-      if (next >= cards.length) return i;
-      return next;
-    });
-  };
-
-  // 解读
-  const doInterpret = async () => {
-    setStage('result-loading');
-    setError('');
-    try {
-      const client = getMcpClient();
-      const result = await client.readTarot({
-        cards: cards.map((c) => ({
-          id: c.id,
-          name: c.name,
-          isReversed: c.isReversed,
-          upright: c.upright,
-          element: c.element,
-          zodiac: c.zodiac,
-        })),
-        question,
-        spreadName: spread?.name ?? '单牌',
-        positions: spread?.positions ?? ['核心指引'],
-      });
-      if (result.success && result.narrative) {
-        setInterpretation(result.narrative);
-      } else {
-        setError(result.error ?? '解读失败，请稍后重试');
-      }
-    } catch (e: any) {
-      setError(e?.message ?? '网络错误');
-    } finally {
-      setStage('result');
-    }
-  };
-
-  const reset = () => {
-    setStage('catalogue');
-    setCards([]);
-    setRevealedIdx(-1);
-    setInterpretation('');
-    setError('');
-    setQuestion('');
+    const isCustom = selectedSpread === 'custom' && !!customLayout?.length;
+  try {
+      window.sessionStorage.setItem(
+        'tarot-reading-session',
+        JSON.stringify({
+          cards: drawn.map((c) => ({
+            id: c.id,
+            name: c.name,
+            isReversed: c.isReversed,
+            upright: c.upright,
+            reversedMeaning: c.reversedMeaning,
+            element: c.element,
+            zodiac: c.zodiac,
+            numeral: c.numeral,
+          })),
+          question,
+          background,
+          spreadName: spreadNameForResult,
+          spreadKey: !isCustom && selectedSpread !== 'quick' && SPREADS[selectedSpread] ? selectedSpread : null,
+          positions: isCustom ? customPositionNames : localizePositions(spread?.positions ?? []),
+          // 自定义牌阵格位：解读室按 row/col 原样还原客户摆放的位置
+          customLayout: isCustom ? customLayout : undefined,
+          interpretation: '',
+          lang,
+          savedAt: Date.now(),
+        })
+      );
+    } catch { /* ignore */ }
+    router.push('/reading/session');
   };
 
   return (
     <PageShell
-      label="Online · Divination"
-      title="开始占卜"
-      subtitle="把心里那件事，问出来。越具体，牌看得越清楚。"
+      label={t('page.online.label')}
+      title={t('page.online.title')}
+      subtitle={t('page.online.subtitle')}
+      compact={stage === 'draw'}
     >
       {/* 目录 */}
       {stage === 'catalogue' && (
         <section>
           <Reveal>
             <h2 className="font-display text-lg tracking-[0.15em] text-frost/90 mb-6">
-              ✦ 选择牌阵
+              <Compass className="mr-2 inline-block h-4 w-4 text-accent" aria-hidden="true" />{t('online.selectSpread')}
             </h2>
           </Reveal>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {/* 自定义牌阵：置顶第一项，点击进入布阵页 */}
+            <Reveal>
+              <button
+                onClick={() => router.push('/online/custom')}
+                className="group h-full w-full rounded-2xl border border-dashed border-accent/40 bg-accent/[0.04] p-5 text-left transition-all duration-300 hover:border-accent/70 hover:bg-accent/[0.08]"
+              >
+                <div className="flex items-baseline justify-between">
+                  <span className="text-[10px] tracking-[0.25em] text-accent/70 uppercase">
+                    <Sparkles className="mr-1 inline-block h-3 w-3" aria-hidden="true" /> · {t('online.customSpreadCount')}
+                  </span>
+                </div>
+                <h3 className="font-display mt-2 text-base tracking-[0.1em] text-frost">{t('online.customSpread')}</h3>
+                <p className="mt-1 text-xs text-muted">{t('online.customSpreadSub')}</p>
+              </button>
+            </Reveal>
+            {/* 来自推荐牌阵的指定牌阵：不在常规选项中时单独显示在首位并预选高亮 */}
+            {presetSpread && !SPREAD_OPTIONS.some((s) => s.id === presetSpread) && SPREADS[presetSpread] && (
+              <Reveal>
+                <button
+                  onClick={() => setSelectedSpread(presetSpread)}
+                  className="h-full w-full rounded-2xl border border-accent/50 bg-accent/15 p-5 text-left transition-all duration-300"
+                >
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-[10px] tracking-[0.25em] text-accent/70 uppercase">
+                      · {t('common.cardsCount', { count: SPREADS[presetSpread].count })}
+                    </span>
+                  </div>
+                  <h3 className="font-display mt-2 text-base tracking-[0.1em] text-frost">{t(`spread.${presetSpread}`)}</h3>
+                  <p className="mt-1 text-xs text-muted">{spreadSubtitle(presetSpread, SPREADS[presetSpread].subtitle, lang, t)}</p>
+                </button>
+              </Reveal>
+            )}
             {SPREAD_OPTIONS.map((s, i) => (
               <Reveal key={s.id} delay={i * 80}>
                 <button
@@ -143,29 +215,21 @@ export default function OnlinePage() {
                 >
                   <div className="flex items-baseline justify-between">
                     <span className="text-[10px] tracking-[0.25em] text-accent/70 uppercase">
-                      {s.theme === 'love' ? '💕' : s.theme === 'career' ? '💼' : '✦'} · {s.count} 张
+                      {s.theme === 'love' ? <Sparkles className="mr-1 inline-block h-3 w-3" aria-hidden="true" /> : s.theme === 'career' ? <Lightbulb className="mr-1 inline-block h-3 w-3" aria-hidden="true" /> : <Gem className="mr-1 inline-block h-3 w-3" aria-hidden="true" />} · {t('common.cardsCount', { count: s.count })}
                     </span>
                   </div>
-                  <h3 className="font-display mt-2 text-base tracking-[0.1em] text-frost">{s.name}</h3>
-                  <p className="mt-1 text-xs text-muted">{s.subtitle}</p>
+                  <h3 className="font-display mt-2 text-base tracking-[0.1em] text-frost">{t(s.nameKey)}</h3>
+                  <p className="mt-1 text-xs text-muted">{t(s.subtitleKey)}</p>
                 </button>
               </Reveal>
             ))}
           </div>
-          <Reveal delay={400}>
-            <button
-              onClick={() => router.push('/online/custom')}
-              className="mt-4 flex items-center gap-2 rounded-full border border-dashed border-white/[0.1] px-4 py-2.5 text-sm text-muted transition-all hover:border-accent/40 hover:text-frost"
-            >
-              <span>✦</span> 自定义牌阵
-            </button>
-          </Reveal>
           <Reveal delay={500}>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
               <textarea
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
-                placeholder="静心默念你的问题…"
+                placeholder={t('online.question')}
                 maxLength={60}
                 className="flex-1 rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm text-frost placeholder:text-muted/50 focus:border-accent/40 focus:outline-none"
               />
@@ -173,181 +237,72 @@ export default function OnlinePage() {
                 onClick={doShuffle}
                 className="glass-btn-primary whitespace-nowrap text-sm tracking-[0.2em]"
               >
-                开始占卜
+                {t('online.start')}
               </button>
             </div>
           </Reveal>
         </section>
       )}
 
-      {/* 洗牌 */}
-      {stage === 'shuffle' && (
-        <section className="flex flex-col items-center py-16">
-          <Reveal>
-            <div className="text-center">
-              <span className="font-display text-3xl text-frost">🔮</span>
-              <p className="mt-4 text-sm text-muted">正在洗牌…</p>
-            </div>
-            <div className="mt-8 flex justify-center">
-              <div className="relative h-32 w-48">
-                {[0, 1, 2, 3, 4, 5].map((i) => (
-                  <div
-                    key={i}
-                    className="absolute inset-0 rounded-lg border border-white/[0.1] bg-white/[0.03]"
-                    style={{
-                      transform: `translateY(${i * 4}px) rotate(${(i - 2) * 2}deg)`,
-                      transition: 'all 0.3s ease',
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-            <button
-              onClick={doReveal}
-              className="mt-10 glass-btn-primary text-sm tracking-[0.2em]"
-            >
-              抽取 {drawCount} 张牌
-            </button>
-          </Reveal>
-        </section>
-      )}
-
-      {/* 抽牌场景 */}
+      {/* 抽牌场景：计数/返回/翻牌叠加在场景底部，一屏全可见 */}
       {stage === 'draw' && (
-        <section className="py-6">
+        <section className="py-2">
           <Reveal>
-            <div className="mb-4 text-center">
-              <p className="text-sm text-muted">从 {drawCount} 张牌中选择</p>
-              <p className="mt-1 font-display text-lg tracking-[0.15em] text-frost">
-                已选 {selectedRef.current.size} / {drawCount}
-              </p>
-            </div>
-            <div className="tarot-scene-host">
-              <TarotScene
-                maxSelect={drawCount}
-                selectedIds={cards.map((c) => c.id)}
-                onToggleCard={toggleCard}
-                disabled={selectedRef.current.size >= drawCount}
-              />
-            </div>
-            <div className="mt-6 flex justify-center gap-3">
-              <button
-                onClick={() => setStage('catalogue')}
-                className="glass-btn text-sm"
-              >
-                ← 返回
-              </button>
-              <button
-                onClick={doReveal}
-                disabled={selectedRef.current.size < drawCount}
-                className={`glass-btn-primary text-sm ${selectedRef.current.size < drawCount ? 'opacity-40' : ''}`}
-              >
-                翻牌 →
-              </button>
-            </div>
-          </Reveal>
-        </section>
-      )}
-
-      {/* 翻牌 */}
-      {stage === 'reveal' && cards.length > 0 && (
-        <section className="py-6">
-          <Reveal>
-            <h2 className="font-display text-lg tracking-[0.15em] text-frost/90 mb-6 text-center">
-              ✦ 牌阵结果
-            </h2>
-            <div className="flex justify-center">
-              <div className="w-full max-w-md">
-                {cards.map((card, i) => (
-                  <div key={i} className="mb-4">
-                    <div
-                      className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 transition-all duration-500"
-                      style={{
-                        opacity: i <= revealedIdx ? 1 : 0.3,
-                        transform: i <= revealedIdx ? 'translateY(0)' : 'translateY(10px)',
-                      }}
-                    >
-                      <div className="flex items-center gap-4">
-                        <span className="text-3xl">{card.emoji}</span>
-                        <div className="flex-1 text-left">
-                          <p className="font-display text-sm tracking-[0.1em] text-frost">
-                            {card.name}
-                          </p>
-                          <p className="text-xs text-muted">
-                            {card.isReversed ? '逆位' : '正位'} · {card.element} · {card.zodiac}
-                          </p>
-                          {i <= revealedIdx && (
-                            <p className="mt-2 text-[12px] leading-relaxed text-muted/90">{card.upright}</p>
-                          )}
-                        </div>
-                        <span className="text-[10px] tracking-[0.2em] text-muted/60 uppercase">
-                          {spread?.positions[i] ?? ''}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="mt-8 flex justify-center gap-3">
-              {revealedIdx < cards.length - 1 && (
-                <button onClick={nextCard} className="glass-btn-primary text-sm">
-                  下一张 →
-                </button>
-              )}
-              {revealedIdx === cards.length - 1 && (
-                <button onClick={doInterpret} className="glass-btn-primary text-sm">
-                  开始解读 ✦
-                </button>
-              )}
-              <button onClick={reset} className="glass-btn text-sm">
-                ← 重新占卜
-              </button>
-            </div>
-          </Reveal>
-        </section>
-      )}
-
-      {/* 解读中 */}
-      {stage === 'result-loading' && (
-        <section className="flex flex-col items-center py-20">
-          <Reveal>
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-accent/20 blur-xl" />
-              <span className="relative text-4xl animate-[float_2s_ease-in-out_infinite]">🔮</span>
-            </div>
-            <p className="mt-6 text-sm text-muted">智能塔罗师正在解读…</p>
-          </Reveal>
-        </section>
-      )}
-
-      {/* 结果 */}
-      {stage === 'result' && (
-        <section className="py-6">
-          <Reveal>
-            <h2 className="font-display text-lg tracking-[0.15em] text-frost/90 mb-6 text-center">
-              ✦ 解读结果
-            </h2>
-            {error ? (
-              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-5 text-center">
-                <p className="text-sm text-red-400">{error}</p>
-              </div>
-            ) : interpretation ? (
-              <div className="prose prose-invert prose-sm max-w-none">
-                <div
-                  className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6"
-                  dangerouslySetInnerHTML={{ __html: interpretation }}
+            <div className="-mx-4 sm:-mx-8 lg:-mx-14">
+              <div className="tarot-scene-host relative">
+                <TarotScene
+                  maxSelect={drawCount}
+                  selectedIds={cards.map((c) => c.id)}
+                  onToggleCard={toggleCard}
                 />
+                {/* 底部控制栏：叠加在场景底部，不占滚动空间；z-1300 压在漂移卡牌(z-index 1000+)之上，绝不被盖住 */}
+                <div className="absolute bottom-0 left-0 right-0 z-[1300] flex items-center justify-center gap-x-6 gap-y-3 bg-gradient-to-t from-[rgba(7,6,10,0.88)] via-[rgba(7,6,10,0.45)] to-transparent px-4 py-4 sm:py-5">
+                  <div className="flex items-baseline gap-2 font-display tracking-[0.2em]">
+                    <span className={`text-3xl ${selectedCount >= drawCount ? 'text-accent' : 'text-frost'}`}>
+                      {selectedCount}
+                    </span>
+                    <span className="text-lg text-muted">/</span>
+                    <span className="text-lg text-muted">{drawCount}</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      // 快速占卜：返回填问题页（带上已填内容方便修改）；每日运势：返回主页；其他牌阵：返回牌阵目录
+                      if (selectedSpread === 'quick') {
+                        const q = encodeURIComponent(question);
+                        const bg = encodeURIComponent(background);
+                        router.push(`/online/quick?q=${q}&bg=${bg}`);
+                      } else if (selectedSpread === 'daily') {
+                        router.push('/');
+                      } else {
+                        setStage('catalogue');
+                      }
+                    }}
+                    className="glass-btn text-sm"
+                  >
+                    <RotateCcw className="mr-2 inline-block h-4 w-4" aria-hidden="true" />{t('online.flipBack')}
+                  </button>
+                  <button
+                    onClick={doReveal}
+                    disabled={selectedCount < drawCount}
+                    className={`glass-btn-primary text-sm ${selectedCount < drawCount ? 'opacity-40' : ''}`}
+                  >
+                    {t('online.flip')} <ChevronRight className="ml-1 inline-block h-4 w-4" aria-hidden="true" />
+                  </button>
+                </div>
               </div>
-            ) : null}
-            <div className="mt-6 flex justify-center gap-3">
-              <button onClick={reset} className="glass-btn text-sm">
-                重新占卜
-              </button>
             </div>
           </Reveal>
         </section>
       )}
+
     </PageShell>
+  );
+}
+
+export default function OnlinePage() {
+  return (
+    <Suspense fallback={<div className="min-h-[56.25rem] w-full" />}>
+      <OnlineInner />
+    </Suspense>
   );
 }

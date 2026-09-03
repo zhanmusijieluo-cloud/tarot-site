@@ -113,6 +113,8 @@ class TarotSceneEngine {
   pointer: { id: number; startX: number; startY: number; lastX: number; lastY: number; moved: boolean } | null = null;
   activePointers = new Map<number, { x: number; y: number }>();
   pinch: { distance: number; zoom: number } | null = null;
+  // 最近一次被识别为"拖动"的时间戳，用于 click 兜底时过滤掉拖动后误触发的 click
+  lastDragAt = 0;
   offset = { x: 0, y: 0 };
   targetOffset = { x: 0, y: 0 };
   zoom = 1;
@@ -145,8 +147,24 @@ class TarotSceneEngine {
       button.className = 'tarot-scene-card';
       button.style.setProperty('--card-w', `${card.width}px`);
       button.style.setProperty('--card-alpha', String(card.alpha));
+      // 鎏金流光相位：每张卡错开，避免全体同步闪烁
+      button.style.setProperty('--gilt-phase', `${(card.id % 12) * -0.55}s`);
       button.setAttribute('aria-label', `第 ${card.id + 1} 张牌背`);
       button.dataset.deckId = String(card.id);
+      // 鎏金卡背图层
+      const giltImg = document.createElement('img');
+      giltImg.src = '/cards/card-back-new.webp';
+      giltImg.alt = '';
+      giltImg.draggable = false;
+      giltImg.className = 'tarot-scene-card-img';
+      button.appendChild(giltImg);
+      // 鎏金流光特效层（扫过的高光）
+      const giltSheen = document.createElement('span');
+      giltSheen.className = 'tarot-scene-card-sheen';
+      giltSheen.setAttribute('aria-hidden', 'true');
+      button.appendChild(giltSheen);
+      // 在 button 上直接绑定 click（最稳，不依赖冒泡与事件代理）
+      button.addEventListener('click', (e) => this.onCardClick(e as MouseEvent, card.id));
       this.field.appendChild(button);
       return button;
     });
@@ -154,6 +172,8 @@ class TarotSceneEngine {
     this.onPointerDown = this.onPointerDown.bind(this);
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onPointerUp = this.onPointerUp.bind(this);
+    this.onCardClick = this.onCardClick.bind(this);
+    this.onRootClick = this.onRootClick.bind(this);
     this.onWheel = this.onWheel.bind(this);
     this.onResize = this.onResize.bind(this);
     this.animate = this.animate.bind(this);
@@ -162,6 +182,8 @@ class TarotSceneEngine {
     this.root.addEventListener('pointermove', this.onPointerMove);
     this.root.addEventListener('pointerup', this.onPointerUp);
     this.root.addEventListener('pointercancel', this.onPointerUp);
+    // 兜底：root 上也监听 click（处理 button 子元素外包了其他元素的情况）
+    this.root.addEventListener('click', this.onRootClick, true);
     this.root.addEventListener('wheel', this.onWheel, { passive: false });
     window.addEventListener('resize', this.onResize);
   }
@@ -190,6 +212,8 @@ class TarotSceneEngine {
     const span = width * 4.85;
     const safeTop = this.isMobile ? 18 : 14;
     const safeBottom = height - (this.isMobile ? 18 : 16);
+    // 随场景高度自动放大牌尺寸（高度 745px 时约 1.69 倍，让放大后的场景不显稀疏）
+    const sizeScale = clamp(height / 440, 0.85, 2.1);
     this.cards.forEach((card, index) => {
       const node = this.nodes[index];
       const flow = (card.t - elapsed * 0.0021 + 1) % 1;
@@ -217,13 +241,13 @@ class TarotSceneEngine {
       const s = card.scale * layerZoom * selectedScale;
       const z = card.z + zoomDelta * (card.layer === 'back' ? 230 : card.layer === 'mid' ? 150 : 76);
       const alphaLift = Math.max(0, zoomDelta) * (card.layer === 'back' ? 0.34 : card.layer === 'mid' ? 0.16 : 0.04);
-      const visualH = card.width * widthZoom * s * 1.5;
+      const visualH = card.width * sizeScale * widthZoom * s * 1.5;
       y = clamp(y, safeTop, safeBottom - visualH * 0.72);
       node.style.setProperty('--x', `${x}px`);
       node.style.setProperty('--y', `${y + lift}px`);
       node.style.setProperty('--z', `${z}px`);
       node.style.setProperty('--s', String(s));
-      node.style.setProperty('--card-w', `${card.width * widthZoom}px`);
+      node.style.setProperty('--card-w', `${card.width * sizeScale * widthZoom}px`);
       node.style.setProperty('--card-alpha', String(clamp(card.alpha + alphaLift, card.alpha, 0.98)));
       node.style.setProperty('--rx', `${card.rotateX + Math.sin(elapsed * 0.38 + card.phase) * 1.4}deg`);
       node.style.setProperty('--ry', `${card.rotateY + Math.cos(elapsed * 0.31 + card.phase) * 2.2}deg`);
@@ -242,7 +266,12 @@ class TarotSceneEngine {
 
   onPointerDown(event: PointerEvent) {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
-    event.preventDefault();
+    // 注意：触屏（touch）这里【不要】调用 event.preventDefault()，
+    // 否则浏览器会抑制后续 click 事件生成，导致点牌失灵。
+    // 触屏的滚动/双指缩放已由 CSS touch-action:none 阻止，无需 JS 干预。
+    if (event.pointerType === 'mouse') {
+      event.preventDefault(); // 仅鼠标需要阻止原生拖拽/选字
+    }
     this.root.setPointerCapture?.(event.pointerId);
     this.activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
     if (this.activePointers.size === 2) {
@@ -298,15 +327,45 @@ class TarotSceneEngine {
     this.activePointers.delete(event.pointerId);
     if (this.activePointers.size < 2) this.pinch = null;
     if (!this.pointer || this.pointer.id !== event.pointerId) return;
-    const canTap = !this.pointer.moved;
+    const wasDrag = this.pointer.moved;
     this.root.releasePointerCapture?.(event.pointerId);
     this.pointer = null;
-    if (!canTap) return;
+    // 拖动后标记一下时间戳，click 兜底时跳过（防止浏览器在 drag-end 仍派发 click）
+    if (wasDrag) this.lastDragAt = performance.now();
+  }
+
+  // click 兜底：处理真实点击/触屏 tap/自动化工具派发的 click
+  onCardClick(event: MouseEvent, cardId: number) {
     if (this.disabled) return;
-    const target = (event.target as Element)?.closest?.('.tarot-scene-card') || this.pickCardAt(event.clientX, event.clientY);
-    if (!target) return;
-    const deckId = Number((target as HTMLElement).dataset.deckId);
-    if (Number.isFinite(deckId)) this.onToggleCard(deckId);
+    // 拖动刚结束（80ms 内）→ 视为 drag 末端，忽略
+    if (performance.now() - this.lastDragAt < 80) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    this.onToggleCard(cardId);
+  }
+
+  // root 上的兜底（处理 button 被包一层的情况）：根据事件坐标找最近牌背
+  onRootClick(event: MouseEvent) {
+    if (this.disabled) return;
+    if (performance.now() - this.lastDragAt < 80) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    // 优先用 DOM closest；触屏上 setPointerCapture 会把 click 目标重定向到 root，
+    // 此时 closest 找不到牌背，改用坐标拾取兜底。
+    const target = (event.target as Element)?.closest?.('.tarot-scene-card') as HTMLElement | null;
+    const deckId = target
+      ? Number(target.dataset.deckId)
+      : Number(this.pickCardAt(event.clientX, event.clientY)?.dataset.deckId);
+    if (!Number.isFinite(deckId) || deckId < 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.onToggleCard(deckId);
   }
 
   pickCardAt(clientX: number, clientY: number): HTMLButtonElement | null {
@@ -370,6 +429,7 @@ class TarotSceneEngine {
     this.root.removeEventListener('pointermove', this.onPointerMove);
     this.root.removeEventListener('pointerup', this.onPointerUp);
     this.root.removeEventListener('pointercancel', this.onPointerUp);
+    this.root.removeEventListener('click', this.onRootClick, true);
     this.root.removeEventListener('wheel', this.onWheel);
     window.removeEventListener('resize', this.onResize);
     this.root.remove();
@@ -377,10 +437,10 @@ class TarotSceneEngine {
 }
 
 /**
- * 3D 漂浮牌阵（仿"夜莺塔罗" TarotScene）：
+ * 3D 漂浮牌阵 TarotScene：
  * - 78 张卡背分为前/中/后 3 层，在 3D 空间（perspective 900px）中无限循环流动
  * - 拖动平移（横向跟随 + 纵向微调），双指/滚轮缩放
- * - 点选牌背（TAP_SLOP 容差区分拖拽与点击），选中金色光环高亮
+ * - 点选牌背（TAP_SLOP 容差区分拖拽与点击），选中雾粉光环高亮
  * - 牌序打乱，卡背无牌名
  */
 export default function TarotScene({ maxSelect, selectedIds, onToggleCard, disabled }: TarotSceneProps) {

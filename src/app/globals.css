@@ -1,7 +1,46 @@
 @import "tailwindcss";
 
-/* ===== Oracle 设计令牌（astral-void 为默认主题）===== */
+/* ===== 响应式基础 =====
+   固定 16px 根字号，避免 100vw 包含滚动条导致右侧溢出。
+   各组件用 clamp() 自行做响应式缩放。
+*/
+html {
+  font-size: 16px;
+  overflow-x: clip;
+}
+
+body {
+  overflow-x: clip;
+  max-width: 100%;
+}
+
+/* ===== Oracle 设计令牌（rose-mist 黑粉为唯一默认主题）===== */
 :root,
+[data-theme="rose-mist"] {
+  /* Rose Mist —— 近黑 + 低饱和雾粉 + 冷白 */
+  --void: #080709;
+  --void-deep: #040304;
+  --surface: #0e0b0e;
+  --mystic: #150d12;
+  --accent: #d9a8b8;
+  --accent-soft: #f0dde3;
+  --accent-dim: #a3808f;
+  --frost: #eae5e9;
+  --muted: #9a9098;
+  --metal: #cbb0ba;
+  --particle-a: #d9a8b8;
+  --particle-b: #f0e6ea;
+  --glow-primary: #d9a8b833;
+  --glow-secondary: #f0dde31c;
+  --fog: #080709;
+  --card-back-from: #150d12;
+  --card-back-to: #040304;
+  --glass: #0b090cb3;
+  --border-subtle: #e8c4d11f;
+  --background: var(--void);
+  --foreground: var(--frost);
+}
+
 [data-theme="astral-void"] {
   --void: #050505;
   --void-deep: #030308;
@@ -24,28 +63,6 @@
   --border-subtle: #ffffff14;
   --background: var(--void);
   --foreground: var(--frost);
-}
-
-[data-theme="rose-mist"] {
-  --void: #050505;
-  --void-deep: #030308;
-  --surface: #0a0a0c;
-  --mystic: #140810;
-  --accent: #e8b4c4;
-  --accent-soft: #fff0f4;
-  --accent-dim: #c9899e;
-  --frost: #e8e6f0;
-  --muted: #8b8798;
-  --metal: #f5c6d4;
-  --particle-a: #e8b4c4;
-  --particle-b: #fff5f8;
-  --glow-primary: #f5c4d25c;
-  --glow-secondary: #ffecf23d;
-  --fog: #050505;
-  --card-back-from: #140810;
-  --card-back-to: #050505;
-  --glass: #08080ab8;
-  --border-subtle: #ffffff14;
 }
 
 [data-theme="matcha-sanctuary"] {
@@ -104,15 +121,31 @@
   --color-frost: var(--frost);
   --color-muted: var(--muted);
   --color-metal: var(--metal);
-  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
-    var(--font-noto-serif-sc), serif;
+  --font-display: var(--font-playfair), "Iowan Old Style", "Palatino Linotype",
+    Palatino, Georgia, var(--font-noto-serif-sc), serif;
 }
 
+/* Tailwind Preflight 已负责 margin reset；不要在 utilities 之后再次用 * 覆盖 mx-auto / mt-* / mb-* */
 * {
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
+}
+
+*, *::before, *::after {
+  min-width: 0;
+}
+
+img, video, canvas, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+button, a, input, textarea, select {
+  max-width: 100%;
+}
+
+p, h1, h2, h3, h4, h5, h6, button, a {
+  overflow-wrap: anywhere;
 }
 
 html {
@@ -137,8 +170,8 @@ body {
 
 /* ===== 核心工具类 ===== */
 .font-display {
-  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
-    var(--font-noto-serif-sc), "Source Han Serif SC", serif;
+  font-family: var(--font-playfair), "Iowan Old Style", "Palatino Linotype",
+    Palatino, Georgia, var(--font-noto-serif-sc), "Source Han Serif SC", serif;
 }
 
 .glass-panel {
@@ -146,6 +179,224 @@ body {
   border: 1px solid var(--border-subtle);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
+}
+
+/* ===== Liquid Glass（渐变描边玻璃拟态，磨砂质感优化）===== */
+.liquid-glass {
+  position: relative;
+  overflow: hidden;
+  background: rgba(10, 8, 11, 0.55);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+.liquid-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.4px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0.15) 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0) 60%,
+    rgba(255, 255, 255, 0.15) 80%,
+    rgba(255, 255, 255, 0.45) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.liquid-glass-strong {
+  position: relative;
+  overflow: hidden;
+  background: rgba(10, 8, 11, 0.72);
+  -webkit-backdrop-filter: blur(28px) saturate(1.5);
+  backdrop-filter: blur(28px) saturate(1.5);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.35),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+}
+
+.liquid-glass-strong::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.4px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0.2) 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0) 60%,
+    rgba(255, 255, 255, 0.2) 80%,
+    rgba(255, 255, 255, 0.5) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ===== 统一按钮体系（Rose Mist）=====
+   .btn-rose  —— 唯一的主行动按钮（低饱和雾粉渐变底）
+   .btn-ghost —— 次级行动（透明底 + 细边框）
+   .btn-text  —— 弱链接（纯文字）
+*/
+.btn-rose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.95rem 2.6rem;
+  border: none;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #e6c2cf 0%, #d3a0b2 55%, #b18194 100%);
+  color: #1c1014;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 240, 244, 0.5);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease, filter 0.3s ease;
+}
+
+.btn-rose:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.06);
+  box-shadow:
+    0 14px 36px rgba(0, 0, 0, 0.45),
+    0 0 22px rgba(217, 168, 184, 0.22),
+    inset 0 1px 0 rgba(255, 240, 244, 0.55);
+}
+
+.btn-rose:active {
+  transform: translateY(0);
+}
+
+.btn-rose--sm {
+  padding: 0.6rem 1.6rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.95rem 2.4rem;
+  border: 1px solid rgba(234, 229, 233, 0.18);
+  border-radius: 9999px;
+  background: rgba(234, 229, 233, 0.03);
+  color: var(--frost);
+  font-size: 0.95rem;
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-ghost:hover {
+  border-color: rgba(234, 229, 233, 0.36);
+  background: rgba(234, 229, 233, 0.06);
+}
+
+.btn-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.btn-text:hover {
+  color: var(--frost);
+}
+
+/* ===== Frosted Card（仿 Labyrinthos 高级磨砂玻璃卡片）=====
+   半透明深紫/深红玻璃底 + 强模糊 + 细边框 + 顶部内高光，
+   hover 时雾粉描边、上浮、外发光 —— 质感的核心载体。
+*/
+.frosted-card {
+  position: relative;
+  background: color-mix(in srgb, var(--surface) 52%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(1.45);
+  backdrop-filter: blur(24px) saturate(1.45);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 1.25rem;
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.35s ease,
+    box-shadow 0.35s ease,
+    background 0.35s ease;
+}
+
+.frosted-card:hover {
+  transform: translateY(-5px);
+  background: color-mix(in srgb, var(--surface) 68%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.38),
+    0 0 18px color-mix(in srgb, var(--accent) 12%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* ===== 磨砂噪点覆盖层（film grain）=====
+   用 SVG feTurbulence 噪点做极低透明度的颗粒覆盖，
+   让整站画面有"磨砂胶片"的颗粒质感，而不是纯平的数字色块。
+*/
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+/* ===== 大气标题：衬线斜体点缀（Cormorant Garamond 斜体，仿 Labyrinthos） ===== */
+.font-display-italic {
+  font-family: var(--font-cormorant), var(--font-playfair),
+    "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
+    var(--font-noto-serif-sc), "Source Han Serif SC", serif;
+  font-style: italic;
+  font-weight: 300;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liquid-glass,
+  .liquid-glass-strong {
+    backdrop-filter: none;
+  }
 }
 
 .shadow-glow {
@@ -301,6 +552,7 @@ body {
 }
 
 /* ===== Oracle 动画库 ===== */
+
 @keyframes card-back-holo-shift {
   0%,
   to {
@@ -420,6 +672,18 @@ body {
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-20px); }
+}
+
+/* 渐进式解读：板块淡入上浮 */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hero 背景装饰大字 —— 浮动幅度由 --drift 控制 */
+@keyframes float-word {
+  0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+  50% { transform: translateY(calc(var(--drift, 16px) * -1)) rotate(1deg); }
 }
 
 @keyframes fade-in-up {
@@ -715,6 +979,46 @@ body {
   will-change: transform, opacity, filter;
   transition: filter 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
   -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+
+/* 鎏金卡背图（古籍版画风） */
+.tarot-scene-card-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* 鎏金流光：一道暖金高光斜扫过牌面，循环播放，相位错开 */
+.tarot-scene-card-sheen {
+  content: '';
+  position: absolute;
+  inset: -40%;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 32%,
+    rgba(255, 226, 160, 0.05) 42%,
+    rgba(255, 233, 180, 0.28) 50%,
+    rgba(195, 173, 122, 0.16) 55%,
+    transparent 65%
+  );
+  transform: translateX(-120%);
+  animation: gilt-sheen 5.6s cubic-bezier(0.45, 0.08, 0.55, 0.92) infinite;
+  animation-delay: var(--gilt-phase, 0s);
+  mix-blend-mode: screen;
+}
+
+@keyframes gilt-sheen {
+  0%   { transform: translateX(-130%) rotate(0.001deg); }
+  55%  { transform: translateX(130%) rotate(0.001deg); }
+  100% { transform: translateX(130%) rotate(0.001deg); }
 }
 
 .tarot-scene-card::before {
@@ -733,8 +1037,44 @@ body {
   box-shadow:
     0 12px 24px rgba(0, 0, 0, 0.62),
     0 0 18px var(--glow-primary),
-    0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    0 0 0 1px color-mix(in srgb, #c3ad7a 70%, transparent),
+    inset 0 0 0 1px rgba(255, 233, 180, 0.22);
+}
+
+.tarot-scene-card.selected .tarot-scene-card-sheen {
+  animation-duration: 1.8s;
+}
+
+/* 选中卡牌：镜面反光特效（高光带快速扫过，比普通流光更亮、更像镜面反射） */
+.tarot-scene-card.selected .tarot-scene-card-sheen {
+  background: linear-gradient(
+    115deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.12) 38%,
+    rgba(255, 244, 214, 0.62) 50%,
+    rgba(255, 244, 214, 0.18) 62%,
+    transparent 80%
+  );
+  mix-blend-mode: screen;
+}
+
+/* 选中卡牌：镜面高光带边缘（更强的反光描边） */
+.tarot-scene-card.selected::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 7px;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.10) 0%,
+    transparent 30%,
+    transparent 70%,
+    rgba(255, 244, 214, 0.28) 100%
+  );
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 244, 214, 0.35),
+    inset 0 0 22px rgba(255, 244, 214, 0.18);
 }
 
 .tarot-scene-card.selected::before {
@@ -747,15 +1087,17 @@ body {
 
 .tarot-scene-host {
   width: 100%;
-  height: 440px;
+  /* 一屏内可见：保留放大尺寸(745px)，但视口不够高时自动收缩，保证底部按钮不被推出屏幕 */
+  height: min(745px, calc(100vh - 7rem));
+  height: min(745px, calc(100svh - env(safe-area-inset-top, 0px) - 7rem));
   border-radius: 18px;
-  background: radial-gradient(ellipse at 50% 40%, var(--glow-secondary), transparent 70%);
-}
-
-@media (max-width: 767px) {
-  .tarot-scene-host {
-    height: 380px;
-  }
+  /* 干净通透的深色背景：无灰雾、无杂色，仅一层柔和暖光从中央晕开 */
+  background:
+    radial-gradient(ellipse 62% 48% at 50% 42%, rgba(217, 168, 184, 0.07), transparent 68%),
+    linear-gradient(180deg, #0d0a10 0%, #07060a 52%, #0a070d 100%);
+  box-shadow:
+    inset 0 0 80px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 /* ===== 旧按钮类 → Oracle 风格 ===== */
@@ -839,6 +1181,20 @@ body {
 }
 
 /* ===== 响应式 ===== */
+@media (min-width: 1280px) {
+  .tarot-card-container {
+    width: clamp(140px, 10vw, 176px);
+    height: clamp(240px, 17vw, 300px);
+  }
+}
+
+@media (max-width: 1024px) {
+  .tarot-card-container {
+    width: clamp(7rem, 16vw, 9rem);
+    height: clamp(12rem, 23vw, 15rem);
+  }
+}
+
 @media (max-width: 768px) {
   .tarot-card-container {
     width: 110px;
@@ -853,9 +1209,21 @@ body {
 
   .btn-mystic,
   .btn-outline {
-    padding: 12px 20px;
+    padding: 0.75rem 1.25rem;
     font-size: 0.85rem;
-    white-space: nowrap;
+    white-space: normal;
+  }
+
+  .shuffle-stack {
+    width: min(13.75rem, 75vw);
+  }
+}
+
+@media (max-width: 1024px) {
+  .tarot-scene-host {
+    /* 平板/手机：放大尺寸 610px，视口不够高时收缩，保证底部按钮一屏可见 */
+    height: min(610px, calc(100vh - 6.5rem));
+    height: min(610px, calc(100svh - env(safe-area-inset-top, 0px) - 6.5rem));
   }
 }
 
@@ -1027,6 +1395,9 @@ body {
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 /* ===== 呼吸冥想 ===== */
@@ -1061,7 +1432,7 @@ body {
   font-family: var(--font-noto-serif-sc), serif;
 }
 
-.text-gradient-gold {
+.text-gradient-rose {
   background: linear-gradient(90deg, var(--muted), var(--frost), var(--muted));
   background-size: 300% auto;
   -webkit-background-clip: text;

@@ -9,7 +9,7 @@ interface Props {
 
 /**
  * 简化牌阵示意图：按牌数画卡背小方块，标注序号。
- * 1: 居中 · 3: 一行 · 4: 2x2 · 5: 十字 · 6: 2x3 · 7: 3+4 · 10: 凯尔特经典布局
+ * 1: 居中 · 3: 一行 · 4: 2x2 · 5: 十字 · 6: 2x3 · 7: 3+4 · 10: 经典十字布局
  */
 export default function SpreadDiagram({ spread }: Props) {
   const count = spread.count;
@@ -55,7 +55,7 @@ export default function SpreadDiagram({ spread }: Props) {
           { x: 38, y: 140 }, { x: 88, y: 140 }, { x: 138, y: 140 }, { x: 188, y: 140 },
         ];
       case 10:
-        // 凯尔特十字简化：左列4 中列5(十字) 右列1
+        // 十字简化：左列4 中列5(十字) 右列1
         return [
           { x: 35, y: 50 }, { x: 35, y: 110 }, { x: 35, y: 170 }, { x: 35, y: 230 },
           { x: 105, y: 80 }, { x: 105, y: 130 }, { x: 105, y: 180 }, // 中心横竖（十字）
