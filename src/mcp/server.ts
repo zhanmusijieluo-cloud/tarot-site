@@ -5,9 +5,9 @@ import { CARD_MYSTIC } from '@/lib/card-mystic';
 import { localizedCardName } from '@/lib/card-names';
 import { createClient } from '@supabase/supabase-js';
 
-// AI 解读引擎：按优先级依次尝试。B.AI（免费 deepseek-v4-flash 视觉版）额度用尽/报错时自动回退 agnes。
+// AI 解读引擎：按优先级依次尝试。B.A.I（qwen3.8-flash，经 api.bankofai.io）额度用尽/报错时自动回退 agnes。
 const ENGINES = [
-  { name: 'bai', apiKey: process.env.BAI_API_KEY, url: 'https://api.b.ai/v1/chat/completions', model: 'deepseek-v4-flash-vision-exp' },
+  { name: 'bai', apiKey: process.env.BAI_API_KEY, url: 'https://api.bankofai.io/v1/chat/completions', model: 'qwen3.8-flash' },
   { name: 'agnes', apiKey: process.env.AGNES_API_KEY, url: 'https://apihub.agnes-ai.com/v1/chat/completions', model: 'agnes-2.5-flash' },
 ].filter((e): e is { name: string; apiKey: string; url: string; model: string } => !!e.apiKey);
 
