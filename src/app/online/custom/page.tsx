@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BookmarkPlus, RotateCcw, Trash2, Undo2, X } from 'lucide-react';
 import PageShell, { Reveal } from '@/components/PageShell';
+import OfflineInterpretSection from '@/components/OfflineInterpretSection';
 import { useI18n } from '@/i18n';
 
 /** 自定义牌阵格位（布阵页与解读室共用的数据结构） */
@@ -49,6 +50,7 @@ export default function CustomPage() {
   const [spreadName, setSpreadName] = useState('');
   const [savedSpreads, setSavedSpreads] = useState<SavedSpread[]>([]);
   const [showSave, setShowSave] = useState(false);
+  const [step, setStep] = useState<'build' | 'offline'>('build');
 
   // 载入本地保存的牌阵列表
   useEffect(() => {
@@ -90,12 +92,13 @@ export default function CustomPage() {
     setNameDraft(cells[idx]?.name ?? '');
   };
 
-  // 保存牌位名
+  // 保存牌位名（保存后自动关闭面板）
   const saveName = () => {
     if (activeIdx === null) return;
     const next = [...cells];
     next[activeIdx] = { ...next[activeIdx], name: nameDraft.trim() || undefined };
     setCells(next);
+    setActiveIdx(null);
   };
 
   // 移除某一张（其余自动重新编号）
@@ -131,6 +134,13 @@ export default function CustomPage() {
     router.push(`/online?spread=custom&count=${count}&layout=${payload}&q=${encodeURIComponent(question)}&bg=${encodeURIComponent(background)}`);
   };
 
+  // 我已抽牌：同页切到线下填牌（保留已布好的格子/问题背景，返回不丢）
+  const startOffline = () => {
+    if (!cells.length) return;
+    setStep('offline');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const gridRows = Array.from({ length: 8 }, (_, i) => i);
   const gridCols = Array.from({ length: MAX_COLS }, (_, i) => i);
 
@@ -158,6 +168,28 @@ export default function CustomPage() {
       width: popW,
     } as React.CSSProperties;
   }, [activeIdx, cells]);
+
+  if (step === 'offline') {
+    return (
+      <PageShell
+        label="自定义牌阵"
+        title={spreadName || '自定义牌阵'}
+        subtitle="已从布阵页带入真实位置与问题背景，逐张填入你的牌即可。"
+      >
+        <OfflineInterpretSection
+          presetCustomCount={count}
+          presetCustomPositions={cells.map((c, i) => c.name || `第${i + 1}张`).join(',')}
+          presetCustomCells={cells}
+          customName={spreadName || undefined}
+          presetQuestion={question}
+          presetBackground={background}
+          hideCustomSettings
+          hideQuestionInput
+          onBack={() => { setStep('build'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+        />
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell
@@ -409,14 +441,23 @@ export default function CustomPage() {
           </div>
         </div>
 
-        {/* 开始占卜：直接进入抽牌系统 */}
-        <button
-          onClick={startReading}
-          disabled={!cells.length}
-          className={`glass-btn-primary w-full text-center text-sm tracking-[0.2em] ${!cells.length ? 'opacity-40' : ''}`}
-        >
-          {t('online.start')} →
-        </button>
+        {/* 开始占卜 / 我已抽牌 并排 */}
+        <div className="flex w-full flex-col gap-3 sm:flex-row">
+          <button
+            onClick={startReading}
+            disabled={!cells.length}
+            className={`glass-btn-primary flex-1 text-center text-sm tracking-[0.2em] ${!cells.length ? 'opacity-40' : ''}`}
+          >
+            {t('online.start')} →
+          </button>
+          <button
+            onClick={startOffline}
+            disabled={!cells.length}
+            className={`liquid-glass flex-1 rounded-full px-6 py-4 text-sm tracking-[0.2em] text-frost transition-all hover:bg-white/[0.04] ${!cells.length ? 'opacity-40' : ''}`}
+          >
+            线下抽牌
+          </button>
+        </div>
       </Reveal>
     </PageShell>
   );

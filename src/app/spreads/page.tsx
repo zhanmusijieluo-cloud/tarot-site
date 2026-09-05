@@ -77,9 +77,9 @@ export default function SpreadsPage() {
             const theme = themeLabels[spread.theme];
             return (
               <Reveal key={key} delay={(i % 3) * 80}>
-                <button
+                <div
                   onClick={() => router.push(`/online/spread/${key}`)}
-                  className="group h-full w-full rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 text-left transition-all duration-300 hover:border-accent/30 hover:bg-accent/[0.05]"
+                  className="group h-full w-full cursor-pointer rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 text-left transition-all duration-300 hover:border-accent/30 hover:bg-accent/[0.05]"
                 >
                   <div className="flex items-baseline justify-between">
                     <span className="text-[10px] tracking-[0.25em] text-accent/70 uppercase">
@@ -96,20 +96,29 @@ export default function SpreadsPage() {
                   <p className="mt-3 text-[12px] leading-relaxed text-muted/90">
                     {spreadDescription(key, spread.description, lang, t)}
                   </p>
-                  <div className="mt-4 flex flex-wrap gap-1.5">
+                  <div className="mt-3 flex flex-wrap gap-1.5">
                     {spreadPositions(key, spread.positions, lang, t).map((p) => (
-                      <span
-                        key={p}
-                        className="rounded-full border border-white/[0.08] px-2.5 py-0.5 text-[10px] text-muted/80"
-                      >
+                      <span key={p} className="rounded-full border border-white/[0.08] px-2.5 py-0.5 text-[10px] text-muted/80">
                         {p}
                       </span>
                     ))}
                   </div>
-                </button>
+                </div>
               </Reveal>
             );
           })}
+          <Reveal>
+            <button
+              onClick={() => router.push('/offline')}
+              className="flex h-full w-full cursor-pointer flex-col rounded-2xl border border-dashed border-accent/30 p-5 text-left transition-all duration-300 hover:border-accent/60 hover:bg-accent/[0.04]"
+            >
+              <span className="text-[10px] tracking-[0.25em] text-accent/70 uppercase">自定义</span>
+              <h3 className="font-display mt-2.5 text-base tracking-[0.1em] text-accent">自定义牌阵</h3>
+              <p className="mt-1 text-xs text-muted">自由设置张数与牌位含义</p>
+              <p className="mt-3 text-[12px] leading-relaxed text-muted/90">自定张数（1-10）、自定牌位，填入你线下摆好的牌，AI 深度解读。</p>
+              <span className="mt-4 text-xs tracking-[0.15em] text-accent/80">线下抽牌 · 去填牌 →</span>
+            </button>
+          </Reveal>
         </div>
       </section>
     </PageShell>

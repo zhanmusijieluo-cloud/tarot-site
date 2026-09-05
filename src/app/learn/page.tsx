@@ -24,9 +24,9 @@ export default function LearnPage() {
   const { t, lang } = useI18n();
   const [activeSuit, setActiveSuit] = useState<string | null>(null);
 
-  // 学习路径：保留两个模块
+  // 学习路径：实战技巧已上线（读库），神话原型待续
   const SECTIONS: { id: string; icon: string; titleKey: string; descKey: string; route: string | null }[] = [
-    { id: 'practice', icon: '📚', titleKey: 'learn.section.practice', descKey: 'learn.desc.practice', route: null },
+    { id: 'practice', icon: '📚', titleKey: 'learn.section.practice', descKey: 'learn.desc.practice', route: '/learn/practice' },
     { id: 'myth', icon: '🏛️', titleKey: 'learn.section.myth', descKey: 'learn.desc.myth', route: null },
   ];
 
@@ -48,13 +48,18 @@ export default function LearnPage() {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {SECTIONS.map((s, i) => (
             <Reveal key={s.id} delay={(i % 4) * 70}>
-              <div className="h-full rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
+              <div
+                onClick={() => s.route && router.push(s.route)}
+                className={`h-full rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 transition-all duration-300 ${s.route ? 'cursor-pointer hover:border-accent/30 hover:bg-accent/[0.04]' : ''}`}
+              >
                 <span className="text-xl opacity-80">{s.icon}</span>
                 <h3 className="font-display mt-3 text-sm tracking-[0.12em] text-frost">
                   {t(s.titleKey)}
                 </h3>
                 <p className="mt-1.5 text-[11px] leading-relaxed text-muted">{t(s.descKey)}</p>
-                <span className="mt-3 block text-xs tracking-[0.1em] text-muted/60">{t('learn.comingSoon')}</span>
+                <span className="mt-3 block text-xs tracking-[0.1em] text-muted/60">
+                  {s.route ? `${t('learn.enter')} →` : t('learn.comingSoon')}
+                </span>
               </div>
             </Reveal>
           ))}

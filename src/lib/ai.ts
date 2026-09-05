@@ -21,6 +21,8 @@ export interface InterpretPayload {
   question: string;
   spreadName?: string;
   positions?: string[];
+  /** 问卜者背景/补充情况（可选，解读更贴合） */
+  background?: string;
   /** 输出语言（跟随站点语言）：en/zh/ja */
   lang?: string;
 }
@@ -45,6 +47,7 @@ export async function requestInterpret(payload: InterpretPayload): Promise<Inter
       question: payload.question,
       spreadName: payload.spreadName,
       positions: payload.positions,
+      background: payload.background,
       lang: payload.lang,
     }),
   });
@@ -64,7 +67,8 @@ export function toPayload(
   question: string,
   spreadName?: string,
   positions?: readonly string[],
-  lang?: string
+  lang?: string,
+  background?: string
 ): InterpretPayload {
   return {
     cards: cards.map((c) => ({
@@ -78,5 +82,6 @@ export function toPayload(
     spreadName,
     positions: positions ? [...positions] : undefined,
     lang,
+    background,
   };
 }

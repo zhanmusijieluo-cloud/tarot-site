@@ -5,6 +5,7 @@ import { ChevronRight, Compass, Gem, Lightbulb, RotateCcw, Sparkles } from 'luci
 import PageShell, { Reveal } from '@/components/PageShell';
 import { useRouter, useSearchParams } from 'next/navigation';
 import TarotScene from '@/components/TarotScene';
+import OfflineInterpretSection from '@/components/OfflineInterpretSection';
 import { TAROT_DECK, SPREADS, type DrawnCard, type Spread } from '@/lib/tarot';
 import { spreadSubtitle, spreadPositions } from '@/lib/spread-i18n';
 import { useI18n } from '@/i18n';
@@ -18,6 +19,8 @@ interface CustomCell {
   cols: number;
   name?: string;
 }
+
+const CARD_BACK = '/cards/card-back-new.webp';
 
 const SPREAD_OPTIONS = [
   { id: 'single', nameKey: 'online.spread.single', count: 1, subtitleKey: 'online.spread.singleSub', theme: 'general' },
@@ -59,7 +62,9 @@ function OnlineInner() {
   const [background, setBackground] = useState(searchParams.get('bg') ?? '');
   const [cards, setCards] = useState<DrawnCard[]>([]);
   const [selectedCount, setSelectedCount] = useState(0);
+  const [offline, setOffline] = useState(false);
   const deckRef = useRef<number[]>([]);
+  const offlineRef = useRef<HTMLDivElement>(null);
   const selectedRef = useRef<Set<number>>(new Set());
 
   const spread: Spread | null = useMemo(
@@ -99,6 +104,22 @@ function OnlineInner() {
     setSelectedCount(0);
     setCards([]);
     setStage('draw');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // 落地页「在线抽牌」：三张无牌阵 → 进入抽牌
+  const startOnline = () => {
+    setSelectedSpread('quick');
+    setOffline(false);
+    doShuffle();
+  };
+
+  // 落地页「线下抽牌」：内嵌线下填牌，并滚到该区域（避免在下方被忽略）
+  const startOffline = () => {
+    setOffline(true);
+    requestAnimationFrame(() => {
+      offlineRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   };
 
   // 选牌（quick 模式从空牌池直接点选，同步维护 deckRef）
@@ -165,82 +186,76 @@ function OnlineInner() {
       {/* 目录 */}
       {stage === 'catalogue' && (
         <section>
+          {/* 三张无牌阵 · 卡背预览（横排摆好） */}
           <Reveal>
-            <h2 className="font-display text-lg tracking-[0.15em] text-frost/90 mb-6">
-              <Compass className="mr-2 inline-block h-4 w-4 text-accent" aria-hidden="true" />{t('online.selectSpread')}
-            </h2>
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-6 py-10 sm:px-10">
+              <h2 className="font-display mb-8 text-center text-lg tracking-[0.15em] text-frost/90">三张无牌阵</h2>
+              <div className="flex items-center justify-center gap-5 sm:gap-7">
+                {[0, 1, 2].map((i) => (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img key={i} src={CARD_BACK} alt="" className="w-[80px] rounded-lg shadow-md shadow-black/50 sm:w-[96px]" />
+                ))}
+              </div>
+            </div>
           </Reveal>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {/* 自定义牌阵：置顶第一项，点击进入布阵页 */}
-            <Reveal>
-              <button
-                onClick={() => router.push('/online/custom')}
-                className="group h-full w-full rounded-2xl border border-dashed border-accent/40 bg-accent/[0.04] p-5 text-left transition-all duration-300 hover:border-accent/70 hover:bg-accent/[0.08]"
-              >
-                <div className="flex items-baseline justify-between">
-                  <span className="text-[10px] tracking-[0.25em] text-accent/70 uppercase">
-                    <Sparkles className="mr-1 inline-block h-3 w-3" aria-hidden="true" /> · {t('online.customSpreadCount')}
-                  </span>
-                </div>
-                <h3 className="font-display mt-2 text-base tracking-[0.1em] text-frost">{t('online.customSpread')}</h3>
-                <p className="mt-1 text-xs text-muted">{t('online.customSpreadSub')}</p>
+
+          {/* 问题 + 背景 */}
+          <Reveal delay={120}>
+            <div className="mt-6 grid gap-5 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6 sm:p-8 lg:grid-cols-2">
+              <div>
+                <label htmlFor="online-question" className="font-display mb-3 block text-sm tracking-[0.2em] text-frost">{t('quick.questionLabel')}</label>
+                <textarea
+                  id="online-question"
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  placeholder={t('quick.questionPlaceholder')}
+                  maxLength={120}
+                  rows={4}
+                  className="w-full resize-none rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm leading-relaxed text-frost placeholder:text-muted/50 focus:border-accent/40 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label htmlFor="online-bg" className="font-display mb-3 block text-sm tracking-[0.2em] text-frost">{t('quick.bgLabel')}</label>
+                <textarea
+                  id="online-bg"
+                  value={background}
+                  onChange={(e) => setBackground(e.target.value)}
+                  placeholder={t('quick.bgPlaceholder')}
+                  maxLength={300}
+                  rows={4}
+                  className="w-full resize-none rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm leading-relaxed text-frost placeholder:text-muted/50 focus:border-accent/40 focus:outline-none"
+                />
+              </div>
+            </div>
+          </Reveal>
+
+          {/* 在线 / 线下 */}
+          <Reveal delay={200}>
+            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:items-stretch sm:justify-center">
+              <button onClick={startOnline} className="glass-btn-primary w-full text-sm tracking-[0.25em] sm:w-auto sm:px-12">
+                <Sparkles className="mr-2 inline-block h-4 w-4" aria-hidden="true" />{t('quick.start')}
               </button>
-            </Reveal>
-            {/* 来自推荐牌阵的指定牌阵：不在常规选项中时单独显示在首位并预选高亮 */}
-            {presetSpread && !SPREAD_OPTIONS.some((s) => s.id === presetSpread) && SPREADS[presetSpread] && (
-              <Reveal>
-                <button
-                  onClick={() => setSelectedSpread(presetSpread)}
-                  className="h-full w-full rounded-2xl border border-accent/50 bg-accent/15 p-5 text-left transition-all duration-300"
-                >
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-[10px] tracking-[0.25em] text-accent/70 uppercase">
-                      · {t('common.cardsCount', { count: SPREADS[presetSpread].count })}
-                    </span>
-                  </div>
-                  <h3 className="font-display mt-2 text-base tracking-[0.1em] text-frost">{t(`spread.${presetSpread}`)}</h3>
-                  <p className="mt-1 text-xs text-muted">{spreadSubtitle(presetSpread, SPREADS[presetSpread].subtitle, lang, t)}</p>
-                </button>
-              </Reveal>
-            )}
-            {SPREAD_OPTIONS.map((s, i) => (
-              <Reveal key={s.id} delay={i * 80}>
-                <button
-                  onClick={() => setSelectedSpread(s.id)}
-                  className={`group h-full w-full rounded-2xl border p-5 text-left transition-all duration-300 ${
-                    selectedSpread === s.id
-                      ? 'border-accent/50 bg-accent/15'
-                      : 'border-white/[0.06] bg-white/[0.02] hover:border-accent/30'
-                  }`}
-                >
-                  <div className="flex items-baseline justify-between">
-                    <span className="text-[10px] tracking-[0.25em] text-accent/70 uppercase">
-                      {s.theme === 'love' ? <Sparkles className="mr-1 inline-block h-3 w-3" aria-hidden="true" /> : s.theme === 'career' ? <Lightbulb className="mr-1 inline-block h-3 w-3" aria-hidden="true" /> : <Gem className="mr-1 inline-block h-3 w-3" aria-hidden="true" />} · {t('common.cardsCount', { count: s.count })}
-                    </span>
-                  </div>
-                  <h3 className="font-display mt-2 text-base tracking-[0.1em] text-frost">{t(s.nameKey)}</h3>
-                  <p className="mt-1 text-xs text-muted">{t(s.subtitleKey)}</p>
-                </button>
-              </Reveal>
-            ))}
-          </div>
-          <Reveal delay={500}>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-              <textarea
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                placeholder={t('online.question')}
-                maxLength={60}
-                className="flex-1 rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm text-frost placeholder:text-muted/50 focus:border-accent/40 focus:outline-none"
-              />
-              <button
-                onClick={doShuffle}
-                className="glass-btn-primary whitespace-nowrap text-sm tracking-[0.2em]"
-              >
-                {t('online.start')}
+              <button onClick={startOffline} className="liquid-glass w-full rounded-full px-8 py-4 text-sm tracking-[0.2em] text-frost transition-all hover:bg-white/[0.04] sm:w-auto sm:px-10">
+                线下抽牌
               </button>
             </div>
           </Reveal>
+
+          {/* 线下抽牌 → 内嵌线下填牌（三张无牌阵） */}
+          {offline && (
+            <div ref={offlineRef} className="mt-2">
+              <OfflineInterpretSection
+                presetCustomCount={3}
+                presetCustomPositions="第一张,第二张,第三张"
+                customName="三张无牌阵"
+                presetQuestion={question}
+                presetBackground={background}
+                hideCustomSettings
+                hideQuestionInput
+                onBack={() => { setOffline(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              />
+            </div>
+          )}
         </section>
       )}
 
