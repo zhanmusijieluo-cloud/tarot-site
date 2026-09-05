@@ -68,6 +68,19 @@ export default function PracticeArticlePage() {
 
   const content = contentOf(article);
 
+  // 行内 **加粗** 渲染（正文存库为轻量 markdown：# / ## / - / **bold**）
+  const Rich = ({ text }: { text: string }) => (
+    <>
+      {text.split(/(\*\*[^*]+\*\*)/g).map((s, k) =>
+        s.startsWith('**') && s.endsWith('**') && s.length > 4 ? (
+          <strong key={k} className="font-medium text-frost">{s.slice(2, -2)}</strong>
+        ) : (
+          <span key={k}>{s}</span>
+        )
+      )}
+    </>
+  );
+
   return (
     <PageShell
       label={t(`learn.practice.cat.${article.category}`)}
@@ -93,11 +106,11 @@ export default function PracticeArticlePage() {
                 const lines = p.split('\n').map((l) => l.replace(/^- /, ''));
                 return (
                   <ul key={i} className="list-disc space-y-1.5 pl-6 text-muted">
-                    {lines.map((l, j) => <li key={j}>{l}</li>)}
+                    {lines.map((l, j) => <li key={j}><Rich text={l} /></li>)}
                   </ul>
                 );
               }
-              return <p key={i}>{p}</p>;
+              return <p key={i}><Rich text={p} /></p>;
             })}
           </article>
         </Reveal>
