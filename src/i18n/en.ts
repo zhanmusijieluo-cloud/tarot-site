@@ -565,6 +565,7 @@ const en: Record<string, string> = {
   'learn.practice.back': 'Back to Practical Skills',
   'learn.practice.notFound': 'This article does not exist yet',
   'learn.practice.writing': 'Content is being written — stay tuned',
+  'learn.practice.toc': 'Contents · tap to jump',
   'learn.practice.cat.foundation': 'Foundations',
   'learn.practice.cat.advanced': 'Advanced',
   'learn.practice.cat.practice': 'In Practice',

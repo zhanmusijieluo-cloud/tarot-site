@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import PageShell, { Reveal } from '@/components/PageShell';
 import { supabaseBrowser } from '@/lib/supabase';
@@ -21,12 +21,32 @@ interface Article {
   content_ja: string;
 }
 
+/** 把正文按 ## 切成章节（开头无 ## 的部分作为引言） */
+interface Section {
+  id: string;
+  title: string;
+  body: string;
+}
+
+function splitSections(content: string): { intro: string; sections: Section[] } {
+  const blocks = content.split(/\n(?=## )/);
+  const intro = !blocks[0]?.startsWith('## ') ? (blocks.shift() ?? '') : '';
+  const sections = blocks.map((b, i) => {
+    const nl = b.indexOf('\n');
+    const title = (nl === -1 ? b.slice(3) : b.slice(3, nl)).trim();
+    const body = nl === -1 ? '' : b.slice(nl + 1);
+    return { id: `sec-${i}`, title, body };
+  });
+  return { intro, sections };
+}
+
 export default function PracticeArticlePage() {
   const { slug } = useParams<{ slug: string }>();
   const router = useRouter();
   const { t, lang } = useI18n();
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const sb = supabaseBrowser();
@@ -44,6 +64,11 @@ export default function PracticeArticlePage() {
 
   const titleOf = (a: Article) => (lang === 'en' ? a.title_en || a.title_zh : lang === 'ja' ? a.title_ja || a.title_zh : a.title_zh);
   const contentOf = (a: Article) => (lang === 'en' ? a.content_en || a.content_zh : lang === 'ja' ? a.content_ja || a.content_zh : a.content_zh);
+
+  const { intro, sections } = useMemo(() => {
+    if (!article) return { intro: '', sections: [] as Section[] };
+    return splitSections(contentOf(article));
+  }, [article, lang]);
 
   if (loading) {
     return (
@@ -66,20 +91,7 @@ export default function PracticeArticlePage() {
     );
   }
 
-  const content = contentOf(article);
-
-  // 行内 **加粗** 渲染（正文存库为轻量 markdown：# / ## / - / **bold**）
-  const Rich = ({ text }: { text: string }) => (
-    <>
-      {text.split(/(\*\*[^*]+\*\*)/g).map((s, k) =>
-        s.startsWith('**') && s.endsWith('**') && s.length > 4 ? (
-          <strong key={k} className="font-medium text-frost">{s.slice(2, -2)}</strong>
-        ) : (
-          <span key={k}>{s}</span>
-        )
-      )}
-    </>
-  );
+  const hasContent = !!(intro || sections.length);
 
   return (
     <PageShell
@@ -94,34 +106,125 @@ export default function PracticeArticlePage() {
         </button>
       </Reveal>
 
-      {content ? (
-        <Reveal delay={100}>
-          <article className="prose-tarot mx-auto mt-8 max-w-3xl space-y-5 text-[15px] leading-relaxed text-frost/90">
-            {content.split(/\n{2,}/).map((para, i) => {
-              const p = para.trim();
-              if (!p) return null;
-              if (p.startsWith('## ')) return <h2 key={i} className="font-display pt-6 text-xl tracking-[0.1em] text-frost">{p.slice(3)}</h2>;
-              if (p.startsWith('# ')) return <h1 key={i} className="font-display pt-6 text-2xl tracking-[0.1em] text-frost">{p.slice(2)}</h1>;
-              if (p.startsWith('- ')) {
-                const lines = p.split('\n').map((l) => l.replace(/^- /, ''));
-                return (
-                  <ul key={i} className="list-disc space-y-1.5 pl-6 text-muted">
-                    {lines.map((l, j) => <li key={j}><Rich text={l} /></li>)}
-                  </ul>
-                );
-              }
-              return <p key={i}><Rich text={p} /></p>;
-            })}
-          </article>
-        </Reveal>
-      ) : (
+      {!hasContent ? (
         <Reveal delay={100}>
           <div className="mx-auto mt-10 max-w-xl rounded-2xl border border-white/[0.06] bg-white/[0.02] p-10 text-center">
             <p className="text-2xl">🌙</p>
             <p className="mt-4 text-sm text-muted">{t('learn.practice.writing')}</p>
           </div>
         </Reveal>
+      ) : (
+        <div className="mx-auto mt-8 max-w-3xl">
+          {/* 目录：点击跳转并展开对应章节 */}
+          {sections.length > 0 && (
+            <Reveal>
+              <nav className="mb-10 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6">
+                <p className="font-display mb-4 text-xs tracking-[0.25em] text-accent/70 uppercase">{t('learn.practice.toc')}</p>
+                <ol className="grid gap-2 sm:grid-cols-2">
+                  {sections.map((s, i) => (
+                    <li key={s.id}>
+                      <a
+                        href={`#${s.id}`}
+                        onClick={() => setCollapsed((c) => ({ ...c, [s.id]: false }))}
+                        className="flex items-baseline gap-2.5 text-sm text-muted transition-colors hover:text-accent"
+                      >
+                        <span className="font-display shrink-0 text-[11px] text-accent/60">{String(i + 1).padStart(2, '0')}</span>
+                        <span className="leading-snug">{s.title}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              </nav>
+            </Reveal>
+          )}
+
+          {/* 引言 */}
+          {intro && (
+            <Reveal delay={80}>
+              <div className="mb-10">
+                <Blocks text={intro} />
+              </div>
+            </Reveal>
+          )}
+
+          {/* 章节：可折叠卡片 */}
+          <div className="space-y-5">
+            {sections.map((s, i) => (
+              <Reveal key={s.id} delay={Math.min(i * 40, 200)}>
+                <section id={s.id} className="scroll-mt-28 rounded-2xl border border-white/[0.06] bg-white/[0.02]">
+                  <button
+                    onClick={() => setCollapsed((c) => ({ ...c, [s.id]: !c[s.id] }))}
+                    className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left sm:px-8"
+                  >
+                    <h2 className="font-display text-base tracking-[0.08em] text-frost sm:text-lg">
+                      <span className="mr-3 text-sm text-accent/70">{String(i + 1).padStart(2, '0')}</span>
+                      {s.title}
+                    </h2>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      className={`h-4 w-4 shrink-0 text-muted transition-transform duration-300 ${collapsed[s.id] ? '' : 'rotate-180'}`}
+                    >
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </button>
+                  {!collapsed[s.id] && (
+                    <div className="px-6 pb-7 sm:px-8">
+                      <Blocks text={s.body} />
+                    </div>
+                  )}
+                </section>
+              </Reveal>
+            ))}
+          </div>
+        </div>
       )}
     </PageShell>
+  );
+}
+
+/** 行内 **加粗** */
+function Rich({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/(\*\*[^*]+\*\*)/g).map((s, k) =>
+        s.startsWith('**') && s.endsWith('**') && s.length > 4 ? (
+          <strong key={k} className="font-medium text-frost">{s.slice(2, -2)}</strong>
+        ) : (
+          <span key={k}>{s}</span>
+        )
+      )}
+    </>
+  );
+}
+
+/** 轻量 markdown 块渲染：# / ## / - 列表 / 段落（宽松行距，适合长文与手机） */
+function Blocks({ text }: { text: string }) {
+  return (
+    <div className="space-y-5 text-[15px] leading-[1.9] text-frost/90">
+      {text.split(/\n{2,}/).map((para, i) => {
+        const p = para.trim();
+        if (!p) return null;
+        if (p.startsWith('### ')) return <h3 key={i} className="font-display pt-2 text-base tracking-[0.08em] text-frost">{p.slice(4)}</h3>;
+        if (p.startsWith('## ')) return <h2 key={i} className="font-display pt-4 text-lg tracking-[0.08em] text-frost">{p.slice(3)}</h2>;
+        if (p.startsWith('# ')) return <h1 key={i} className="font-display pt-4 text-xl tracking-[0.08em] text-frost">{p.slice(2)}</h1>;
+        if (p.startsWith('- ')) {
+          const lines = p.split('\n').map((l) => l.replace(/^- /, ''));
+          return (
+            <ul key={i} className="space-y-3.5 border-l border-accent/15 pl-5">
+              {lines.map((l, j) => (
+                <li key={j} className="relative text-muted">
+                  <span className="absolute -left-[1.4rem] top-[0.75em] h-1.5 w-1.5 rounded-full bg-accent/50" />
+                  <Rich text={l} />
+                </li>
+              ))}
+            </ul>
+          );
+        }
+        return <p key={i}><Rich text={p} /></p>;
+      })}
+    </div>
   );
 }

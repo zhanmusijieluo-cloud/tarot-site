@@ -553,6 +553,7 @@ const zh: Record<string, string> = {
   'learn.practice.back': '返回实战技巧',
   'learn.practice.notFound': '这篇文章还不存在',
   'learn.practice.writing': '内容正在撰写中，敬请期待',
+  'learn.practice.toc': '目录 · 点击直达',
   'learn.practice.cat.foundation': '基础篇',
   'learn.practice.cat.advanced': '进阶篇',
   'learn.practice.cat.practice': '实战篇',

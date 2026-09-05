@@ -553,6 +553,7 @@ const ja: Record<string, string> = {
   'learn.practice.back': '実践テクニックへ戻る',
   'learn.practice.notFound': 'この記事はまだ存在しません',
   'learn.practice.writing': '執筆中です。お楽しみに',
+  'learn.practice.toc': 'もくじ · タップで移動',
   'learn.practice.cat.foundation': '基礎編',
   'learn.practice.cat.advanced': '応用編',
   'learn.practice.cat.practice': '実践編',
