@@ -200,7 +200,7 @@ function Rich({ text }: { text: string }) {
   );
 }
 
-/** 轻量 markdown 块渲染：# / ## / - 列表 / 段落（宽松行距，适合长文与手机） */
+/** 轻量 markdown 块渲染：# / ## / - 列表 / 1. 编号列表（序号徽标） / 段落（单换行保留为换行） */
 function Blocks({ text }: { text: string }) {
   return (
     <div className="space-y-5 text-[15px] leading-[1.9] text-frost/90">
@@ -210,20 +210,61 @@ function Blocks({ text }: { text: string }) {
         if (p.startsWith('### ')) return <h3 key={i} className="font-display pt-2 text-base tracking-[0.08em] text-frost">{p.slice(4)}</h3>;
         if (p.startsWith('## ')) return <h2 key={i} className="font-display pt-4 text-lg tracking-[0.08em] text-frost">{p.slice(3)}</h2>;
         if (p.startsWith('# ')) return <h1 key={i} className="font-display pt-4 text-xl tracking-[0.08em] text-frost">{p.slice(2)}</h1>;
-        if (p.startsWith('- ')) {
-          const lines = p.split('\n').map((l) => l.replace(/^- /, ''));
+        const lines = p.split('\n').map((l) => l.trim()).filter(Boolean);
+        // 圆点列表
+        if (lines.every((l) => l.startsWith('- '))) {
           return (
             <ul key={i} className="space-y-3.5 border-l border-accent/15 pl-5">
               {lines.map((l, j) => (
                 <li key={j} className="relative text-muted">
                   <span className="absolute -left-[1.4rem] top-[0.75em] h-1.5 w-1.5 rounded-full bg-accent/50" />
-                  <Rich text={l} />
+                  <Rich text={l.slice(2)} />
                 </li>
               ))}
             </ul>
           );
         }
-        return <p key={i}><Rich text={p} /></p>;
+        // 编号列表：手动编号（保留原文序号），每条独立成块，续行归入该条
+        if (/^\d+[.、]/.test(lines[0])) {
+          const items: { num: string; lines: string[] }[] = [];
+          for (const l of lines) {
+            const m = l.match(/^(\d+)[.、]\s*(.*)$/);
+            if (m) items.push({ num: m[1], lines: [m[2]] });
+            else if (items.length) items[items.length - 1].lines.push(l);
+            else items.push({ num: '', lines: [l] });
+          }
+          return (
+            <div key={i} className="space-y-4">
+              {items.map((it, j) => (
+                <div key={j} className="flex gap-3">
+                  {it.num && (
+                    <span className="font-display mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-accent/25 bg-accent/10 text-[11px] text-accent">
+                      {it.num}
+                    </span>
+                  )}
+                  <div className="min-w-0 flex-1 text-muted">
+                    {it.lines.map((l, k) => (
+                      <p key={k} className={k > 0 ? 'mt-1.5' : ''}>
+                        <Rich text={l} />
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        }
+        // 普通段落：单换行保留为换行
+        return (
+          <p key={i}>
+            {lines.map((l, j) => (
+              <span key={j}>
+                {j > 0 && <br />}
+                <Rich text={l} />
+              </span>
+            ))}
+          </p>
+        );
       })}
     </div>
   );
