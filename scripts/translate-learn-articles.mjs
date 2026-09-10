@@ -21,7 +21,7 @@ let done = existsSync(PROGRESS) ? JSON.parse(readFileSync(PROGRESS, 'utf-8')) : 
 const save = () => writeFileSync(PROGRESS, JSON.stringify(done));
 
 const GLOSSARY = `塔罗术语必须用标准译法（英文）：大阿卡纳=Major Arcana，小阿卡纳=Minor Arcana，牌阵=spread，正位=upright，逆位=reversed，问卜者=querent，愚者=The Fool，魔术师=The Magician，女祭司=The High Priestess，皇后=The Empress，皇帝=The Emperor，教皇=The Hierophant，恋人=The Lovers，战车=The Chariot，力量=Strength，隐者=The Hermit，命运之轮=Wheel of Fortune，正义=Justice，倒吊人=The Hanged Man，死神=Death，节制=Temperance，恶魔=The Devil，塔=The Tower，星星=The Star，月亮=The Moon，太阳=The Sun，审判=Judgement，世界=The World；权杖=Wands，圣杯=Cups，宝剑=Swords，星币=Pentacles；宫廷牌 Page/Knight/Queen/King。
-日文术语：大アルカナ、小アルカナ、スプレッド（牌阵）、正位置、逆位置、相談者/クエレント、ワンド、カップ、ソード、ペンタクル、ペイジ、ナイト、クイーン、キング。`;
+日文术语：大アルカナ、小アルカナ、スプレッド（牌阵）、正位置、逆位置、相談者（クライアント）、ワンド、カップ、ソード、ペンタクル、ペイジ、ナイト、クイーン、キング。`;
 
 async function askAI(prompt, maxTok = 8000) {
   let lastErr = null;

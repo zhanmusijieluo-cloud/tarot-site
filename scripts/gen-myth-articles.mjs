@@ -25,7 +25,8 @@ const tarotSrc = readFileSync('src/lib/tarot.ts', 'utf-8');
 const TAROT_DECK = eval('(' + tarotSrc.match(/export const TAROT_DECK[^=]*= (\[[\s\S]*?\n\]);/)[1] + ')');
 const CARD_EN = eval('(' + (tarotSrc.match(/export const CARD_EN_NAMES[^=]*= (\{[\s\S]*?\n\});/)?.[1] || '{}') + ')');
 const namesSrc = readFileSync('src/lib/card-names.ts', 'utf-8');
-const CARD_JA = eval('(' + (namesSrc.match(/CARD_JA_NAMES[^=]*= (\{[\s\S]*?\}) as const/)?.[1] || '{}') + ')');
+const CARD_JA = eval('(' + (namesSrc.match(/CARD_JA_NAMES[^=]*?=\s*(\{[\s\S]*?\});/)?.[1] || '{}') + ')');
+if (!CARD_JA[1] || !CARD_JA[21]) { console.error('!! CARD_JA 名牌读取失败, 中止 (22个大阿卡纳名应齐全)'); process.exit(1); }
 
 // 已有的 myth 段落素材（card-details.json 的 myth 段）作为写作参考注入
 let DETAILS = [];
