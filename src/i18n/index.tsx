@@ -33,7 +33,16 @@ function getInitialLang(): Lang {
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(getInitialLang);
+  // 始终以 'en' 作为初始渲染值（与 SSR 一致），挂载后再同步 localStorage，
+  // 避免服务端/客户端初始渲染不一致导致 hydration mismatch。
+  const [lang, setLangState] = useState<Lang>('en');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const saved = getInitialLang();
+    if (saved !== 'en') setLangState(saved);
+    setMounted(true);
+  }, []);
 
   const setLang = useCallback((l: Lang) => {
     setLangState(l);
