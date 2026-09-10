@@ -476,37 +476,40 @@ function createIncrementalEmitter(ctx: ReadingCtx, cards: any[]) {
     return -1;
   };
   const decode = (v: string): string => { try { return JSON.parse('"' + v.replace(/"/g, '\\"') + '"'); } catch { return v; } };
-  const cardHeader = (i: number): string => {
+  /** 已输出过卡头/牌性的卡（骨架先行后 feed 不再重复输出） */
+  const emittedHeaders = new Set<number>();
+  /** 单卡完整骨架段：卡头 + 牌性（含数据库图片内嵌，用户0等待看到牌面） */
+  const cardSkeleton = (i: number, withDivider: boolean): string => {
     const card = cards[i];
     const name = localizedCardName(card, ctx.lang);
+    const imgPath = `/cards/card_${String(card.id).padStart(2, '0')}.jpg`;
     const parts: string[] = [];
+    if (withDivider) parts.push('---\n\n');
+    parts.push(`![${name}](${imgPath})`);
     parts.push(`### ${i + 1}. ${name}（${reversedLabelOf(card)}）`);
     parts.push(`**${T.posLabel}**：${positions[i] || '—'}\n`);
-    return (i === 0 ? `## ${T.s1}\n\n` : '\n---\n\n') + parts.join('\n');
+    parts.push(`#### ${T.traitsLabel}\n\n` + toListMd(traitsFor(card, ctx) || '') + '\n');
+    return parts.join('\n');
   };
 
   return {
-    /** 骨架先行：请求 AI 前即可推出的完整框架（板块1 标题 + 各卡头 + 牌性特质），数据库/代码内容，零 AI 依赖 */
+    /** 骨架先行：请求 AI 前即可推出的完整框架（板块1 标题 + 各卡完整段），图片/牌性全部来自数据库，零 AI 依赖 */
     skeleton(): string {
       const parts: string[] = [`## ${T.s1}\n\n`];
-      parts.push(cardHeader(0));
       for (let i = 0; i < n; i++) {
-        if (i > 0) parts.push('\n\n---\n\n' + cardHeader(i));
-        parts.push(`#### ${T.traitsLabel}\n\n` + toListMd(traitsFor(cards[i], ctx) || '') + '\n');
+        parts.push(cardSkeleton(i, i > 0) + '\n');
+        emittedHeaders.add(i);
       }
       return parts.join('').replace(/\n{3,}/g, '\n\n');
     },
-    /** 重置解析状态（重试新一轮 AI 输出时调用），并返回骨架尾段（第2张牌起的追加部分） */
+    /** 重试前重置解析状态并重发全骨架（前端收到 retry 会清空旧文本） */
     resetForRetry(): string {
       state.idx = 0;
       state.card = -1;
       state.phase = 'wait-cards';
       state.queue = [];
-      let extra = '';
-      for (let i = 1; i < n; i++) {
-        extra += '\n\n---\n\n' + cardHeader(i) + `#### ${T.traitsLabel}\n\n` + toListMd(traitsFor(cards[i], ctx) || '') + '\n';
-      }
-      return extra;
+      emittedHeaders.clear();
+      return this.skeleton();
     },
     /** 传入累积原文，返回新增可显示的 Markdown 文本（可能为空串） */
     feed(raw: string): string {
@@ -523,10 +526,11 @@ function createIncrementalEmitter(ctx: ReadingCtx, cards: any[]) {
           state.card = 0;
           state.phase = 'fields';
           state.queue = ['position', 'summary'];
-          out.push(cardHeader(0));
-          // 静态牌性即时拼入（无需等模型生成）
-          const st = traitsFor(cards[0], ctx);
-          if (st) out.push(`#### ${T.traitsLabel}\n\n` + toListMd(st) + '\n');
+          // 骨架已输出过卡头+牌性：feed 只推 AI 新写的 position 字段内容
+          if (!emittedHeaders.has(0)) {
+            out.push(cardSkeleton(0, false));
+            emittedHeaders.add(0);
+          }
           progressed = true;
         } else if (state.queue.length === 0) {
           // 当前卡完成 / 卡组结束 → 推进
@@ -534,9 +538,10 @@ function createIncrementalEmitter(ctx: ReadingCtx, cards: any[]) {
             state.card++;
             if (state.card < n) {
               state.queue = ['position', 'summary'];
-              out.push(cardHeader(state.card));
-              const st2 = traitsFor(cards[state.card], ctx);
-              if (st2) out.push(`#### ${T.traitsLabel}\n\n` + toListMd(st2) + '\n');
+              if (!emittedHeaders.has(state.card)) {
+                out.push('\n\n' + cardSkeleton(state.card, true));
+                emittedHeaders.add(state.card);
+              }
             } else {
               state.phase = 'tail';
               state.queue = [...TAIL_KEYS];
@@ -678,24 +683,22 @@ export class TarotMcpServer {
       let lastRaw = '';
       /** 骨架先行标记：AI 首个 delta 到达前是否已推送过预拼装框架 */
       let skeletonSent = false;
-      /** 骨架先行：先于 AI 发出的 Markdown（标题+卡头+牌性），用于首次 delta 时去重 */
-      let skeletonText = '';
 
       for (let attempt = 0; attempt < 2; attempt++) {
         if (attempt > 0) {
           // 重试预算保护：总耗时接近函数上限时不再重试
           if (Date.now() - startedAt > 230000) break;
           yield { type: 'retry' };
-          // 重试时重置解析器并重发骨架尾段（前端收到 retry 会清空旧文本）
-          skeletonText = emitter.resetForRetry();
+          // 重试时重置解析器并重发全骨架（前端收到 retry 会清空旧文本）
           skeletonSent = true;
-          if (skeletonText) yield { type: 'delta', text: skeletonText };
+          const sk = emitter.resetForRetry();
+          if (sk) yield { type: 'delta', text: sk };
         } else {
-          // 骨架先行：立刻推送板块1框架（标题+卡头+牌性特质），用户0等待看到结构
-          // feed() 在 wait-cards 阶段同样会输出第一张牌的卡头——首次 AI delta 时需去重
-          skeletonText = emitter.skeleton();
-          yield { type: 'delta', text: skeletonText };
+          // 骨架先行：立刻推送板块1框架（标题+卡头+图片+牌性），用户0等待看到所有牌面
+          // feed 内部用 emittedHeaders 保证不重复输出骨架已有的卡头/牌性
           skeletonSent = true;
+          const sk = emitter.skeleton();
+          if (sk) yield { type: 'delta', text: sk };
         }
         const response = await this.callAI(ctx.system, ctx.prompt, true);
         if (!response.ok || !response.body) {
@@ -707,14 +710,7 @@ export class TarotMcpServer {
         for await (const delta of upstreamContentDeltas(response.body)) {
           raw += delta;
           let md = emitter.feed(raw);
-          // 首个 AI delta：feed 可能重复输出骨架已有的卡头/牌性，去重一次
-          if (md && skeletonSent) {
-            skeletonSent = false;
-            // feed 首块包含「板块1标题+卡头+牌性」与骨架重复 → 只保留骨架没有的后续增量
-            const cutAt = md.indexOf(ctx.positions[1] ? '---' : '\n');
-            if (cutAt > 0) md = md.slice(cutAt).replace(/^-{3,}\n?/, '');
-            else md = '';
-          }
+          // 骨架先行模式：feed 输出的卡头/牌性已由骨架推送，这里直接下发 AI 增量（无需去重拼接）
           if (md) yield { type: 'delta', text: md };
         }
         lastRaw = raw;
