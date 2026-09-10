@@ -65,6 +65,12 @@ export default function PracticeArticlePage() {
   const titleOf = (a: Article) => (lang === 'en' ? a.title_en || a.title_zh : lang === 'ja' ? a.title_ja || a.title_zh : a.title_zh);
   const contentOf = (a: Article) => (lang === 'en' ? a.content_en || a.content_zh : lang === 'ja' ? a.content_ja || a.content_zh : a.content_zh);
 
+  // 返回 = 撤销一步历史（浏览器返回键才会正确跳出本板块）；直接外链进入无历史时兜底跳列表
+  const backToList = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) router.back();
+    else router.push('/learn/practice');
+  };
+
   const { intro, sections } = useMemo(() => {
     if (!article) return { intro: '', sections: [] as Section[] };
     return splitSections(contentOf(article));
@@ -83,7 +89,7 @@ export default function PracticeArticlePage() {
       <PageShell label={t('learn.practice.label')} title={t('learn.practice.title')}>
         <Reveal className="flex flex-col items-center gap-6 py-24">
           <p className="text-sm text-muted">{t('learn.practice.notFound')}</p>
-          <button onClick={() => router.push('/learn/practice')} className="glass-btn-primary text-sm">
+          <button onClick={backToList} className="glass-btn-primary text-sm">
             ← {t('learn.practice.back')}
           </button>
         </Reveal>
@@ -101,7 +107,7 @@ export default function PracticeArticlePage() {
       wide
     >
       <Reveal className="mt-10">
-        <button onClick={() => router.push('/learn/practice')} className="text-xs tracking-[0.15em] text-accent/80 transition-colors hover:text-accent">
+        <button onClick={backToList} className="text-xs tracking-[0.15em] text-accent/80 transition-colors hover:text-accent">
           ← {t('learn.practice.back')}
         </button>
       </Reveal>
