@@ -224,13 +224,13 @@ export default function MythArticlePage() {
           {(prevSlug || nextSlug) && (
             <div className="mt-14 grid gap-3 border-t border-white/[0.06] pt-8 sm:grid-cols-2">
               {prevSlug ? (
-                <button onClick={() => router.push(`/learn/myth/${prevSlug}`)} className="group rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-left transition-all hover:border-accent/30 hover:bg-accent/[0.05]">
+                <button onClick={() => router.replace(`/learn/myth/${prevSlug}`)} className="group rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-left transition-all hover:border-accent/30 hover:bg-accent/[0.05]">
                   <span className="block text-[10px] tracking-[0.2em] text-muted/60 uppercase">← {t('learn.myth.prev')}</span>
                   <span className="mt-1 block truncate text-sm text-frost">{TAROT_DECK[Math.max((cardId ?? 1) - 1, 0)] ? localizedCardName(TAROT_DECK[(cardId ?? 1) - 1], lang) : ''}</span>
                 </button>
               ) : <span />}
               {nextSlug && (
-                <button onClick={() => router.push(`/learn/myth/${nextSlug}`)} className="group rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-right transition-all hover:border-accent/30 hover:bg-accent/[0.05]">
+                <button onClick={() => router.replace(`/learn/myth/${nextSlug}`)} className="group rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-right transition-all hover:border-accent/30 hover:bg-accent/[0.05]">
                   <span className="block text-[10px] tracking-[0.2em] text-muted/60 uppercase">{t('learn.myth.next')} →</span>
                   <span className="mt-1 block truncate text-sm text-frost">{TAROT_DECK[(cardId ?? 20) + 1] ? localizedCardName(TAROT_DECK[(cardId ?? 20) + 1], lang) : ''}</span>
                 </button>
