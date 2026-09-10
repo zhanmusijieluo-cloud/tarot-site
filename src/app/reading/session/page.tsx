@@ -969,7 +969,14 @@ export default function ReadingSessionPage() {
       <section className="pb-28">
         <div className="mt-8 flex justify-center">
           <button
-            onClick={() => router.push('/online')}
+            onClick={() => {
+              // 重新占卜 = 全新一场：清掉旧解读/追问会话，回到推荐牌阵页选择新牌阵
+              try {
+                window.sessionStorage.removeItem(SESSION_KEY);
+                window.sessionStorage.removeItem(CHAT_KEY);
+              } catch { /* ignore */ }
+              router.push('/spreads');
+            }}
             className="glass-btn text-xs"
           >
             <RotateCcw className="mr-2 inline-block h-3.5 w-3.5" aria-hidden="true" />{t('online.restart')}
