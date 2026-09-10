@@ -268,6 +268,7 @@ function Blocks({ text }: { text: string }) {
         if (p.startsWith('### ')) return <h3 key={i} className="font-display pt-2 text-base tracking-[0.08em] text-frost">{p.slice(4)}</h3>;
         if (p.startsWith('## ')) return <h2 key={i} className="font-display pt-4 text-lg tracking-[0.08em] text-frost">{p.slice(3)}</h2>;
         if (p.startsWith('# ')) return <h1 key={i} className="font-display pt-4 text-xl tracking-[0.08em] text-frost">{p.slice(2)}</h1>;
+        if (/^(-{3,}|\*{3,})$/.test(p)) return <hr key={i} className="my-2 border-white/10" />;
         const lines = p.split('\n').map((l) => l.trim()).filter(Boolean);
         // 圆点列表
         if (lines.every((l) => l.startsWith('- '))) {
