@@ -106,6 +106,8 @@ export default function ReadingSessionPage() {
   const [followStream, setFollowStream] = useState(true);
   const streamDoneRef = useRef(false);
   const interpretHeadRef = useRef<HTMLDivElement>(null);
+  /** 首次生成（正文为空）时默认不跟随：视口停在窗口一牌阵展示，用户看完自己抽的牌再下滑跟读 */
+  const firstStreamRef = useRef(true);
 
   // ═══ 后续问题抽牌状态 ═══
   const [showDrawScene, setShowDrawScene] = useState(false);
@@ -170,7 +172,10 @@ export default function ReadingSessionPage() {
       setRegenerating(true);
       setRegenText('');
       setRegenerateError('');
-      setFollowStream(true);
+      // 首次生成：视口留在牌阵展示，不自动跟随；用户下滑后 wheel/touchmove 会负责取消跟随状态，
+      // 所以这里只在「重试/语言切换」时恢复跟随（此时用户已在解读区阅读）
+      setFollowStream(!firstStreamRef.current);
+      firstStreamRef.current = false;
       streamDoneRef.current = true;
       try {
         const client = getMcpClient();
@@ -1082,15 +1087,27 @@ function splitCardAnchors(text: string): { anchor: { id: number; reversed: boole
 function MarkdownBlockWithCards({ text }: { text: string }) {
   const segs = splitCardAnchors(text);
   if (!segs.some((s) => s.anchor)) return <MarkdownBlock text={text} />;
+  // 以锚点为界整卡分组：锚点 + 后续文字(直到下一锚点) = 一张卡的完整内容
+  // 每组包进独立卡片容器（圆角+边框+底色），浏览时牌与牌之间视觉分明，不会误读为同一张牌的内容
+  const groups: { anchor: { id: number; reversed: boolean }; md: string[] }[] = [];
+  let intro = '';
+  for (const s of segs) {
+    if (s.anchor) groups.push({ anchor: s.anchor, md: [] });
+    else if (groups.length === 0) intro += s.text;
+    else groups[groups.length - 1].md.push(s.text);
+  }
   return (
     <>
-      {segs.map((s, i) =>
-        s.anchor ? (
-          <SkeletonCardImage key={`c${i}-${s.anchor.id}`} id={s.anchor.id} reversed={s.anchor.reversed} name="" />
-        ) : (
-          <MarkdownBlock key={`t${i}`} text={s.text} />
-        )
-      )}
+      {intro.trim() && <MarkdownBlock text={intro} />}
+      {groups.map((g, i) => (
+        <div
+          key={`card-${i}-${g.anchor.id}`}
+          className="my-6 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 sm:p-6"
+        >
+          <SkeletonCardImage id={g.anchor.id} reversed={g.anchor.reversed} name="" />
+          <MarkdownBlock text={g.md.join('')} />
+        </div>
+      ))}
     </>
   );
 }
