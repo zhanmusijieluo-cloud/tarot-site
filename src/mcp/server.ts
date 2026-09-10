@@ -279,7 +279,7 @@ Based on the above, provide a complete in-depth reading covering ALL seven parts
   "cards": [
     {
       "position": "Position explanation: this card sits at 【position name】, addressing the aspect of the client's question about XX, 2-3 sentences",
-      "summary": "Summary for the querent: combine the client's question and background, explain what this card means in the client's specific situation, 3-4 sentences"
+      "summary": "Summary for the querent: combine the client's question and background, explain what this card means in the client's specific situation, 3-4 sentences. IMPORTANT: Before writing, silently consider WHY the client is asking this question at this moment — what situation, worry or hope likely drives it — and let that understanding color every sentence. The summary must visibly speak to the client's underlying concern, not just the abstract card meaning"
     }
   ],
   "elementEnergy": "Overall elemental energy and orientation: tally the distribution of the four elements and their meaning (e.g. much Fire suggests action-prone and conflict-prone), upright/reversed ratio and how smoothly the energy flows, how the elements generate/overcome each other and affect the situation",
@@ -314,7 +314,7 @@ ${cardsContext}
   "cards": [
     {
       "position": "ポジション説明：このカードは【ポジション名】に位置し、相談者の質問のうちXXの側面に答えるものです、2〜3文",
-      "summary": "相談者へのまとめ：相談者の質問と背景を踏まえ、このカードが相談者の具体的な問題において意味することを説明、3〜4文"
+      "summary": "相談者へのまとめ：相談者の質問と背景を踏まえ、このカードが相談者の具体的な問題において意味することを説明、3〜4文。重要：書く前に、相談者がなぜ今この質問をしたのか——どんな状況・不安・期待がその背後にあるか——を黙って考え、その理解を一文一文に反映させること。要約は抽象的な牌義ではなく、相談者の根っからの関心事に答えるものであること"
     }
   ],
   "elementEnergy": "全体の元素エネルギーと方向性：風火水土の分布とその意味（例：火が多いと行動的で衝突しやすい）、正逆の割合とエネルギーの流れの良さ、元素の相生相剋が状況に与える影響",
@@ -348,7 +348,7 @@ ${cardsContext}
   "cards": [
     {
       "position": "牌位说明：这张牌位于【某牌位】，回答的是客户问题中关于XX的层面，2-3句",
-      "summary": "针对问卜者的总结：结合客户所问的问题与背景，说明这张牌在客户的具体问题中表达的意思，3-4句"
+      "summary": "针对问卜者的总结：结合客户所问的问题与背景，说明这张牌在客户的具体问题中表达的意思，3-4句。重要：下笔前先默想——客户为什么会在此刻问这个问题（ta 正处于什么处境、在担心什么、在盼什么），并把这份理解融进每一句里。总结要 visibly 回应问卜者底层的关切，而不是复述抽象牌义"
     }
   ],
   "elementEnergy": "整体元素与朝向能量：统计风火水土四元素分布及其含义（如火多主行动易冲突）、正逆位比例与能量顺畅度、元素相生相克对局势的影响",
@@ -366,6 +366,7 @@ ${cardsContext}
 2. 每个字段的值必须是字符串；字段内部需要分点时，每一点必须以「• 」开头并用 \\n 分隔换行；
 3. 关键语句加粗：把**具体的信号内容本身**用加粗标出（具体表现/数字/时间/行为/征兆，不是概括性标签），每张牌 summary 1-2 处，其余字段 1-3 处；
 4. 解读要有洞察层次，结合牌面细节与问卜者的具体问题展开，禁止空泛套话；不制造焦虑，强调人的主观选择会改变走向。
+4.5 **动机视角（贯穿全部板块）**：回答前先自问——问卜者为什么会来问这个问题？ta 此刻的处境、恐惧、期盼是什么？这个问题对 ta 的意义在哪里？此后每个板块（尤其 rootCause / trend / conclusion / advice）的措辞都要围绕这份动机理解展开：根源分析指向 ta 的真实处境而非泛泛的"内在原因"，趋势要回答"ta 所图的能不能成"，总结与建议必须落在 ta 的切身关切上。语气始终柔和共情，绝不流于"剖析"感。
 5. **JSON 转义（关键）**：所有字符串值内的换行必须写成字面 \n、双引号写成 \"；禁止在字符串值内输出真实的换行符或未转义的双引号，否则 JSON 无效并导致解读失败。`;
 
   const system =
