@@ -1068,7 +1068,15 @@ function SkeletonCardImage({ id, reversed, name }: { id: number; reversed: boole
   );
 }
 
-/** 服务端骨架流 δ 文本预处理：把 <!--card:id:rev--> 行拆成 {anchor, text} 段序列 */
+/**
+ * 服务端骨架流 δ 文本预处理：把 <!--card:id:rev--> 行拆成 {anchor, text} 段序列
+ * 关键：整段骨架在第一个 delta 里就含全部3个锚点，但 AI 字段是逐卡到达的。
+ * 前端无法在「某个 AI 字段结束」处切组——因为流式没有信号。
+ *
+ * 解法（改为序号驱动）：每组卡头自带 `### N.` 序号，AI 的 position/summary 增量到达时
+ * 前端按「最新锚点序号」归属——即：出现在锚点k之后、锚点k+1之前的文字属于卡k。
+ * 该规则依托服务端的字段顺序保证（cards 数组顺序输出），与版式天然一致。
+ */
 function splitCardAnchors(text: string): { anchor: { id: number; reversed: boolean; name?: string } | null; text: string }[] {
   const segs: { anchor: { id: number; reversed: boolean; name?: string } | null; text: string }[] = [];
   const re = /<!--card:(\d+):([01])-->/g;
@@ -1085,7 +1093,11 @@ function splitCardAnchors(text: string): { anchor: { id: number; reversed: boole
 
 /** 支持骨架锚点的 Markdown 渲染块：锚点处画卡面小图（逆位自动旋转），其余按轻量版式 */
 function MarkdownBlockWithCards({ text }: { text: string }) {
-  const segs = splitCardAnchors(text);
+  // 先把「板块2 及之后」从卡锚点流中切出来（板块2~7 不属于任何一张卡的框）
+  const part2Idx = text.search(/#{1,4}\s*(?:板块|Part|セクション)\s*2/);
+  const bodyPart = part2Idx >= 0 ? text.slice(0, part2Idx) : text;
+  const tailPart = part2Idx >= 0 ? text.slice(part2Idx) : '';
+  const segs = splitCardAnchors(bodyPart);
   if (!segs.some((s) => s.anchor)) return <MarkdownBlock text={text} />;
   // 以锚点为界整卡分组：锚点 + 后续文字(直到下一锚点) = 一张卡的完整内容
   // 每组包进独立卡片容器（圆角+边框+底色），浏览时牌与牌之间视觉分明，不会误读为同一张牌的内容
@@ -1108,15 +1120,18 @@ function MarkdownBlockWithCards({ text }: { text: string }) {
           <MarkdownBlock text={g.md.join('')} />
         </div>
       ))}
+      {tailPart.trim() && <MarkdownBlock text={tailPart} />}
     </>
   );
 }
 
 /** 轻量 Markdown 渲染块（统一留白节奏） */
 function MarkdownBlock({ text }: { text: string }) {
+  // 防泄漏：骨架锚点若意外残留于此段（如分组边界计算偏差），从可见文本剔除
+  const safe = text.replace(/<!--card:\d+:[01]-->/g, '');
   return (
     <div className="[&_h1]:mb-4 [&_h1]:font-display [&_h1]:text-xl [&_h1]:text-frost [&_h2]:mb-4 [&_h2]:mt-8 [&_h2]:font-display [&_h2]:text-lg [&_h2]:tracking-wide [&_h2]:text-frost [&_h3]:mb-2.5 [&_h3]:mt-6 [&_h3]:font-display [&_h3]:text-base [&_h3]:text-frost [&_h4]:mb-3 [&_h4]:mt-7 [&_h4]:flex [&_h4]:items-center [&_h4]:gap-2.5 [&_h4]:font-display [&_h4]:text-sm [&_h4]:font-normal [&_h4]:tracking-[0.15em] [&_h4]:text-accent [&_li]:ml-5 [&_li]:mb-1.5 [&_li]:list-disc [&_p]:mb-4 [&_p]:leading-[1.9] [&_strong]:text-frost">
-      <ReactMarkdown>{text}</ReactMarkdown>
+      <ReactMarkdown>{safe}</ReactMarkdown>
     </div>
   );
 }

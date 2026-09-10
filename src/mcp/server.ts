@@ -496,15 +496,16 @@ function createIncrementalEmitter(ctx: ReadingCtx, cards: any[]) {
     return parts.join('\n');
   };
 
+  /**
+   * 骨架先行 v2：只发板块1标题 + 卡1 的锚点/卡头/牌性。
+   * 卡2、卡3 的骨架段改由 feed() 在 AI 字段推进到对应卡时再发——
+   * 这样「锚点 → 后续 AI 字段」的时间顺序与分组规则完全一致，
+   * 前端「锚点后、下一锚点前归该卡」的分组在天性上成立，杜绝总结漏组。
+   */
   return {
-    /** 骨架先行：请求 AI 前即可推出的完整框架（板块1 标题 + 各卡完整段），图片/牌性全部来自数据库，零 AI 依赖 */
     skeleton(): string {
-      const parts: string[] = [`## ${T.s1}\n\n`];
-      for (let i = 0; i < n; i++) {
-        parts.push(cardSkeleton(i, i > 0) + '\n');
-        emittedHeaders.add(i);
-      }
-      return parts.join('').replace(/\n{3,}/g, '\n\n');
+      emittedHeaders.add(0); // 卡1 骨架先行，feed 里不再重复发卡头
+      return `## ${T.s1}\n\n` + cardSkeleton(0, false) + '\n';
     },
     /** 重试前重置解析状态并重发全骨架（前端收到 retry 会清空旧文本） */
     resetForRetry(): string {
