@@ -102,6 +102,10 @@ export default function ReadingSessionPage() {
   const [regenText, setRegenText] = useState('');
   const regenRef = useRef<HTMLDivElement>(null);
   const [regenerateError, setRegenerateError] = useState('');
+  /** 智能跟随：流式生成时自动滚动到最新文字；用户手动滚动即暂停，可一键恢复 */
+  const [followStream, setFollowStream] = useState(true);
+  const streamDoneRef = useRef(false);
+  const interpretHeadRef = useRef<HTMLDivElement>(null);
 
   // ═══ 后续问题抽牌状态 ═══
   const [showDrawScene, setShowDrawScene] = useState(false);
@@ -166,6 +170,8 @@ export default function ReadingSessionPage() {
       setRegenerating(true);
       setRegenText('');
       setRegenerateError('');
+      setFollowStream(true);
+      streamDoneRef.current = true;
       try {
         const client = getMcpClient();
         const result = await client.readTarotStream(
@@ -207,12 +213,36 @@ export default function ReadingSessionPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.lang, session?.savedAt, lang, checked]);
 
-  // 重新生成流式文本增长时自动滚动
+  // 重新生成流式文本增长时自动滚动（仅在用户允许「跟随」时生效）
   useEffect(() => {
-    if (regenerating && regenText) {
+    if (regenerating && regenText && followStream) {
       regenRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
-  }, [regenText, regenerating]);
+  }, [regenText, regenerating, followStream]);
+
+  // 解读生成完成：平滑滚回解读板块顶部，从开头开始阅读
+  useEffect(() => {
+    if (!regenerating && regenText && streamDoneRef.current) {
+      streamDoneRef.current = false;
+      // 等最终文本上屏渲染完再滚，避免读到一半跳走
+      const id = setTimeout(() => {
+        interpretHeadRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 600);
+      return () => clearTimeout(id);
+    }
+  }, [regenerating, regenText]);
+
+  // 用户手动滚动判定：wheel / touchmove / 键盘滚动都算主动行为，暂停跟随
+  useEffect(() => {
+    if (!regenerating) return;
+    const pause = () => setFollowStream(false);
+    window.addEventListener('wheel', pause, { passive: true });
+    window.addEventListener('touchmove', pause, { passive: true });
+    return () => {
+      window.removeEventListener('wheel', pause);
+      window.removeEventListener('touchmove', pause);
+    };
+  }, [regenerating]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -365,6 +395,11 @@ export default function ReadingSessionPage() {
   const { cards, question, background, spreadName, positions, interpretation } = session;
   const spreadKey = session.spreadKey ?? null;
 
+  // ═══ 板块锚点导航：三条窗口快速跳转（01 牌阵 / 02 解读 / 03 追问） ═══
+  const jumpTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   // ═══ 牌阵展示：运行时几何求解（hooks 已移到所有条件 return 之前——React 规则） ═══
   const n = cards.length;
   const coords = solved.coords;
@@ -500,10 +535,31 @@ export default function ReadingSessionPage() {
         </p>
       </Reveal>
 
+      {/* ═══ 板块锚点导航条（sticky 顶部）+「恢复跟随」悬浮球 ═══ */}
+      <nav
+        aria-label={t('session.window.interpret')}
+        className="sticky top-[4.5rem] z-[1200] mx-auto flex w-fit items-center gap-1 rounded-full border border-white/[0.08] bg-[rgba(9,8,10,0.82)] px-2 py-1.5 backdrop-blur-xl"
+      >
+        {[
+          { id: 'spread-window', label: t('session.nav.spread') },
+          { id: 'interpret-window', label: t('session.nav.interpret') },
+          { id: 'followup-window', label: t('session.nav.followup') },
+        ].map((item, i) => (
+          <button
+            key={item.id}
+            onClick={() => jumpTo(item.id)}
+            className="rounded-full px-3.5 py-1.5 text-[11px] tracking-[0.15em] text-muted transition-all hover:bg-white/[0.06] hover:text-frost"
+          >
+            <span className="mr-1.5 text-accent/60">{`0${i + 1}`}</span>
+            {item.label}
+          </button>
+        ))}
+      </nav>
+
       {/* ═══ 窗口一：牌阵展示（按牌阵位置摆放） ═══ */}
-      <section className="pb-24">
+      <section id="spread-window" className="pb-24">
         <WindowHead no="01" icon={<Gem className="h-4 w-4" />} title={t('session.window.spread')} sub={question ? `「${question}」` : undefined} />
-        <Reveal>
+        <Reveal mount>
           <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-10 sm:px-7 sm:py-12">
             {/* 绝对定位容器：每张牌落在其牌阵坐标点上（高度由几何求解器精确计算） */}
             <div ref={layoutRef} className="relative mx-auto w-full max-w-2xl" style={{ height: layoutW ? solved.height : undefined, minHeight: layoutW ? undefined : 200 }}>
@@ -598,9 +654,10 @@ export default function ReadingSessionPage() {
       <SectionDivider />
 
       {/* ═══ 窗口二：mumu 深度解读 ═══ */}
-      <section className="pb-24">
+      <section id="interpret-window">
+        <div ref={interpretHeadRef} className="scroll-mt-36" />
         <WindowHead no="02" icon={<Brain className="h-4 w-4" />} title={t('session.window.interpret')} />
-        <Reveal delay={100}>
+        <Reveal mount>
           <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-5 py-8 sm:px-8 sm:py-10">
             {(question || background) && (
               <div className="mb-7 space-y-1.5 border-l-2 border-accent/40 pl-4 text-left">
@@ -619,6 +676,16 @@ export default function ReadingSessionPage() {
               </div>
             )}
             {/* 解读生成中（SSE 流式打字机）：首次进入（正文为空）用大 logo 等待视觉；语言切换重读用轻量提示条 */}
+            {regenerating && !followStream && (
+              <div className="mb-4 flex justify-center">
+                <button
+                  onClick={() => setFollowStream(true)}
+                  className="glass-btn animate-pulse rounded-full px-4 py-2 text-xs tracking-[0.12em]"
+                >
+                  ↓ {t('session.resumeFollow')}
+                </button>
+              </div>
+            )}
             {regenerating && (
               <>
                 {!interpretation.trim() ? (
@@ -664,7 +731,7 @@ export default function ReadingSessionPage() {
                               style={{ aspectRatio: '2 / 3.4', transform: b.card.isReversed ? 'rotate(180deg)' : 'none' }}
                             >
                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={getCardImage(b.card.id)} alt={localizedCardName(b.card, lang)} className="h-full w-full object-cover" loading="lazy" />
+                              <img src={getCardImage(b.card.id)} alt={localizedCardName(b.card, lang)} className="h-full w-full object-cover" loading="eager" />
                             </div>
                             <div className="flex flex-1 flex-col justify-center">
                               <span className="flex items-center gap-2">
@@ -797,7 +864,7 @@ export default function ReadingSessionPage() {
                                 style={{ aspectRatio: '2 / 3.4', transform: c.isReversed ? 'rotate(180deg)' : 'none' }}
                               >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={getCardImage(c.id)} alt={localizedCardName(c, lang)} className="h-full w-full object-cover" loading="lazy" />
+                                <img src={getCardImage(c.id)} alt={localizedCardName(c, lang)} className="h-full w-full object-cover" loading="eager" />
                               </div>
                               <span className="text-center text-[10px] leading-tight text-muted">
                                 {localizedCardName(c, lang)}
@@ -826,7 +893,7 @@ export default function ReadingSessionPage() {
                               style={{ aspectRatio: '2 / 3.4', transform: c.isReversed ? 'rotate(180deg)' : 'none' }}
                             >
                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={getCardImage(c.id)} alt={localizedCardName(c, lang)} className="h-full w-full object-cover" loading="lazy" />
+                              <img src={getCardImage(c.id)} alt={localizedCardName(c, lang)} className="h-full w-full object-cover" loading="eager" />
                             </div>
                             <span className="text-center text-[10px] leading-tight text-muted">
                               {localizedCardName(c, lang)}

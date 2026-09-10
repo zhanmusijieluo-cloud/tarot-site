@@ -486,6 +486,28 @@ function createIncrementalEmitter(ctx: ReadingCtx, cards: any[]) {
   };
 
   return {
+    /** 骨架先行：请求 AI 前即可推出的完整框架（板块1 标题 + 各卡头 + 牌性特质），数据库/代码内容，零 AI 依赖 */
+    skeleton(): string {
+      const parts: string[] = [`## ${T.s1}\n\n`];
+      parts.push(cardHeader(0));
+      for (let i = 0; i < n; i++) {
+        if (i > 0) parts.push('\n\n---\n\n' + cardHeader(i));
+        parts.push(`#### ${T.traitsLabel}\n\n` + toListMd(traitsFor(cards[i], ctx) || '') + '\n');
+      }
+      return parts.join('').replace(/\n{3,}/g, '\n\n');
+    },
+    /** 重置解析状态（重试新一轮 AI 输出时调用），并返回骨架尾段（第2张牌起的追加部分） */
+    resetForRetry(): string {
+      state.idx = 0;
+      state.card = -1;
+      state.phase = 'wait-cards';
+      state.queue = [];
+      let extra = '';
+      for (let i = 1; i < n; i++) {
+        extra += '\n\n---\n\n' + cardHeader(i) + `#### ${T.traitsLabel}\n\n` + toListMd(traitsFor(cards[i], ctx) || '') + '\n';
+      }
+      return extra;
+    },
     /** 传入累积原文，返回新增可显示的 Markdown 文本（可能为空串） */
     feed(raw: string): string {
       const out: string[] = [];
@@ -615,6 +637,11 @@ export class TarotMcpServer {
             // 推理模型：reasoning 与正文共享 max_tokens 配额。
             // 质量优先：给足配额让模型充分思考与展开，避免深度被压缩。
             max_tokens: 10000,
+            // 思考降档：塔罗解读重文采与结构，深度思考链收益低、耗时长。
+            // qwen3.8 实测：thinking on 约 11~37s，off 后 4.2s（教育测试同任务）。
+            // aggregator 兼容两种参数：chat_template_kwargs 关 thinking，reasoning_effort 兜底非 qwen 模型
+            chat_template_kwargs: { enable_thinking: false },
+            reasoning_effort: 'low',
           }),
           // 单次 AI 调用上限 250s：日语大牌阵实测 138s，需留足余量；Vercel Hobby 函数上限 300s
           signal: AbortSignal.timeout(250000),
@@ -649,12 +676,26 @@ export class TarotMcpServer {
       const ctx = await buildReadingInputs(args);
       const emitter = createIncrementalEmitter(ctx, args.cards);
       let lastRaw = '';
+      /** 骨架先行标记：AI 首个 delta 到达前是否已推送过预拼装框架 */
+      let skeletonSent = false;
+      /** 骨架先行：先于 AI 发出的 Markdown（标题+卡头+牌性），用于首次 delta 时去重 */
+      let skeletonText = '';
 
       for (let attempt = 0; attempt < 2; attempt++) {
         if (attempt > 0) {
           // 重试预算保护：总耗时接近函数上限时不再重试
           if (Date.now() - startedAt > 230000) break;
           yield { type: 'retry' };
+          // 重试时重置解析器并重发骨架尾段（前端收到 retry 会清空旧文本）
+          skeletonText = emitter.resetForRetry();
+          skeletonSent = true;
+          if (skeletonText) yield { type: 'delta', text: skeletonText };
+        } else {
+          // 骨架先行：立刻推送板块1框架（标题+卡头+牌性特质），用户0等待看到结构
+          // feed() 在 wait-cards 阶段同样会输出第一张牌的卡头——首次 AI delta 时需去重
+          skeletonText = emitter.skeleton();
+          yield { type: 'delta', text: skeletonText };
+          skeletonSent = true;
         }
         const response = await this.callAI(ctx.system, ctx.prompt, true);
         if (!response.ok || !response.body) {
@@ -665,7 +706,15 @@ export class TarotMcpServer {
         let raw = '';
         for await (const delta of upstreamContentDeltas(response.body)) {
           raw += delta;
-          const md = emitter.feed(raw);
+          let md = emitter.feed(raw);
+          // 首个 AI delta：feed 可能重复输出骨架已有的卡头/牌性，去重一次
+          if (md && skeletonSent) {
+            skeletonSent = false;
+            // feed 首块包含「板块1标题+卡头+牌性」与骨架重复 → 只保留骨架没有的后续增量
+            const cutAt = md.indexOf(ctx.positions[1] ? '---' : '\n');
+            if (cutAt > 0) md = md.slice(cutAt).replace(/^-{3,}\n?/, '');
+            else md = '';
+          }
           if (md) yield { type: 'delta', text: md };
         }
         lastRaw = raw;

@@ -3,20 +3,23 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Navbar from '@/components/Navbar';
 
-/** 滚动显现 */
+/** 滚动显现；mount=true 时挂载即显现（不等滚动），用于解读室牌阵等首屏主角 */
 export function Reveal({
   children,
   delay = 0,
   className = '',
+  mount = false,
 }: {
   children: ReactNode;
   delay?: number;
   className?: string;
+  mount?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [shown, setShown] = useState(false);
+  const [shown, setShown] = useState(mount);
 
   useEffect(() => {
+    if (mount) return;
     const el = ref.current;
     if (!el) return;
     const io = new IntersectionObserver(
