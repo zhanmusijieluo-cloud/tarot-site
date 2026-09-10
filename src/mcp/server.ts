@@ -1,5 +1,5 @@
 import { TarotReadingRequest } from './types';
-import { shuffleDraw, SPREADS } from '@/lib/tarot';
+import { shuffleDraw, SPREADS, CARD_EN_NAMES } from '@/lib/tarot';
 import { getCardTraits, CARD_TRAITS } from '@/lib/card-traits';
 import { CARD_MYSTIC } from '@/lib/card-mystic';
 import { localizedCardName } from '@/lib/card-names';
@@ -169,6 +169,60 @@ function traitsFor(card: any, ctx: ReadingCtx): string {
   return staticTraits || (typeof card?.traitsFallback === 'string' ? card.traitsFallback : '');
 }
 
+/**
+ * 案例经验召回：按本次抽到的牌(卡名英文不区分大小写)从 tarot_case_log
+ * 找历史真实解读案例。卡对卡匹配优先，命中不足时降级为匹配任意两张。
+ * 检索失败/无库 → 返回空数组，调用方直接跳过附注（管线零阻断）。
+ */
+async function recallSimilarCases(ids: number[], limit = 3): Promise<{ cards: string; reading: string }[]> {
+  const client = getSupabaseClient();
+  if (!client || !ids.length) return [];
+  const deck = TAROT_DECK_GLOBAL();
+  const names = ids.map((id) => deck[id]?.name_en || '').filter(Boolean);
+  if (!names.length) return [];
+  try {
+    // 卡1精确命中优先
+    const q1 = await client
+      .from('tarot_case_log')
+      .select('card1,card2,card3,reading_en')
+      .ilike('card1', names[0])
+      .limit(limit);
+    let rows = (q1.data || []) as any[];
+    if (rows.length < limit && names[1]) {
+      const q2 = await client
+        .from('tarot_case_log')
+        .select('card1,card2,card3,reading_en')
+        .ilike('card2', names[1])
+        .limit(limit);
+      const seen = new Set(rows.map(r => r.id ?? r.reading_en));
+      for (const r of (q2.data || []) as any[]) {
+        if (rows.length >= limit) break;
+        if (!seen.has(r.reading_en)) rows.push(r);
+      }
+    }
+    return rows.map((r) => ({
+      cards: `${r.card1} | ${r.card2} | ${r.card3}`,
+      reading: (r.reading_en || '').slice(0, 700),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+// tarot.ts 的 TAROT_DECK 导入已在文件头部存在(src/lib/tarot)——此处取英文名映射
+function TAROT_DECK_GLOBAL() {
+  return TAROT_DECK_INDEX;
+}
+const TAROT_DECK_INDEX: { name_en: string }[] = (() => {
+  // CARD_EN_NAMES 来自 src/lib/tarot 的权威导出; 键为字符串索引
+  const enNames = CARD_EN_NAMES as unknown as Record<string, string>;
+  const out: { name_en: string }[] = [];
+  for (let i = 0; i < 78; i++) {
+    out.push({ name_en: enNames[String(i)] ?? enNames[String(Number(i))] ?? '' });
+  }
+  return out;
+})();
+
 interface ReadingCtx {
   positions: readonly string[];
   lang: 'zh' | 'en' | 'ja';
@@ -188,6 +242,8 @@ async function buildReadingInputs(args: TarotReadingRequest): Promise<ReadingCtx
   // 从内容数据库读取本次抽到的牌意/牌性/象征（存活内容），读不到回退代码库
   const ids = args.cards.map((c: any) => (typeof c?.id === 'number' ? c.id : -1)).filter((i: number) => i >= 0);
   const dbMeanings = await loadDbMeanings(ids, lang);
+  // 案例经验召回: 真实历史解读作 few-shot 参考(失败静默跳过)
+  const recalledCases = await recallSimilarCases(ids, 3);
 
   const cardsContext = args.cards.map((card: any, index: number) => {
     const position = positions[index] || card.position || (useEn ? '(No fixed position)' : '（无固定牌位）');
@@ -376,7 +432,15 @@ ${cardsContext}
         ? 'あなたはプロのタロット読解師です。有効な JSON のみを出力してください。簡潔に、無駄な長考をせず直接答えること。重要：すべての内容を日本語で出力すること。中国語や英語は使用しないこと。'
         : '你是一位专业塔罗解读师。你必须只输出合法 JSON，不输出任何其他文字。所有解读内容必须使用简体中文书写。';
 
-  return { positions, lang, n, prompt, system, SECTION_TITLES, dbMeanings };
+  // 案例经验附注: 真实历史解读范文, 供参考措辞与分寸(不替代牌义判官)
+  const casesBlock = recalledCases.length
+    ? `\n\n**参考经验（历史上真实完成过的解读案例, 供借鉴语气与分寸, 不要抄袭内容）：**\n` +
+      recalledCases
+        .map((c, i) => `案例${i + 1}: 牌${c.cards}\n解读范文: ${c.reading}`)
+        .join('\n\n')
+    : '';
+
+  return { positions, lang, n, prompt: prompt + casesBlock, system, SECTION_TITLES, dbMeanings };
 }
 
 /** 结构化结果 → 固定模板 Markdown（格式由代码保证，标题随站点语言切换） */
