@@ -27,7 +27,7 @@ export default function LearnPage() {
   // 学习路径：实战技巧已上线（读库），神话原型待续
   const SECTIONS: { id: string; icon: string; titleKey: string; descKey: string; route: string | null }[] = [
     { id: 'practice', icon: '📚', titleKey: 'learn.section.practice', descKey: 'learn.desc.practice', route: '/learn/practice' },
-    { id: 'myth', icon: '🏛️', titleKey: 'learn.section.myth', descKey: 'learn.desc.myth', route: null },
+    { id: 'myth', icon: '🏛️', titleKey: 'learn.section.myth', descKey: 'learn.desc.myth', route: '/learn/myth' },
   ];
 
   return (
