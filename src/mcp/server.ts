@@ -379,6 +379,7 @@ ${cardsContext}
 }
 
 /** 结构化结果 → 固定模板 Markdown（格式由代码保证，标题随站点语言切换） */
+/** 最终规范版式：骨架锚点不进最终全文（前端已实时渲染过卡面） */
 function assembleNarrative(
   structured: StructuredReading,
   cards: any[],
@@ -478,14 +479,17 @@ function createIncrementalEmitter(ctx: ReadingCtx, cards: any[]) {
   const decode = (v: string): string => { try { return JSON.parse('"' + v.replace(/"/g, '\\"') + '"'); } catch { return v; } };
   /** 已输出过卡头/牌性的卡（骨架先行后 feed 不再重复输出） */
   const emittedHeaders = new Set<number>();
-  /** 单卡完整骨架段：卡头 + 牌性（含数据库图片内嵌，用户0等待看到牌面） */
+  /**
+   * 单卡骨架段（纯文字，不含图片!）：
+   * 图片由前端按 isReversed 旋转渲染——Markdown img 无法套 CSS transform，
+   * 所以骨架只发 HTML 注释锚点，前端 strip 后自行绘制卡面组件。
+   */
   const cardSkeleton = (i: number, withDivider: boolean): string => {
     const card = cards[i];
     const name = localizedCardName(card, ctx.lang);
-    const imgPath = `/cards/card_${String(card.id).padStart(2, '0')}.jpg`;
     const parts: string[] = [];
     if (withDivider) parts.push('---\n\n');
-    parts.push(`![${name}](${imgPath})`);
+    parts.push(`<!--card:${card.id}:${card.isReversed ? 1 : 0}-->`);
     parts.push(`### ${i + 1}. ${name}（${reversedLabelOf(card)}）`);
     parts.push(`**${T.posLabel}**：${positions[i] || '—'}\n`);
     parts.push(`#### ${T.traitsLabel}\n\n` + toListMd(traitsFor(card, ctx) || '') + '\n');

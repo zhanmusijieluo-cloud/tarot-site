@@ -705,7 +705,7 @@ export default function ReadingSessionPage() {
                   ref={regenRef}
                   className={`text-left leading-relaxed text-muted [&_h2]:mb-3 [&_h2]:mt-7 [&_h2]:font-display [&_h2]:text-lg [&_h2]:text-frost [&_h3]:mb-2 [&_h3]:mt-5 [&_h3]:font-display [&_h3]:text-base [&_h3]:text-frost [&_li]:ml-5 [&_li]:list-disc [&_p]:mb-3.5 [&_strong]:text-frost ${!interpretation.trim() ? '' : 'mb-8 max-h-[70vh] overflow-y-auto rounded-xl border border-white/[0.06] bg-white/[0.02] p-5'}`}
                 >
-                  <ReactMarkdown>{regenText + (regenText ? '▍' : '')}</ReactMarkdown>
+                  <MarkdownBlockWithCards text={regenText + (regenText ? '▍' : '')} />
                 </div>
               </>
             )}
@@ -771,7 +771,7 @@ export default function ReadingSessionPage() {
               </div>
             ) : (
               <div className="text-left leading-relaxed text-muted [&_h1]:mb-4 [&_h1]:font-display [&_h1]:text-xl [&_h1]:text-frost [&_h2]:mb-3 [&_h2]:mt-7 [&_h2]:font-display [&_h2]:text-lg [&_h2]:text-frost [&_h3]:mb-2 [&_h3]:mt-5 [&_h3]:font-display [&_h3]:text-base [&_h3]:text-frost [&_h4]:mb-3 [&_h4]:mt-6 [&_h4]:flex [&_h4]:items-center [&_h4]:gap-2.5 [&_h4]:font-display [&_h4]:text-sm [&_h4]:tracking-[0.15em] [&_h4]:text-accent [&_li]:ml-5 [&_li]:list-disc [&_p]:mb-3.5 [&_strong]:text-frost">
-                <ReactMarkdown>{interpretation}</ReactMarkdown>
+                <MarkdownBlockWithCards text={interpretation} />
               </div>
             )}
           </div>
@@ -1043,6 +1043,56 @@ function SectionDivider() {
 /** 板块1引言：从板块1标题到第一张牌之前（含标题行） */
 function section1BlocksIntro(section1: string, firstMarkPos: number): string {
   return section1.slice(0, firstMarkPos);
+}
+
+/**
+ * 骨架卡牌锚点 → 卡面小组件：<!--card:id:rev--> 处渲染可旋转牌面小图。
+ * 逆位牌 rotate(180deg)，与展示窗口一视觉一致；锚点由服务端骨架流式下发。
+ */
+function SkeletonCardImage({ id, reversed, name }: { id: number; reversed: boolean; name: string }) {
+  return (
+    <div className="mb-4 flex items-start gap-4">
+      <div
+        className="w-14 shrink-0 overflow-hidden rounded-md shadow-md shadow-black/50 sm:w-16"
+        style={{ aspectRatio: '2 / 3.4', transform: reversed ? 'rotate(180deg)' : 'none' }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={getCardImage(id)} alt={name} className="h-full w-full object-cover" loading="eager" />
+      </div>
+    </div>
+  );
+}
+
+/** 服务端骨架流 δ 文本预处理：把 <!--card:id:rev--> 行拆成 {anchor, text} 段序列 */
+function splitCardAnchors(text: string): { anchor: { id: number; reversed: boolean; name?: string } | null; text: string }[] {
+  const segs: { anchor: { id: number; reversed: boolean; name?: string } | null; text: string }[] = [];
+  const re = /<!--card:(\d+):([01])-->/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) segs.push({ anchor: null, text: text.slice(last, m.index) });
+    segs.push({ anchor: { id: Number(m[1]), reversed: m[2] === '1' }, text: '' });
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) segs.push({ anchor: null, text: text.slice(last) });
+  return segs.length ? segs : [{ anchor: null, text }];
+}
+
+/** 支持骨架锚点的 Markdown 渲染块：锚点处画卡面小图（逆位自动旋转），其余按轻量版式 */
+function MarkdownBlockWithCards({ text }: { text: string }) {
+  const segs = splitCardAnchors(text);
+  if (!segs.some((s) => s.anchor)) return <MarkdownBlock text={text} />;
+  return (
+    <>
+      {segs.map((s, i) =>
+        s.anchor ? (
+          <SkeletonCardImage key={`c${i}-${s.anchor.id}`} id={s.anchor.id} reversed={s.anchor.reversed} name="" />
+        ) : (
+          <MarkdownBlock key={`t${i}`} text={s.text} />
+        )
+      )}
+    </>
+  );
 }
 
 /** 轻量 Markdown 渲染块（统一留白节奏） */
