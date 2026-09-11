@@ -169,6 +169,40 @@ function lnAdjacentPairs(spreadKey: string | null | undefined, n: number): [numb
   return pairs;
 }
 
+/** 塔罗78张咱家韦特原图实测朝向（public/data/card-directions.json, id=0..77 与 TAROT_DECK 同序）。 */
+let _tarotDirs: Map<number, any> | null = null;
+function loadCardDirections(): Map<number, any> {
+  if (_tarotDirs) return _tarotDirs;
+  const map = new Map<number, any>();
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const j = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'public', 'data', 'card-directions.json'), 'utf-8'));
+    for (const x of j.cards) map.set(x.id, x);
+  } catch { /* 缺文件容忍 */ }
+  _tarotDirs = map;
+  return map;
+}
+
+/** 雷诺曼36张咱家牌面(1780希望之戏)实测朝向（public/data/ln-directions.json, id=1..36）。 */
+let _lnDirs: Map<number, any> | null = null;
+function loadLnDirections(): Map<number, any> {
+  if (_lnDirs) return _lnDirs;
+  const map = new Map<number, any>();
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const j = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'public', 'data', 'ln-directions.json'), 'utf-8'));
+    for (const x of j.cards) map.set(x.id, x);
+  } catch { /* 缺文件容忍 */ }
+  _lnDirs = map;
+  return map;
+}
+
+const FACING_ZH: Record<string, string> = { left: '朝画面左（过去侧）', right: '朝画面右（未来侧）', front: '正面朝向问卜者', back: '背对观者（背离明面/看向远处）', none: '无明显朝向' };
+const FACING_EN: Record<string, string> = { left: 'facing image-left (the past side)', right: 'facing image-right (the future side)', front: 'facing the querent directly', back: 'back turned to the viewer (looking away/into distance)', none: 'no orientation' };
+const FACING_JA: Record<string, string> = { left: '画像左（過去側）向き', right: '画像右（未来側）向き', front: '相談者真正面向き', back: '観者に背を向く（外面から目を背ける／遠くを見る）', none: '向きなし' };
+
 /** 惰性创建 Supabase 客户端（用 NEXT_PUBLIC 公钥读取即可，公开读取策略已放行）。无环境变量时返回 null。 */
 function getSupabaseClient(): any {
   if (_supabaseClient) return _supabaseClient;
@@ -302,6 +336,21 @@ async function buildReadingInputs(args: TarotReadingRequest): Promise<ReadingCtx
   const dbMeanings = await loadDbMeanings(ids, lang);
   // 案例经验召回: 真实历史解读作 few-shot 参考(失败静默跳过)
   const recalledCases = await recallSimilarCases(ids, 3);
+  // 咱家韦特原图实测朝向表; 逆位时画面左右镜像(上=未来/过去侧翻转)
+  const dirsMap = loadCardDirections();
+  const faceNote = (id: number, rev: boolean): string => {
+    const d = dirsMap.get(id);
+    if (!d) return '';
+    let facing = d.facing as string;
+    if (rev) facing = facing === 'left' ? 'right' : facing === 'right' ? 'left' : facing;
+    if (lang === 'en') {
+      return ` [art orientation${rev ? ', card REVERSED so left/right are mirrored' : ''}: ${FACING_EN[facing] || 'no orientation'}]`;
+    }
+    if (lang === 'ja') {
+      return `【画面向き${rev ? '（逆位置のため左右反転）' : ''}：${FACING_JA[facing] || '向きなし'}】`;
+    }
+    return `（画面朝向${rev ? '，逆位故左右已镜像' : ''}：${FACING_ZH[facing] || '无明显朝向'}${d.detail ? '，' + d.detail : ''}）`;
+  };
 
   const cardsContext = args.cards.map((card: any, index: number) => {
     const position = positions[index] || card.position || (useEn ? '(No fixed position)' : '（无固定牌位）');
@@ -321,10 +370,10 @@ async function buildReadingInputs(args: TarotReadingRequest): Promise<ReadingCtx
       ? `\n  象征深度解构（权威资料，解读时请融入画面象征与深层哲理）：画面：${mystic.image}；意象：${mystic.items.join('；')}；深层：${mystic.deep.replace(/-{2,}/g, ' ').replace(/\s+/g, ' ')}`
       : '';
     if (useEn) {
-      return `- Card ${index + 1} "${cardName}" (${rev ? 'Reversed' : 'Upright'}, Element: ${elem}) —— Position【${position}】${staticTraits ? '\n  Known card nature (authoritative, cite freely): ' + staticTraits.replace(/\n+/g, ' ') : ''}${mysticText}`;
+      return `- Card ${index + 1} "${cardName}" (${rev ? 'Reversed' : 'Upright'}, Element: ${elem}) —— Position【${position}】${faceNote(cardId, rev)}${staticTraits ? '\n  Known card nature (authoritative, cite freely): ' + staticTraits.replace(/\n+/g, ' ') : ''}${mysticText}`;
     } else {
       const zhElem = card.element || '未知';
-      return `- 第${index + 1}张牌「${cardName}」(${rev ? '逆位' : '正位'}，元素：${zhElem}) —— 牌位【${position}】：${card.upright}${staticTraits ? '\n  该牌牌性（权威资料，可直接引用）：' + staticTraits.replace(/\n+/g, ' ') : ''}${mysticText}`;
+      return `- 第${index + 1}张牌「${cardName}」(${rev ? '逆位' : '正位'}，元素：${zhElem}) —— 牌位【${position}】：${card.upright}${faceNote(cardId, rev)}${staticTraits ? '\n  该牌牌性（权威资料，可直接引用）：' + staticTraits.replace(/\n+/g, ' ') : ''}${mysticText}`;
     }
   }).join('\n');
 
@@ -396,7 +445,7 @@ Based on the above, provide a complete in-depth reading covering ALL seven parts
       "summary": "Summary for the querent: combine the client's question and background, explain what this card means in the client's specific situation, 3-4 sentences. IMPORTANT: Before writing, silently consider WHY the client is asking this question at this moment — what situation, worry or hope likely drives it — and let that understanding color every sentence. The summary must visibly speak to the client's underlying concern, not just the abstract card meaning"
     }
   ],
-  "elementEnergy": "Overall elemental energy and orientation: tally the distribution of the four elements and their meaning (e.g. much Fire suggests action-prone and conflict-prone), upright/reversed ratio and how smoothly the energy flows, how the elements generate/overcome each other and affect the situation",
+  "elementEnergy": "Overall elemental energy and orientation: tally the distribution of the four elements and their meaning (e.g. much Fire suggests action-prone and conflict-prone), upright/reversed ratio and how smoothly the energy flows, how the elements generate/overcome each other and affect the situation. Also read the ART ORIENTATION cues attached to each card (facing past-side/left, future-side/right, facing the querent, or back-turned): who/what the figures look toward, where the action is moving, and what that implies for the question",
   "links": "Interplay between cards: where energies support or clash, and the logical links between positions",
   "rootCause": "Deep root cause analysis: the internal reasons behind the current situation, hidden emotions, past influences",
   "trend": "Trend forecast: short-term and medium/long-term direction, distinguishing controllable factors from uncontrollable external ones",
@@ -407,6 +456,7 @@ Based on the above, provide a complete in-depth reading covering ALL seven parts
 Hard requirements:
 0. ${LANG_INSTRUCTION}
 0.5. Each drawn card comes with "Known card nature" (authoritative card traits: element, numerology, planetary correspondence, upright/reversed difference). Treat it as established fact — cite it when analyzing links, root causes and trends, do NOT re-derive or contradict it. Do not output the card nature itself in any JSON field (it is added to the final report separately).
+0.6. Each card also carries an [art orientation] note measured from THIS deck's actual artwork (left = past side, right = future side, back-turned = avoiding/looking away, front = facing the querent; reversed cards already have left/right mirrored). Use these cues as concrete evidence in per-card summaries, links and trend (who looks at whom, which way the event moves) — but orientation is seasoning, not the judge: never overturn a verdict on orientation alone.
 1. The "cards" array must have exactly ${n} elements (one-to-one with the drawn cards), the Nth element interprets the Nth card; the other six fields must all be non-empty strings;
 2. Every field value must be a string; when a field contains multiple points, each point must start with 「• 」 and be separated by \\n;
 3. When you reference a card position in your writing, TRANSLATE the position name into English (e.g. 「过去」→ "Past", 「现在」→ "Present") instead of quoting it verbatim;
@@ -431,7 +481,7 @@ ${cardsContext}
       "summary": "相談者へのまとめ：相談者の質問と背景を踏まえ、このカードが相談者の具体的な問題において意味することを説明、3〜4文。重要：書く前に、相談者がなぜ今この質問をしたのか——どんな状況・不安・期待がその背後にあるか——を黙って考え、その理解を一文一文に反映させること。要約は抽象的な牌義ではなく、相談者の根っからの関心事に答えるものであること"
     }
   ],
-  "elementEnergy": "全体の元素エネルギーと方向性：風火水土の分布とその意味（例：火が多いと行動的で衝突しやすい）、正逆の割合とエネルギーの流れの良さ、元素の相生相剋が状況に与える影響",
+  "elementEnergy": "全体の元素エネルギーと方向性：風火水土の分布とその意味（例：火が多いと行動的で衝突しやすい）、正逆の割合とエネルギーの流れの良さ、元素の相生相剋が状況に与える影響。さらに各カードに付記された【画面向き】の手がかり（過去側＝左／未来側＝右・相談者正面向き・背を向く）も読み取り、人物の視線や動作の方向が質問に何を意味するか解説すること",
   "links": "カード間の連動：カード同士のエネルギーの相生・相剋、ポジション間の論理的関連",
   "rootCause": "現状の深層原因分析：今の状況が生まれた内的理由、隠れた感情、過去の影響",
   "trend": "情勢の推移予測：短期・中期・長期の行方、コントロール可能な要素と不可避な外部要因の区別",
@@ -442,6 +492,7 @@ ${cardsContext}
 必須要件：
 0. ${LANG_INSTRUCTION}
 0.5. 各カードには「該当カードの性質」（権威ある資料：元素・数秘・惑星対応・正逆位の違い）が付与されています。これを既知の事実として扱い、連動・深層原因・趨勢の分析で自由に引用すること。再導出したり矛盾させたりしないこと。カードの性質そのものは JSON のどのフィールドにも出力しないこと（最終レポートには別途反映されます）。
+0.6. 各カードにはさらに【画面向き】注記（このデッキ実物の測定向き。左＝過去側、右＝未来側、背を向く＝回避、正面向き＝相談者直視。逆位置は左右反転済み）が付きます。カード別解読・連動・趨勢で視線や動作の方向を具体的根拠として使うこと。ただし向きは脇役であり主義ではない——向きだけで判定を覆さないこと。
 1. "cards" 配列の長さは ${n} ちょうど（引いたカードと一対一対応）、N番目の要素はN番目のカードを解釈すること。他の6つのフィールドはすべて空でない文字列であること；
 2. 各フィールドの値は文字列であること。フィールド内に複数の要点がある場合は、各要点を「• 」で始め、\\n で改行して区切ること；
 3. カードのポジションを文中で引用する際は、日本語に翻訳して書くこと（例：「过去」→「過去」、「现在」→「現在」）。そのまま引用しないこと；
@@ -465,7 +516,7 @@ ${cardsContext}
       "summary": "针对问卜者的总结：结合客户所问的问题与背景，说明这张牌在客户的具体问题中表达的意思，3-4句。重要：下笔前先默想——客户为什么会在此刻问这个问题（ta 正处于什么处境、在担心什么、在盼什么），并把这份理解融进每一句里。总结要 visibly 回应问卜者底层的关切，而不是复述抽象牌义"
     }
   ],
-  "elementEnergy": "整体元素与朝向能量：统计风火水土四元素分布及其含义（如火多主行动易冲突）、正逆位比例与能量顺畅度、元素相生相克对局势的影响",
+  "elementEnergy": "整体元素与朝向能量：统计风火水土四元素分布及其含义（如火多主行动易冲突）、正逆位比例与能量顺畅度、元素相生相克对局势的影响。并须读取每张牌附带的「画面朝向」线索（朝画面左=过去侧、朝画面右=未来侧、正对问卜者、背对观者）：人物目光与动作朝哪、能量流向哪，这对客户的问题意味着什么",
   "links": "牌阵联动关系：牌与牌之间能量相生/相冲、位置之间的逻辑关联",
   "rootCause": "现状深层根源分析：当下局面产生的内在原因、隐藏情绪、过往影响",
   "trend": "局势发展趋势推演：短期与中长期走向，区分可控因素与不可控外部因素",
@@ -476,6 +527,7 @@ ${cardsContext}
 硬性要求：
 0. ${LANG_INSTRUCTION}
 0.5. 每张牌附有「该牌牌性」（权威资料：元素、灵数、行星星座对应、正逆位差异）。将其视为既定事实，在联动、深层原因、趋势分析中直接引用，不要重新推导，也不要与之矛盾。牌性本身不要输出到 JSON 的任何字段中（最终报告会单独拼入）。
+0.6. 每张牌还附有「画面朝向」（本站韦特原图实测朝向：左=过去侧、右=未来侧、背对观者=回避/望向远方、正面=直面问卜者；逆位牌系统已自动镜像左右）。在逐张解读、联动、趋势中把方向线索用作具体证据（谁看向谁、事件朝哪走、心思在哪一侧）——但朝向是佐料不是判官，绝不能仅凭朝向翻判。
 1. "cards" 数组长度必须等于 ${n}（与抽牌结果一一对应），第 N 个元素解读第 N 张牌；其余六个字段的值都必须是非空字符串；
 2. 每个字段的值必须是字符串；字段内部需要分点时，每一点必须以「• 」开头并用 \\n 分隔换行；
 3. 关键语句加粗：把**具体的信号内容本身**用加粗标出（具体表现/数字/时间/行为/征兆，不是概括性标签），每张牌 summary 1-2 处，其余字段 1-3 处；
@@ -521,6 +573,7 @@ async function buildLenormandInputs(
   n: number
 ): Promise<ReadingCtx> {
   const lnData = loadLnDetails();
+  const lnDirs = loadLnDirections();
   const useEn = lang !== 'zh';
 
   const cardsContext = args.cards.map((card: any, index: number) => {
@@ -541,10 +594,18 @@ async function buildLenormandInputs(
         : `四领域：感情=${dom.love || ''}；事业=${dom.career || ''}；财务=${dom.wealth || ''}；身心=${dom.health || ''}`);
     }
     const playing = LN_PLAYING_HINT[id] || card.element || '';
+    const dir = lnDirs.get(id);
+    const dirText = dir
+      ? (lang === 'en'
+          ? ` | art orientation: ${FACING_EN[dir.facing] || 'no orientation'}`
+          : lang === 'ja'
+            ? `【画面向き：${FACING_JA[dir.facing] || '向きなし'}】`
+            : `｜画面朝向：${FACING_ZH[dir.facing] || '无明显朝向'}${dir.note ? '，' + dir.note : ''}`)
+      : '';
     if (useEn) {
-      return `- Card ${index + 1} "${cardName}" (keywords: ${kw}; playing-card link: ${playing}) —— Position【${position}】\n  ${pieces.filter(Boolean).join(' | ')}`;
+      return `- Card ${index + 1} "${cardName}" (keywords: ${kw}; playing-card link: ${playing}) —— Position【${position}】${dirText}\n  ${pieces.filter(Boolean).join(' | ')}`;
     }
-    return `- 第${index + 1}张牌「${cardName}」（关键词：${kw}；扑克对应：${playing}）—— 牌位【${position}】\n  ${pieces.filter(Boolean).join(' | ')}`;
+    return `- 第${index + 1}张牌「${cardName}」（关键词：${kw}；扑克对应：${playing}）—— 牌位【${position}】${dirText}\n  ${pieces.filter(Boolean).join(' | ')}`;
   }).join('\n');
 
   // ── 相邻牌对组合辞典召回（雷诺曼的"经验库": 权威 pairwise 方向义, 逐对附入 prompt）──
@@ -644,6 +705,7 @@ Based on the above, output a complete reading covering ALL seven parts. **Output
 Hard requirements:
 0. ${LANG_INSTRUCTION}
 0.5. Each card comes with authoritative Lenormand data (core meaning / combination guide / timing / shadow / four domains). Treat it as established fact, cite it freely, never contradict or re-derive it. Do not output the raw data itself in any JSON field.
+0.6. Each card also carries an [art orientation] measured from THIS deck's actual 1780 artwork (left = past side, right = future side, none = no direction). In Lenormand orientation matters: a blade/animal/figure points AT the card beside it — e.g. the Scythe's blade cuts toward whatever sits to its left, Rider moving left carries events toward the past side. Use these cues when naming pairings; never invent orientations not stated in the note.
 0.7. Where a combination dictionary is provided above, your pairings in "elementEnergy" and "links" MUST stay consistent with those dictionary meanings (you may enrich, never contradict them).
 1. The "cards" array must have exactly ${n} elements (one-to-one with drawn cards, in the same order); all six other fields must be non-empty strings.
 2. Every field value is a string; bullet points start with 「• 」 separated by \\n.
@@ -673,6 +735,7 @@ Hard requirements:
 必須要件：
 0. ${LANG_INSTRUCTION}
 0.5. 各カードの権威データは既成事実として自由に引用、矛盾・再導出禁止。データそのものは JSON に出力しない。
+0.6. 各カードには当デッキ（1780年「希望のゲーム」実物）で測定した【画面向き】が付きます（左＝過去側、右＝未来側、向きなしあり）。ルノルマンでは向きが重要：刃・動物・人物の向きは隣のカードへ「向かう」意味を持つ（例：鎌刀の刃は左のカードを刈る、騎手が左向きなら出来事が過去側へ向かう）。組み合わせを語る際にこの手がかりを使うこと。注記にない向きを作らないこと。
 1. "cards" 配列長はちょうど ${n}（引いたカードと一対一・同順）、他の6フィールドはすべて空でない文字列。
 2. 各値は文字列。箇条書きは「• 」始まり \\n 区切り。
 3. ルノルマンなので**逆位置/逆さまの語を一切使わない**。文中でポジションを参照する時は日本語に翻訳する。
@@ -700,6 +763,7 @@ Hard requirements:
 硬性要求：
 0. ${LANG_INSTRUCTION}
 0.5. 每张牌附「雷诺曼权威牌意」，视为既定事实自由引用；牌意原文不得整段复述进 JSON 字段。
+0.6. 每张牌另附「画面朝向」（本站 1780《希望之戏》原图实测：左=过去侧、右=未来侧、部分牌无朝向）。雷诺曼里朝向是真信息：刃口/动物/人物的脸朝哪，就作用于哪——如镰刀刃朝左则"割向"左边的牌、骑手朝左奔驰=事件冲向过去侧/从未来侧赶来。讲组合与连线成句时引用这些方向线索；禁止编造注记里没有的朝向。
 1. "cards" 数组长度必须等于 ${n}（与抽牌顺序一一对应），其余六个字段都是非空字符串。
 2. 字段值全部是字符串；分点时每点「• 」开头 \\n 分隔。
 3. 雷诺曼体系**全文禁止出现"逆位/逆位置/reversed"字眼**。文中引用牌位时翻译为对应语言的自然说法。
