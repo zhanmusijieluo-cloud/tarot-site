@@ -107,8 +107,6 @@ export default function ReadingSessionPage() {
   const [regenerateError, setRegenerateError] = useState('');
   /** 智能跟随：流式生成时自动滚动到最新文字；用户手动滚动即暂停，可一键恢复 */
   const [followStream, setFollowStream] = useState(true);
-  const streamDoneRef = useRef(false);
-  const interpretHeadRef = useRef<HTMLDivElement>(null);
   /** 首次生成（正文为空）时默认不跟随：视口停在窗口一牌阵展示，用户看完自己抽的牌再下滑跟读 */
   const firstStreamRef = useRef(true);
 
@@ -179,7 +177,6 @@ export default function ReadingSessionPage() {
       // 所以这里只在「重试/语言切换」时恢复跟随（此时用户已在解读区阅读）
       setFollowStream(!firstStreamRef.current);
       firstStreamRef.current = false;
-      streamDoneRef.current = true;
       try {
         const client = getMcpClient();
         const result = await client.readTarotStream(
@@ -230,17 +227,8 @@ export default function ReadingSessionPage() {
     }
   }, [regenText, regenerating, followStream]);
 
-  // 解读生成完成：平滑滚回解读板块顶部，从开头开始阅读
-  useEffect(() => {
-    if (!regenerating && regenText && streamDoneRef.current) {
-      streamDoneRef.current = false;
-      // 等最终文本上屏渲染完再滚，避免读到一半跳走
-      const id = setTimeout(() => {
-        interpretHeadRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 600);
-      return () => clearTimeout(id);
-    }
-  }, [regenerating, regenText]);
+  // 解读生成完成后视角保持原位: 客户在等待中已手动下滑阅读已出现的部分, 完成瞬间绝不跳视角
+  // (旧行为: 完成后平滑滚回解读板块顶部——用户明确要求移除)
 
   // 用户手动滚动判定：wheel / touchmove / 键盘滚动都算主动行为，暂停跟随
   useEffect(() => {
@@ -683,7 +671,6 @@ export default function ReadingSessionPage() {
 
       {/* ═══ 窗口二：mumu 深度解读 ═══ */}
       <section id="interpret-window">
-        <div ref={interpretHeadRef} className="scroll-mt-36" />
         <WindowHead no="02" icon={<Brain className="h-4 w-4" />} title={t('session.window.interpret')} />
         <Reveal mount>
           <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-5 py-8 sm:px-8 sm:py-10">
@@ -704,16 +691,6 @@ export default function ReadingSessionPage() {
               </div>
             )}
             {/* 解读生成中（SSE 流式打字机）：首次进入（正文为空）用大 logo 等待视觉；语言切换重读用轻量提示条 */}
-            {regenerating && !followStream && (
-              <div className="mb-4 flex justify-center">
-                <button
-                  onClick={() => setFollowStream(true)}
-                  className="glass-btn animate-pulse rounded-full px-4 py-2 text-xs tracking-[0.12em]"
-                >
-                  ↓ {t('session.resumeFollow')}
-                </button>
-              </div>
-            )}
             {regenerating && (
               <>
                 {!interpretation.trim() ? (

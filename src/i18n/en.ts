@@ -433,7 +433,6 @@ const en: Record<string, string> = {
   'session.nav.spread': 'Spread',
   'session.nav.interpret': 'Reading',
   'session.nav.followup': 'Q&A',
-  'session.resumeFollow': 'New content — tap to keep following',
   'session.generating': 'Mumu is reading the cards…',
   'session.send': 'Send follow-up',
   'session.modeLabel': 'Mumu\'s tone',

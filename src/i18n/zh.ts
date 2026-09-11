@@ -426,7 +426,6 @@ const zh: Record<string, string> = {
   'session.nav.spread': '牌阵',
   'session.nav.interpret': '解读',
   'session.nav.followup': '追问',
-  'session.resumeFollow': '有新内容，点我继续跟随',
   'session.generating': 'mumu 正在解读牌面…',
   'session.send': '发送追问',
   'session.modeLabel': 'mumu 的语气',
