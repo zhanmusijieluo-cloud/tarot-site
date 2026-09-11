@@ -3,14 +3,7 @@
 import PageShell, { Reveal, SectionHead } from '@/components/PageShell';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/i18n';
-
-// 36 张雷诺曼牌：图标 + 编号为通用符号；名称与关键词走 i18n（ln.N.name / ln.N.kw）
-const CARDS = [
-  '🐎', '🍀', '⛵', '🏠', '🌳', '☁️', '🐍', '⚰️', '💐', '🌾',
-  '🪢', '🕊️', '🧒', '🦊', '🐻', '⭐', '🦩', '🐕', '🗼', '🌳',
-  '⛰️', '🛤️', '🐁', '💗', '💍', '📖', '✉️', '🤵', '👗', '🌺',
-  '☀️', '🌙', '🗝️', '🐟', '⚓', '✝️',
-];
+import { LN_CARDS, lnImage } from '@/lib/lenormand';
 
 export default function LenormandPage() {
   const router = useRouter();
@@ -46,21 +39,36 @@ export default function LenormandPage() {
           title={t('lenormand.cardSection')}
           sub={t('lenormand.cardSub')}
         />
-        <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9">
-          {CARDS.map((icon, i) => (
-            <Reveal key={i} delay={(i % 9) * 55}>
-              <div className="group flex flex-col items-center rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-center transition-all duration-300 hover:border-accent/30 hover:bg-accent/[0.05] hover:-translate-y-1">
-                <span className="text-base">{icon}</span>
-                <span className="mt-1.5 font-display text-xs tracking-[0.1em] text-frost">
-                  {t(`ln.${i}.name`)}
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9">
+          {LN_CARDS.map((c, i) => (
+            <Reveal key={c.id} delay={(i % 9) * 55}>
+              <button
+                onClick={() => router.push(`/lenormand/card/${c.id}`)}
+                className="group flex h-full w-full flex-col items-center rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-center transition-all duration-300 hover:border-accent/40 hover:bg-accent/[0.05] hover:-translate-y-1"
+              >
+                {/* 1780年《希望之戏》公有领域牌面 */}
+                <div
+                  className="w-full overflow-hidden rounded-md shadow-md shadow-black/30 transition-transform duration-300 group-hover:scale-[1.03]"
+                  style={{ aspectRatio: '10 / 15' }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={lnImage(c.id)}
+                    alt={t(`ln.${c.i18nIndex}.name`)}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                <span className="mt-2.5 font-display text-xs tracking-[0.1em] text-frost">
+                  {c.id}. {t(`ln.${c.i18nIndex}.name`)}
                 </span>
-                <span className="mt-0.5 block text-[9px] tracking-[0.2em] text-muted/60 uppercase">
-                  {String(i + 1).padStart(2, '0')}
+                <span className="mt-1 block text-[10px] leading-snug text-muted/80">
+                  {kwPreview(t(`ln.${c.i18nIndex}.kw`))}
                 </span>
-                <span className="mt-2 block text-[10px] leading-snug text-muted/80">
-                  {kwPreview(t(`ln.${i}.kw`))}
+                <span className="mt-1.5 hidden text-[10px] tracking-[0.12em] text-accent/0 transition-colors group-hover:text-accent/80 sm:block">
+                  {t('lenormand.enter')} →
                 </span>
-              </div>
+              </button>
             </Reveal>
           ))}
         </div>
