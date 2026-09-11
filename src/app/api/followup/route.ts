@@ -112,15 +112,17 @@ export async function POST(request: NextRequest) {
               thisRound: (q: string) => ` 本轮针对「${q}」新抽了三张。`,
             };
 
+    // 雷诺曼无逆位: 牌组里出现 lenormand 标记时不标注正/逆
+    const isLn = cards?.some((c: any) => c.arcana === 'lenormand');
     const cardsContext = (cards || [])
       .map((card, i) => {
         const position = positions?.[i] ? `（${positions[i]}）` : '';
         const name = cardName(card, langCode);
-        const rev = card.isReversed ? L.reversed : L.upright;
+        const rev = isLn ? '' : (card.isReversed ? L.reversed : L.upright);
         if (langCode === 'zh') {
-          return `- ${L.cardN(i)}「${name}」${position} ${rev}：${card.upright}`;
+          return `- ${L.cardN(i)}「${name}」${position}${rev ? ' ' + rev : ''}：${card.upright}`;
         }
-        return `- ${L.cardN(i)} "${name}" (${rev})${position}: ${card.upright}`;
+        return `- ${L.cardN(i)} "${name}"${rev ? ` (${rev})` : ''}${position}: ${card.upright}`;
       })
       .join('\n');
 

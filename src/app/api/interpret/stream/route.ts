@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const { cards, question, background, spreadName, positions, lang } = body || {};
+  const { cards, question, background, spreadName, positions, lang, deck } = body || {};
   if (!cards || cards.length === 0) {
     return new Response(JSON.stringify({ error: '需要至少一张牌' }), {
       status: 400,
@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
     spreadName: spreadName || '单牌',
     positions: positions || [],
     lang: typeof lang === 'string' ? lang : 'zh',
+    deck: deck === 'lenormand' ? ('lenormand' as const) : ('tarot' as const),
   };
 
   const encoder = new TextEncoder();

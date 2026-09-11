@@ -8,6 +8,7 @@ import PageShell, { Reveal } from '@/components/PageShell';
 import TarotScene from '@/components/TarotScene';
 import LogoSpinner from '@/components/LogoSpinner';
 import { type DrawnCard, getCardImage, CARD_EN_NAMES, TAROT_DECK, SPREADS } from '@/lib/tarot';
+import { LN_DECK, lnImage } from '@/lib/lenormand';
 import { localizedCardName, CARD_JA_NAMES } from '@/lib/card-names';
 import { spreadPositions } from '@/lib/spread-i18n';
 import { getSpreadCoords, getCrossIdx, solveSpreadLayout, solveCustomGridLayout, CARD_H_RATIO, cardWClassToPx } from '@/lib/spread-layout';
@@ -28,6 +29,8 @@ interface ReadingSession {
   interpretation: string;
   /** 解读生成时的语言：语言切换时自动重新生成对应语言解读 */
   lang?: string;
+  /** 牌组：缺省塔罗；'lenormand' 时解读室按雷诺曼渲染(图/名称/无逆位/追问抽36张池) */
+  deck?: 'tarot' | 'lenormand';
   savedAt: number;
 }
 
@@ -187,12 +190,14 @@ export default function ReadingSessionPage() {
               isReversed: c.isReversed,
               upright: c.upright,
               element: c.element,
+              arcana: c.arcana,
             })),
             question: session.question,
             background: session.background,
             spreadName: session.spreadName,
             positions: session.positions ?? [],
             lang,
+            deck: session.deck,
           },
           { onDelta: (text) => setRegenText((prev) => prev + text), onRetry: () => setRegenText('') }
         );
@@ -399,6 +404,10 @@ export default function ReadingSessionPage() {
 
   const { cards, question, background, spreadName, positions, interpretation } = session;
   const spreadKey = session.spreadKey ?? null;
+  /** 雷诺曼会话: 牌图/比例/无逆位标签/追问抽牌池全部走 lenormand 分支 */
+  const isLn = session.deck === 'lenormand';
+  const cardImg = (id: number) => (isLn ? lnImage(id) : getCardImage(id));
+  const cardRatio = isLn ? '520 / 670' : '2 / 3.4';
 
   // ═══ 板块锚点导航：三条窗口快速跳转（01 牌阵 / 02 解读 / 03 追问） ═══
   const jumpTo = (id: string) => {
@@ -427,8 +436,8 @@ export default function ReadingSessionPage() {
     })();
     // 给 AI 的完整牌面：原牌阵在前，追问牌在后（牌名已按站点语言本地化，避免污染上下文）
     const allCardsForAI = [
-      ...cards.map((c) => ({ id: c.id, name: localizedCardName(c, lang), isReversed: c.isReversed, upright: c.upright })),
-      ...mergedExtra.map((c) => ({ id: c.id, name: localizedCardName(c, lang), isReversed: c.isReversed, upright: c.upright })),
+      ...cards.map((c) => ({ id: c.id, name: localizedCardName(c, lang), isReversed: c.isReversed, upright: c.upright, arcana: c.arcana })),
+      ...mergedExtra.map((c) => ({ id: c.id, name: localizedCardName(c, lang), isReversed: c.isReversed, upright: c.upright, arcana: c.arcana })),
     ];
     // 牌位标签：原牌位 + 追问新牌位（按站点语言）
     const extraPosLabel =
@@ -440,6 +449,7 @@ export default function ReadingSessionPage() {
       ...mergedExtra.map((_, i) => extraPosLabel(i)),
     ];
     const revLabelOf = (c: DrawnCard) => {
+      if (isLn) return ''; // 雷诺曼无逆位: 不标注正/逆, 避免误导 AI
       if (lang === 'en') return c.isReversed ? 'Reversed' : 'Upright';
       if (lang === 'ja') return c.isReversed ? '逆位置' : '正位置';
       return c.isReversed ? '逆位' : '正位';
@@ -451,7 +461,7 @@ export default function ReadingSessionPage() {
           ? `[The querent has drawn ${mergedExtra.length} follow-up card(s) beyond the original spread (no fixed positions): ${mergedExtra.map((c) => `${localizedCardName(c, lang)} (${revLabelOf(c)})`).join(', ')}. These were drawn for extended questions around the original reading.${extraCards?.length ? ` This round, three new cards were drawn for "${q}".` : ''} Answer with ALL cards in view.]\n\n`
           : lang === 'ja'
             ? `【相談者は元のスプレッド之外に計${mergedExtra.length}枚の追加カードを引きました（固定ポジションなし）：${mergedExtra.map((c) => `${localizedCardName(c, lang)}（${revLabelOf(c)}）`).join('、')}。これらは元の質問に関する延伸の質問のために引いたものです。${extraCards?.length ? `今回、「${q}」のために新たに3枚を引きました。` : ''}すべてのカードを踏まえて回答してください。】\n\n`
-            : `【问卜者在原牌阵之外先后共抽取了 ${mergedExtra.length} 张追问牌（无固定牌位）：${mergedExtra.map((c) => `${localizedCardName(c, lang)}${c.isReversed ? '逆位' : '正位'}`).join('、')}。这些是围绕原问题的延伸询问所抽的牌。${extraCards?.length ? `本轮针对「${q}」新抽了三张。` : ''}请结合全部牌面回答。】\n\n`
+            : `【问卜者在原牌阵之外先后共抽取了 ${mergedExtra.length} 张追问牌（无固定牌位）：${mergedExtra.map((c) => `${localizedCardName(c, lang)}${revLabelOf(c)}`).join('、')}。这些是围绕原问题的延伸询问所抽的牌。${extraCards?.length ? `本轮针对「${q}」新抽了三张。` : ''}请结合全部牌面回答。】\n\n`
         : '';
     setChat([
       ...history,
@@ -504,6 +514,10 @@ export default function ReadingSessionPage() {
     const q = followUp.trim();
     if (!q || asking) return;
     const drawn = selectedIds.map((uid) => {
+      if (isLn) {
+        const base = LN_DECK.find((c) => c.id === uid)!;
+        return { ...base } as DrawnCard; // 雷诺曼无逆位
+      }
       const base = TAROT_DECK.find((c) => c.id === uid)!;
       return { ...base, isReversed: Math.random() < 0.5 } as DrawnCard;
     });
@@ -576,7 +590,7 @@ export default function ReadingSessionPage() {
                 // 避免 rotate(90deg) 占位（竖）与视觉（横）不一致导致牌下方留白
                 const cardStyle = isCross
                   ? { width: Math.round(cardWPx * CARD_H_RATIO), height: cardWPx, transform: card.isReversed ? 'rotate(180deg)' : 'none' }
-                  : { aspectRatio: '2 / 3.4', transform: card.isReversed ? 'rotate(180deg)' : 'none' };
+                  : { aspectRatio: cardRatio, transform: card.isReversed ? 'rotate(180deg)' : 'none' };
                 return (
                   <div key={idx} className="absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${p.x}%`, top: `${p.y}%` }}>
                     <button
@@ -598,7 +612,7 @@ export default function ReadingSessionPage() {
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={getCardImage(card.id)}
+                          src={cardImg(card.id)}
                           alt={`${localizedCardName(card, lang)} ${card.isReversed ? t('online.reversed') : t('online.upright')}`}
                           className="h-full w-full object-cover"
                           loading="eager"
@@ -623,10 +637,14 @@ export default function ReadingSessionPage() {
             <div className="mx-auto mt-10 max-w-xl rounded-xl border border-white/[0.06] bg-black/20 px-5 py-4 text-left">
               <p className="font-display text-sm tracking-[0.1em] text-frost">
                 <span className="mr-2 text-accent">{String(activeCard + 1).padStart(2, '0')}</span>
-                {localizedCardName(cards[activeCard], lang)} ·{' '}
-                <span className={cards[activeCard].isReversed ? 'text-muted' : 'text-accent'}>
-                  {cards[activeCard].isReversed ? t('online.reversed') : t('online.upright')}
-                </span>
+                {localizedCardName(cards[activeCard], lang)}
+                {!isLn && (
+                  <> ·{' '}
+                    <span className={cards[activeCard].isReversed ? 'text-muted' : 'text-accent'}>
+                      {cards[activeCard].isReversed ? t('online.reversed') : t('online.upright')}
+                    </span>
+                  </>
+                )}
               </p>
               {localizedPositions[activeCard] && (
                 <p className="mt-0.5 text-xs text-accent/70">
@@ -634,7 +652,7 @@ export default function ReadingSessionPage() {
                 </p>
               )}
               <p className="mt-1.5 text-xs leading-relaxed text-muted">
-                {cards[activeCard].isReversed ? cards[activeCard].reversedMeaning : cards[activeCard].upright}
+                {isLn ? cards[activeCard].upright : cards[activeCard].isReversed ? cards[activeCard].reversedMeaning : cards[activeCard].upright}
               </p>
               {cards.length > 1 && (
                 <div className="mt-4 flex gap-1.5">
@@ -710,7 +728,7 @@ export default function ReadingSessionPage() {
                   ref={regenRef}
                   className={`text-left leading-relaxed text-muted [&_h2]:mb-3 [&_h2]:mt-7 [&_h2]:font-display [&_h2]:text-lg [&_h2]:text-frost [&_h3]:mb-2 [&_h3]:mt-5 [&_h3]:font-display [&_h3]:text-base [&_h3]:text-frost [&_li]:ml-5 [&_li]:list-disc [&_p]:mb-3.5 [&_strong]:text-frost ${!interpretation.trim() ? '' : 'mb-8 max-h-[70vh] overflow-y-auto rounded-xl border border-white/[0.06] bg-white/[0.02] p-5'}`}
                 >
-                  <MarkdownBlockWithCards text={regenText + (regenText ? '▍' : '')} />
+                  <MarkdownBlockWithCards text={regenText + (regenText ? '▍' : '')} deck={session.deck} />
                 </div>
               </>
             )}
@@ -733,10 +751,10 @@ export default function ReadingSessionPage() {
                           <div className="mb-4 flex items-start gap-4">
                             <div
                               className="w-14 shrink-0 overflow-hidden rounded-md shadow-md shadow-black/50 sm:w-16"
-                              style={{ aspectRatio: '2 / 3.4', transform: b.card.isReversed ? 'rotate(180deg)' : 'none' }}
+                              style={{ aspectRatio: cardRatio, transform: b.card.isReversed ? 'rotate(180deg)' : 'none' }}
                             >
                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={getCardImage(b.card.id)} alt={localizedCardName(b.card, lang)} className="h-full w-full object-cover" loading="eager" />
+                              <img src={cardImg(b.card.id)} alt={localizedCardName(b.card, lang)} className="h-full w-full object-cover" loading="eager" />
                             </div>
                             <div className="flex flex-1 flex-col justify-center">
                               <span className="flex items-center gap-2">
@@ -745,10 +763,14 @@ export default function ReadingSessionPage() {
                                   {cardIdx + 1}
                                 </span>
                                 <span className="font-display text-sm tracking-[0.08em] text-frost">
-                                  {localizedCardName(b.card, lang)} ·{' '}
-                                  <span className={b.card.isReversed ? 'text-muted' : 'text-accent'}>
-                                    {b.card.isReversed ? t('online.reversed') : t('online.upright')}
-                                  </span>
+                                  {localizedCardName(b.card, lang)}
+                                  {!isLn && (
+                                    <> ·{' '}
+                                      <span className={b.card.isReversed ? 'text-muted' : 'text-accent'}>
+                                        {b.card.isReversed ? t('online.reversed') : t('online.upright')}
+                                      </span>
+                                    </>
+                                  )}
                                 </span>
                               </span>
                               {/* 牌位：这张牌在牌阵中对应回答的问题（如时间流的"过去"） */}
@@ -776,7 +798,7 @@ export default function ReadingSessionPage() {
               </div>
             ) : (
               <div className="text-left leading-relaxed text-muted [&_h1]:mb-4 [&_h1]:font-display [&_h1]:text-xl [&_h1]:text-frost [&_h2]:mb-3 [&_h2]:mt-7 [&_h2]:font-display [&_h2]:text-lg [&_h2]:text-frost [&_h3]:mb-2 [&_h3]:mt-5 [&_h3]:font-display [&_h3]:text-base [&_h3]:text-frost [&_h4]:mb-3 [&_h4]:mt-6 [&_h4]:flex [&_h4]:items-center [&_h4]:gap-2.5 [&_h4]:font-display [&_h4]:text-sm [&_h4]:tracking-[0.15em] [&_h4]:text-accent [&_li]:ml-5 [&_li]:list-disc [&_p]:mb-3.5 [&_strong]:text-frost">
-                <MarkdownBlockWithCards text={interpretation} />
+                <MarkdownBlockWithCards text={interpretation} deck={session.deck} />
               </div>
             )}
           </div>
@@ -866,15 +888,19 @@ export default function ReadingSessionPage() {
                             <div key={ci} className="flex w-14 flex-col items-center gap-1.5 sm:w-16">
                               <div
                                 className="w-full overflow-hidden rounded-md shadow-md shadow-black/50"
-                                style={{ aspectRatio: '2 / 3.4', transform: c.isReversed ? 'rotate(180deg)' : 'none' }}
+                                style={{ aspectRatio: cardRatio, transform: c.isReversed ? 'rotate(180deg)' : 'none' }}
                               >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={getCardImage(c.id)} alt={localizedCardName(c, lang)} className="h-full w-full object-cover" loading="eager" />
+                                <img src={cardImg(c.id)} alt={localizedCardName(c, lang)} className="h-full w-full object-cover" loading="eager" />
                               </div>
                               <span className="text-center text-[10px] leading-tight text-muted">
                                 {localizedCardName(c, lang)}
-                                <br />
-                                <span className={c.isReversed ? '' : 'text-accent/80'}>{c.isReversed ? t('online.reversed') : t('online.upright')}</span>
+                                {!isLn && (
+                                  <>
+                                    <br />
+                                    <span className={c.isReversed ? '' : 'text-accent/80'}>{c.isReversed ? t('online.reversed') : t('online.upright')}</span>
+                                  </>
+                                )}
                               </span>
                             </div>
                           ))}
@@ -895,15 +921,19 @@ export default function ReadingSessionPage() {
                           <div key={ci} className="flex w-14 flex-col items-center gap-1.5 sm:w-16">
                             <div
                               className="w-full overflow-hidden rounded-md shadow-md shadow-black/50"
-                              style={{ aspectRatio: '2 / 3.4', transform: c.isReversed ? 'rotate(180deg)' : 'none' }}
+                              style={{ aspectRatio: cardRatio, transform: c.isReversed ? 'rotate(180deg)' : 'none' }}
                             >
                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={getCardImage(c.id)} alt={localizedCardName(c, lang)} className="h-full w-full object-cover" loading="eager" />
+                              <img src={cardImg(c.id)} alt={localizedCardName(c, lang)} className="h-full w-full object-cover" loading="eager" />
                             </div>
                             <span className="text-center text-[10px] leading-tight text-muted">
                               {localizedCardName(c, lang)}
-                              <br />
-                              <span className={c.isReversed ? '' : 'text-accent/80'}>{c.isReversed ? t('online.reversed') : t('online.upright')}</span>
+                              {!isLn && (
+                                <>
+                                  <br />
+                                  <span className={c.isReversed ? '' : 'text-accent/80'}>{c.isReversed ? t('online.reversed') : t('online.upright')}</span>
+                                </>
+                              )}
                             </span>
                           </div>
                         ))}
@@ -996,6 +1026,7 @@ export default function ReadingSessionPage() {
           </p>
           <div className="tarot-scene-host relative mt-3 min-h-0 flex-1">
             <TarotScene
+              deck={isLn ? 'lenormand' : 'tarot'}
               maxSelect={3}
               selectedIds={selectedIds}
               onToggleCard={togglePoolCard}
@@ -1060,16 +1091,18 @@ function section1BlocksIntro(section1: string, firstMarkPos: number): string {
 /**
  * 骨架卡牌锚点 → 卡面小组件：<!--card:id:rev--> 处渲染可旋转牌面小图。
  * 逆位牌 rotate(180deg)，与展示窗口一视觉一致；锚点由服务端骨架流式下发。
+ * deck='lenormand' 时改用雷诺曼牌图与比例（无逆位, 不旋转）。
  */
-function SkeletonCardImage({ id, reversed, name }: { id: number; reversed: boolean; name: string }) {
+function SkeletonCardImage({ id, reversed, name, deck }: { id: number; reversed: boolean; name: string; deck?: 'tarot' | 'lenormand' }) {
+  const ln = deck === 'lenormand';
   return (
     <div className="mb-4 flex items-start gap-4">
       <div
         className="w-14 shrink-0 overflow-hidden rounded-md shadow-md shadow-black/50 sm:w-16"
-        style={{ aspectRatio: '2 / 3.4', transform: reversed ? 'rotate(180deg)' : 'none' }}
+        style={{ aspectRatio: ln ? '520 / 670' : '2 / 3.4', transform: !ln && reversed ? 'rotate(180deg)' : 'none' }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={getCardImage(id)} alt={name} className="h-full w-full object-cover" loading="eager" />
+        <img src={ln ? lnImage(id) : getCardImage(id)} alt={name} className="h-full w-full object-cover" loading="eager" />
       </div>
     </div>
   );
@@ -1099,7 +1132,7 @@ function splitCardAnchors(text: string): { anchor: { id: number; reversed: boole
 }
 
 /** 支持骨架锚点的 Markdown 渲染块：锚点处画卡面小图（逆位自动旋转），其余按轻量版式 */
-function MarkdownBlockWithCards({ text }: { text: string }) {
+function MarkdownBlockWithCards({ text, deck }: { text: string; deck?: 'tarot' | 'lenormand' }) {
   // 先把「板块2 及之后」从卡锚点流中切出来（板块2~7 不属于任何一张卡的框）
   const part2Idx = text.search(/#{1,4}\s*(?:板块|Part|セクション)\s*2/);
   const bodyPart = part2Idx >= 0 ? text.slice(0, part2Idx) : text;
@@ -1123,7 +1156,7 @@ function MarkdownBlockWithCards({ text }: { text: string }) {
           key={`card-${i}-${g.anchor.id}`}
           className="my-6 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 sm:p-6"
         >
-          <SkeletonCardImage id={g.anchor.id} reversed={g.anchor.reversed} name="" />
+          <SkeletonCardImage id={g.anchor.id} reversed={g.anchor.reversed} name="" deck={deck} />
           <MarkdownBlock text={g.md.join('')} />
         </div>
       ))}

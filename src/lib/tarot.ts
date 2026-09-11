@@ -12,6 +12,8 @@ export interface TarotCard {
 
 export interface DrawnCard extends TarotCard {
   isReversed: boolean;
+  /** 牌组标记: 塔罗牌不填(undefined); 雷诺曼流程填 'lenormand'。解读室与服务端据此分流 */
+  arcana?: string;
 }
 
 export interface Spread {
@@ -176,7 +178,8 @@ export const TAROT_DECK: TarotCard[] = [
  * 返回原版伟特塔罗（Rider-Waite）牌面的本地图片路径。
  * 牌面图片位于 public/cards/card_XX.jpg（78 张完整牌库，公有领域）。
  */
-export function getCardImage(id: number): string {
+export function getCardImage(id: number, deck?: 'tarot' | 'lenormand'): string {
+  if (deck === 'lenormand') return `/lenormand/ln_${String(id).padStart(2, '0')}.webp`;
   return `/cards/card_${String(id).padStart(2, '0')}.jpg`;
 }
 

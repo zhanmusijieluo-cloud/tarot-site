@@ -1,5 +1,6 @@
 import type { Lang } from '@/i18n';
 import { CARD_EN_NAMES } from '@/lib/tarot';
+import { LN_EN_NAMES, LN_JA_NAMES } from '@/lib/lenormand';
 
 /**
  * 78 张牌的三语名称映射（zh 用 TAROT_DECK 原名，此处只补 en/ja）。
@@ -31,11 +32,17 @@ export const CARD_JA_NAMES: Record<number, string> = {
 
 /** 按语言取牌名：zh 用原名，ja 用日译名（缺失回退英文再回退原名），en 用韦特英文名 */
 export function localizedCardName(
-  card: { id?: number; name: string },
+  card: { id?: number; name: string; arcana?: string },
   lang: Lang
 ): string {
-  if (lang === 'zh') return card.name;
   const id = typeof card.id === 'number' ? card.id : -1;
+  // 雷诺曼牌: 走自己的三语名牌(与塔罗 CARD_*_NAMES 键区不冲突, 按 arcana 分支)
+  if (card.arcana === 'lenormand') {
+    if (lang === 'ja') return LN_JA_NAMES[id] || card.name;
+    if (lang === 'en') return LN_EN_NAMES[id] || card.name;
+    return card.name; // zh 会话存的就是中文名
+  }
+  if (lang === 'zh') return card.name;
   if (lang === 'ja') {
     return CARD_JA_NAMES[id] || CARD_EN_NAMES[id] || card.name;
   }

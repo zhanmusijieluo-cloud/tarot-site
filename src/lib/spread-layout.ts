@@ -125,6 +125,29 @@ const SPREAD_RAW: Record<string, RawLayout> = {
     coords: HOLY_TRIANGLE,
       step: 2,
   },
+  // ═══ 雷诺曼 (id 1-36 独立牌组, key 以 ln 前缀区分) ═══
+  lnx3: {
+    // 三张连线：左→中→右连读成句
+    coords: [
+      { x: 20, y: 52 },
+      { x: 50, y: 52 },
+      { x: 80, y: 52 },
+    ],
+      step: 2,
+  },
+  lnx5: {
+    // 五张十字：中心主题 + 左右影响 + 上下助力根基（与 CROSS_5 顺序一致）
+    coords: CROSS_5,
+      step: 4,
+  },
+  lnx9: {
+    // 九张方阵：3×3 环绕中心主题
+    coords: [
+      { x: 22, y: 18 }, { x: 50, y: 18 }, { x: 78, y: 18 },
+      { x: 22, y: 50 }, { x: 50, y: 50 }, { x: 78, y: 50 },
+      { x: 22, y: 82 }, { x: 50, y: 82 }, { x: 78, y: 82 },
+    ],
+  },
   situation: {
     // 核心问题居中；已看见在左（明处），未看见在右（暗处）；阻碍压上方；行动落下方
     coords: CROSS_5,

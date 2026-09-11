@@ -26,10 +26,10 @@ export default function LenormandPage() {
       wide
       footer={
         <button
-          onClick={() => router.push('/online')}
+          onClick={() => router.push('/lenormand/draw')}
           className="glass-btn-primary text-xs tracking-[0.25em]"
         >
-          {t('closing.cta')} →
+          {t('lnflow.start')} →
         </button>
       }
     >

@@ -45,9 +45,15 @@ interface TarotSceneProps {
   selectedIds: number[];
   onToggleCard: (id: number) => void;
   disabled?: boolean;
+  /** 牌组: tarot=78张(id 0-77, 默认) / lenormand=36张(id 1-36)。控制漂浮牌池与洗牌范围 */
+  deck?: 'tarot' | 'lenormand';
 }
 
-function shuffleIds(totalCards: number): number[] {
+function shuffleIds(totalCards: number, deck: 'tarot' | 'lenormand' = 'tarot'): number[] {
+  if (deck === 'lenormand') {
+    const ids = Array.from({ length: 36 }, (_, i) => i + 1); // 雷诺曼 id 1~36
+    return ids.sort(() => Math.random() - 0.5).slice(0, totalCards);
+  }
   return [...TAROT_DECK].sort(() => Math.random() - 0.5).slice(0, totalCards).map(c => c.id);
 }
 
@@ -124,7 +130,7 @@ class TarotSceneEngine {
   field: HTMLDivElement;
   nodes: HTMLButtonElement[] = [];
 
-  constructor(opts: { container: HTMLElement; totalCards: number; maxSelect: number; selectedIds: number[]; onToggleCard: (id: number) => void }) {
+  constructor(opts: { container: HTMLElement; totalCards: number; maxSelect: number; selectedIds: number[]; onToggleCard: (id: number) => void; deck?: 'tarot' | 'lenormand' }) {
     this.container = opts.container;
     this.totalCards = opts.totalCards;
     this.maxSelect = opts.maxSelect;
@@ -132,7 +138,7 @@ class TarotSceneEngine {
     this.onToggleCard = opts.onToggleCard;
     this.disabled = false;
     this.isMobile = window.matchMedia('(max-width: 767px)').matches;
-    this.cards = buildCards(opts.totalCards, this.isMobile, shuffleIds(opts.totalCards));
+    this.cards = buildCards(opts.totalCards, this.isMobile, shuffleIds(opts.totalCards, opts.deck));
 
     this.root = document.createElement('div');
     this.root.className = 'tarot-scene-root';
@@ -443,7 +449,7 @@ class TarotSceneEngine {
  * - 点选牌背（TAP_SLOP 容差区分拖拽与点击），选中雾粉光环高亮
  * - 牌序打乱，卡背无牌名
  */
-export default function TarotScene({ maxSelect, selectedIds, onToggleCard, disabled }: TarotSceneProps) {
+export default function TarotScene({ maxSelect, selectedIds, onToggleCard, disabled, deck = 'tarot' }: TarotSceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<TarotSceneEngine | null>(null);
 
@@ -452,10 +458,11 @@ export default function TarotScene({ maxSelect, selectedIds, onToggleCard, disab
     if (!container) return;
     const engine = new TarotSceneEngine({
       container,
-      totalCards: 78,
+      totalCards: deck === 'lenormand' ? 36 : 78,
       maxSelect,
       selectedIds,
       onToggleCard,
+      deck,
     });
     engine.init();
     engineRef.current = engine;

@@ -123,6 +123,23 @@ interface DbMeaning {
 }
 
 let _supabaseClient: any = null;
+
+/** 雷诺曼牌意数据（public/data/ln-details.json, 服务端进程内缓存一次）。读不到返回空 map → prompt 退化为仅关键词。 */
+let _lnDetails: Map<number, any> | null = null;
+function loadLnDetails(): Map<number, any> {
+  if (_lnDetails) return _lnDetails;
+  const map = new Map<number, any>();
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const p = path.join(process.cwd(), 'public', 'data', 'ln-details.json');
+    const arr = JSON.parse(fs.readFileSync(p, 'utf-8'));
+    for (const x of arr) map.set(x.id, x);
+  } catch { /* 文件缺失/服务端只读环境: 保持空表 */ }
+  _lnDetails = map;
+  return map;
+}
+
 /** 惰性创建 Supabase 客户端（用 NEXT_PUBLIC 公钥读取即可，公开读取策略已放行）。无环境变量时返回 null。 */
 function getSupabaseClient(): any {
   if (_supabaseClient) return _supabaseClient;
@@ -162,6 +179,7 @@ async function loadDbMeanings(ids: number[], lang: string): Promise<Map<number, 
 
 /** 取某张牌的静态牌性文本：优先数据库（存活内容），其次代码库，再回退 AI 生成值 */
 function traitsFor(card: any, ctx: ReadingCtx): string {
+  if (isLnCtx(ctx)) return ''; // 雷诺曼无塔罗牌性表
   const lang = ctx.lang;
   const id = typeof card?.id === 'number' ? card.id : -1;
   const db = id >= 0 ? ctx.dbMeanings.get(id) : undefined;
@@ -223,6 +241,10 @@ const TAROT_DECK_INDEX: { name_en: string }[] = (() => {
   return out;
 })();
 
+function isLnCtx(ctx: ReadingCtx): boolean {
+  return ctx.deck === 'lenormand';
+}
+
 interface ReadingCtx {
   positions: readonly string[];
   lang: 'zh' | 'en' | 'ja';
@@ -231,6 +253,8 @@ interface ReadingCtx {
   system: string;
   SECTION_TITLES: Record<string, string>;
   dbMeanings: Map<number, DbMeaning>;
+  /** 牌组标记: lenormand 时全链路禁用塔罗牌表(防 id 撞车) */
+  deck?: 'tarot' | 'lenormand';
 }
 
 /** 构建 cardsContext + 三语 prompt + system 指令（读牌与流式共用） */
@@ -239,6 +263,11 @@ async function buildReadingInputs(args: TarotReadingRequest): Promise<ReadingCtx
   const lang = (args.lang === 'en' || args.lang === 'ja' ? args.lang : 'zh') as 'zh' | 'en' | 'ja';
   const useEn = lang !== 'zh';
   const n = args.cards.length;
+  // ── 雷诺曼分支: 36张独立牌组(id 1-36 与塔罗 0-77 撞车), 全程不查塔罗牌表/案例库 ──
+  const isLn = args.deck === 'lenormand' || (args.cards.length > 0 && (args.cards[0] as any)?.arcana === 'lenormand');
+  if (isLn) {
+    return await buildLenormandInputs(args, lang, positions, n);
+  }
   // 从内容数据库读取本次抽到的牌意/牌性/象征（存活内容），读不到回退代码库
   const ids = args.cards.map((c: any) => (typeof c?.id === 'number' ? c.id : -1)).filter((i: number) => i >= 0);
   const dbMeanings = await loadDbMeanings(ids, lang);
@@ -443,6 +472,210 @@ ${cardsContext}
   return { positions, lang, n, prompt: prompt + casesBlock, system, SECTION_TITLES, dbMeanings };
 }
 
+/**
+ * 雷诺曼 36 张牌阵解读输入构建（与塔罗链路共骨架, prompt 全定制）:
+ * - 牌意权威源: public/data/ln-details.json (36张三语详解: core/domains/pairing/playing/timing/shadow)
+ * - 雷诺曼规则: 无逆位、读组合如造句、相邻牌互相修饰、中心牌为主题
+ * - 全程不查塔罗 card_meanings/traits/case 表 (id 1-36 与塔罗撞车)
+ */
+const LN_PLAYING_HINT: Record<number, string> = {
+  1: '♥8', 2: '6♥', 3: '8♣', 4: '10♦', 5: 'A♠', 6: 'K♥', 7: 'Q♣', 8: '9♠', 9: '6♦', 10: '10♣',
+  11: '8♦', 12: 'Q♦', 13: '9♦', 14: '7♠', 15: '2♠', 16: '9♥', 17: 'Q♠', 18: 'K♣', 19: 'J♣', 20: 'A♦',
+  21: '7♥', 22: '4♣', 23: '5♣', 24: 'A♥', 25: '9♣', 26: '7♦', 27: '7♣', 28: '8♠', 29: 'K♦', 30: '4♠',
+  31: 'J♦', 32: 'J♥', 33: 'A♣', 34: 'K♠', 35: 'Q♥', 36: 'J♠',
+};
+
+async function buildLenormandInputs(
+  args: TarotReadingRequest,
+  lang: 'zh' | 'en' | 'ja',
+  positions: readonly string[],
+  n: number
+): Promise<ReadingCtx> {
+  const lnData = loadLnDetails();
+  const useEn = lang !== 'zh';
+
+  const cardsContext = args.cards.map((card: any, index: number) => {
+    const id = typeof card.id === 'number' ? card.id : -1;
+    const det = lnData.get(id)?.[lang] || lnData.get(id)?.zh || {};
+    const cardName = localizedCardName(card, lang);
+    const position = positions[index] || (useEn ? '(no fixed position)' : '（无固定牌位）');
+    const kw = typeof card.upright === 'string' ? card.upright : '';
+    const dom = det.domains || {};
+    const pieces: string[] = [];
+    if (det.core) pieces.push(useEn ? 'Core meaning: ' : '核心象意：', det.core);
+    if (det.pairing) pieces.push(useEn ? 'Combination guide: ' : '组合读法：', det.pairing);
+    if (det.timing) pieces.push(useEn ? 'Timing: ' : '时间线索：', det.timing);
+    if (det.shadow) pieces.push(useEn ? 'Shadow: ' : '阴影提醒：', det.shadow);
+    if (dom.love || dom.career || dom.wealth || dom.health) {
+      pieces.push(useEn
+        ? `Domains — love: ${dom.love || ''}; career: ${dom.career || ''}; wealth: ${dom.wealth || ''}; health: ${dom.health || ''}`
+        : `四领域：感情=${dom.love || ''}；事业=${dom.career || ''}；财务=${dom.wealth || ''}；身心=${dom.health || ''}`);
+    }
+    const playing = LN_PLAYING_HINT[id] || card.element || '';
+    if (useEn) {
+      return `- Card ${index + 1} "${cardName}" (keywords: ${kw}; playing-card link: ${playing}) —— Position【${position}】\n  ${pieces.filter(Boolean).join(' | ')}`;
+    }
+    return `- 第${index + 1}张牌「${cardName}」（关键词：${kw}；扑克对应：${playing}）—— 牌位【${position}】\n  ${pieces.filter(Boolean).join(' | ')}`;
+  }).join('\n');
+
+  const LANG_INSTRUCTION =
+    lang === 'en'
+      ? '**OUTPUT LANGUAGE (CRITICAL): Write EVERY field of the JSON in English, in natural Lenormand-reading English.**'
+      : lang === 'ja'
+        ? '**出力言語（最重要）：JSON の全フィールドを日本語で書いてください。ルノルマン鑑定士の自然な日本語で出力すること。**'
+        : '**输出语言（重要）：所有字段必须使用简体中文书写。**';
+
+  const SECTION_TITLES: Record<string, string> =
+    lang === 'en'
+      ? {
+          s1: 'Part 1: Card-by-Card Breakdown',
+          posLabel: 'Position',
+          traitsLabel: 'Card Nature & Traits',
+          summaryLabel: 'Summary for the Querent',
+          s2: 'Part 2: The Sentence the Cards Tell',
+          s3: 'Part 3: Card-by-Card Interaction',
+          s4: 'Part 4: Deep Root Cause Analysis',
+          s5: 'Part 5: Trend Forecast',
+          s6: 'Part 6: Overall Conclusion',
+          s7: 'Part 7: Actionable Advice',
+        }
+      : lang === 'ja'
+        ? {
+            s1: 'セクション1：カード別の読み解き',
+            posLabel: 'ポジション',
+            traitsLabel: 'カードの性質',
+            summaryLabel: '相談者へのまとめ',
+            s2: 'セクション2：カードが作る一文',
+            s3: 'セクション3：カード同士の相互作用',
+            s4: 'セクション4：深層原因の分析',
+            s5: 'セクション5：情勢の推移予測',
+            s6: 'セクション6：総合まとめ',
+            s7: 'セクション7：実践的なアドバイス',
+          }
+        : {
+            s1: '板块1：逐张牌解读',
+            posLabel: '牌位',
+            traitsLabel: '牌性特质',
+            summaryLabel: '给问卜者的总结',
+            s2: '板块2：连线成句',
+            s3: '板块3：牌与牌的互动',
+            s4: '板块4：深层根源分析',
+            s5: '板块5：趋势推演',
+            s6: '板块6：综合结论',
+            s7: '板块7：行动建议',
+          };
+
+  const lnRules =
+    lang === 'en'
+      ? `You are a professional Lenormand reader (Petit Lenormand, 36-card tradition from «The Game of Hope»). Unlike tarot, Lenormand has NO reversed meanings — cards are read in combinations, like words forming sentences: the card BEFORE modifies the card AFTER (e.g. Letter+Rider = fast news; Snake+Ring = a complicated commitment). The central card of the spread is the theme. Use the authoritative card data given for each card (core meaning, combination guide, timing, shadow, domains) as established fact.
+
+Based on the above, output a complete reading covering ALL seven parts. **Output ONLY one valid JSON object, no text outside JSON, no code fences**:
+{
+  "cards": [
+    {
+      "position": "Position explanation: this card sits at 【position name】, addressing what aspect of the querent's question, 2-3 sentences",
+      "summary": "What this card means in the querent's specific situation, 3-4 sentences. Read it TOGETHER WITH its neighbors (state which card modifies it and how). Silently consider WHY the querent asks this question now — let that color tone and framing, but NEVER bend the verdict: card logic is the judge"
+    }
+  ],
+  "elementEnergy": "The sentence the cards tell: combine ALL drawn cards in spread order into one coherent narrative sentence (like a native Lenormand reader would), then unpack its key turning points. Explicitly name card-to-card pairings",
+  "links": "Card-by-card interaction: adjacency effects, mirror pairs (if any), which cards brighten or darken which",
+  "rootCause": "Deep root cause: the internal reasons behind the current situation, hidden emotions, past influences",
+  "trend": "Trend forecast: short-term and medium/long-term direction, using timing clues from the cards (e.g. Rider=fast, Mountain=slow); distinguish controllable factors from external ones",
+  "conclusion": "Overall conclusion: is the situation favorable, core contradiction, core opportunity",
+  "advice": "Actionable advice: short-term do-this / long-term adjust. MUST be bullet points, each starting with 「• 」 separated by \\n"
+}
+
+Hard requirements:
+0. ${LANG_INSTRUCTION}
+0.5. Each card comes with authoritative Lenormand data (core meaning / combination guide / timing / shadow / four domains). Treat it as established fact, cite it freely, never contradict or re-derive it. Do not output the raw data itself in any JSON field.
+1. The "cards" array must have exactly ${n} elements (one-to-one with drawn cards, in the same order); all six other fields must be non-empty strings.
+2. Every field value is a string; bullet points start with 「• 」 separated by \\n.
+3. This is Lenormand: NEVER mention reversed/reversed-position. When referencing a card position in prose, translate the position name into English.
+4. Bold the concrete signals themselves (**specific behaviors/times/events**, 1-2 per card summary, 1-3 elsewhere).
+5. No generic filler, no fear-mongering; emphasize the querent's own choices can change the outcome.
+6. **JSON escaping (CRITICAL): newlines inside strings must be literal \\n; double quotes escaped as \\"; never output raw newlines or unescaped quotes inside a string value.**`
+    : lang === 'ja'
+      ? `あなたはプロのルノルマン鑑定士（プティ・ルノルマン、36枚、「希望のゲーム」由来の伝統）。タロットと異なりルノルマンに**逆位置はありません**——カードは「単語」ではなく「文」で読みます：前のカードが後ろのカードを修飾する（例：手紙＋騎士＝速い知らせ、蛇＋指輪＝複雑な約束）。スプレッドの中心カードがテーマです。各カードに与えられた権威データ（コアの意味・組み合わせ読解・タイミング・影・四領域）は既成事実として扱うこと。
+
+上記に基づき全7セクションを一度に深く解釈してください。**有効な JSON オブジェクトのみ出力、JSON 外の文字列・コードブロック禁止**：
+{
+  "cards": [
+    {
+      "position": "ポジション説明：このカードは【ポジション名】に位置し、相談のどの側面に答えるか、2〜3文",
+      "summary": "相談者の具体的な問題においてこのカードが意味すること、3〜4文。必ず隣のカードと合わせて読むこと（どのカードが誰を修飾するか明記）。相談者が今この質問をした理由を黙って考え、温度感に反映させるが、判定を曲げない——牌義が判事"
+    }
+  ],
+  "elementEnergy": "カードが作る一文：引いた全カードをスプレッド順で一つの自然な文章に造句し（ルノルマン鑑定士らしく）、転換点を明示的に解説。ペア名を必ず挙げる",
+  "links": "カード同士の相互作用：隣接効果、鏡像ペア（あれば）、どちらがどちらを明るく／暗くするか",
+  "rootCause": "深層原因：今の状況の内的理由、隠れた感情、過去の影響",
+  "trend": "推移予測：短期・中長期の行方。タイミングデータ（騎士＝速い、山＝遅い等）を使う。可控／不可を区別",
+  "conclusion": "総合まとめ：全体の流れは吉か凶か、核心的矛盾、核心的チャンス",
+  "advice": "実践アドバイス：短期どうする／長期の調整。箇条書き、各項目「• 」始まり \\n 区切り"
+}
+
+必須要件：
+0. ${LANG_INSTRUCTION}
+0.5. 各カードの権威データは既成事実として自由に引用、矛盾・再導出禁止。データそのものは JSON に出力しない。
+1. "cards" 配列長はちょうど ${n}（引いたカードと一対一・同順）、他の6フィールドはすべて空でない文字列。
+2. 各値は文字列。箇条書きは「• 」始まり \\n 区切り。
+3. ルノルマンなので**逆位置/逆さまの語を一切使わない**。文中でポジションを参照する時は日本語に翻訳する。
+4. 具体的な兆候そのものを太字に（行動/時間/出来事、抽象ラベル不可）、各summary 1〜2箇所・他1〜3箇所。
+5. 紋切り型禁止・不安を煽らない。本人の選択で流れが変わると強調。
+6. **JSONエスケープ（重要）：文字列内の改行はリテラル \\n、引用符は \\"。生改行・未エスケープ引用符はJSON不正になる。**`
+      : `你是一位专业雷诺曼（Petit Lenormand，36张，源自1780年《希望之戏》传统）占卜师。与塔罗不同，雷诺曼**没有逆位**——牌是"词"，连起来读成"句"：前一张牌修饰后一张牌（例如：信+骑手=快消息；蛇+戒指=复杂纠葛的承诺）；牌阵中心的牌是整局主题。每张牌附有的权威数据（核心象意/组合读法/时间线索/阴影提醒/四领域）是既定事实，直接引用，不得矛盾或重新推导。
+
+请基于以上信息做完整深度解读，一次性输出全部七大板块。**必须只输出一个合法的 JSON 对象，禁止输出 JSON 以外的任何文字，禁止用 Markdown 代码块包裹**：
+{
+  "cards": [
+    {
+      "position": "牌位说明：这张牌位于【某牌位】，回答的是客户问题中关于XX的层面，2-3句",
+      "summary": "这张牌在客户具体问题中的含义，3-4句。必须结合相邻牌来读（点明是谁修饰谁、怎么修饰）。下笔前默想客户为何此刻问此问题，让措辞贴近其处境——但牌义永远是判官，绝不为迎合而扭曲占断"
+    }
+  ],
+  "elementEnergy": "连线成句：把全部抽出的牌按牌阵顺序连读成一句通顺的话（像雷诺曼师那样造句），再拆解句中关键转折。必须点名具体的两两组合（如「X+Y=……」）",
+  "links": "牌与牌的互动：相邻影响、镜像对（如牌阵对称位）、谁点亮谁、谁拖累谁",
+  "rootCause": "深层根源：当下局面的内在原因、隐藏情绪、过往影响",
+  "trend": "趋势推演：短期与中长期走向，利用牌的时间线索（骑手=快、山=迟滞、锚=长期稳定等），区分可控与不可控因素",
+  "conclusion": "综合结论：整体顺逆、核心矛盾、核心机会",
+  "advice": "落地建议：短期怎么做、长期怎么调。必须分条，每条「• 」开头 \\n 分隔"
+}
+
+硬性要求：
+0. ${LANG_INSTRUCTION}
+0.5. 每张牌附「雷诺曼权威牌意」，视为既定事实自由引用；牌意原文不得整段复述进 JSON 字段。
+1. "cards" 数组长度必须等于 ${n}（与抽牌顺序一一对应），其余六个字段都是非空字符串。
+2. 字段值全部是字符串；分点时每点「• 」开头 \\n 分隔。
+3. 雷诺曼体系**全文禁止出现"逆位/逆位置/reversed"字眼**。文中引用牌位时翻译为对应语言的自然说法。
+4. 关键语句加粗：**具体的行为/时间/事件信号本身**（不是概括标签），每张牌 summary 1-2 处，其余板块 1-3 处。
+5. 禁止空泛套话、不制造焦虑，强调问卜者自己的选择能改变走向。
+6. **JSON 转义（关键）：字符串值内换行必须写 \\n、双引号写 \\"；禁止输出裸换行或未转义引号，否则解读失败。**`;
+
+  const spreadDisplay = typeof args.spreadName === 'string' && args.spreadName
+    ? args.spreadName
+    : (lang === 'en' ? 'Lenormand spread' : lang === 'ja' ? 'ルノルマンスプレッド' : '雷诺曼牌阵');
+  const infoBlock = lang === 'en'
+    ? `**Reading information:**\n- Question: ${args.question || 'Not specified'}\n- Querent background: ${args.background || '(Not provided)'}\n- Spread: ${spreadDisplay}\n- Drawn cards (each labeled with its position — interpret strictly by this correspondence):\n${cardsContext}\n\n`
+    : lang === 'ja'
+      ? `**鑑定情報：**\n- 質問：${args.question || '未指定'}\n- 相談者の背景：${args.background || '（未提供）'}\n- スプレッド：${spreadDisplay}\n- 引いたカード（各カードにポジション明記。対応を厳守）：\n${cardsContext}\n\n`
+      : `**占卜信息：**\n- 问题：${args.question || '未指定'}\n- 问卜者背景：${args.background || '（未提供）'}\n- 牌阵：${spreadDisplay}\n- 抽牌结果（每张牌已标注牌位，严格按对应关系解读，不得混淆）：\n${cardsContext}\n\n`;
+  const prompt = infoBlock + lnRules;
+
+  const system =
+    lang === 'en'
+      ? 'You are a professional Lenormand (36-card) reader. Output ONLY valid JSON, no other text. Be concise and direct; skip lengthy deliberation. CRITICAL: Write ALL content in English. Never use Chinese or Japanese. Lenormand has no reversed cards.'
+      : lang === 'ja'
+        ? 'あなたはプロのルノルマン鑑定士です。有効な JSON のみを出力。簡潔に直接答えること。すべての内容を日本語で出力すること。ルノルマンに逆位置はありません。'
+        : '你是一位专业雷诺曼占卜师。你必须只输出合法 JSON，不输出任何其他文字。所有解读内容必须使用简体中文书写。雷诺曼没有逆位。';
+
+  return {
+    positions, lang, n,
+    prompt, system,
+    SECTION_TITLES,
+    dbMeanings: new Map<number, DbMeaning>(),
+    deck: 'lenormand',
+  };
+}
+
 /** 结构化结果 → 固定模板 Markdown（格式由代码保证，标题随站点语言切换） */
 /** 最终规范版式：骨架锚点不进最终全文（前端已实时渲染过卡面） */
 function assembleNarrative(
@@ -455,14 +688,20 @@ function assembleNarrative(
   sections.push(`## ${T.s1}`);
   structured.cards.forEach((c, i) => {
     const card = cards[i];
+    const isLn = isLnCtx(ctx);
     const positionLabel = positions[i] || '—';
-    const reversedLabel = lang === 'en' ? (card.isReversed ? 'Reversed' : 'Upright') : lang === 'ja' ? (card.isReversed ? '逆位置' : '正位置') : (card.isReversed ? '逆位' : '正位');
+    const reversedLabel = isLn
+      ? (lang === 'en' ? 'Upright' : lang === 'ja' ? '正位置' : '正位')
+      : (lang === 'en' ? (card.isReversed ? 'Reversed' : 'Upright') : lang === 'ja' ? (card.isReversed ? '逆位置' : '正位置') : (card.isReversed ? '逆位' : '正位'));
     const displayName = localizedCardName(card, lang);
-    sections.push(`### ${i + 1}. ${displayName}（${reversedLabel}）`);
+    // 雷诺曼无逆位: 卡头不带「(正位)」后缀, 与牌墙"不设逆位"说明一致
+    sections.push(isLn ? `### ${i + 1}. ${displayName}` : `### ${i + 1}. ${displayName}（${reversedLabel}）`);
     sections.push(`**${T.posLabel}**：${positionLabel}\n`);
     sections.push(c.position.trim() + '\n');
-    sections.push(`#### ${T.traitsLabel}\n\n`);
-    sections.push(toListMd(traitsFor(card, ctx) || c.traits || '') + '\n');
+    if (!isLn) {
+      sections.push(`#### ${T.traitsLabel}\n\n`);
+      sections.push(toListMd(traitsFor(card, ctx) || c.traits || '') + '\n');
+    }
     sections.push(`#### ${T.summaryLabel}\n\n`);
     sections.push(toParagraphMd(c.summary.trim()));
     if (i < structured.cards.length - 1) sections.push('\n---\n');
@@ -555,9 +794,9 @@ function createIncrementalEmitter(ctx: ReadingCtx, cards: any[]) {
     const parts: string[] = [];
     if (withDivider) parts.push('---\n\n');
     parts.push(`<!--card:${card.id}:${card.isReversed ? 1 : 0}-->`);
-    parts.push(`### ${i + 1}. ${name}（${reversedLabelOf(card)}）`);
+    parts.push(isLnCtx(ctx) ? `### ${i + 1}. ${name}` : `### ${i + 1}. ${name}（${reversedLabelOf(card)}）`);
     parts.push(`**${T.posLabel}**：${positions[i] || '—'}\n`);
-    parts.push(`#### ${T.traitsLabel}\n\n` + toListMd(traitsFor(card, ctx) || '') + '\n');
+    if (!isLnCtx(ctx)) parts.push(`#### ${T.traitsLabel}\n\n` + toListMd(traitsFor(card, ctx) || '') + '\n');
     return parts.join('\n');
   };
 

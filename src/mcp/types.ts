@@ -26,6 +26,8 @@ export interface TarotReadingRequest {
   mode?: 'auto' | 'manual';
   /** 输出语言（跟随站点语言）：en/zh/ja，缺省 zh */
   lang?: string;
+  /** 牌组: 缺省塔罗; 'lenormand' 走36张雷诺曼链路 */
+  deck?: 'tarot' | 'lenormand';
 }
 
 export interface TarotReadingResponse {
