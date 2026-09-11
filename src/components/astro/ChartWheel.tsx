@@ -1,11 +1,10 @@
 'use client';
 
 // ============================================================
-// 3D 星盘轮盘 (C1) — three.js
-// 结构: 宫位环(元素色扇区) + 星座环(30°格+符号) + 行星(真实NASA贴图星球)
-// 行星光斑已升级为"真实星体": 太阳自发光+点光源, 行星Phong受光, 土星带环
-// 视角: 俯视=标准星盘(ASC左/逆时针) 侧视=黄道面立起看黄纬悬浮
-// 线索: 脚线(行星→环上刻度) + 悬停/点击点亮 + 标注卡(落座/宫/尊贵/相位/接纳)
+// 3D 星盘轮盘 (C1 · 真实星体版 v2) — three.js
+// 方向铁则: ASC 固定9点钟(左), 宫位/星座自 ASC 逆时针增 (标准星盘惯例)
+// 行星全部平铺同一高度; 同度数挤靠的星球自动径向错层, 脚线仍指真实刻度
+// 点击星球 = 只做高亮+标注卡, 绝不自转盘面 (盘向=客户读盘的方位基准)
 // 纪律: 位置数据全部来自排盘引擎, 本组件只画不编
 // ============================================================
 
@@ -16,7 +15,7 @@ import { useI18n } from '@/i18n';
 // ---------- 与 API 返回对齐的数据类型 ----------
 export interface VPlanet {
   name: string; zh: string; symbol: string;
-  longitude: number; eclLat?: number; // 黄纬(度), 缺省0
+  longitude: number; eclLat?: number; // 黄纬(度)
   sign: string; signZh: string; degInSign: number; formatted: string;
   house: number | null; retrograde: boolean;
   dignity: { state: string; strength: number } | null;
@@ -30,6 +29,7 @@ export interface VReception {
 }
 export interface VChart {
   houseSystemUsed: string; timeKnown: boolean;
+  input: { year: number; month: number; day: number; hour: number; minute: number; city?: string };
   planets: VPlanet[];
   angles: { ascendant: VPlanet | null; midheaven: VPlanet | null };
   cusps: number[] | null;
@@ -38,12 +38,22 @@ export interface VChart {
   warnings: string[];
 }
 
-// ---------- 布局常量 ----------
-const R_OUT = 5.0;    // 外环(宫位环)
-const R_MID = 4.35;   // 中环(星座环)内缘
-const R_SIGN = 3.45;  // 星座环外缘(=宫位环内缘留缝)
-const R_PLAN = 2.75;  // 行星带半径
-const ASC_ANGLE_DEG = 180; // ASC 画在9点钟(行业惯例), 黄经逆时针增
+// ---------- 布局常量 (俯视: 屏幕右=+X, 屏幕上=-Z) ----------
+const R_OUT = 5.0;    // 宫位带外缘
+const R_BAND = 4.42;  // 宫位带内缘(星座带外缘)
+const R_SIGN = 3.45;  // 星座带内缘
+const R_PLAN = 2.68;  // 行星基准半径
+const GOLD = 0xcdb88a;
+
+// 黄经 → 屏幕角: rel=自ASC逆时针角; a=180°+rel → rel=0在左(9点), 逆时针走
+function lonToAngle(lon: number, ascLon: number): number {
+  const rel = (((lon - ascLon) % 360) + 360) % 360;
+  return (180 + rel) * Math.PI / 180;
+}
+function polar(r: number, a: number): THREE.Vector3 {
+  return new THREE.Vector3(Math.cos(a) * r, 0, -Math.sin(a) * r);
+}
+const norm360 = (d: number) => ((d % 360) + 360) % 360;
 
 const ELEMENT_OF_SIGN: Record<string, string> = {
   Aries: '火', Leo: '火', Sagittarius: '火',
@@ -54,9 +64,11 @@ const ELEMENT_OF_SIGN: Record<string, string> = {
 const ELEMENT_COLOR: Record<string, number> = {
   '火': 0xe8a08a, '土': 0xcdb88a, '风': 0x9cc3d8, '水': 0x8aa8d8,
 };
+const ELEMENT_HEX: Record<string, string> = {
+  '火': '#e8a08a', '土': '#cdb88a', '风': '#9cc3d8', '水': '#8aa8d8',
+};
 const SIGN_GLYPH = ['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
 const SIGN_ORDER = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
-const SIGN_ZH = ['白羊','金牛','双子','巨蟹','狮子','处女','天秤','天蝎','射手','摩羯','水瓶','双鱼'];
 const DIGNITY_ZH: Record<string, string> = {
   Domicile: '入庙', Exalted: '耀升', Detriment: '失势', Fall: '落陷', Peregrine: '游走',
 };
@@ -69,7 +81,7 @@ const SIGNS_ZH_MINI: Record<string, string> = {
   Capricornus: '摩羯', Aquarius: '水瓶', Pisces: '双鱼', Ophiuchus: '蛇夫',
 };
 
-// 真实星球贴图 (NASA Solar System Scope, 公有领域)
+// 真实星球贴图 (NASA Solar System Scope)
 const TEX: Record<string, string> = {
   Sun: '/textures/planet/2k_sun.jpg',
   Moon: '/textures/planet/2k_moon.jpg',
@@ -80,24 +92,13 @@ const TEX: Record<string, string> = {
   Saturn: '/textures/planet/2k_saturn.jpg',
   Uranus: '/textures/planet/2k_uranus.jpg',
   Neptune: '/textures/planet/2k_neptune.jpg',
-  Pluto: '/textures/planet/2k_moon.jpg', // 暂无NASA冥王星贴图, 灰岩质感代替
+  Pluto: '/textures/planet/2k_moon.jpg', // 无免费冥王星贴图, 灰岩质感代替
 };
-// 视觉半径(盘面尺度; 相对大小参照真实比例适度夸张保证可点)
 const BODY_R: Record<string, number> = {
   Sun: 0.42, Moon: 0.19, Mercury: 0.11, Venus: 0.16, Mars: 0.13,
   Jupiter: 0.30, Saturn: 0.26, Uranus: 0.21, Neptune: 0.20, Pluto: 0.09,
 };
-
 const DEG = Math.PI / 180;
-
-function lonToAngle(lon: number, ascLon: number): number {
-  const rel = (((lon - ascLon) % 360) + 360) % 360; // 自ASC逆时针
-  return (ASC_ANGLE_DEG - rel) * DEG;              // three世界角(x=cos,z=-sin)
-}
-function polar(r: number, a: number): THREE.Vector3 {
-  return new THREE.Vector3(Math.cos(a) * r, 0, -Math.sin(a) * r);
-}
-const norm360 = (d: number) => ((d % 360) + 360) % 360;
 
 function glowTexture(hex: string, px = 128): THREE.Texture {
   const c = document.createElement('canvas');
@@ -113,17 +114,17 @@ function glowTexture(hex: string, px = 128): THREE.Texture {
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
-function textTexture(text: string, font: number, color = '#e6ecff'): THREE.Texture {
+function textTexture(text: string, font: number, color = '#e6ecff', glow = 0): THREE.Texture {
+  const size = Math.max(128, Math.ceil(font * 2.6));
   const c = document.createElement('canvas');
-  c.width = c.height = 128;
+  c.width = c.height = size;
   const ctx = c.getContext('2d')!;
-  ctx.font = `300 ${font}px "PingFang SC","Microsoft YaHei",serif`;
-  ctx.fillStyle = color;
+  ctx.font = `400 ${font}px "Segoe UI Symbol","Apple Symbols","PingFang SC","Microsoft YaHei",serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.shadowColor = 'rgba(0,0,0,0.85)';
-  ctx.shadowBlur = 8;
-  ctx.fillText(text, 64, 64);
+  if (glow > 0) { ctx.shadowColor = color; ctx.shadowBlur = glow; }
+  ctx.fillStyle = color;
+  ctx.fillText(text, size / 2, size / 2);
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
@@ -139,7 +140,7 @@ interface SceneProps {
 
 function ChartScene({ chart, zhMode, view, selected, onSelect }: SceneProps) {
   const mountRef = useRef<HTMLDivElement>(null);
-  const aimRef = useRef<{ aim: (lon: number, lat: number) => void } | null>(null);
+  const apiRef = useRef<{ set: (n: string | null) => void } | null>(null);
 
   const ascLon = chart.angles.ascendant?.longitude ?? 0;
   const hasHouses = chart.timeKnown && !!chart.cusps;
@@ -158,262 +159,332 @@ function ChartScene({ chart, zhMode, view, selected, onSelect }: SceneProps) {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(42, W / H, 0.1, 100);
     camera.position.set(0, 10.6, 3.1);
-    camera.up.set(0, 0, -1);        // 俯视稳定化: 屏幕上方=世界-Z
     camera.lookAt(0, 0, 0);
 
-    const root = new THREE.Group(); // 盘面整体; YXZ序: y=水平自转(世界Y), x=倾角(俯视↔侧视)
+    const root = new THREE.Group();
     root.rotation.order = 'YXZ';
     scene.add(root);
     const disposables: { dispose: () => void }[] = [];
     const track = <T extends { dispose: () => void }>(x: T) => { disposables.push(x); return x; };
 
-    // 灯光: 太阳=点光源(真实方向→月相等受光正确) + 环境光保底
     const sunP = chart.planets.find((p) => p.name === 'Sun');
     scene.add(new THREE.AmbientLight(0xbcc8e8, 0.85));
     const sunLight = new THREE.PointLight(0xfff1d6, 2.6, 0, 0);
 
-    // ---------- 环 ----------
-    // 宫位扇区(外环): 元素色 + 悬高亮 userData
+    // ---------- 背景星尘 ----------
+    {
+      const pts: number[] = [];
+      for (let i = 0; i < 360; i++) {
+        const v = new THREE.Vector3().randomDirection();
+        const rr = 14 + Math.random() * 8;
+        pts.push(v.x * rr, v.y * rr * 0.6, v.z * rr);
+      }
+      const g = track(new THREE.BufferGeometry());
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+      root.add(new THREE.Points(g, track(new THREE.PointsMaterial({
+        color: 0x9fb4d8, size: 0.05, transparent: true, opacity: 0.35, sizeAttenuation: true, depthWrite: false,
+      }))));
+    }
+
+    // ---------- 中央发光点 ----------
+    {
+      const ct = track(glowTexture('#9db4e8', 128));
+      const cs = new THREE.Sprite(track(new THREE.SpriteMaterial({
+        map: ct, transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending,
+      })));
+      cs.scale.set(1.7, 1.7, 1);
+      root.add(cs);
+    }
+
+    // ---------- 宫位带 (外环: 细分扇区 + 金刻度) ----------
     const houseSlices: THREE.Mesh[] = [];
-    if (hasHouses) {
-      for (let h = 0; h < 12; h++) {
-        const c0 = norm360((chart.cusps as number[])[h]);
-        const c1 = norm360((chart.cusps as number[])[(h + 1) % 12]);
-        let span = norm360(c1 - c0); if (span < 1) span = 30;
-        const a0 = lonToAngle(c0, ascLon);
-        const geo = track(new THREE.RingGeometry(R_MID + 0.12, R_OUT, 40, 1, a0 - span * DEG, span * DEG));
-        const el = ELEMENT_OF_SIGN[SIGN_ORDER[Math.floor(c0 / 30) % 12]] ?? '风';
+    const cusps = chart.cusps as number[] | null;
+    {
+      const a1 = (s: number) => lonToAngle(s * 30, ascLon); // 星座带扇区起始角(跟随ASC)
+      for (let s = 0; s < 12; s++) {
+        const geo = track(new THREE.RingGeometry(R_SIGN, R_BAND, 24, 1, a1(s), 30 * DEG));
+        const el = ELEMENT_OF_SIGN[SIGN_ORDER[s]];
         const mat = track(new THREE.MeshBasicMaterial({
           color: ELEMENT_COLOR[el], transparent: true, opacity: 0.10, side: THREE.DoubleSide, depthWrite: false,
         }));
         const m = new THREE.Mesh(geo, mat);
         m.rotation.x = -Math.PI / 2;
-        m.userData = { houseSlice: h + 1, baseOpacity: 0.10 };
+        m.userData = { signSlice: s, baseOpacity: 0.10 };
         root.add(m);
         houseSlices.push(m);
+        // 符号: 元素色 + 微光, 大尺寸
+        const gt = track(textTexture(SIGN_GLYPH[s], 96, ELEMENT_HEX[el], 10));
+        const gs = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: gt, transparent: true, opacity: 0.95, depthWrite: false })));
+        gs.position.copy(polar((R_SIGN + R_BAND) / 2, lonToAngle(s * 30 + 15, ascLon)));
+        gs.scale.set(0.6, 0.6, 1);
+        root.add(gs);
+        // 星座边界: 30° 金色细线
+        const ab = lonToAngle(s * 30, ascLon);
+        root.add(new THREE.Line(
+          track(new THREE.BufferGeometry().setFromPoints([polar(R_SIGN, ab), polar(R_OUT, ab)])),
+          track(new THREE.LineBasicMaterial({ color: GOLD, transparent: true, opacity: 0.32 })),
+        ));
       }
     }
-    // 圈线
-    for (const [r, op] of [[R_OUT, 0.55], [R_MID + 0.12, 0.4], [R_SIGN, 0.4], [R_MID, 0.35]] as const) {
+    if (hasHouses && cusps) {
+      for (let h = 0; h < 12; h++) {
+        const c0 = norm360(cusps[h]), c1 = norm360(cusps[(h + 1) % 12]);
+        let span = norm360(c1 - c0); if (span < 1) span = 30;
+        const a0 = lonToAngle(c0, ascLon);
+        const geo = track(new THREE.RingGeometry(R_BAND + 0.04, R_OUT, 40, 1, a0, span * DEG));
+        const el = ELEMENT_OF_SIGN[SIGN_ORDER[Math.floor(c0 / 30) % 12]] ?? '风';
+        const mat = track(new THREE.MeshBasicMaterial({
+          color: ELEMENT_COLOR[el], transparent: true, opacity: 0.045, side: THREE.DoubleSide, depthWrite: false,
+        }));
+        const m = new THREE.Mesh(geo, mat);
+        m.rotation.x = -Math.PI / 2;
+        m.userData = { houseSlice: h + 1, baseOpacity: 0.045 };
+        root.add(m);
+        houseSlices.push(m);
+        // 宫头线 (角点1/4/7/10用金色)
+        const isAcs = h % 3 === 0;
+        root.add(new THREE.Line(
+          track(new THREE.BufferGeometry().setFromPoints([polar(R_SIGN, a0), polar(R_OUT, a0)])),
+          track(new THREE.LineBasicMaterial({
+            color: isAcs ? GOLD : 0x6f84ab, transparent: true, opacity: isAcs ? 0.95 : 0.6,
+          })),
+        ));
+        // 宫号 (扇区中点, 角点金色)
+        const amid = a0 + (span * DEG) / 2;
+        const tex = track(textTexture(String(h + 1), 46, isAcs ? '#e3d3a3' : '#9fb2d4'));
+        const spr = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.95, depthWrite: false })));
+        spr.position.copy(polar((R_BAND + R_OUT) / 2, amid));
+        spr.scale.set(0.3, 0.3, 1);
+        root.add(spr);
+      }
+      // ASC / MC 锚点标签 (带外)
+      const ascA = lonToAngle(norm360(cusps[0]), ascLon);
+      const mcA = lonToAngle(norm360(cusps[9]), ascLon);
+      for (const [txt, ang, big] of [['ASC', ascA, 1.15], ['MC', mcA, 1.0]] as const) {
+        const tex = track(textTexture(txt, 40, '#e3d3a3'));
+        const spr = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.95, depthWrite: false })));
+        const p = polar(R_OUT + 0.34, ang);
+        p.y = 0.26 * (big - 1);
+        spr.position.copy(p);
+        spr.scale.set(0.62 * big, 0.24 * big, 1);
+        root.add(spr);
+      }
+    } else {
+      // 未知时间: 无宫位环, 只留刻度圈
+      const g = track(new THREE.RingGeometry(R_BAND + 0.04, R_OUT, 128));
+      const m = new THREE.Mesh(g, track(new THREE.MeshBasicMaterial({ color: 0x1a2136, transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false })));
+      m.rotation.x = -Math.PI / 2;
+      root.add(m);
+    }
+
+    // ---------- 外环金线 + 5°/10° 刻度针脚 ----------
+    for (const [r, op] of [[R_BAND + 0.02, 0.5], [R_OUT, 0.6]] as const) {
       const ringLine = new THREE.Mesh(
-        track(new THREE.RingGeometry(r, r + 0.015, 160)),
-        track(new THREE.MeshBasicMaterial({ color: 0x8ea3c8, transparent: true, opacity: op, side: THREE.DoubleSide })),
+        track(new THREE.RingGeometry(r, r + 0.013, 220)),
+        track(new THREE.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: op, side: THREE.DoubleSide })),
       );
       ringLine.rotation.x = -Math.PI / 2;
       root.add(ringLine);
     }
-    // 星座扇区 + 符号
-    for (let s = 0; s < 12; s++) {
-      const a0 = lonToAngle(s * 30, ascLon);
-      const geo = track(new THREE.RingGeometry(R_SIGN, R_MID, 24, 1, a0 - 30 * DEG, 30 * DEG));
-      const el = ELEMENT_OF_SIGN[SIGN_ORDER[s]];
-      const mat = track(new THREE.MeshBasicMaterial({
-        color: ELEMENT_COLOR[el], transparent: true, opacity: 0.12, side: THREE.DoubleSide, depthWrite: false,
-      }));
-      const m = new THREE.Mesh(geo, mat);
-      m.rotation.x = -Math.PI / 2;
-      m.userData = { signSlice: s, baseOpacity: 0.12 };
-      root.add(m);
-      houseSlices.push(m);
-      const amid = lonToAngle(s * 30 + 15, ascLon);
-      const tex = track(textTexture(SIGN_GLYPH[s], 64, '#cdd9f2'));
-      const spr = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false })));
-      spr.position.copy(polar((R_SIGN + R_MID) / 2, amid));
-      spr.scale.set(0.52, 0.52, 1);
-      root.add(spr);
-    }
-    // 宫头线 + 宫号
-    if (hasHouses) {
-      for (let h = 0; h < 12; h++) {
-        const a = lonToAngle(norm360((chart.cusps as number[])[h]), ascLon);
-        const line = new THREE.Line(
-          track(new THREE.BufferGeometry().setFromPoints([polar(R_SIGN, a), polar(R_MID + 0.1, a)])),
-          track(new THREE.LineBasicMaterial({
-            color: h === 0 || h === 9 ? 0xcfe0ff : 0x5d6f92,
-            transparent: true, opacity: h === 0 || h === 9 ? 0.95 : 0.5,
-          })),
-        );
-        root.add(line);
-        const a1 = lonToAngle(norm360((chart.cusps as number[])[(h + 1) % 12]), ascLon);
-        const amid = a + norm180(a1 - a) / 2;
-        const tex = track(textTexture(String(h + 1), 46, '#93a8cc'));
-        const spr = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.9, depthWrite: false })));
-        spr.position.copy(polar((R_MID + 0.12 + R_OUT) / 2, amid));
-        spr.scale.set(0.34, 0.34, 1);
-        root.add(spr);
+    for (let lon = 0; lon < 360; lon += 5) {
+      const major = lon % 30 === 0, med = lon % 10 === 0;
+      if (!med && !major) {
+        // 5°: 极细短针脚
+        const a = lonToAngle(lon, ascLon);
+        root.add(new THREE.Line(
+          track(new THREE.BufferGeometry().setFromPoints([polar(R_OUT + 0.01, a), polar(R_OUT + 0.07, a)])),
+          track(new THREE.LineBasicMaterial({ color: 0x8a98b8, transparent: true, opacity: 0.3 })),
+        ));
+        continue;
       }
+      const a = lonToAngle(lon, ascLon);
+      const len = major ? 0.17 : 0.12;
+      root.add(new THREE.Line(
+        track(new THREE.BufferGeometry().setFromPoints([polar(R_OUT + 0.01, a), polar(R_OUT + len, a)])),
+        track(new THREE.LineBasicMaterial({ color: major ? GOLD : 0x8a98b8, transparent: true, opacity: major ? 0.85 : 0.5 })),
+      ));
     }
 
-    // ---------- 真实星球 ----------
+    // ---------- 行星: 同高度平铺 + 近距错层防遮挡 ----------
     const texLoader = new THREE.TextureLoader();
-    const planetObjs: { name: string; group: THREE.Group; mesh: THREE.Mesh; lon: number; lat: number }[] = [];
-    const core = new THREE.Group(); // 中心区(相位线用)
-    root.add(core);
+    const planetObjs: { name: string; group: THREE.Group; mesh: THREE.Mesh; r: number; a: number }[] = [];
+    {
+      // 按逆时针角度排序后聚类: 弧距 < 两半径和+0.10 的同组
+      const items = chart.planets.map((p) => {
+        const a = lonToAngle(p.longitude, ascLon);
+        const rel = norm360(p.longitude - ascLon);
+        return { p, a, rel, br: BODY_R[p.name] ?? 0.14 };
+      }).sort((x, y) => x.rel - y.rel);
+      const groups: number[][] = [];
+      items.forEach((it, i) => {
+        const g0 = groups[groups.length - 1];
+        if (g0) {
+          const prev = items[g0[g0.length - 1]];
+          if (Math.abs(it.rel - prev.rel) * DEG * R_PLAN < (prev.br + it.br) * 1.08 + 0.06) g0.push(i);
+          else groups.push([i]);
+        } else groups.push([i]);
+      });
+      // 环向跨360°的贴邻也并入
+      if (groups.length > 1) {
+        const gF = groups[0], gL = groups[groups.length - 1];
+        if ((360 - items[gL[gL.length - 1]].rel + items[gF[0]].rel) * DEG * R_PLAN < (items[gL[gL.length - 1]].br + items[gF[0]].br) * 1.08 + 0.06) {
+          groups[0] = [...gL.reverse(), ...gF];
+          groups.pop();
+        }
+      }
+      const OFFSETS = [0, -0.62, 0.55, -1.18, 1.05]; // 先内后外, 外扩封顶贴星座带
+      const radiusOf = new Map<string, number>();
+      for (const g of groups) {
+        g.forEach((idx, k) => radiusOf.set(items[idx].p.name, R_PLAN + (OFFSETS[k % OFFSETS.length] ?? (k % 2 ? -1.4 : 1.4))));
+      }
 
-    for (const p of chart.planets) {
-      const a = lonToAngle(p.longitude, ascLon);
-      const lat = p.eclLat ?? 0;
-      const r = R_PLAN;
-      const pos = polar(r, a);
-      pos.y = Math.sin(lat * DEG) * r * 3.0; // 黄纬夸张, 侧视可见
+      for (const it of items) {
+        const p = it.p;
+        const r = radiusOf.get(p.name) ?? R_PLAN;
+        const pos = polar(r, it.a);
+        const g = new THREE.Group();
+        g.position.copy(pos);
 
-      const g = new THREE.Group();
-      g.position.copy(pos);
-      const br = BODY_R[p.name] ?? 0.14;
-
-      let mat: THREE.Material;
-      if (p.name === 'Sun') {
-        mat = new THREE.MeshBasicMaterial({ color: 0xffffff }); // 自发光
-      } else {
-        mat = new THREE.MeshPhongMaterial({
+        let mat: THREE.Material;
+        if (p.name === 'Sun') mat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        else mat = new THREE.MeshPhongMaterial({
           color: p.name === 'Pluto' ? 0xb8b0a8 : 0xffffff,
           emissive: 0x121622, emissiveIntensity: 1, shininess: p.name === 'Moon' ? 2 : 8,
         });
-      }
-      const geo = track(new THREE.SphereGeometry(br, 24, 14));
-      const mesh = new THREE.Mesh(geo, track(mat));
-      mesh.userData = { planet: p.name };
-      g.add(mesh);
-      if (TEX[p.name]) {
-        texLoader.load(TEX[p.name], (t) => {
-          t.colorSpace = THREE.SRGBColorSpace;
-          (mat as THREE.MeshPhongMaterial).map = t;
-          (mat as THREE.MeshPhongMaterial).needsUpdate = true;
-        });
-      }
-      // 太阳光晕 + 把点光源摆到太阳位置(挂在root上, 随盘旋转)
-      if (p.name === 'Sun') {
-        const gt = track(glowTexture('#ffce7a'));
-        const gs = new THREE.Sprite(track(new THREE.SpriteMaterial({
-          map: gt, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending,
-        })));
-        gs.scale.set(br * 5.2, br * 5.2, 1);
-        g.add(gs);
-        sunLight.position.copy(pos);
-        root.add(sunLight);
-      } else {
-        // 其他星球一层很淡的元素色光斑, 方便在深底上看清
-        const el = ELEMENT_OF_SIGN[p.sign] ?? '风';
-        const hex = '#' + ELEMENT_COLOR[el].toString(16).padStart(6, '0');
-        const gt = track(glowTexture(hex));
-        const gs = new THREE.Sprite(track(new THREE.SpriteMaterial({
-          map: gt, transparent: true, opacity: 0.32, depthWrite: false, blending: THREE.AdditiveBlending,
-        })));
-        gs.scale.set(br * 3.6, br * 3.6, 1);
-        g.add(gs);
-      }
-      // 土星环
-      if (p.name === 'Saturn') {
-        const rg = track(new THREE.RingGeometry(br * 1.4, br * 2.35, 40, 1));
-        const pArr = rg.attributes.position, uvA = rg.attributes.uv;
-        const v3 = new THREE.Vector3();
-        for (let i = 0; i < pArr.count; i++) {
-          v3.fromBufferAttribute(pArr, i);
-          uvA.setXY(i, (v3.length() - br * 1.4) / (br * 0.95), 0.5);
+        const geo = track(new THREE.SphereGeometry(it.br, 24, 14));
+        const mesh = new THREE.Mesh(geo, track(mat));
+        mesh.userData = { planet: p.name };
+        g.add(mesh);
+        if (TEX[p.name]) {
+          texLoader.load(TEX[p.name], (t) => {
+            t.colorSpace = THREE.SRGBColorSpace;
+            (mat as THREE.MeshPhongMaterial).map = t;
+            (mat as THREE.MeshPhongMaterial).needsUpdate = true;
+          });
         }
-        const ringMat = track(new THREE.MeshBasicMaterial({ color: 0xd8c9a8, side: THREE.DoubleSide, transparent: true, opacity: 0.0 }));
-        texLoader.load('/textures/planet/2k_saturn_ring_alpha.png', (t) => {
-          t.colorSpace = THREE.SRGBColorSpace;
-          ringMat.map = t; ringMat.opacity = 0.9; ringMat.needsUpdate = true;
-        });
-        const rm = new THREE.Mesh(rg, ringMat);
-        rm.rotation.x = Math.PI / 2 + 0.45;
-        g.add(rm);
-      }
-      // 符号标签(球上方)
-      const lt = track(textTexture(`${p.symbol}${p.retrograde ? '℞' : ''}`, 44, '#f2f6ff'));
-      const ls = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: lt, transparent: true, depthWrite: false })));
-      ls.position.set(0, br + 0.28, 0);
-      ls.scale.set(0.42, 0.42, 1);
-      g.add(ls);
-      root.add(g);
-      planetObjs.push({ name: p.name, group: g, mesh, lon: p.longitude, lat });
+        if (p.name === 'Sun') {
+          const gt = track(glowTexture('#ffce7a'));
+          const gs = new THREE.Sprite(track(new THREE.SpriteMaterial({
+            map: gt, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending,
+          })));
+          gs.scale.set(it.br * 5.2, it.br * 5.2, 1);
+          g.add(gs);
+          sunLight.position.copy(pos);
+          root.add(sunLight);
+        } else {
+          const el = ELEMENT_OF_SIGN[p.sign] ?? '风';
+          const gt = track(glowTexture(ELEMENT_HEX[el]));
+          const gs = new THREE.Sprite(track(new THREE.SpriteMaterial({
+            map: gt, transparent: true, opacity: 0.3, depthWrite: false, blending: THREE.AdditiveBlending,
+          })));
+          gs.scale.set(it.br * 3.4, it.br * 3.4, 1);
+          g.add(gs);
+        }
+        if (p.name === 'Saturn') {
+          const rg = track(new THREE.RingGeometry(it.br * 1.4, it.br * 2.3, 40, 1));
+          const pArr = rg.attributes.position, uvA = rg.attributes.uv;
+          const v3 = new THREE.Vector3();
+          for (let i = 0; i < pArr.count; i++) {
+            v3.fromBufferAttribute(pArr, i);
+            uvA.setXY(i, (v3.length() - it.br * 1.4) / (it.br * 0.95), 0.5);
+          }
+          const ringMat = track(new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0 }));
+          texLoader.load('/textures/planet/2k_saturn_ring_alpha.png', (t) => {
+            t.colorSpace = THREE.SRGBColorSpace;
+            ringMat.map = t; ringMat.opacity = 0.9; ringMat.needsUpdate = true;
+          });
+          const rm = new THREE.Mesh(rg, ringMat);
+          rm.rotation.x = Math.PI / 2 + 0.45;
+          g.add(rm);
+        }
+        // 符号标签 (统一挂在所有星球同一高度上方)
+        const lt = track(textTexture(`${p.symbol}${p.retrograde ? '℞' : ''}`, 44, '#f2f6ff', 6));
+        const ls = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: lt, transparent: true, depthWrite: false })));
+        ls.position.set(0, it.br + 0.3, 0);
+        ls.scale.set(0.44, 0.44, 1);
+        g.add(ls);
+        root.add(g);
+        planetObjs.push({ name: p.name, group: g, mesh, r, a: it.a });
 
-      // 脚线 + 刻度点 (球→星座环上的影子)
-      const foot = polar(R_MID - 0.02, a);
-      const lg = track(new THREE.BufferGeometry().setFromPoints([pos, foot]));
-      root.add(new THREE.Line(lg, track(new THREE.LineBasicMaterial({ color: 0x8ea3c8, transparent: true, opacity: 0.35 }))));
-      const dot = new THREE.Mesh(
-        track(new THREE.CircleGeometry(0.06, 14)),
-        track(new THREE.MeshBasicMaterial({ color: ELEMENT_COLOR[ELEMENT_OF_SIGN[p.sign] ?? '风'], transparent: true, opacity: 0.95, side: THREE.DoubleSide })),
-      );
-      dot.position.copy(foot); dot.rotation.x = -Math.PI / 2;
-      root.add(dot);
+        // 脚线 + 刻度点 (球 → 真实黄经在星座带上的投影)
+        const foot = polar(R_SIGN - 0.01, it.a);
+        root.add(new THREE.Line(
+          track(new THREE.BufferGeometry().setFromPoints([pos, foot])),
+          track(new THREE.LineBasicMaterial({ color: 0x8ea3c8, transparent: true, opacity: 0.3 })),
+        ));
+        const el = ELEMENT_OF_SIGN[p.sign] ?? '风';
+        const dot = new THREE.Mesh(
+          track(new THREE.CircleGeometry(0.055, 14)),
+          track(new THREE.MeshBasicMaterial({ color: ELEMENT_COLOR[el], transparent: true, opacity: 0.95, side: THREE.DoubleSide })),
+        );
+        dot.position.copy(foot); dot.rotation.x = -Math.PI / 2;
+        root.add(dot);
+      }
     }
-    root.add(sunLight); // 兜底: Sun不在行星列表(理论上不会发生)时灯仍生效, 幂等add无副作用
+    root.add(sunLight); // 幂等兜底
 
     // ---------- 相位线 ----------
-    const aspectLines: { mesh: THREE.Line; a: string; b: string; baseOp: number; hot: boolean }[] = [];
-    const lonOf: Record<string, number> = {};
-    for (const p of chart.planets) lonOf[p.name] = p.longitude;
+    const aspectLines: { mesh: THREE.Line; a: string; b: string; baseOp: number }[] = [];
     for (const asp of aspects) {
-      if (!(asp.a in lonOf) || !(asp.b in lonOf)) continue;
-      const p0 = polar(R_PLAN - 0.55, lonToAngle(lonOf[asp.a], ascLon));
-      const p1 = polar(R_PLAN - 0.55, lonToAngle(lonOf[asp.b], ascLon));
-      const hot = asp.type === 'trine' || asp.type === 'sextile';
-      const conj = asp.type === 'conjunction';
-      const col = conj ? 0xcdb88a : hot ? 0x8aa8d8 : 0xe8a08a;
-      const baseOp = conj ? 0.42 : 0.5;
+      const pa = planetObjs.find((o) => o.name === asp.a);
+      const pb = planetObjs.find((o) => o.name === asp.b);
+      if (!pa || !pb) continue;
+      const ra = Math.max(0.5, pa.r - (BODY_R[asp.a] ?? 0.14) - 0.08);
+      const rb = Math.max(0.5, pb.r - (BODY_R[asp.b] ?? 0.14) - 0.08);
+      const col = asp.type === 'conjunction' ? GOLD : (asp.type === 'trine' || asp.type === 'sextile') ? 0x8aa8d8 : 0xe8a08a;
       const mesh = new THREE.Line(
-        track(new THREE.BufferGeometry().setFromPoints([p0, p1])),
-        track(new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: baseOp })),
+        track(new THREE.BufferGeometry().setFromPoints([polar(ra, pa.a), polar(rb, pb.a)])),
+        track(new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: 0.5 })),
       );
       root.add(mesh);
-      aspectLines.push({ mesh, a: asp.a, b: asp.b, baseOp, hot });
+      aspectLines.push({ mesh, a: asp.a, b: asp.b, baseOp: 0.5 });
     }
 
-    // ---------- 高亮 ----------
-    // 光晕/标签 sprite 记录基准透明度, 选中=放大, 其他=压暗(反复切换不衰减)
+    // ---------- 高亮 (不移动盘面) ----------
     for (const po of planetObjs) {
       po.group.traverse((o) => {
         const sp = o as THREE.Sprite;
         if (sp.isSprite && (sp.material as THREE.SpriteMaterial).userData?.base === undefined) {
-          (sp.material as THREE.SpriteMaterial).userData = { ...(sp.material as THREE.SpriteMaterial).userData, base: (sp.material as THREE.SpriteMaterial).opacity };
+          const sm = sp.material as THREE.SpriteMaterial;
+          sm.userData = { ...sm.userData, base: sm.opacity };
         }
       });
     }
-    let curSel = selected;
-    const applyHighlight = () => {
-      const name = curSel;
-      const selPlanet = name ? chart.planets.find((x) => x.name === name) ?? null : null;
+    const applyHighlight = (name: string | null) => {
+      const sel = name ? chart.planets.find((x) => x.name === name) ?? null : null;
       for (const po of planetObjs) {
-        const dim = name ? (po.name === name ? 1 : 0.25) : 1;
-        po.group.scale.setScalar(po.name === name ? 1.35 : 1);
+        const dim = name ? (po.name === name ? 1 : 0.22) : 1;
+        po.group.scale.setScalar(po.name === name ? 1.45 : 1);
         const m = po.mesh.material as THREE.MeshPhongMaterial;
-        if (m.emissiveIntensity !== undefined) m.emissiveIntensity = po.name === name ? 2.2 : 1;
+        if (m.emissiveIntensity !== undefined) m.emissiveIntensity = po.name === name ? 2.4 : 1;
         po.group.traverse((o) => {
           const sp = o as THREE.Sprite;
           if (sp.isSprite) {
-            const base = (sp.material as THREE.SpriteMaterial).userData?.base as number | undefined ?? (sp.material as THREE.SpriteMaterial).opacity;
+            const base = (sp.material as THREE.SpriteMaterial).userData?.base as number | undefined ?? 1;
             (sp.material as THREE.SpriteMaterial).opacity = base * dim;
           }
         });
       }
       for (const al of aspectLines) {
-        const isHot = name && (al.a === name || al.b === name);
-        (al.mesh.material as THREE.LineBasicMaterial).opacity = name ? (isHot ? 0.98 : 0.05) : al.baseOp;
+        const hot = name && (al.a === name || al.b === name);
+        (al.mesh.material as THREE.LineBasicMaterial).opacity = name ? (hot ? 0.98 : 0.05) : al.baseOp;
       }
       for (const hs of houseSlices) {
         const ud = hs.userData as { signSlice?: number; houseSlice?: number; baseOpacity: number };
         let target = ud.baseOpacity;
-        if (selPlanet) {
-          if (ud.signSlice !== undefined && SIGN_ORDER[ud.signSlice] === selPlanet.sign) target = 0.42;
-          if (ud.houseSlice !== undefined && selPlanet.house === ud.houseSlice) target = Math.max(target, 0.32);
+        if (sel) {
+          if (ud.signSlice !== undefined && SIGN_ORDER[ud.signSlice] === sel.sign) target = 0.4;
+          if (ud.houseSlice !== undefined && sel.house === ud.houseSlice) target = Math.max(target, 0.3);
         }
         (hs.material as THREE.MeshBasicMaterial).opacity = target;
       }
     };
-    applyHighlight();
-    apiRef_local.apply = applyHighlight;
-    apiRef_local.set = (n: string | null) => { curSel = n; applyHighlight(); };
+    applyHighlight(selected);
+    apiRef.current = { set: applyHighlight };
 
-    // ---------- 拖拽旋转 + 滚轮变焦 + 点击拾取 ----------
+    // ---------- 拖拽旋转(惯性) + 滚轮变焦 + 点击 ----------
     let dragging = false, movedPx = 0, lastX = 0, lastY = 0;
-    let yawV = 0, pitchV = 0;             // 惯性速度
-    let spinY = 0, tiltUser = 0;          // 自转角 / 用户俯仰偏置
-    let fov = 42;
-    let aimLL: [number, number] | null = null;
-
+    let yawV = 0, spinY = 0, fov = 42;
     const el = renderer.domElement;
     const onDown = (e: PointerEvent) => { dragging = true; movedPx = 0; lastX = e.clientX; lastY = e.clientY; };
     const onMove = (e: PointerEvent) => {
@@ -421,14 +492,13 @@ function ChartScene({ chart, zhMode, view, selected, onSelect }: SceneProps) {
       const dx = e.clientX - lastX, dy = e.clientY - lastY;
       lastX = e.clientX; lastY = e.clientY;
       movedPx += Math.abs(dx) + Math.abs(dy);
-      yawV = dx * 0.005; pitchV = dy * 0.005;
+      yawV = dx * 0.005;
       spinY += yawV;
-      tiltUser = Math.min(0.5, Math.max(-0.5, tiltUser + pitchV));
     };
     const onUp = (e: PointerEvent) => {
       if (!dragging) return;
       dragging = false;
-      if (movedPx > 7) return; // 拖拽不算点击
+      if (movedPx > 7) return;
       const rect = el.getBoundingClientRect();
       const ndc = new THREE.Vector2(
         ((e.clientX - rect.left) / rect.width) * 2 - 1,
@@ -449,43 +519,22 @@ function ChartScene({ chart, zhMode, view, selected, onSelect }: SceneProps) {
     window.addEventListener('pointerup', onUp);
     el.addEventListener('wheel', onWheel, { passive: false });
 
-    // 聚焦: 把行星转到"近侧屏幕中下"(朝相机一侧, 显得大、标签可读)
-    aimRef.current = { aim: (lon, lat) => { void lat; aimLL = [lon, 0]; } };
-
     // ---------- 渲染循环 ----------
-    let raf = 0;
-    let last = performance.now();
+    let raf = 0, last = performance.now();
     const tick = () => {
       const now = performance.now();
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      if (!dragging) { // 惯性衰减
-        yawV *= 0.88; pitchV *= 0.88;
-        spinY += yawV;
-        tiltUser = Math.min(0.5, Math.max(-0.5, tiltUser + pitchV));
-      }
-      // 倾角(top平视/side立起) + 用户偏置; YXZ序: y=世界自转, x=盘面倾角
-      const targetTilt = (view === 'side' ? 1.12 : 0) + tiltUser * (view === 'side' ? 0.4 : 1);
-      root.rotation.x += (targetTilt - root.rotation.x) * Math.min(1, dt * 5);
-      if (aimLL) { // 聚焦收敛: 世界角 a+ry = -π/2 (近侧)
-        const a = lonToAngle(aimLL[0], ascLon);
-        const wantY = -Math.PI / 2 - a;
-        const diff = ((wantY - spinY + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
-        if (Math.abs(diff) < 0.008) aimLL = null;
-        else spinY += diff * Math.min(1, dt * 5);
-      }
+      if (!dragging) { yawV *= 0.88; spinY += yawV; }
       root.rotation.y += (spinY - root.rotation.y) * Math.min(1, dt * 9);
+      const targetTilt = view === 'side' ? 1.02 : 0;
+      root.rotation.x += (targetTilt - root.rotation.x) * Math.min(1, dt * 5);
       camera.fov += (fov - camera.fov) * Math.min(1, dt * 7);
       camera.updateProjectionMatrix();
-      for (const po of planetObjs) po.mesh.rotation.y += dt * 0.12; // 星球自转
+      for (const po of planetObjs) po.mesh.rotation.y += dt * 0.12;
       renderer.render(scene, camera);
       raf = requestAnimationFrame(tick);
     };
-    // 进场: 太阳转到近侧(第一眼看见太阳)
-    if (sunP) {
-      const a0 = lonToAngle(sunP.longitude, ascLon);
-      spinY = root.rotation.y = -Math.PI / 2 - a0;
-    }
     tick();
 
     const onResize = () => {
@@ -505,29 +554,15 @@ function ChartScene({ chart, zhMode, view, selected, onSelect }: SceneProps) {
       disposables.forEach((d) => d.dispose());
       renderer.dispose();
       if (renderer.domElement.parentElement === mount) mount.removeChild(renderer.domElement);
-      aimRef.current = null;
+      apiRef.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chart, view]);
 
-  // selected 变化 → 高亮 + 聚焦 (不重建场景)
-  useEffect(() => {
-    apiRef_local.set?.(selected);
-    const p = selected ? chart.planets.find((x) => x.name === selected) : null;
-    if (p) aimRef.current?.aim(p.longitude, p.eclLat ?? 0);
-  }, [selected, chart]);
+  // selected 变化 → 只改高亮, 不动盘
+  useEffect(() => { apiRef.current?.set(selected); }, [selected]);
 
   return <div ref={mountRef} className="h-[420px] w-full cursor-grab active:cursor-grabbing sm:h-[520px]" />;
-}
-
-// 轻量单例桥 (场景重建频率低, 避免 ref 穿透层层传递)
-const apiRef_local: { set?: (n: string | null) => void; apply?: () => void } = {};
-
-function norm180(r: number): number {
-  let x = r % (Math.PI * 2);
-  if (x > Math.PI) x -= Math.PI * 2;
-  if (x < -Math.PI) x += Math.PI * 2;
-  return x;
 }
 
 // ---------- 点击标注卡(纯标注, 无AI) ----------
@@ -647,7 +682,7 @@ export default function ChartWheel({ chart, zhMode }: { chart: VChart; zhMode: b
             {t('astro.view.side')}
           </button>
         </div>
-        {/* 星球快捷跳转(小星球点不到时按符号直达) */}
+        {/* 星球快捷跳转 */}
         <div className="flex flex-wrap gap-1">
           {chart.planets.map((p) => (
             <button
