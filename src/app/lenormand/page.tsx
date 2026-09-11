@@ -97,12 +97,16 @@ export default function LenormandPage() {
                   onClick={() => goSpread(key)}
                   className="group h-full w-full rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:border-accent/30 hover:bg-accent/[0.05]"
                 >
-                  {/* 迷你阵位示意（按真实布局坐标缩略） */}
-                  <div className="relative mb-4 h-[54px] w-full">
+                  {/* 迷你阵位示意：真实鎏金卡背微缩图（与快速占卜大卡同源图） */}
+                  <div className="relative mb-4 h-[64px] w-full">
                     {SPREAD_MINI[key].map((pt, j) => (
-                      <span
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
                         key={j}
-                        className="absolute h-[14px] w-[10px] -translate-x-1/2 -translate-y-1/2 rounded-[2px] border border-accent/30 bg-accent/[0.08] transition-colors group-hover:border-accent/60 group-hover:bg-accent/20"
+                        src="/cards/card-back-new.webp"
+                        alt=""
+                        loading="lazy"
+                        className="absolute h-[20px] w-[13px] -translate-x-1/2 -translate-y-1/2 rounded-[3px] opacity-85 shadow-[0_2px_6px_rgba(0,0,0,0.55)] ring-1 ring-white/10 transition-all duration-300 group-hover:opacity-100 group-hover:ring-accent/40"
                         style={{ left: `${pt.x}%`, top: `${pt.y}%` }}
                       />
                     ))}
