@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import PageShell, { Reveal, SectionHead } from '@/components/PageShell';
 import { TAROT_DECK, getCardImage } from '@/lib/tarot';
 import { localizedCardName } from '@/lib/card-names';
@@ -59,9 +59,18 @@ const BLOCKS = [
 export default function CardDetailPage() {
   const { id } = useParams();
   const cardId = parseInt(String(id), 10);
+  const router = useRouter();
   const { t, lang } = useI18n();
   const [details, setDetails] = useState<CardDetails | null>(null);
   const [loaded, setLoaded] = useState(false);
+
+  // 返回 = 撤销一步历史(浏览器返回键才能正确跳出本板块); 直链进入无历史时兜底跳牌库
+  const backToDeck = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) router.back();
+    else router.push('/learn');
+  };
+  // 上/下一张 = 替换当前历史记录, 不往栈里摞牌
+  const goCard = (target: number) => router.replace(`/learn/card/${target}`);
 
   // 运行时加载 JSON 数据（避免大文件进构建产物，加快编译）
   useEffect(() => {
@@ -144,12 +153,12 @@ export default function CardDetailPage() {
     >
       {/* 返回牌库 */}
       <div className="mb-10">
-        <Link
-          href="/learn"
+        <button
+          onClick={backToDeck}
           className="inline-flex items-center gap-1.5 text-xs tracking-[0.15em] text-muted transition-colors hover:text-accent"
         >
           <ChevronLeft className="h-4 w-4" /> {t('learn.detail.back')}
-        </Link>
+        </button>
       </div>
 
       {/* 顶部：牌面 + 关键信息 */}
@@ -257,9 +266,9 @@ export default function CardDetailPage() {
 
       {/* 上下张导航 */}
       <div className="mt-16 grid gap-3 border-t border-white/[0.06] pt-8 sm:grid-cols-2">
-        <Link
-          href={`/learn/card/${prev.id}`}
-          className="group flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 transition-all hover:border-accent/30 hover:bg-accent/[0.05]"
+        <button
+          onClick={() => goCard(prev.id)}
+          className="group flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-left transition-all hover:border-accent/30 hover:bg-accent/[0.05]"
         >
           <ChevronLeft className="h-5 w-5 shrink-0 text-muted transition-transform group-hover:-translate-x-1" />
           <span className="min-w-0">
@@ -268,9 +277,9 @@ export default function CardDetailPage() {
             </span>
             <span className="block truncate text-sm text-frost">{prevName}</span>
           </span>
-        </Link>
-        <Link
-          href={`/learn/card/${next.id}`}
+        </button>
+        <button
+          onClick={() => goCard(next.id)}
           className="group flex items-center justify-end gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-right transition-all hover:border-accent/30 hover:bg-accent/[0.05]"
         >
           <span className="min-w-0">
@@ -280,7 +289,7 @@ export default function CardDetailPage() {
             <span className="block truncate text-sm text-frost">{nextName}</span>
           </span>
           <ChevronRight className="h-5 w-5 shrink-0 text-muted transition-transform group-hover:translate-x-1" />
-        </Link>
+        </button>
       </div>
     </PageShell>
   );

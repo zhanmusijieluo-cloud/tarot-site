@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import PageShell, { Reveal } from '@/components/PageShell';
 import { useI18n } from '@/i18n';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -44,9 +43,18 @@ const DOMAIN_META = [
 export default function LnCardDetailPage() {
   const { id } = useParams();
   const cardId = parseInt(String(id), 10);
+  const router = useRouter();
   const { t, lang } = useI18n();
   const [details, setDetails] = useState<LnDetail | null>(null);
   const [loaded, setLoaded] = useState(false);
+
+  // 返回 = 撤销一步历史(浏览器返回键才能正确跳出本板块); 直链进入无历史时兜底跳牌墙
+  const backToWall = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) router.back();
+    else router.push('/lenormand');
+  };
+  // 上/下一张 = 替换当前历史记录, 不往栈里摞牌
+  const goCard = (target: number) => router.replace(`/lenormand/card/${target}`);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,9 +83,9 @@ export default function LnCardDetailPage() {
       <PageShell label={t('page.lenormand.label')} title={t('page.lenormand.title')}>
         <div className="flex flex-col items-center gap-6 py-24 text-center">
           <p className="text-4xl opacity-60">🕯️</p>
-          <Link href="/lenormand" className="text-accent underline underline-offset-4">
+          <button onClick={backToWall} className="text-accent underline underline-offset-4">
             ← {t('common.back')}
-          </Link>
+          </button>
         </div>
       </PageShell>
     );
@@ -100,12 +108,12 @@ export default function LnCardDetailPage() {
     >
       {/* 返回牌墙 */}
       <div className="mb-10">
-        <Link
-          href="/lenormand"
+        <button
+          onClick={backToWall}
           className="inline-flex items-center gap-1.5 text-xs tracking-[0.15em] text-muted transition-colors hover:text-accent"
         >
           <ChevronLeft className="h-4 w-4" /> {t('lenormand.detail.back')}
-        </Link>
+        </button>
       </div>
 
       <section className="grid gap-10 lg:grid-cols-[minmax(280px,360px)_1fr]">
@@ -199,9 +207,9 @@ export default function LnCardDetailPage() {
 
       {/* 上下张导航 */}
       <div className="mt-16 grid gap-3 border-t border-white/[0.06] pt-8 sm:grid-cols-2">
-        <Link
-          href={`/lenormand/card/${prev}`}
-          className="group flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 transition-all hover:border-accent/30 hover:bg-accent/[0.05]"
+        <button
+          onClick={() => goCard(prev)}
+          className="group flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-left transition-all hover:border-accent/30 hover:bg-accent/[0.05]"
         >
           <ChevronLeft className="h-5 w-5 shrink-0 text-muted transition-transform group-hover:-translate-x-1" />
           <span className="min-w-0">
@@ -210,9 +218,9 @@ export default function LnCardDetailPage() {
               {prev}. {t(`ln.${prev - 1}.name`)}
             </span>
           </span>
-        </Link>
-        <Link
-          href={`/lenormand/card/${next}`}
+        </button>
+        <button
+          onClick={() => goCard(next)}
           className="group flex items-center justify-end gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-right transition-all hover:border-accent/30 hover:bg-accent/[0.05]"
         >
           <span className="min-w-0">
@@ -222,7 +230,7 @@ export default function LnCardDetailPage() {
             </span>
           </span>
           <ChevronRight className="h-5 w-5 shrink-0 text-muted transition-transform group-hover:translate-x-1" />
-        </Link>
+        </button>
       </div>
     </PageShell>
   );
