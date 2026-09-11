@@ -140,6 +140,35 @@ function loadLnDetails(): Map<number, any> {
   return map;
 }
 
+/** 雷诺曼组合权威辞典（public/data/ln-combos.json, key=a*100+b 方向敏感）。读不到返回空 map → prompt 退化为无辞典。 */
+let _lnCombos: Map<number, any> | null = null;
+function loadLnCombos(): Map<number, any> {
+  if (_lnCombos) return _lnCombos;
+  const map = new Map<number, any>();
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const p = path.join(process.cwd(), 'public', 'data', 'ln-combos.json');
+    const arr = JSON.parse(fs.readFileSync(p, 'utf-8'));
+    for (const x of arr) map.set(x.key, x);
+  } catch { /* 缺文件容忍 */ }
+  _lnCombos = map;
+  return map;
+}
+
+/** 依牌阵形状取「相邻牌对」下标（有方向: 前位→后位）。ln9 按 3x3 行优先含横纵邻; 其余按顺序相邻。 */
+function lnAdjacentPairs(spreadKey: string | null | undefined, n: number): [number, number][] {
+  const pairs: [number, number][] = [];
+  if (spreadKey === 'ln9' && n === 9) {
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 2; c++) pairs.push([r * 3 + c, r * 3 + c + 1]);
+    for (let c = 0; c < 3; c++) for (let r = 0; r < 2; r++) pairs.push([r * 3 + c, (r + 1) * 3 + c]);
+    return pairs;
+  }
+  if (spreadKey === 'ln3b' && n === 3) return [[0, 1], [1, 2]]; // 盒阵按状况→挑战→建议读
+  for (let i = 0; i < n - 1; i++) pairs.push([i, i + 1]);
+  return pairs;
+}
+
 /** 惰性创建 Supabase 客户端（用 NEXT_PUBLIC 公钥读取即可，公开读取策略已放行）。无环境变量时返回 null。 */
 function getSupabaseClient(): any {
   if (_supabaseClient) return _supabaseClient;
@@ -518,6 +547,33 @@ async function buildLenormandInputs(
     return `- 第${index + 1}张牌「${cardName}」（关键词：${kw}；扑克对应：${playing}）—— 牌位【${position}】\n  ${pieces.filter(Boolean).join(' | ')}`;
   }).join('\n');
 
+  // ── 相邻牌对组合辞典召回（雷诺曼的"经验库": 权威 pairwise 方向义, 逐对附入 prompt）──
+  const lnComboData = loadLnCombos();
+  const drawnIds = args.cards.map((c: any) => (typeof c?.id === 'number' ? c.id : -1));
+  const comboLines: string[] = [];
+  if (lnComboData.size) {
+    for (const [i, j] of lnAdjacentPairs(args.spreadKey, n)) {
+      const a = drawnIds[i], b = drawnIds[j];
+      if (a < 0 || b < 0) continue;
+      const hit = lnComboData.get(a * 100 + b);
+      if (!hit) continue;
+      const ha = hit[lang] || hit.zh, hb = hit[lang] || hit.zh;
+      if (!ha?.core) continue;
+      const nameI = localizedCardName(args.cards[i] as any, lang);
+      const nameJ = localizedCardName(args.cards[j] as any, lang);
+      const posI = positions[i] || String(i + 1);
+      const posJ = positions[j] || String(j + 1);
+      comboLines.push(useEn
+        ? `- 【${nameI}(${posI})】→【${nameJ}(${posJ})】: ${ha.core} —— ${ha.note || ''}`
+        : `【${nameI}(${posI})】+【${nameJ}(${posJ})】：${ha.core}——${hb.note || ''}`);
+    }
+  }
+  const comboBlock = comboLines.length
+    ? (useEn
+        ? `\n\n**Authoritative combination dictionary (read THESE pair meanings as established fact — build your sentence from them; direction matters, first modifies second):**\n` + comboLines.join('\n')
+        : `\n\n**组合权威辞典（相邻牌对的方向义, 视为既定事实据此造句, 前牌修饰后牌）：**\n` + comboLines.join('\n'))
+    : '';
+
   const LANG_INSTRUCTION =
     lang === 'en'
       ? '**OUTPUT LANGUAGE (CRITICAL): Write EVERY field of the JSON in English, in natural Lenormand-reading English.**'
@@ -588,6 +644,7 @@ Based on the above, output a complete reading covering ALL seven parts. **Output
 Hard requirements:
 0. ${LANG_INSTRUCTION}
 0.5. Each card comes with authoritative Lenormand data (core meaning / combination guide / timing / shadow / four domains). Treat it as established fact, cite it freely, never contradict or re-derive it. Do not output the raw data itself in any JSON field.
+0.7. Where a combination dictionary is provided above, your pairings in "elementEnergy" and "links" MUST stay consistent with those dictionary meanings (you may enrich, never contradict them).
 1. The "cards" array must have exactly ${n} elements (one-to-one with drawn cards, in the same order); all six other fields must be non-empty strings.
 2. Every field value is a string; bullet points start with 「• 」 separated by \\n.
 3. This is Lenormand: NEVER mention reversed/reversed-position. When referencing a card position in prose, translate the position name into English.
@@ -658,7 +715,7 @@ Hard requirements:
     : lang === 'ja'
       ? `**鑑定情報：**\n- 質問：${args.question || '未指定'}\n- 相談者の背景：${args.background || '（未提供）'}\n- スプレッド：${spreadDisplay}\n- 引いたカード（各カードにポジション明記。対応を厳守）：\n${cardsContext}\n\n`
       : `**占卜信息：**\n- 问题：${args.question || '未指定'}\n- 问卜者背景：${args.background || '（未提供）'}\n- 牌阵：${spreadDisplay}\n- 抽牌结果（每张牌已标注牌位，严格按对应关系解读，不得混淆）：\n${cardsContext}\n\n`;
-  const prompt = infoBlock + lnRules;
+  const prompt = infoBlock + comboBlock + lnRules;
 
   const system =
     lang === 'en'

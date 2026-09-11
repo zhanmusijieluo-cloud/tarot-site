@@ -364,6 +364,8 @@ const en: Record<string, string> = {
   'custom.preview': 'Spread Preview',
   'custom.position': 'Card {n}',
   'custom.gridSubtitle': 'Pick positions on the card wall, numbered in order; name each position if you like.',
+  'custom.offlineSubtitle': 'Your grid positions and question carry over — just fill in each card you drew offline.',
+  'lnflow.customTitle': 'Custom Lenormand Spread',
   'custom.canvasLabel': 'Tap an empty slot to place a card back',
   'custom.canvasHint': 'Drag sideways to scroll · mini-map to navigate',
   'custom.miniMap': 'Overview Map',
@@ -380,6 +382,7 @@ const en: Record<string, string> = {
   'custom.spreadNamePlaceholder': 'Spread name (e.g. My Seasons)',
   'custom.deleteSpread': 'Delete spread',
   'custom.removeCard': 'Remove',
+  'custom.offlineBtn': 'Offline draw',
   'online.question': 'Quietly hold your question in mind…',
   'online.start': 'Begin Reading',
   'online.shuffling': 'Shuffling cards…',
@@ -1145,6 +1148,15 @@ const en: Record<string, string> = {
   'ziwei.star.8.trait': 'Versatile, socially adept, strong desires',
   'ziwei.star.9.role': 'Debate · Insight · Research',
   'ziwei.star.9.trait': 'Meticulous, eloquent and observant, born analyst',
+  'lnflow.offlineTitle': 'Offline Draw · Reading',
+  'lnflow.offlineSubtitle': 'Already laid out real cards? Pick a spread, fill in each card and let the AI read them deeply.',
+  'lnflow.customEntry': 'Custom Spread',
+  'lnflow.customEntrySub': 'Set your own card count and position meanings, then draw online or fill offline.',
+  'session.fbQuestion': 'Did this reading hit home?',
+  'session.fbUp': 'Accurate',
+  'session.fbDown': 'Off the mark',
+  'session.fbNotePlaceholder': 'Optional: what rang true or false?',
+  'session.fbThanks': 'Thanks, every vote sharpens the readings ✦',
 };
 
 export default en;

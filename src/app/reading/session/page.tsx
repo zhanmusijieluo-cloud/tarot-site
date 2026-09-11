@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Brain, ChevronRight, CornerDownRight, Gem, Loader2, MessageCircleQuestion, RotateCcw, SendHorizontal, Sparkles } from 'lucide-react';
+import { Brain, ChevronRight, CornerDownRight, Gem, Loader2, MessageCircleQuestion, RotateCcw, SendHorizontal, Sparkles, ThumbsDown, ThumbsUp } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import PageShell, { Reveal } from '@/components/PageShell';
 import TarotScene from '@/components/TarotScene';
@@ -12,6 +12,7 @@ import { LN_DECK, lnImage, LN_SPREADS } from '@/lib/lenormand';
 import { localizedCardName, CARD_JA_NAMES } from '@/lib/card-names';
 import { spreadPositions } from '@/lib/spread-i18n';
 import { getSpreadCoords, getCrossIdx, solveSpreadLayout, solveCustomGridLayout, CARD_H_RATIO, cardWClassToPx } from '@/lib/spread-layout';
+import { supabaseBrowser } from '@/lib/supabase';
 import { getMcpClient } from '@/mcp/client';
 import { useI18n } from '@/i18n';
 
@@ -109,6 +110,11 @@ export default function ReadingSessionPage() {
   const [followStream, setFollowStream] = useState(true);
   /** 首次生成（正文为空）时默认不跟随：视口停在窗口一牌阵展示，用户看完自己抽的牌再下滑跟读 */
   const firstStreamRef = useRef(true);
+  /** 本次解读「准不准」反馈：null 未评 / up / down；noteDraft 选填短评 */
+  const [fbVote, setFbVote] = useState<'up' | 'down' | null>(null);
+  const [fbNote, setFbNote] = useState('');
+  const [fbSent, setFbSent] = useState(false);
+  const [fbSaving, setFbSaving] = useState(false);
 
   // ═══ 后续问题抽牌状态 ═══
   const [showDrawScene, setShowDrawScene] = useState(false);
@@ -195,6 +201,7 @@ export default function ReadingSessionPage() {
             positions: session.positions ?? [],
             lang,
             deck: session.deck,
+            spreadKey: session.spreadKey ?? null,
           },
           { onDelta: (text) => setRegenText((prev) => prev + text), onRetry: () => setRegenText('') }
         );
@@ -412,6 +419,32 @@ export default function ReadingSessionPage() {
   const coords = solved.coords;
   // 需要横置的牌下标（当前无横置牌阵，恒为 -1）
   const crossIdx = getCrossIdx(spreadKey, n);
+
+  // 「准不准」反馈 → 写入 Supabase reading_feedback 表（RLS 允许匿名插入, 读取策略关闭）
+  const sendFeedback = async (vote: 'up' | 'down') => {
+    if (fbVote || fbSaving) return;
+    setFbSaving(true);
+    setFbVote(vote);
+    try {
+      const sb = supabaseBrowser() as any;
+      if (sb) {
+        await sb.from('reading_feedback').insert({
+          deck: isLn ? 'lenormand' : 'tarot',
+          spread_key: spreadKey,
+          spread_name: spreadName,
+          question: question || '',
+          background: background || '',
+          cards: cards.map((c) => ({ id: c.id, name: c.name, reversed: !!c.isReversed })),
+          interpretation: interpretation || '',
+          lang,
+          vote,
+          note: fbNote.trim().slice(0, 200),
+        });
+      }
+      setFbSent(true);
+    } catch { /* 静默失败: 不打扰阅读, 按钮保持已选态 */ }
+    setFbSaving(false);
+  };
 
   // 追问：AI 始终结合客户抽过的所有牌作答（原牌阵 + 历次追问牌）
   const askFollowUp = async (overrideText?: string, extraCards?: DrawnCard[]) => {
@@ -785,6 +818,44 @@ export default function ReadingSessionPage() {
             )}
           </div>
         </Reveal>
+
+        {/* ═══ 本次解读准不准？（客户真实反馈 → reading_feedback 库, 塔太和雷诺曼通用） ═══ */}
+        {!regenerating && interpretation && (
+          <Reveal delay={120}>
+            <div className="mt-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-6 py-5">
+              {!fbSent ? (
+                <>
+                  <p className="text-center text-sm text-frost">{t('session.fbQuestion')}</p>
+                  <div className="mt-4 flex items-center justify-center gap-3">
+                    <button
+                      onClick={() => sendFeedback('up')}
+                      disabled={!!fbVote || fbSaving}
+                      className={`glass-btn inline-flex h-10 items-center gap-2 px-6 text-xs ${fbVote === 'up' ? 'border-accent/60 text-accent' : ''} ${fbVote && fbVote !== 'up' ? 'opacity-40' : ''}`}
+                    >
+                      <ThumbsUp className="h-4 w-4" aria-hidden="true" />{t('session.fbUp')}
+                    </button>
+                    <button
+                      onClick={() => sendFeedback('down')}
+                      disabled={!!fbVote || fbSaving}
+                      className={`glass-btn inline-flex h-10 items-center gap-2 px-6 text-xs ${fbVote === 'down' ? 'border-accent/60 text-accent' : ''} ${fbVote && fbVote !== 'down' ? 'opacity-40' : ''}`}
+                    >
+                      <ThumbsDown className="h-4 w-4" aria-hidden="true" />{t('session.fbDown')}
+                    </button>
+                  </div>
+                  <input
+                    value={fbNote}
+                    onChange={(e) => setFbNote(e.target.value)}
+                    maxLength={200}
+                    placeholder={t('session.fbNotePlaceholder')}
+                    className="mt-4 w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-2.5 text-xs text-frost placeholder:text-muted/50 focus:border-accent/40 focus:outline-none"
+                  />
+                </>
+              ) : (
+                <p className="text-center text-sm text-accent">{t('session.fbThanks')}</p>
+              )}
+            </div>
+          </Reveal>
+        )}
       </section>
 
       <SectionDivider />

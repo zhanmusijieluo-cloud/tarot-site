@@ -28,6 +28,8 @@ export interface TarotReadingRequest {
   lang?: string;
   /** 牌组: 缺省塔罗; 'lenormand' 走36张雷诺曼链路 */
   deck?: 'tarot' | 'lenormand';
+  /** 牌阵键(ln3a/ln3b/ln5/ln9/three/...): 雷诺曼据此取相邻对组合辞典 */
+  spreadKey?: string | null;
 }
 
 export interface TarotReadingResponse {

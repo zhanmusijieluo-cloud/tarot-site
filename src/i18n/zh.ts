@@ -357,6 +357,8 @@ const zh: Record<string, string> = {
   'custom.preview': '牌阵预览',
   'custom.position': '第{n}张',
   'custom.gridSubtitle': '在牌墙上点选位置布阵，按点击顺序编号，可命名每个牌位',
+  'custom.offlineSubtitle': '已从布阵页带入真实位置与问题背景，逐张填入你的牌即可。',
+  'lnflow.customTitle': '雷诺曼自定义牌阵',
   'custom.canvasLabel': '点击牌墙空位放置牌背',
   'custom.canvasHint': '横向可拖动，迷你地图可定位',
   'custom.miniMap': '全阵地图',
@@ -373,6 +375,7 @@ const zh: Record<string, string> = {
   'custom.spreadNamePlaceholder': '牌阵名称（如：我的四季阵）',
   'custom.deleteSpread': '删除牌阵',
   'custom.removeCard': '移除此牌',
+  'custom.offlineBtn': '线下抽牌',
   'online.question': '静心默念你的问题…',
   'online.start': '开始占卜',
   'online.shuffling': '正在洗牌…',
@@ -1122,6 +1125,15 @@ const zh: Record<string, string> = {
   'ziwei.star.8.trait': '多才多艺，长袖善舞，欲望旺盛',
   'ziwei.star.9.role': '口舌 · 洞察 · 研究',
   'ziwei.star.9.trait': '心思缜密，善辩善察，适合研究分析',
+  'lnflow.offlineTitle': '线下抽牌 · 解读',
+  'lnflow.offlineSubtitle': '已经在现实中摆好了牌？选择牌阵，把每张牌填进对应位置，AI 为你展开深度解读。',
+  'lnflow.customEntry': '自定义牌阵',
+  'lnflow.customEntrySub': '自由设定张数与每个牌位的含义，再选择在线抽牌或线下填牌。',
+  'session.fbQuestion': '这次解读，说到你心里了吗？',
+  'session.fbUp': '准',
+  'session.fbDown': '不准',
+  'session.fbNotePlaceholder': '想补充一句哪里准/哪里不准？（可不填）',
+  'session.fbThanks': '感谢反馈，你的每一句都在让解读变得更准 ✦',
 };
 
 export default zh;

@@ -357,6 +357,8 @@ const ja: Record<string, string> = {
   'custom.preview': 'スプレッドプレビュー',
   'custom.position': '{n}枚目',
   'custom.gridSubtitle': 'カードウォールの好きな位置を選んでスプレッドを構成。順番に番号が付き、各位置に名前を付けられます。',
+  'custom.offlineSubtitle': '布陣ページで選んだ位置と質問内容はそのままです。引いたカードを1枚ずつ入力してください。',
+  'lnflow.customTitle': 'ルノルマン・カスタムスプレッド',
   'custom.canvasLabel': '空きマスをタップしてカードを置く',
   'custom.canvasHint': '横にスクロール · ミニマップで移動',
   'custom.miniMap': '全体マップ',
@@ -373,6 +375,7 @@ const ja: Record<string, string> = {
   'custom.spreadNamePlaceholder': 'スプレッド名（例：四季の陣）',
   'custom.deleteSpread': 'スプレッドを削除',
   'custom.removeCard': '削除',
+  'custom.offlineBtn': 'オフラインで抽牌',
   'online.question': '心を静めて質問を念じる…',
   'online.start': '占いを始める',
   'online.shuffling': 'シャッフル中…',
@@ -1122,6 +1125,15 @@ const ja: Record<string, string> = {
   'ziwei.star.8.trait': '多才多芸で社交的、欲も強い',
   'ziwei.star.9.role': '口舌・洞察・研究',
   'ziwei.star.9.trait': '綿密で弁舌さわやか、分析・研究に向く',
+  'lnflow.offlineTitle': 'オフライン抽牌 · リーディング',
+  'lnflow.offlineSubtitle': '現実にカードを並べましたか？スプレッドを選び、各位置にカードを入力すれば AI が深く読み解きます。',
+  'lnflow.customEntry': 'カスタムスプレッド',
+  'lnflow.customEntrySub': '枚数とポジションの意味を自由に設定し、オンライン抽牌またはオフライン入力で占えます。',
+  'session.fbQuestion': '今回の鑑定は心に当たりましたか？',
+  'session.fbUp': '当たった',
+  'session.fbDown': '外れた',
+  'session.fbNotePlaceholder': '（任意）どこが当たり／外れましたか？',
+  'session.fbThanks': 'ご感想ありがとう。一言ごとに鑑定が磨かれます ✦',
 };
 
 export default ja;

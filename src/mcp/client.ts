@@ -85,7 +85,8 @@ export class McpClient {
           spreadName: params.spreadName,
           positions: params.positions || [],
           lang: params.lang || 'zh',
-          deck: params.deck || 'tarot'
+          deck: params.deck || 'tarot',
+          spreadKey: params.spreadKey ?? null,
         }),
         signal: handlers.signal ?? AbortSignal.timeout(260000),
       });

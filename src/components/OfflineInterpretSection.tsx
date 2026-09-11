@@ -14,6 +14,7 @@ import {
   type DrawnCard,
 } from '@/lib/tarot';
 import { CARD_JA_NAMES } from '@/lib/card-names';
+import { LN_DECK, LN_SPREADS, LN_SPREAD_KEYS, LN_EN_NAMES as LN_EN_NAMES_I, LN_JA_NAMES as LN_JA_NAMES_I, lnImage, lnLocalName } from '@/lib/lenormand';
 import { solveSpreadLayout, cardWClassToPx, customGridToCoords, solveCoordsLayout } from '@/lib/spread-layout';
 import { spreadPositions } from '@/lib/spread-i18n';
 import { useI18n } from '@/i18n';
@@ -22,8 +23,10 @@ const THEME_KEYS = ['general', 'love', 'career', 'wealth', 'choice', 'growth'];
 const SPREAD_KEYS = Object.keys(SPREADS);
 
 type Slot = { id: number; isReversed: boolean } | null;
+type DeckKind = 'tarot' | 'lenormand';
 
-function cardName(id: number, lang: string): string {
+function cardName(id: number, lang: string, deck: DeckKind = 'tarot'): string {
+  if (deck === 'lenormand') return lnLocalName(id, lang);
   if (lang === 'ja') return CARD_JA_NAMES[id] || CARD_EN_NAMES[id] || '';
   if (lang === 'en') return CARD_EN_NAMES[id] || '';
   return TAROT_DECK.find((c) => c.id === id)?.name || '';
@@ -40,6 +43,7 @@ export default function OfflineInterpretSection({
   hideCustomSettings = false,
   presetCustomCells,
   customName,
+  deck = 'tarot',
 }: {
   presetSpread?: string;
   presetQuestion?: string;
@@ -51,11 +55,18 @@ export default function OfflineInterpretSection({
   hideCustomSettings?: boolean;
   presetCustomCells?: { row: number; col: number; cols: number; name?: string }[];
   customName?: string;
+  /** 牌组: tarot=78张(默认, 行为与旧版完全一致) | lenormand=36张无逆位 */
+  deck?: DeckKind;
 }) {
+  const isLn = deck === 'lenormand';
   const router = useRouter();
   const { lang, t } = useI18n();
   const hasCustomPreset = !!presetCustomPositions || (!!presetCustomCells && presetCustomCells.length > 0) || presetSpread === 'custom';
-  const [spreadKey, setSpreadKey] = useState(presetSpread && presetSpread in SPREADS ? presetSpread : 'three');
+  const [spreadKey, setSpreadKey] = useState(
+    isLn
+      ? (presetSpread && presetSpread in LN_SPREADS ? presetSpread : 'ln3a')
+      : presetSpread && presetSpread in SPREADS ? presetSpread : 'three'
+  );
   const [theme, setTheme] = useState<'all' | (typeof THEME_KEYS)[number]>('all');
   const [useCustom, setUseCustom] = useState(hasCustomPreset);
   const [customCount, setCustomCount] = useState(presetCustomCount || 3);
@@ -73,18 +84,21 @@ export default function OfflineInterpretSection({
   const pickerRef = useRef<HTMLDivElement>(null);
 
   const gridCustom = useCustom && !!presetCustomCells && presetCustomCells.length > 0;
+  const L3 = lang === 'en' ? 'en' : lang === 'ja' ? 'ja' : 'zh';
   const n = gridCustom
     ? presetCustomCells!.length
-    : useCustom ? Math.max(1, Math.min(10, customCount)) : SPREADS[spreadKey]?.count ?? 1;
+    : useCustom ? Math.max(1, Math.min(10, customCount)) : (isLn ? LN_SPREADS[spreadKey]?.count : SPREADS[spreadKey]?.count) ?? 1;
   const positions: readonly string[] = gridCustom
     ? presetCustomCells!.map((c, i) => c.name || `位置${i + 1}`)
     : useCustom
       ? customPositions.split(/[,，、]/).filter(Boolean)
-      : spreadPositions(spreadKey, SPREADS[spreadKey].positions, lang, t);
+      : isLn
+        ? (LN_SPREADS[spreadKey]?.positions[L3] ?? [])
+        : spreadPositions(spreadKey, SPREADS[spreadKey].positions, lang, t);
 
   const spreadOptions = useMemo(
-    () => (theme === 'all' ? SPREAD_KEYS : SPREAD_KEYS.filter((k) => SPREADS[k]?.theme === theme)),
-    [theme]
+    () => (isLn ? [...LN_SPREAD_KEYS] : theme === 'all' ? SPREAD_KEYS : SPREAD_KEYS.filter((k) => SPREADS[k]?.theme === theme)),
+    [theme, isLn]
   );
 
   useEffect(() => {
@@ -118,14 +132,22 @@ export default function OfflineInterpretSection({
   }, [spreadKey, useCustom, n, containerW, gridCustom, presetCustomCells]);
 
   const filtered = useMemo(() => {
+    const pool: { id: number; name: string }[] = isLn ? LN_DECK : TAROT_DECK;
     const q = query.trim().toLowerCase();
-    if (!q) return TAROT_DECK;
-    return TAROT_DECK.filter((c) =>
-      [c.name, CARD_EN_NAMES[c.id], CARD_JA_NAMES[c.id], c.numeral, String(c.id)].some(
+    if (!q) return pool;
+    if (isLn) {
+      return pool.filter((c) =>
+        [c.name, LN_EN_NAMES_I[(c as { id: number }).id], LN_JA_NAMES_I[(c as { id: number }).id], String(c.id)].some(
+          (s) => s && String(s).toLowerCase().includes(q)
+        )
+      );
+    }
+    return pool.filter((c) =>
+      [c.name, CARD_EN_NAMES[c.id], CARD_JA_NAMES[c.id], (c as { numeral?: string }).numeral, String(c.id)].some(
         (s) => s && String(s).toLowerCase().includes(q)
       )
     );
-  }, [query]);
+  }, [query, isLn]);
 
   const filledCount = slots.filter(Boolean).length;
   const allFilled = filledCount === n;
@@ -152,6 +174,10 @@ export default function OfflineInterpretSection({
       return;
     }
     const cards = slots.map((s) => {
+      if (isLn) {
+        const base = LN_DECK.find((x) => x.id === s!.id)!;
+        return { ...base } as DrawnCard;
+      }
       const base = TAROT_DECK.find((x) => x.id === s!.id)!;
       return { ...base, isReversed: s!.isReversed } as DrawnCard;
     });
@@ -160,19 +186,21 @@ export default function OfflineInterpretSection({
       cards: cards.map((c) => ({
         id: c.id,
         name: c.name,
-        isReversed: c.isReversed,
+        isReversed: isLn ? false : c.isReversed,
         upright: c.upright,
         reversedMeaning: c.reversedMeaning,
         element: c.element,
         zodiac: c.zodiac,
         numeral: c.numeral,
+        ...(isLn ? { arcana: 'lenormand' as const } : {}),
       })),
+      ...(isLn ? { deck: 'lenormand' } : {}),
       question,
       background,
       spreadName: isCustom
         ? customName || `自定义牌阵（${positions.join('、')}）`
-        : SPREADS[spreadKey].name,
-      spreadKey: !isCustom && SPREADS[spreadKey] ? spreadKey : null,
+        : isLn ? (LN_SPREADS[spreadKey]?.name[L3] ?? spreadKey) : SPREADS[spreadKey].name,
+      spreadKey: !isCustom && (isLn ? LN_SPREADS[spreadKey] : SPREADS[spreadKey]) ? spreadKey : null,
       positions: [...positions],
       customLayout: gridCustom ? presetCustomCells : undefined,
       interpretation: '',
@@ -222,6 +250,7 @@ export default function OfflineInterpretSection({
         {!presetSpread && !hasCustomPreset && (
         <div className="mb-14 text-left">
           <h3 className="font-display mb-6 text-xl tracking-[0.15em] text-frost/90">一、选择牌阵</h3>
+          {!isLn && (
           <div className="mb-8 flex flex-wrap gap-3">
             <button
               onClick={() => setTheme('all')}
@@ -243,9 +272,11 @@ export default function OfflineInterpretSection({
               </button>
             ))}
           </div>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          )}
+          <div className={`grid gap-5 ${isLn ? 'sm:grid-cols-2 lg:grid-cols-4' : 'sm:grid-cols-2 lg:grid-cols-3'}`}>
             {spreadOptions.map((key) => {
               const sp = SPREADS[key];
+              const ln = isLn ? LN_SPREADS[key] : undefined;
               const active = !useCustom && spreadKey === key;
               return (
                 <button
@@ -255,11 +286,11 @@ export default function OfflineInterpretSection({
                     active ? 'border-accent/50 bg-accent/[0.08] shadow-glow' : 'border-white/[0.06] bg-white/[0.02] hover:border-accent/30'
                   }`}
                 >
-                  <p className="font-display text-lg tracking-[0.12em] text-frost">{sp.name}</p>
+                  <p className="font-display text-lg tracking-[0.12em] text-frost">{ln ? ln.name[L3] : sp.name}</p>
                   <p className="mt-2 text-[11px] tracking-[0.2em] text-accent/70 uppercase">
-                    {sp.count} 张牌 · {SPREAD_THEMES[sp.theme]?.name ?? sp.theme}
+                    {ln ? `${ln.count} 张牌` : `${sp.count} 张牌 · ${SPREAD_THEMES[sp.theme]?.name ?? sp.theme}`}
                   </p>
-                  <p className="mt-3 text-sm leading-relaxed text-muted">{sp.subtitle}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-muted">{ln ? ln.sub[L3] : sp.subtitle}</p>
                 </button>
               );
             })}
@@ -340,7 +371,7 @@ export default function OfflineInterpretSection({
                 const slot = slots[i];
                 const coord = layout.coords[i];
                 const cardW = Math.max(52, Math.round(cardWClassToPx(layout.cardW) * 0.85));
-                const cardH = Math.round(cardW * 1.7);
+                const cardH = Math.round(cardW * (isLn ? 670 / 520 : 1.7));
                 return (
                   <div
                     key={i}
@@ -351,26 +382,31 @@ export default function OfflineInterpretSection({
                     <p className="mb-1.5 whitespace-nowrap text-[11px] tracking-[0.12em] text-muted">{pos}</p>
                     {slot ? (
                       <div className="group relative">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={getCardImage(slot.id)}
-                          alt={cardName(slot.id, lang)}
+                          src={isLn ? lnImage(slot.id) : getCardImage(slot.id)}
+                          alt={cardName(slot.id, lang, deck)}
                           style={{ width: cardW, height: cardH }}
                           className={`rounded-lg border border-accent/30 object-cover ${
-                            slot.isReversed ? 'rotate-180' : ''
+                            slot.isReversed && !isLn ? 'rotate-180' : ''
                           }`}
                         />
+                        {!isLn && (
                         <span className="absolute top-1 left-1 rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] text-accent-soft">
                           {slot.isReversed ? '逆位' : '正位'}
                         </span>
+                        )}
                         <div className="absolute inset-0 flex items-center justify-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                          {!isLn && (
                           <button onClick={() => toggleRev(i)} className="rounded-full bg-black/80 px-2 py-1 text-[10px] text-frost">
                             翻转
                           </button>
+                          )}
                           <button onClick={() => clearSlot(i)} className="rounded-full bg-black/80 px-2 py-1 text-[10px] text-frost">
                             清除
                           </button>
                         </div>
-                        <p className="mt-1.5 text-center text-xs text-frost">{cardName(slot.id, lang)}</p>
+                        <p className="mt-1.5 text-center text-xs text-frost">{cardName(slot.id, lang, deck)}</p>
                       </div>
                     ) : (
                       <button
@@ -404,7 +440,7 @@ export default function OfflineInterpretSection({
                   autoFocus
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="例如：教皇 · hierophant · 圣杯五 · cups 5"
+                  placeholder={isLn ? '例如：骑手 · rider · 狐狸 · 14' : '例如：教皇 · hierophant · 圣杯五 · cups 5'}
                   className="mb-5 w-full rounded-xl border border-white/10 bg-black/30 px-5 py-4 text-sm text-frost placeholder:text-muted/50 focus:border-accent/50 focus:outline-none"
                 />
                 <div className="grid max-h-64 grid-cols-3 gap-3 overflow-y-auto sm:grid-cols-4 md:grid-cols-6">
@@ -414,8 +450,9 @@ export default function OfflineInterpretSection({
                       onClick={() => pickCard(c.id)}
                       className="group flex flex-col items-center rounded-lg border border-white/[0.06] bg-white/[0.02] p-2 transition-all hover:border-accent/40"
                     >
-                      <img src={getCardImage(c.id)} alt={cardName(c.id, lang)} className="h-24 w-16 rounded-md object-cover" />
-                      <span className="mt-2 line-clamp-1 text-center text-[10px] text-frost">{cardName(c.id, lang)}</span>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={isLn ? lnImage(c.id) : getCardImage(c.id)} alt={cardName(c.id, lang, deck)} className="h-24 w-16 rounded-md object-cover" />
+                      <span className="mt-2 line-clamp-1 text-center text-[10px] text-frost">{cardName(c.id, lang, deck)}</span>
                     </button>
                   ))}
                 </div>

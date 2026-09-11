@@ -5,13 +5,14 @@
  * 复用塔罗链路的会话结构(tarot-reading-session), 以 arcana='lenormand' 标记牌组;
  * 雷诺曼无逆位: 翻牌只出正位, 牌意由「连线组合」决定。
  */
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { ChevronRight, HelpCircle, RotateCcw, Sparkles, User } from 'lucide-react';
 import PageShell, { Reveal } from '@/components/PageShell';
 import TarotScene from '@/components/TarotScene';
 import { LN_SPREADS, LN_SPREAD_KEYS, LN_DECK, type LnDrawnCard } from '@/lib/lenormand';
+import type { CustomCell } from '@/components/CustomSpreadBuilder';
 import { useI18n } from '@/i18n';
 
 type Stage = 'question' | 'draw';
@@ -38,6 +39,19 @@ function LenormandDrawInner() {
   const spreadKey = LN_SPREAD_KEYS.includes(searchParams.get('spread') as (typeof LN_SPREAD_KEYS)[number])
     ? searchParams.get('spread')!
     : 'ln3a';
+  // 自定义牌阵: 布阵页带 ?spread=custom&layout= 进来 → 格位决定张数与位置
+  const customLayout = useMemo<CustomCell[] | null>(() => {
+    if (searchParams.get('spread') !== 'custom') return null;
+    try {
+      const raw = searchParams.get('layout');
+      if (!raw) return null;
+      const arr = JSON.parse(decodeURIComponent(raw)) as CustomCell[];
+      if (!Array.isArray(arr) || !arr.length) return null;
+      return arr.filter((c) => Number.isFinite(c?.row) && Number.isFinite(c?.col));
+    } catch {
+      return null;
+    }
+  }, [searchParams]);
   const [stage, setStage] = useState<Stage>('question');
   const [question, setQuestion] = useState(searchParams.get('q') ?? '');
   const [background, setBackground] = useState(searchParams.get('bg') ?? '');
@@ -46,10 +60,15 @@ function LenormandDrawInner() {
   const orderRef = useRef<number[]>([]);
 
   const spread = LN_SPREADS[spreadKey];
-  const drawCount = spread?.count ?? 3;
+  const isCustom = !!customLayout?.length;
+  const drawCount = isCustom ? customLayout!.length : (spread?.count ?? 3);
 
-  const spreadLabel = spread?.name[L] ?? '';
-  const positionNames = spread?.positions[L] ?? [];
+  const spreadLabel = isCustom
+    ? (t('lnflow.customTitle'))
+    : (spread?.name[L] ?? '');
+  const positionNames: readonly string[] = isCustom
+    ? customLayout!.map((c, i) => c.name || `位置${i + 1}`)
+    : (spread?.positions[L] ?? []);
 
   const toggleCard = (id: number) => {
     const s = selectedRef.current;
@@ -77,8 +96,9 @@ function LenormandDrawInner() {
           question,
           background,
           spreadName: spreadLabel,
-          spreadKey,
-          positions: positionNames,
+          spreadKey: isCustom ? null : spreadKey,
+          positions: [...positionNames],
+          ...(isCustom ? { customLayout: customLayout! } : {}),
           interpretation: '',
           lang,
           savedAt: Date.now(),

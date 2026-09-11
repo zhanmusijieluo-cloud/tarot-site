@@ -123,6 +123,42 @@ export default function LenormandPage() {
               </Reveal>
             );
           })}
+          {/* 自定义牌阵：布阵页入口（虚线卡, 对齐塔罗 /spreads 样式） */}
+          <Reveal delay={360}>
+            <button
+              onClick={() => router.push('/lenormand/custom')}
+              className="group h-full w-full rounded-2xl border border-dashed border-accent/40 bg-accent/[0.04] p-5 text-left transition-all duration-300 hover:border-accent/70 hover:bg-accent/[0.08]"
+            >
+              <div className="flex items-baseline justify-between">
+                <span className="text-[10px] tracking-[0.25em] text-accent/70 uppercase">
+                  ✦ · {t('online.customSpreadCount')}
+                </span>
+              </div>
+              <h3 className="font-display mt-2.5 text-base tracking-[0.1em] text-frost">
+                {t('lnflow.customEntry')}
+              </h3>
+              <p className="mt-1 text-xs text-muted">{t('lnflow.customEntrySub')}</p>
+              <span className="mt-3 block text-[11px] tracking-[0.12em] text-muted/50 transition-colors group-hover:text-accent">
+                {t('lnflow.start')} →
+              </span>
+            </button>
+          </Reveal>
+          {/* 线下抽牌：自己实体牌摆好后来这填 */}
+          <Reveal delay={450}>
+            <button
+              onClick={() => router.push('/lenormand/offline')}
+              className="group h-full w-full rounded-2xl border border-dashed border-accent/30 p-5 text-left transition-all duration-300 hover:border-accent/60 hover:bg-accent/[0.04]"
+            >
+              <span className="text-[10px] tracking-[0.25em] text-accent/70 uppercase">✦ · {t('common.cardsCount', { count: 10 })}</span>
+              <h3 className="font-display mt-2.5 text-base tracking-[0.1em] text-accent">
+                {t('lnflow.offlineTitle')}
+              </h3>
+              <p className="mt-1 text-xs text-muted">{t('lnflow.offlineSubtitle')}</p>
+              <span className="mt-3 block text-[11px] tracking-[0.12em] text-muted/50 transition-colors group-hover:text-accent">
+                {t('lnflow.start')} →
+              </span>
+            </button>
+          </Reveal>
         </div>
       </section>
 
