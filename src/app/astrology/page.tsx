@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import PageShell, { Reveal, SectionHead } from '@/components/PageShell';
+import NatalForm from '@/components/astro/NatalForm';
 import { useI18n } from '@/i18n';
 
 const SIGNS = [
@@ -79,9 +80,17 @@ export default function AstrologyPage() {
         </p>
       }
     >
-      {/* 十二星座 */}
+      {/* 本命盘排盘器 */}
       <section className="mb-20 mt-12 sm:mb-28">
-        <SectionHead no="01" title={t('astrology.signSection')} sub={t('astrology.signSub')} />
+        <SectionHead no="01" title={t('astro.section')} sub={t('astro.sectionSub')} />
+        <Reveal>
+          <NatalForm />
+        </Reveal>
+      </section>
+
+      {/* 十二星座 */}
+      <section className="mb-20 sm:mb-28">
+        <SectionHead no="02" title={t('astrology.signSection')} sub={t('astrology.signSub')} />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
           {SIGNS.map((s, i) => (
             <Reveal key={s.nameKey} delay={(i % 6) * 60}>
@@ -110,7 +119,7 @@ export default function AstrologyPage() {
 
       {/* 十大行星 */}
       <section className="mb-20 sm:mb-28">
-        <SectionHead no="02" title={t('astrology.planetSection')} sub={t('astrology.planetSub')} />
+        <SectionHead no="03" title={t('astrology.planetSection')} sub={t('astrology.planetSub')} />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {PLANETS.map((p, i) => (
             <Reveal key={p.nameKey} delay={(i % 5) * 70}>
@@ -131,7 +140,7 @@ export default function AstrologyPage() {
 
       {/* 十二宫位 */}
       <section className="mb-20 sm:mb-28">
-        <SectionHead no="03" title={t('astrology.houseSection')} sub={t('astrology.houseSub')} />
+        <SectionHead no="04" title={t('astrology.houseSection')} sub={t('astrology.houseSub')} />
         <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
           {HOUSES.map((h, i) => (
             <Reveal key={h.no} delay={(i % 3) * 70}>
@@ -151,7 +160,7 @@ export default function AstrologyPage() {
 
       {/* 五大相位 */}
       <section className="mb-8">
-        <SectionHead no="04" title={t('astrology.aspectSection')} sub={t('astrology.aspectSub')} />
+        <SectionHead no="05" title={t('astrology.aspectSection')} sub={t('astrology.aspectSub')} />
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
           {ASPECTS.map((a, i) => (
             <Reveal key={a.nameKey} delay={i * 70}>
