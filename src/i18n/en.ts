@@ -651,6 +651,7 @@ const en: Record<string, string> = {
   'lnflow.quickBadge': 'Quick Reading',
   'lnflow.quickTitle': '3-Card Line · One Sentence, One Outcome',
   'lnflow.quickGo': 'Start now',
+  'lnflow.drawBtn': 'Start drawing',
   'lnflow.spreadsTitle': 'Classic Spreads',
   'lnflow.qPlaceholder': 'Which outcome do you want to ask about? Lenormand shines on concrete questions, e.g. "Will this deal close?" or "How will their attitude shift soon?"',
   'lnflow.chooseSpread': 'Next · Choose a spread',

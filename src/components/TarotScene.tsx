@@ -65,10 +65,15 @@ function buildCards(totalCards: number, isMobile: boolean, ids: number[]): CardS
     mid: [0.024, -0.034, 0.006, 0.044, -0.018, 0.032, -0.042, 0.012],
     front: [-0.026, 0.042, -0.012, 0.028, -0.038, 0.016],
   };
+  // 三层数量按牌组规模等比缩放: 塔罗78 → 32/30/16; 雷诺曼36 → 15/14/7
+  // (节点数必须恰好等于牌数, 否则取模复用会让同一张牌在场景中重复出现)
+  const nBack = Math.max(1, Math.round((totalCards * 32) / 78));
+  const nMid = Math.max(1, Math.round((totalCards * 30) / 78));
+  const nFront = Math.max(1, totalCards - nBack - nMid);
   const bands = [
-    { count: 32, layer: 'back' as const, y: 0.04, amp: 0.042, width: 40, alpha: 0.68, scale: 0.94, z: -190, speed: 0.24, offset: 0.012 },
-    { count: 30, layer: 'mid' as const, y: 0.28, amp: 0.058, width: 44, alpha: 0.84, scale: 0.96, z: -36, speed: 0.31, offset: 0.055 },
-    { count: 16, layer: 'front' as const, y: 0.5, amp: 0.038, width: 49, alpha: 0.96, scale: 0.99, z: 76, speed: 0.36, offset: 0.115 },
+    { count: nBack, layer: 'back' as const, y: 0.04, amp: 0.042, width: 40, alpha: 0.68, scale: 0.94, z: -190, speed: 0.24, offset: 0.012 },
+    { count: nMid, layer: 'mid' as const, y: 0.28, amp: 0.058, width: 44, alpha: 0.84, scale: 0.96, z: -36, speed: 0.31, offset: 0.055 },
+    { count: nFront, layer: 'front' as const, y: 0.5, amp: 0.038, width: 49, alpha: 0.96, scale: 0.99, z: 76, speed: 0.36, offset: 0.115 },
   ];
   let deckIndex = 0;
 
@@ -81,7 +86,7 @@ function buildCards(totalCards: number, isMobile: boolean, ids: number[]): CardS
       const tilt = (random() - 0.5) * (band.layer === 'back' ? 7 : 9);
       const side = random() < 0.16 ? (random() < 0.5 ? -1 : 1) : 0;
       cards.push({
-        id: ids[deckIndex % totalCards],
+        id: ids[deckIndex % ids.length],
         layer: band.layer,
         t,
         yBase: band.y + stagger + sideBias,

@@ -638,6 +638,7 @@ const zh: Record<string, string> = {
   'lnflow.quickBadge': '快速占卜',
   'lnflow.quickTitle': '三张连线 · 一句话读懂走向',
   'lnflow.quickGo': '立即开始',
+  'lnflow.drawBtn': '开始抽牌',
   'lnflow.spreadsTitle': '常用牌阵',
   'lnflow.qPlaceholder': '想问哪件事的走向？雷诺曼擅长回答具体的事件问题，如「这次合作能不能成」「他近期的态度会怎样」',
   'lnflow.chooseSpread': '下一步 · 选牌阵',

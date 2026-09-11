@@ -5,7 +5,7 @@
  * 复用塔罗链路的会话结构(tarot-reading-session), 以 arcana='lenormand' 标记牌组;
  * 雷诺曼无逆位: 翻牌只出正位, 牌意由「连线组合」决定。
  */
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { ChevronRight, HelpCircle, RotateCcw, Sparkles, User } from 'lucide-react';
@@ -14,7 +14,7 @@ import TarotScene from '@/components/TarotScene';
 import { LN_SPREADS, LN_SPREAD_KEYS, LN_DECK, type LnDrawnCard } from '@/lib/lenormand';
 import { useI18n } from '@/i18n';
 
-type Stage = 'question' | 'spread' | 'draw';
+type Stage = 'question' | 'draw';
 
 /** 与塔罗解读室 DrawnCard 对齐的会话卡片 */
 interface SessionCard {
@@ -34,14 +34,13 @@ function LenormandDrawInner() {
   const { t, lang } = useI18n();
   const L = lang === 'en' ? 'en' : lang === 'ja' ? 'ja' : 'zh';
   const searchParams = useSearchParams();
-  // 首页点牌阵直达: ?spread=ln5 —— 有预设阵也先停在「问题」步(雷诺曼必须有问题才能解)
-  const presetSpread = LN_SPREAD_KEYS.includes(searchParams.get('spread') as (typeof LN_SPREAD_KEYS)[number])
+  // 首页已选牌阵, URL 带 ?spread=lnX 直达; 无参数时兜底三张时光线(快速占卜)
+  const spreadKey = LN_SPREAD_KEYS.includes(searchParams.get('spread') as (typeof LN_SPREAD_KEYS)[number])
     ? searchParams.get('spread')!
     : 'ln3a';
   const [stage, setStage] = useState<Stage>('question');
   const [question, setQuestion] = useState(searchParams.get('q') ?? '');
   const [background, setBackground] = useState(searchParams.get('bg') ?? '');
-  const [spreadKey, setSpreadKey] = useState<string>(presetSpread);
   const [selectedCount, setSelectedCount] = useState(0);
   const selectedRef = useRef<Set<number>>(new Set());
   const orderRef = useRef<number[]>([]);
@@ -147,52 +146,22 @@ function LenormandDrawInner() {
           <Reveal delay={240}>
             <div className="mt-8 flex flex-col items-center gap-4">
               <button
-                onClick={() => { if (question.trim()) setStage('spread'); }}
+                onClick={() => { if (question.trim()) setStage('draw'); }}
                 disabled={!question.trim()}
                 className={`glass-btn-primary w-full text-sm tracking-[0.25em] sm:w-auto sm:px-12 ${!question.trim() ? 'opacity-40' : ''}`}
               >
                 <Sparkles className="mr-2 inline-block h-4 w-4" aria-hidden="true" />
-                {t('lnflow.chooseSpread')}
+                {t('lnflow.drawBtn')}
               </button>
+              <p className="text-center text-[11px] leading-relaxed text-muted/60">
+                {spreadLabel} · {t('common.cardsCount', { count: drawCount })}
+              </p>
             </div>
           </Reveal>
         </div>
       )}
 
-      {/* 第2步: 选牌阵 */}
-      {stage === 'spread' && (
-        <div className="mx-auto mt-10 w-full max-w-3xl sm:mt-14">
-          <Reveal>
-            <h2 className="font-display mb-6 text-center text-lg tracking-[0.15em] text-frost/90">{t('lnflow.spreadTitle')}</h2>
-          </Reveal>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {LN_SPREAD_KEYS.map((key, i) => {
-              const sp = LN_SPREADS[key];
-              return (
-                <Reveal key={key} delay={i * 90}>
-                  <button
-                    onClick={() => { setSpreadKey(key); setStage('draw'); selectedRef.current.clear(); orderRef.current = []; setSelectedCount(0); }}
-                    className={`group h-full w-full rounded-2xl border p-6 text-left transition-all duration-300 hover:-translate-y-1 ${
-                      spreadKey === key
-                        ? 'border-accent/40 bg-accent/[0.06]'
-                        : 'border-white/[0.06] bg-white/[0.02] hover:border-accent/30 hover:bg-accent/[0.04]'
-                    }`}
-                  >
-                    <span className="font-display text-[10px] tracking-[0.25em] text-accent/70 uppercase">
-                      {t('common.cardsCount', { count: sp.count })}
-                    </span>
-                    <h3 className="font-display mt-3 text-sm tracking-[0.12em] text-frost">{sp.name[L]}</h3>
-                    <p className="mt-2 text-[12px] leading-relaxed text-muted">{sp.sub[L]}</p>
-                    <span className="mt-4 block text-xs tracking-[0.1em] text-muted/60 transition-colors group-hover:text-accent">{t('lnflow.start')} →</span>
-                  </button>
-                </Reveal>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* 第3步: 36张漂浮抽牌 */}
+      {/* 第2步: 36张漂浮抽牌 */}
       {stage === 'draw' && (
         <section className="py-2">
           <Reveal>

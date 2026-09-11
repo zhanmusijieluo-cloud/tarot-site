@@ -638,6 +638,7 @@ const ja: Record<string, string> = {
   'lnflow.quickBadge': 'クイックリーディング',
   'lnflow.quickTitle': '3枚ライン · 一文で行方を読む',
   'lnflow.quickGo': '今すぐ開始',
+  'lnflow.drawBtn': 'カードを引く',
   'lnflow.spreadsTitle': '定番スプレッド',
   'lnflow.qPlaceholder': 'どんな件 の行方を知りたいですか？ルノルマンは具体的な質問向き（例「この取引は成立する？」「相手の最近の態度は？」）',
   'lnflow.chooseSpread': '次へ · スプレッド選択',
