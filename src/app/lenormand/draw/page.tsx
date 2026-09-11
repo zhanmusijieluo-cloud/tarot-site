@@ -11,7 +11,7 @@ import { Suspense } from 'react';
 import { ChevronRight, HelpCircle, RotateCcw, Sparkles, User } from 'lucide-react';
 import PageShell, { Reveal } from '@/components/PageShell';
 import TarotScene from '@/components/TarotScene';
-import { LN_SPREADS, LN_DECK, type LnDrawnCard } from '@/lib/lenormand';
+import { LN_SPREADS, LN_SPREAD_KEYS, LN_DECK, type LnDrawnCard } from '@/lib/lenormand';
 import { useI18n } from '@/i18n';
 
 type Stage = 'question' | 'spread' | 'draw';
@@ -29,18 +29,19 @@ interface SessionCard {
   arcana: 'lenormand';
 }
 
-const SPREAD_CARDS = ['lnx3', 'lnx5', 'lnx9'] as const;
-
 function LenormandDrawInner() {
   const router = useRouter();
   const { t, lang } = useI18n();
+  const L = lang === 'en' ? 'en' : lang === 'ja' ? 'ja' : 'zh';
   const searchParams = useSearchParams();
-  // 支持从 /lenormand 某张牌「用这张牌阵占卜」直达: ?spread=lnx3&q=xxx
-  const presetSpread = SPREAD_CARDS.includes(searchParams.get('spread') as any) ? searchParams.get('spread')! : null;
-  const [stage, setStage] = useState<Stage>(presetSpread ? 'draw' : 'question');
+  // 首页点牌阵直达: ?spread=ln5 —— 有预设阵也先停在「问题」步(雷诺曼必须有问题才能解)
+  const presetSpread = LN_SPREAD_KEYS.includes(searchParams.get('spread') as (typeof LN_SPREAD_KEYS)[number])
+    ? searchParams.get('spread')!
+    : 'ln3a';
+  const [stage, setStage] = useState<Stage>('question');
   const [question, setQuestion] = useState(searchParams.get('q') ?? '');
   const [background, setBackground] = useState(searchParams.get('bg') ?? '');
-  const [spreadKey, setSpreadKey] = useState<string>(presetSpread ?? 'lnx3');
+  const [spreadKey, setSpreadKey] = useState<string>(presetSpread);
   const [selectedCount, setSelectedCount] = useState(0);
   const selectedRef = useRef<Set<number>>(new Set());
   const orderRef = useRef<number[]>([]);
@@ -48,33 +49,8 @@ function LenormandDrawInner() {
   const spread = LN_SPREADS[spreadKey];
   const drawCount = spread?.count ?? 3;
 
-  const spreadLabel = useMemo(() => {
-    const zh = spread?.name ?? '';
-    if (lang === 'en') return { lnx3: '3-Card Line', lnx5: '5-Card Cross', lnx9: '9-Card Square' }[spreadKey] ?? zh;
-    if (lang === 'ja') return { lnx3: '3枚リーディング', lnx5: '5枚クロス', lnx9: '9枚スクエア' }[spreadKey] ?? zh;
-    return zh;
-  }, [spreadKey, spread, lang]);
-
-  const positionNames = useMemo(() => {
-    const zhPos = spread?.positions ?? [];
-    if (lang === 'en') {
-      const map: Record<string, string[]> = {
-        lnx3: ['The Situation', 'What Is Happening', 'Where It Heads'],
-        lnx5: ['Core Theme', 'Left Influence', 'Right Influence', 'Above · Support', 'Below · Foundation'],
-        lnx9: ['Top-Left', 'Top', 'Top-Right', 'Left', 'Center · Theme', 'Right', 'Bottom-Left', 'Bottom', 'Bottom-Right'],
-      };
-      return map[spreadKey] ?? zhPos;
-    }
-    if (lang === 'ja') {
-      const map: Record<string, string[]> = {
-        lnx3: ['状況の流れ', '今起きていること', '向かう先'],
-        lnx5: ['テーマ', '左の影響', '右の影響', '上·後押し', '下·土台'],
-        lnx9: ['左上', '上', '右上', '左', '中心·テーマ', '右', '左下', '下', '右下'],
-      };
-      return map[spreadKey] ?? zhPos;
-    }
-    return zhPos;
-  }, [spreadKey, spread, lang]);
+  const spreadLabel = spread?.name[L] ?? '';
+  const positionNames = spread?.positions[L] ?? [];
 
   const toggleCard = (id: number) => {
     const s = selectedRef.current;
@@ -189,11 +165,9 @@ function LenormandDrawInner() {
           <Reveal>
             <h2 className="font-display mb-6 text-center text-lg tracking-[0.15em] text-frost/90">{t('lnflow.spreadTitle')}</h2>
           </Reveal>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {SPREAD_CARDS.map((key, i) => {
+          <div className="grid gap-4 sm:grid-cols-2">
+            {LN_SPREAD_KEYS.map((key, i) => {
               const sp = LN_SPREADS[key];
-              const label = { lnx3: t('lnflow.s3'), lnx5: t('lnflow.s5'), lnx9: t('lnflow.s9') }[key];
-              const sub = { lnx3: t('lnflow.s3Sub'), lnx5: t('lnflow.s5Sub'), lnx9: t('lnflow.s9Sub') }[key];
               return (
                 <Reveal key={key} delay={i * 90}>
                   <button
@@ -204,9 +178,11 @@ function LenormandDrawInner() {
                         : 'border-white/[0.06] bg-white/[0.02] hover:border-accent/30 hover:bg-accent/[0.04]'
                     }`}
                   >
-                    <span className="font-display text-[10px] tracking-[0.25em] text-accent/70 uppercase">{sp.count} · {key}</span>
-                    <h3 className="font-display mt-3 text-sm tracking-[0.12em] text-frost">{label}</h3>
-                    <p className="mt-2 text-[12px] leading-relaxed text-muted">{sub}</p>
+                    <span className="font-display text-[10px] tracking-[0.25em] text-accent/70 uppercase">
+                      {t('common.cardsCount', { count: sp.count })}
+                    </span>
+                    <h3 className="font-display mt-3 text-sm tracking-[0.12em] text-frost">{sp.name[L]}</h3>
+                    <p className="mt-2 text-[12px] leading-relaxed text-muted">{sp.sub[L]}</p>
                     <span className="mt-4 block text-xs tracking-[0.1em] text-muted/60 transition-colors group-hover:text-accent">{t('lnflow.start')} →</span>
                   </button>
                 </Reveal>

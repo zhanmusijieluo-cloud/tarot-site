@@ -8,7 +8,7 @@ import PageShell, { Reveal } from '@/components/PageShell';
 import TarotScene from '@/components/TarotScene';
 import LogoSpinner from '@/components/LogoSpinner';
 import { type DrawnCard, getCardImage, CARD_EN_NAMES, TAROT_DECK, SPREADS } from '@/lib/tarot';
-import { LN_DECK, lnImage } from '@/lib/lenormand';
+import { LN_DECK, lnImage, LN_SPREADS } from '@/lib/lenormand';
 import { localizedCardName, CARD_JA_NAMES } from '@/lib/card-names';
 import { spreadPositions } from '@/lib/spread-i18n';
 import { getSpreadCoords, getCrossIdx, solveSpreadLayout, solveCustomGridLayout, CARD_H_RATIO, cardWClassToPx } from '@/lib/spread-layout';
@@ -372,6 +372,11 @@ export default function ReadingSessionPage() {
   const localizedPositions = useMemo(() => {
     const sk = session?.spreadKey ?? null;
     if (!session || !sk) return session?.positions ?? [];
+    // 雷诺曼阵: 位名从 LN_SPREADS 三语表随站点语言实时取
+    const lnSpread = sk.startsWith('ln') ? LN_SPREADS[sk] : undefined;
+    if (lnSpread && lnSpread.positions[lang === 'en' || lang === 'ja' ? lang : 'zh'].length === session.positions.length) {
+      return lnSpread.positions[lang === 'en' || lang === 'ja' ? lang : 'zh'];
+    }
     const zhSpread = SPREADS[sk];
     const positions = session.positions;
     if (!zhSpread || zhSpread.positions.length !== positions.length) return positions;

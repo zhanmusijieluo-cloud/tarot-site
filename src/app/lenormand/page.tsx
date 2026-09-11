@@ -1,13 +1,24 @@
 'use client';
 
+/**
+ * 雷诺曼主页：占卜区置顶（快速占卜 + 常用牌阵），牌墙详解区在下。
+ * 牌阵数据全部来自 lib/lenormand 的 LN_SPREADS（内置三语, 页面按站点语言取用）。
+ */
 import PageShell, { Reveal, SectionHead } from '@/components/PageShell';
 import { useRouter } from 'next/navigation';
+import { Sparkles } from 'lucide-react';
 import { useI18n } from '@/i18n';
-import { LN_CARDS, lnImage } from '@/lib/lenormand';
+import { LN_CARDS, LN_SPREADS, LN_SPREAD_KEYS, lnImage } from '@/lib/lenormand';
+
+const LUCKY_TIP =
+  '🍀 雷诺曼小贴士：三张牌连读成一句话——比如「信 + 骑士 + 鹳」＝「一封改变处境的消息」';
 
 export default function LenormandPage() {
   const router = useRouter();
   const { t, lang } = useI18n();
+  const L = lang === 'en' ? 'en' : lang === 'ja' ? 'ja' : 'zh';
+
+  const goSpread = (key: string) => router.push(`/lenormand/draw?spread=${key}`);
 
   // 关键词分隔符：中文用「 · 」拼前两个，en/ja 原样展示
   const kwPreview = (kw: string) => {
@@ -24,18 +35,97 @@ export default function LenormandPage() {
       title={t('page.lenormand.title')}
       subtitle={t('page.lenormand.subtitle')}
       wide
-      footer={
-        <button
-          onClick={() => router.push('/lenormand/draw')}
-          className="glass-btn-primary text-xs tracking-[0.25em]"
-        >
-          {t('lnflow.start')} →
-        </button>
-      }
     >
-      <section className="mb-20 mt-12 sm:mb-28">
+      {/* ═══ 占卜区（置顶）：快速占卜 + 常用牌阵 ═══ */}
+      <section className="mt-10 mb-16 sm:mt-14 sm:mb-20">
+        <SectionHead no="01" title={t('lnflow.sectionTitle')} sub={t('lnflow.sectionSub')} />
+
+        {/* 快速占卜 · 三张时光线（大主按钮） */}
+        <Reveal>
+          <button
+            onClick={() => goSpread('ln3a')}
+            className="group relative block w-full overflow-hidden rounded-3xl border border-accent/25 bg-gradient-to-br from-accent/[0.10] via-white/[0.02] to-accent/[0.05] p-7 text-left transition-all duration-300 hover:border-accent/50 hover:shadow-[0_0_40px_-12px] hover:shadow-accent/30 sm:p-9"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="min-w-0">
+                <p className="flex items-center gap-2 text-[10px] tracking-[0.3em] text-accent/80 uppercase">
+                  <Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> {t('lnflow.quickBadge')}
+                </p>
+                <h3 className="font-display mt-3 text-xl tracking-[0.1em] text-frost sm:text-2xl">
+                  {t('lnflow.quickTitle')}
+                </h3>
+                <p className="mt-2.5 max-w-xl text-[12px] leading-relaxed text-muted">
+                  {LN_SPREADS.ln3a.sub[L]}
+                </p>
+              </div>
+              {/* 三张卡背示意 */}
+              <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="w-[52px] rounded-lg opacity-90 shadow-lg shadow-black/50 ring-1 ring-white/10 transition-transform duration-300 sm:w-[64px]"
+                    style={{
+                      aspectRatio: '10 / 15',
+                      transform: `rotate(${(i - 1) * 6}deg) translateY(${i === 1 ? -6 : 0}px)`,
+                    }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/cards/card-back-new.webp" alt="" className="h-full w-full rounded-lg object-cover" />
+                  </div>
+                ))}
+                <span className="font-display ml-2 hidden text-sm tracking-[0.2em] text-accent/85 transition-transform duration-300 group-hover:translate-x-1 sm:block">
+                  {t('lnflow.quickGo')} →
+                </span>
+              </div>
+            </div>
+            <p className="mt-5 border-t border-white/[0.06] pt-4 text-[11px] leading-relaxed text-muted/70">{LUCKY_TIP}</p>
+          </button>
+        </Reveal>
+
+        {/* 常用牌阵 */}
+        <Reveal delay={120}>
+          <h3 className="font-display mb-4 mt-10 text-xs tracking-[0.25em] text-muted/80 uppercase">
+            {t('lnflow.spreadsTitle')}
+          </h3>
+        </Reveal>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {LN_SPREAD_KEYS.map((key, i) => {
+            const sp = LN_SPREADS[key];
+            return (
+              <Reveal key={key} delay={i * 90}>
+                <button
+                  onClick={() => goSpread(key)}
+                  className="group h-full w-full rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:border-accent/30 hover:bg-accent/[0.05]"
+                >
+                  {/* 迷你阵位示意（按真实布局坐标缩略） */}
+                  <div className="relative mb-4 h-[54px] w-full">
+                    {SPREAD_MINI[key].map((pt, j) => (
+                      <span
+                        key={j}
+                        className="absolute h-[14px] w-[10px] -translate-x-1/2 -translate-y-1/2 rounded-[2px] border border-accent/30 bg-accent/[0.08] transition-colors group-hover:border-accent/60 group-hover:bg-accent/20"
+                        style={{ left: `${pt.x}%`, top: `${pt.y}%` }}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <h4 className="font-display text-sm tracking-[0.1em] text-frost">{sp.name[L]}</h4>
+                    <span className="shrink-0 text-[10px] tracking-[0.2em] text-muted/60">{t('common.cardsCount', { count: sp.count })}</span>
+                  </div>
+                  <p className="mt-2 text-[11px] leading-relaxed text-muted">{sp.sub[L]}</p>
+                  <span className="mt-3 block text-[11px] tracking-[0.12em] text-muted/50 transition-colors group-hover:text-accent">
+                    {t('lnflow.start')} →
+                  </span>
+                </button>
+              </Reveal>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ═══ 牌墙详解区 ═══ */}
+      <section className="mb-20 sm:mb-28">
         <SectionHead
-          no="01"
+          no="02"
           title={t('lenormand.cardSection')}
           sub={t('lenormand.cardSub')}
         />
@@ -48,7 +138,7 @@ export default function LenormandPage() {
               >
                 {/* 1780年《希望之戏》公有领域牌面 */}
                 <div
-                  className="w-full overflow-hidden rounded-md shadow-md shadow-black/30 transition-transform duration-300 group-hover:scale-[1.03]"
+                  className="w-full overflow-hidden rounded-md shadow-md shadow-black/30 transition-transform duration-200 group-hover:scale-105"
                   style={{ aspectRatio: '10 / 15' }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -73,24 +163,18 @@ export default function LenormandPage() {
           ))}
         </div>
       </section>
-
-      <section className="mb-8">
-        <SectionHead no="02" title={t('lenormand.methodSection')} sub={t('lenormand.methodSub')} />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            { titleKey: 'lenormand.method1', descKey: 'lenormand.method1Desc' },
-            { titleKey: 'lenormand.method2', descKey: 'lenormand.method2Desc' },
-            { titleKey: 'lenormand.method3', descKey: 'lenormand.method3Desc' },
-          ].map((m, i) => (
-            <Reveal key={m.titleKey} delay={i * 100}>
-              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
-                <h3 className="font-display text-sm tracking-[0.15em] text-frost">{t(m.titleKey)}</h3>
-                <p className="mt-2.5 text-[12px] leading-relaxed text-muted">{t(m.descKey)}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
     </PageShell>
   );
 }
+
+/** 牌阵迷你示意图坐标（与 spread-layout 真实布局同构, 按 key 静态镜像） */
+const SPREAD_MINI: Record<string, { x: number; y: number }[]> = {
+  ln3a: [{ x: 20, y: 50 }, { x: 50, y: 50 }, { x: 80, y: 50 }],
+  ln3b: [{ x: 20, y: 50 }, { x: 50, y: 50 }, { x: 80, y: 50 }],
+  ln5: [{ x: 10, y: 50 }, { x: 30, y: 50 }, { x: 50, y: 50 }, { x: 70, y: 50 }, { x: 90, y: 50 }],
+  ln9: [
+    { x: 24, y: 18 }, { x: 50, y: 18 }, { x: 76, y: 18 },
+    { x: 24, y: 50 }, { x: 50, y: 50 }, { x: 76, y: 50 },
+    { x: 24, y: 82 }, { x: 50, y: 82 }, { x: 76, y: 82 },
+  ],
+};

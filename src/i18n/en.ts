@@ -646,15 +646,15 @@ const en: Record<string, string> = {
 
   'lnflow.title': 'Lenormand Reading',
   'lnflow.subtitle': '36 symbolic cards · read as sentences · point straight at how events unfold',
+  'lnflow.sectionTitle': 'Start a Reading',
+  'lnflow.sectionSub': 'Pick a spread and ask one concrete question',
+  'lnflow.quickBadge': 'Quick Reading',
+  'lnflow.quickTitle': '3-Card Line · One Sentence, One Outcome',
+  'lnflow.quickGo': 'Start now',
+  'lnflow.spreadsTitle': 'Classic Spreads',
   'lnflow.qPlaceholder': 'Which outcome do you want to ask about? Lenormand shines on concrete questions, e.g. "Will this deal close?" or "How will their attitude shift soon?"',
   'lnflow.chooseSpread': 'Next · Choose a spread',
   'lnflow.spreadTitle': 'Choose a Spread',
-  'lnflow.s3': '3-Card Line',
-  'lnflow.s3Sub': 'Read left-center-right as one sentence: situation, what\'s happening, where it heads. The fastest, sharpest starter',
-  'lnflow.s5': '5-Card Cross',
-  'lnflow.s5Sub': 'Core theme + left/right influences + above/below support & foundation — the forces around one matter',
-  'lnflow.s9': '9-Card Square',
-  'lnflow.s9Sub': 'A 3×3 panorama with a center theme and eight surrounding influences — for complex situations',
   'lnflow.start': 'Start drawing',
 
   // ===== BaZi Page =====

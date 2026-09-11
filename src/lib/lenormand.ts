@@ -117,23 +117,79 @@ export function lnLocalName(id: number, lang: string, t?: (k: string) => string)
 }
 
 /**
- * 雷诺曼牌阵 (与塔罗 SPREADS 分开, 避免混入塔罗牌阵库)
- * - positions: 中文位名(前端 localizePositions 可覆盖); 雷诺曼核心是"连线造句"
+ * 雷诺曼常用牌阵（收纳自 Lozzy's Lenormand / Labyrinthos / lenormand.life 等主流站点的标准阵）:
+ * - ln3a 三张时光线: 过去/现在/未来 一行连读
+ * - ln3b 三张解题盒: 状况/挑战/建议
+ * - ln5  五张聚焦线: 中心=题眼, 由内向外读, 1+5 / 2+4 镜像
+ * - ln9  九张全景盒: 3x3 横读三层(表层/现实/根基) 竖读三时(过去/现在/未来) 对角看暗流
+ * name/sub/positions 均内置三语, 页面按站点语言取用。
  */
-export const LN_SPREADS: Record<string, { name: string; count: number; positions: string[] }> = {
-  lnx3: {
-    name: '三张连线',
+export type LnLang3 = { zh: string; en: string; ja: string };
+export interface LnSpread {
+  count: number;
+  name: LnLang3;
+  sub: LnLang3;
+  positions: { zh: string[]; en: string[]; ja: string[] };
+}
+
+export const LN_SPREADS: Record<string, LnSpread> = {
+  ln3a: {
     count: 3,
-    positions: ['情况主线', '正在发生', '走向结果'],
+    name: { zh: '三张 · 时光线', en: '3-Card Timeline', ja: '3枚 · タイムライン' },
+    sub: {
+      zh: '一行三张连读成句：事情的来路、当下、短近走向。雷诺曼最常用入门阵',
+      en: 'One line read as a sentence: how it started, what is now, where it heads. The go-to starter spread',
+      ja: '一列を一文で読む：来し方・現在・直近の行方。ルノルマン定番の入門スプレッド',
+    },
+    positions: {
+      zh: ['过去之因', '现在之势', '未来之向'],
+      en: ['Past', 'Present', 'Future'],
+      ja: ['過去', '現在', '未来'],
+    },
   },
-  lnx5: {
-    name: '五张十字',
+  ln3b: {
+    count: 3,
+    name: { zh: '三张 · 解题盒', en: '3-Card Situation–Challenge–Advice', ja: '3枚 · 課題解決ボックス' },
+    sub: {
+      zh: '问「这事怎么破」：现状是什么、卡在哪、下一步怎么走',
+      en: 'For "how do I crack this": the situation, the obstacle, the next move',
+      ja: '「どう解決する？」向け：状況・障害・次の一手',
+    },
+    positions: {
+      zh: ['状况', '挑战', '建议'],
+      en: ['Situation', 'Challenge', 'Advice'],
+      ja: ['状況', '課題', 'アドバイス'],
+    },
+  },
+  ln5: {
     count: 5,
-    positions: ['主题核心', '左侧影响', '右侧影响', '上方助力', '下方根基'],
+    name: { zh: '五张 · 聚焦线', en: '5-Card Focus Line', ja: '5枚 · フォーカスライン' },
+    sub: {
+      zh: '中心牌是题眼，两侧由内向外读，首尾互为镜像——快而深的日常主力阵',
+      en: 'Middle card is the theme; read outward in pairs, 1+5 and 2+4 mirror each other — the daily workhorse',
+      ja: '中央がテーマ。内側から外へ読み、1+5・2+4は鏡像。日常使いの主力陣',
+    },
+    positions: {
+      zh: ['远方背景', '近端影响', '核心主题', '近端走向', '远方结果'],
+      en: ['Far Background', 'Near Influence', 'Core Theme', 'Near Direction', 'Far Outcome'],
+      ja: ['遠い背景', '直近の影響', '核心テーマ', '直近の方向', '遠い結末'],
+    },
   },
-  lnx9: {
-    name: '九张方阵',
+  ln9: {
     count: 9,
-    positions: ['左上', '上', '右上', '左', '中心·主题', '右', '左下', '下', '右下'],
+    name: { zh: '九张 · 全景盒', en: '9-Card Box · Portrait', ja: '9枚 · ボックス（肖像）' },
+    sub: {
+      zh: '3×3 微缩全景：横读三层（想法/现实/根基），竖读三时（过去/现在/未来），对角看暗流',
+      en: 'A 3×3 mini tableau: rows = thoughts/reality/foundation, columns = past/present/future, diagonals = hidden currents',
+      ja: '3×3のミニアトラ：横=思考/現実/基盤、縦=過去/現在/未来、対角は伏流',
+    },
+    positions: {
+      zh: ['表层·过去', '表层·现在', '表层·未来', '现实·过去', '核心主题', '现实·未来', '根基·过去', '根基·现在', '根基·未来'],
+      en: ['Surface Past', 'Surface Present', 'Surface Future', 'Reality Past', 'Core Theme', 'Reality Future', 'Root Past', 'Root Present', 'Root Future'],
+      ja: ['表層·過去', '表層·現在', '表層·未来', '現実·過去', '核心テーマ', '現実·未来', '基盤·過去', '基盤·現在', '基盤·未来'],
+    },
   },
 };
+
+/** 抽牌页可用的牌阵 key（顺序即展示顺序） */
+export const LN_SPREAD_KEYS = ['ln3a', 'ln3b', 'ln5', 'ln9'] as const;
