@@ -57,7 +57,7 @@ function shuffleIds(totalCards: number, deck: 'tarot' | 'lenormand' = 'tarot'): 
   return [...TAROT_DECK].sort(() => Math.random() - 0.5).slice(0, totalCards).map(c => c.id);
 }
 
-function buildCards(totalCards: number, isMobile: boolean, ids: number[]): CardSpec[] {
+function buildCards(totalCards: number, isMobile: boolean, ids: number[], deck: 'tarot' | 'lenormand' = 'tarot'): CardSpec[] {
   const random = seeded(0x79657969);
   const cards: CardSpec[] = [];
   const yNudge: Record<string, number[]> = {
@@ -67,14 +67,22 @@ function buildCards(totalCards: number, isMobile: boolean, ids: number[]): CardS
   };
   // 三层数量按牌组规模等比缩放: 塔罗78 → 32/30/16; 雷诺曼36 → 15/14/7
   // (节点数必须恰好等于牌数, 否则取模复用会让同一张牌在场景中重复出现)
+  const ln = deck === 'lenormand';
   const nBack = Math.max(1, Math.round((totalCards * 32) / 78));
   const nMid = Math.max(1, Math.round((totalCards * 30) / 78));
   const nFront = Math.max(1, totalCards - nBack - nMid);
-  const bands = [
-    { count: nBack, layer: 'back' as const, y: 0.04, amp: 0.042, width: 40, alpha: 0.68, scale: 0.94, z: -190, speed: 0.24, offset: 0.012 },
-    { count: nMid, layer: 'mid' as const, y: 0.28, amp: 0.058, width: 44, alpha: 0.84, scale: 0.96, z: -36, speed: 0.31, offset: 0.055 },
-    { count: nFront, layer: 'front' as const, y: 0.5, amp: 0.038, width: 49, alpha: 0.96, scale: 0.99, z: 76, speed: 0.36, offset: 0.115 },
-  ];
+  const bands = ln
+    ? [
+        // 雷诺曼: 三层纵向整体下移居中(牌海重心≈视口中线), 漂移带更窄(同屏密度≈塔罗)
+        { count: nBack, layer: 'back' as const, y: 0.18, amp: 0.04, width: 40, alpha: 0.68, scale: 0.94, z: -190, speed: 0.24, offset: 0.012 },
+        { count: nMid, layer: 'mid' as const, y: 0.42, amp: 0.055, width: 44, alpha: 0.84, scale: 0.96, z: -36, speed: 0.31, offset: 0.055 },
+        { count: nFront, layer: 'front' as const, y: 0.64, amp: 0.036, width: 49, alpha: 0.96, scale: 0.99, z: 76, speed: 0.36, offset: 0.115 },
+      ]
+    : [
+        { count: nBack, layer: 'back' as const, y: 0.04, amp: 0.042, width: 40, alpha: 0.68, scale: 0.94, z: -190, speed: 0.24, offset: 0.012 },
+        { count: nMid, layer: 'mid' as const, y: 0.28, amp: 0.058, width: 44, alpha: 0.84, scale: 0.96, z: -36, speed: 0.31, offset: 0.055 },
+        { count: nFront, layer: 'front' as const, y: 0.5, amp: 0.038, width: 49, alpha: 0.96, scale: 0.99, z: 76, speed: 0.36, offset: 0.115 },
+      ];
   let deckIndex = 0;
 
   for (const band of bands) {
@@ -113,6 +121,7 @@ function buildCards(totalCards: number, isMobile: boolean, ids: number[]): CardS
 class TarotSceneEngine {
   container: HTMLElement;
   totalCards: number;
+  deck: 'tarot' | 'lenormand';
   maxSelect: number;
   selectedIds: Set<number>;
   onToggleCard: (id: number) => void;
@@ -138,12 +147,13 @@ class TarotSceneEngine {
   constructor(opts: { container: HTMLElement; totalCards: number; maxSelect: number; selectedIds: number[]; onToggleCard: (id: number) => void; deck?: 'tarot' | 'lenormand' }) {
     this.container = opts.container;
     this.totalCards = opts.totalCards;
+    this.deck = opts.deck || 'tarot';
     this.maxSelect = opts.maxSelect;
     this.selectedIds = new Set(opts.selectedIds);
     this.onToggleCard = opts.onToggleCard;
     this.disabled = false;
     this.isMobile = window.matchMedia('(max-width: 767px)').matches;
-    this.cards = buildCards(opts.totalCards, this.isMobile, shuffleIds(opts.totalCards, opts.deck));
+    this.cards = buildCards(opts.totalCards, this.isMobile, shuffleIds(opts.totalCards, opts.deck), opts.deck);
 
     this.root = document.createElement('div');
     this.root.className = 'tarot-scene-root';
@@ -219,8 +229,10 @@ class TarotSceneEngine {
     this.offset.y += (this.targetOffset.y - this.offset.y) * damping;
     this.zoom += (this.targetZoom - this.zoom) * damping;
 
-    const left = -width * 1.92;
-    const span = width * 4.85;
+    // 漂移带总宽按牌数等比缩放: 塔罗78张→4.85屏宽; 雷诺曼36张→2.24屏宽
+    // 屏内同排密度一致(≈16张/屏), 不再显得稀疏; 带子绕视口居中对折
+    const span = width * 4.85 * (this.totalCards / 78);
+    const left = -(span - width) / 2;
     const safeTop = this.isMobile ? 18 : 14;
     const safeBottom = height - (this.isMobile ? 18 : 16);
     // 随场景高度自动放大牌尺寸（高度 745px 时约 1.69 倍，让放大后的场景不显稀疏）
@@ -330,7 +342,10 @@ class TarotSceneEngine {
     }
     if (!this.pointer.moved) return;
     const { width } = this.getBounds();
-    this.targetOffset.x = clamp(this.targetOffset.x + dx * 1.35, -width * 1.7, width * 1.7);
+    // 横向拖拽限位: 塔罗保持原 ±1.7屏; 窄带牌组(雷诺曼)收紧到带缘+半屏, 防止把牌全部拖出视野
+    const dragSpan = width * 4.85 * (this.totalCards / 78);
+    const dragMax = Math.min(width * 1.7, (dragSpan - width) / 2 + width * 0.55);
+    this.targetOffset.x = clamp(this.targetOffset.x + dx * 1.35, -dragMax, dragMax);
     this.targetOffset.y = clamp(this.targetOffset.y + dy * 0.45, -58, 58);
   }
 

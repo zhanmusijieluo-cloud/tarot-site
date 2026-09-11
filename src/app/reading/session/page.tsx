@@ -1005,12 +1005,12 @@ export default function ReadingSessionPage() {
         <div className="mt-8 flex justify-center">
           <button
             onClick={() => {
-              // 重新占卜 = 全新一场：清掉旧解读/追问会话，回到推荐牌阵页选择新牌阵
+              // 重新占卜 = 全新一场：清掉旧解读/追问会话, 各牌组回各自的选阵入口(塔罗→推荐牌阵页, 雷诺曼→雷诺曼主页)
               try {
                 window.sessionStorage.removeItem(SESSION_KEY);
                 window.sessionStorage.removeItem(CHAT_KEY);
               } catch { /* ignore */ }
-              router.push('/spreads');
+              router.push(isLn ? '/lenormand' : '/spreads');
             }}
             className="glass-btn text-xs"
           >
