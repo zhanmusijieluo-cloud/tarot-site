@@ -9,27 +9,10 @@
 import { useMemo, useState } from 'react';
 import { useI18n } from '@/i18n';
 import { ALL_CITIES, findCity } from '@/lib/astro/cities';
+import ChartWheel, { type VChart } from '@/components/astro/ChartWheel';
 import type { HouseSystem } from '@/lib/astro/chart';
 
-// ---- 盘面返回类型 (与 src/lib/astro/chart.ts 对齐, 前端独立声明免引服务端类型) ----
-interface PlanetView {
-  name: string; zh: string; symbol: string; longitude: number;
-  sign: string; signZh: string; degInSign: number; formatted: string;
-  house: number | null; retrograde: boolean; speed: number;
-  dignity: { state: string; strength: number } | null;
-}
-interface AspectView {
-  a: string; b: string; type: string; typeZh: string; symbol: string;
-  orb: number; applying: boolean | null;
-}
-interface ChartView {
-  houseSystemUsed: HouseSystem; timeKnown: boolean;
-  planets: PlanetView[];
-  angles: { ascendant: PlanetView | null; midheaven: PlanetView | null };
-  cusps: number[] | null;
-  aspects: AspectView[];
-  warnings: string[];
-}
+// ---- 盘面类型: 与 API 返回对齐, 由 ChartWheel 统一导出 ----
 
 const HOUSE_SYSTEMS: { value: HouseSystem; zh: string }[] = [
   { value: 'placidus', zh: '普拉西德' },
@@ -70,7 +53,7 @@ export default function NatalForm() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [chart, setChart] = useState<ChartView | null>(null);
+  const [chart, setChart] = useState<VChart | null>(null);
 
   const city = useMemo(() => findCity(cityId), [cityId]);
 
@@ -94,7 +77,7 @@ export default function NatalForm() {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || t('astro.form.failed')); return; }
-      setChart(data.chart as ChartView);
+      setChart(data.chart as VChart);
     } catch {
       setError(t('astro.form.failed'));
     } finally {
@@ -226,6 +209,9 @@ export default function NatalForm() {
               </div>
             ))}
           </div>
+
+          {/* 3D 轮盘 (C1): 点星体看落座/落宫/相位/互溶接纳标注 */}
+          <ChartWheel chart={chart} zhMode={zhMode} />
 
           {/* 行星落座落宫表 */}
           <div className="overflow-hidden rounded-2xl border border-white/[0.07]">

@@ -5,7 +5,7 @@
 //   · ASC/MC vs 独立Python引擎(aryaminus/astro): 差 <0.001°
 // 纪律: 引擎算盘, 模型解读 — 本文件输出即"证据", AI 不得增删行星位置
 // ============================================================
-import { calculateChart, calculateAspects, AspectType } from 'celestine'
+import { calculateChart, calculateAspects, AspectType, getSignInfo } from 'celestine'
 
 export type HouseSystem =
   | 'placidus' | 'koch' | 'equal' | 'whole-sign'
@@ -34,6 +34,7 @@ export interface ChartPlanet {
   zh: string         // 中文, 如 '太阳'
   symbol: string     // '☉'
   longitude: number  // 黄经 0-360
+  eclLat: number     // 黄纬(度) — 3D 侧视悬浮高度
   sign: string       // 星座英文 'Leo'
   signZh: string     // 星座中文 '狮子'
   degInSign: number  // 座内度数(十进) 0-30
@@ -62,6 +63,7 @@ export interface NatalChart {
   angles: { ascendant: ChartPlanet | null; midheaven: ChartPlanet | null }
   cusps: number[] | null
   aspects: ChartAspect[]
+  receptions: Reception[]
   warnings: string[]
 }
 
@@ -87,6 +89,21 @@ const PLANET_SYMBOL: Record<string, string> = {
 const ASPECT_ZH: Record<string, string> = {
   conjunction: '合', sextile: '六合', square: '刑', trine: '拱', opposition: '冲',
 }
+
+// ---------- 互溶接纳 (Reception) ----------
+// 庙座表(现代守护)与传统守护表直接复用 celestine getSignInfo; 耀升表为托勒密公版知识:
+// 日羊 月牛 水处 金鱼 火摩 木巨 土天秤 (源: 《四书集》I.19, 各派于此基本一致)
+const EXALTATION_SIGN: Record<string, string> = {
+  Sun: 'Aries', Moon: 'Taurus', Mercury: 'Virgo', Venus: 'Pisces',
+  Mars: 'Capricorn', Jupiter: 'Cancer', Saturn: 'Libra',
+  // 三王星无古典耀升位; 现代派部分给天王天蝎/海王射手/冥王摩羯, 争议大 → 不入主表, 规则库二期定流派
+  Uranus: '', Neptune: '', Pluto: '',
+}
+const FALL_SIGN: Record<string, string> = {
+  Sun: 'Libra', Moon: 'Scorpio', Mercury: 'Pisces', Venus: 'Virgo',
+  Mars: 'Cancer', Jupiter: 'Capricorn', Saturn: 'Aries',
+  Uranus: '', Neptune: '', Pluto: '',
+}
 // 客户主盘十星(不含小行星); 小行星留骨架二期按需开
 const CORE_BODIES = [
   'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
@@ -97,8 +114,66 @@ const HIGH_LAT = 66.5 // 高纬 Placidus 数学不收敛区
 const norm = (d: number) => ((d % 360) + 360) % 360
 const toPct = (x: number) => Math.round(x * 100) / 100
 
+// 星座名 → 索引 (0白羊…11双鱼)
+const SIGN_IDX: Record<string, number> = {
+  Aries: 0, Taurus: 1, Gemini: 2, Cancer: 3, Leo: 4, Virgo: 5,
+  Libra: 6, Scorpio: 7, Sagittarius: 8, Capricorn: 9, Aquarius: 10, Pisces: 11,
+}
+type RulerKind = 'domicile' | 'exaltation' | 'detriment' | 'fall'
+const RULER_KIND_ZH: Record<RulerKind, string> = {
+  domicile: '庙座', exaltation: '耀升', detriment: '失势', fall: '落陷',
+}
+
+export interface Reception {
+  a: string          // 行星A (落座者)
+  b: string          // 行星B (座主)
+  kind: RulerKind    // A 住在 B 的什么宫里
+  mutual: boolean    // 互溶: 双向同住
+  bySign: string     // 发生在哪个星座(展示用)
+}
+
+/**
+ * 互溶接纳表: A 落在 B 守护/耀升的星座 → B 接纳 A; 双向同住 = 互溶 (mutual reception)
+ * 守护表用 celestine getSignInfo (现代守护, 与主盘 dignities 同流派, 不混古典守护以免自相矛盾)
+ */
+export function computeReceptions(
+  planets: { name: string; sign: string }[],
+  opts: { traditional?: boolean } = {},
+): Reception[] {
+  const rulers = new Map<number, string>()      // 星座idx → 座主(庙)
+  const exalted = new Map<number, string>()     // 星座idx → 耀升星
+  for (let i = 0; i < 12; i++) {
+    const info = getSignInfo(i as never)
+    const r = opts.traditional ? info.traditionalRuler : info.ruler
+    rulers.set(i, r)
+    for (const [p, s] of Object.entries(EXALTATION_SIGN)) if (s && SIGN_IDX[s] === i) exalted.set(i, p)
+  }
+  const hostOf = (signName: string) => ({
+    ruler: rulers.get(SIGN_IDX[signName] ?? -1),
+    exalt: exalted.get(SIGN_IDX[signName] ?? -1),
+  })
+  const out: Reception[] = []
+  for (const a of planets) {
+    const { ruler, exalt } = hostOf(a.sign)
+    if (!ruler && !exalt) continue
+    for (const b of planets) {
+      if (a.name === b.name) continue
+      let kind: RulerKind | null = null
+      if (ruler === b.name) kind = 'domicile'
+      else if (exalt === b.name) kind = 'exaltation'
+      if (!kind) continue
+      // 查反向: B 是否也住在 A 的庙/耀升座 → 互溶
+      const rev = hostOf(b.sign)
+      const mutual = rev.ruler === a.name || rev.exalt === a.name
+      // 两个方向各记一条(不吞信息), 展示层按 pair 归并显示"互溶"
+      out.push({ a: a.name, b: b.name, kind, mutual, bySign: a.sign })
+    }
+  }
+  return out
+}
+
 function bodyToPlanet(
-  raw: { name: string; longitude: number; signName: string; degree: number; minute: number; formatted: string; house?: number; longitudeSpeed?: number; isRetrograde?: boolean; dignity?: { state: string; strength: number } | null },
+  raw: { name: string; longitude: number; signName: string; degree: number; minute: number; formatted: string; house?: number; longitudeSpeed?: number; isRetrograde?: boolean; latitude?: number; dignity?: { state: string; strength: number } | null },
   houseKnown: boolean,
 ): ChartPlanet {
   return {
@@ -106,6 +181,7 @@ function bodyToPlanet(
     zh: PLANET_ZH[raw.name] ?? raw.name,
     symbol: PLANET_SYMBOL[raw.name] ?? raw.name,
     longitude: toPct(norm(raw.longitude)),
+    eclLat: toPct(raw.latitude ?? 0),
     sign: raw.signName,
     signZh: SIGNS_ZH[raw.signName] ?? raw.signName,
     degInSign: toPct(raw.degree + raw.minute / 60),
@@ -175,6 +251,9 @@ export function castNatalChart(birth: BirthData): NatalChart {
     symbol: a.symbol, orb: toPct(a.deviation), applying: a.isApplying,
   }))
 
+  // 互溶接纳 (十星之间, 与盘面同一守护流派)
+  const receptions = computeReceptions(planets.map(p => ({ name: p.name, sign: p.sign })))
+
   return {
     input: birth,
     houseSystemUsed: system,
@@ -184,7 +263,7 @@ export function castNatalChart(birth: BirthData): NatalChart {
     cusps: timeKnown
       ? (c.houses as unknown as { cusps: (number | { longitude: number })[] }).cusps.map(x => typeof x === 'number' ? x : x.longitude)
       : null,
-    aspects, warnings,
+    aspects, receptions, warnings,
   }
 }
 
@@ -207,6 +286,24 @@ export function chartEvidence(ch: NatalChart): string {
   for (const a of sorted.slice(0, 14)) {
     const app = a.applying === true ? ', 入相(作用增强)' : a.applying === false ? ', 出相(作用减弱)' : ''
     lines.push(`- ${PLANET_ZH[a.a]}${a.typeZh}${PLANET_ZH[a.b]} (误差${a.orb}°${app})`)
+  }
+  if (ch.receptions.length) {
+    lines.push(`【互溶接纳】(星体做客/房东关系, 互溶=双向互客)` )
+    const seen = new Set<string>()
+    for (const r of ch.receptions) {
+      const key = [r.a, r.b].sort().join('|')
+      if (seen.has(key)) continue
+      const kindZh = RULER_KIND_ZH[r.kind]
+      if (r.mutual) {
+        const rev = ch.receptions.find(x => x.a === r.b && x.b === r.a)
+        seen.add(key)
+        // r: A住r.bySign=B之家(kind); rev: B住rev.bySign=A之家(rev.kind)
+        lines.push(`- 互溶: ${PLANET_ZH[r.a]} ↔ ${PLANET_ZH[r.b]} (${PLANET_ZH[r.a]}居${SIGNS_ZH[r.bySign] ?? r.bySign}=${PLANET_ZH[r.b]}之${kindZh}, ${PLANET_ZH[r.b]}居${rev ? SIGNS_ZH[rev.bySign] ?? rev.bySign : '?'}=${PLANET_ZH[r.a]}之${rev ? RULER_KIND_ZH[rev.kind] : ''})`)
+      } else {
+        seen.add(key)
+        lines.push(`- ${PLANET_ZH[r.b]}接纳${PLANET_ZH[r.a]} (${PLANET_ZH[r.a]}居${SIGNS_ZH[r.bySign] ?? r.bySign}=${PLANET_ZH[r.b]}之${kindZh})`)
+      }
+    }
   }
   if (ch.warnings.length) {
     lines.push(`【精度声明】`)
