@@ -143,22 +143,6 @@ export default function LenormandPage() {
               </span>
             </button>
           </Reveal>
-          {/* 线下抽牌：自己实体牌摆好后来这填 */}
-          <Reveal delay={450}>
-            <button
-              onClick={() => router.push('/lenormand/offline')}
-              className="group h-full w-full rounded-2xl border border-dashed border-accent/30 p-5 text-left transition-all duration-300 hover:border-accent/60 hover:bg-accent/[0.04]"
-            >
-              <span className="text-[10px] tracking-[0.25em] text-accent/70 uppercase">✦ · {t('common.cardsCount', { count: 10 })}</span>
-              <h3 className="font-display mt-2.5 text-base tracking-[0.1em] text-accent">
-                {t('lnflow.offlineTitle')}
-              </h3>
-              <p className="mt-1 text-xs text-muted">{t('lnflow.offlineSubtitle')}</p>
-              <span className="mt-3 block text-[11px] tracking-[0.12em] text-muted/50 transition-colors group-hover:text-accent">
-                {t('lnflow.start')} →
-              </span>
-            </button>
-          </Reveal>
         </div>
       </section>
 

@@ -11,6 +11,7 @@ import { Suspense } from 'react';
 import { ChevronRight, HelpCircle, RotateCcw, Sparkles, User } from 'lucide-react';
 import PageShell, { Reveal } from '@/components/PageShell';
 import TarotScene from '@/components/TarotScene';
+import OfflineInterpretSection from '@/components/OfflineInterpretSection';
 import { LN_SPREADS, LN_SPREAD_KEYS, LN_DECK, type LnDrawnCard } from '@/lib/lenormand';
 import type { CustomCell } from '@/components/CustomSpreadBuilder';
 import { useI18n } from '@/i18n';
@@ -58,6 +59,9 @@ function LenormandDrawInner() {
   const [selectedCount, setSelectedCount] = useState(0);
   const selectedRef = useRef<Set<number>>(new Set());
   const orderRef = useRef<number[]>([]);
+  // 线下抽牌: 与塔罗 /online 同款——按钮并排在「开始抽牌」旁, 点击就地展开填牌区
+  const [offline, setOffline] = useState(false);
+  const offlineRef = useRef<HTMLDivElement>(null);
 
   const spread = LN_SPREADS[spreadKey];
   const isCustom = !!customLayout?.length;
@@ -164,7 +168,7 @@ function LenormandDrawInner() {
             </div>
           </Reveal>
           <Reveal delay={240}>
-            <div className="mt-8 flex flex-col items-center gap-4">
+            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:items-stretch sm:justify-center">
               <button
                 onClick={() => { if (question.trim()) setStage('draw'); }}
                 disabled={!question.trim()}
@@ -173,11 +177,41 @@ function LenormandDrawInner() {
                 <Sparkles className="mr-2 inline-block h-4 w-4" aria-hidden="true" />
                 {t('lnflow.drawBtn')}
               </button>
-              <p className="text-center text-[11px] leading-relaxed text-muted/60">
-                {spreadLabel} · {t('common.cardsCount', { count: drawCount })}
-              </p>
+              <button
+                onClick={() => {
+                  setOffline(true);
+                  requestAnimationFrame(() => offlineRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+                }}
+                className="liquid-glass w-full rounded-full px-8 py-4 text-sm tracking-[0.2em] text-frost transition-all hover:bg-white/[0.04] sm:w-auto sm:px-10"
+              >
+                {t('custom.offlineBtn')}
+              </button>
             </div>
+            <p className="mt-4 text-center text-[11px] leading-relaxed text-muted/60">
+              {spreadLabel} · {t('common.cardsCount', { count: drawCount })}
+            </p>
           </Reveal>
+
+          {/* 线下抽牌 → 就地内嵌填牌区（内置阵带真实阵形; 自定义阵带入格位） */}
+          {offline && (
+            <div ref={offlineRef} className="mt-2">
+              <OfflineInterpretSection
+                deck="lenormand"
+                {...(isCustom
+                  ? {
+                      presetCustomCount: drawCount,
+                      presetCustomPositions: positionNames.join(','),
+                      presetCustomCells: customLayout!,
+                      customName: spreadLabel,
+                    }
+                  : { presetSpread: spreadKey })}
+                presetQuestion={question}
+                presetBackground={background}
+                hideQuestionInput
+                onBack={() => { setOffline(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              />
+            </div>
+          )}
         </div>
       )}
 
