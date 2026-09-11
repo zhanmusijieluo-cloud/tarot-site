@@ -29,7 +29,7 @@ export interface VReception {
 }
 export interface VChart {
   houseSystemUsed: string; timeKnown: boolean;
-  input: { year: number; month: number; day: number; hour: number; minute: number; city?: string };
+  input: { year: number; month: number; day: number; hour: number; minute: number; city?: string; label?: string };
   planets: VPlanet[];
   angles: { ascendant: VPlanet | null; midheaven: VPlanet | null };
   cusps: number[] | null;

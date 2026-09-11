@@ -6,10 +6,10 @@
 // 铁律: 盘面数据来自引擎, 本页只收集资料不展示不修饰
 // ============================================================
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/i18n';
-import { ALL_CITIES, findCity } from '@/lib/astro/cities';
+import BirthplacePicker, { type BirthPlace } from '@/components/astro/BirthplacePicker';
 import { paramsFromBirth } from '@/lib/astro/chart-url';
 import type { BirthData, HouseSystem } from '@/lib/astro/chart';
 
@@ -39,21 +39,22 @@ export default function NatalForm() {
   const [hour, setHour] = useState('14');
   const [minute, setMinute] = useState('30');
   const [timeKnown, setTimeKnown] = useState(true);
-  const [cityId, setCityId] = useState('beijing');
+  const [place, setPlace] = useState<BirthPlace>({ lat: 39.9042, lng: 116.4074, tz: 8, label: '北京', cnCode: '北京~北京~北京' });
+  const [label, setLabel] = useState('');
   const [houseSystem, setHouseSystem] = useState<HouseSystem>('placidus');
   const [error, setError] = useState('');
-
-  const city = useMemo(() => findCity(cityId), [cityId]);
 
   const cast = () => {
     setError('');
     const b: BirthData = {
       year: +year, month: +month, day: +day,
       hour: +hour, minute: +minute,
-      timezone: city?.tz ?? 8,
-      latitude: city?.lat ?? 39.9042,
-      longitude: city?.lng ?? 116.4074,
-      city: zhMode ? city?.zh : city?.en,
+      timezone: place.tz,
+      latitude: place.lat,
+      longitude: place.lng,
+      city: place.label,
+      cnCode: place.cnCode,
+      label: label.trim() || undefined,
       houseSystem, timeKnown,
     };
     if (!(b.year >= 1900 && b.year <= 2100) || !(b.month >= 1 && b.month <= 12) || !(b.day >= 1 && b.day <= 31)) {
@@ -86,15 +87,14 @@ export default function NatalForm() {
             onChange={(e) => setDay(e.target.value)} className={inputCls} />
         </div>
         <div>
-          <label className={labelCls}>{t('astro.form.city')}</label>
-          <select value={cityId} onChange={(e) => setCityId(e.target.value)} className={inputCls}>
-            {ALL_CITIES.map((c) => (
-              <option key={c.id} value={c.id} className="bg-[#0b0e17]">
-                {zhMode ? c.zh : c.en}
-              </option>
-            ))}
-          </select>
+          <label className={labelCls}>{t('astro.form.label')}</label>
+          <input value={label} maxLength={30} onChange={(e) => setLabel(e.target.value)} className={inputCls}
+            placeholder={t('astro.form.labelPh')} />
         </div>
+      </div>
+
+      <div className="mt-3">
+        <BirthplacePicker value={place} onChange={setPlace} />
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -147,7 +147,7 @@ export default function NatalForm() {
       <button
         type="button"
         onClick={cast}
-        disabled={!city}
+        disabled={!place.label || !Number.isFinite(place.lat)}
         className="glass-btn-primary mt-6 w-full py-3.5 text-sm tracking-[0.3em] disabled:opacity-40"
       >
         {t('astro.form.cast')}

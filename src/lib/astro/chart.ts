@@ -27,6 +27,10 @@ export interface BirthData {
   houseSystem?: HouseSystem
   /** 不知道出生时间: true 时不算上升/宫位, 行星按当地正午近似 */
   timeKnown?: boolean
+  /** 盘档案名(如"小美的盘"), 仅展示与存档 */
+  label?: string
+  /** 中国三级地点编码"省~市~区"(URL 还原用), 仅展示与存档 */
+  cnCode?: string
 }
 
 export interface ChartPlanet {

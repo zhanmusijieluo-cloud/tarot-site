@@ -49,6 +49,8 @@ export async function POST(request: NextRequest) {
       minute: timeKnown ? minute : 0,
       timezone, latitude, longitude,
       city: typeof b.city === 'string' ? b.city.slice(0, 40) : undefined,
+      label: typeof b.label === 'string' ? b.label.slice(0, 30) : undefined,
+      cnCode: typeof b.cnCode === 'string' ? b.cnCode.slice(0, 60) : undefined,
       houseSystem,
       timeKnown,
     }

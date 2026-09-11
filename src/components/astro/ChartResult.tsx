@@ -50,6 +50,7 @@ export default function ChartResult({ chart, zhMode }: { chart: VChart; zhMode: 
     <div className="space-y-6">
       {/* 出生资料回显 */}
       <p className="text-center text-[11px] tracking-[0.12em] text-muted/80">
+        {chart.input.label && <span className="mr-2 text-accent">{chart.input.label}</span>}
         {zhMode
           ? `${chart.input.year}-${chart.input.month}-${chart.input.day} ${chart.timeKnown ? `${String(chart.input.hour).padStart(2, '0')}:${String(chart.input.minute).padStart(2, '0')}` : '时间未知'} · ${chart.input.city ?? ''}`
           : `${chart.input.year}-${chart.input.month}-${chart.input.day} ${chart.timeKnown ? `${String(chart.input.hour).padStart(2, '0')}:${String(chart.input.minute).padStart(2, '0')}` : 'time unknown'} · ${chart.input.city ?? ''}`}
