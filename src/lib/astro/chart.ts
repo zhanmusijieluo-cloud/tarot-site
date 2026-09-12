@@ -102,7 +102,8 @@ export interface CastSettings {
     dir?: 'ccw' | 'cw'          // 逆时针(默认)/顺时针盘
     ascPos?: 'left' | 'top'     // ASC 在左(默认)/在上
     aspects?: boolean           // 相位线 (默认开)
-    feet?: boolean              // 脚线刻度 (默认开)
+    feet?: boolean              // 脚线 (默认: 仅选中星显示; true=常显)
+    feetAlways?: boolean        // 脚线常显开关
     nums?: boolean              // 宫号 (默认开)
     ticks?: boolean             // 度刻度针脚 (默认开)
   }

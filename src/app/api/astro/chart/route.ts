@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
       if (s.display.dir === 'cw') d.dir = 'cw'
       if (s.display.ascPos === 'top') d.ascPos = 'top'
       for (const k of ['aspects', 'feet', 'nums', 'ticks'] as const) if (s.display[k] === false) d[k] = false
+      if (s.display.feetAlways === true) d.feetAlways = true
       if (Object.keys(d).length) settings.display = d
     }
 

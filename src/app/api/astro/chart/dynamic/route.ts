@@ -52,6 +52,7 @@ function parseSettings(s: Record<string, unknown> | undefined): CastSettings {
     if (di.dir === 'cw') d.dir = 'cw'
     if (di.ascPos === 'top') d.ascPos = 'top'
     for (const k of ['aspects', 'feet', 'nums', 'ticks'] as const) if (di[k] === false) d[k] = false
+      if (di.feetAlways === true) d.feetAlways = true
     if (Object.keys(d).length) out.display = d
   }
   return out

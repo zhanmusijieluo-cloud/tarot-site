@@ -377,7 +377,14 @@ export default function ChartSettings({ value, onChange, sys, onSysChange, tabSi
                   <Row label={zhMode ? '图层' : 'Layers'}>
                     <div className="space-y-1.5">
                       <Toggle on={disp.aspects !== false} label={zhMode ? '相位线' : 'Aspect lines'} onClick={() => set({ display: { ...disp, aspects: disp.aspects === false ? undefined : false } })} />
-                      <Toggle on={disp.feet !== false} label={zhMode ? '脚线与刻度点' : 'Foot lines'} onClick={() => set({ display: { ...disp, feet: disp.feet === false ? undefined : false } })} />
+                      <Toggle on={!!disp.feetAlways} label={zhMode ? '脚线刻度点' : 'Foot lines'} hint={zhMode ? '关 → 仅选中星 → 常显 三态循环' : 'off → selected-only → always'} onClick={() => {
+                        const n = { ...disp }; const cur = n.feet === false ? 0 : n.feetAlways ? 1 : 2; // 0关 1常显 2仅选中(默认)
+                        delete n.feetAlways; delete n.feet
+                        if (cur === 0) n.feetAlways = true        // 关 → 常显
+                        else if (cur === 1) { /* 常显 → 仅选中 = 两删 */ }
+                        else n.feet = false                        // 仅选中 → 关
+                        set({ display: n })
+                      }} />
                       <Toggle on={disp.nums !== false} label={zhMode ? '宫号' : 'House numbers'} onClick={() => set({ display: { ...disp, nums: disp.nums === false ? undefined : false } })} />
                       <Toggle on={disp.ticks !== false} label={zhMode ? '刻度针脚' : 'Degree ticks'} onClick={() => set({ display: { ...disp, ticks: disp.ticks === false ? undefined : false } })} />
                     </div>

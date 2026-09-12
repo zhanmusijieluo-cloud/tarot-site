@@ -35,7 +35,7 @@ export interface VChart {
   combust?: string[]; viaCombusta?: string[];
   input: { year: number; month: number; day: number; hour: number; minute: number; city?: string; label?: string;
     latitude?: number; longitude?: number; timezone?: number; cnCode?: string };
-  settings?: { display?: { dir?: 'ccw' | 'cw'; ascPos?: 'left' | 'top'; aspects?: boolean; feet?: boolean; nums?: boolean; ticks?: boolean } };
+  settings?: { display?: { dir?: 'ccw' | 'cw'; ascPos?: 'left' | 'top'; aspects?: boolean; feet?: boolean; feetAlways?: boolean; nums?: boolean; ticks?: boolean } };
   planets: VPlanet[];
   angles: { ascendant: VPlanet | null; midheaven: VPlanet | null };
   cusps: number[] | null;
@@ -147,7 +147,7 @@ interface SceneProps {
   view: 'top' | 'side';
   disp?: {
     dir?: 'ccw' | 'cw'; ascPos?: 'left' | 'top';
-    aspects?: boolean; feet?: boolean; nums?: boolean; ticks?: boolean;
+    aspects?: boolean; feet?: boolean; feetAlways?: boolean; nums?: boolean; ticks?: boolean;
   };
   /** 外层按钮调场景指令 (回正等) */
   sceneApi?: React.MutableRefObject<{ reset?: () => void } | null>;
@@ -226,15 +226,15 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
         const el = ELEMENT_OF_SIGN[SIGN_ORDER[s]];
         // D·墨盘金弧: 扇区统一墨蓝近黑, 元素性格交给外缘彩弧+符号色
         const mat = track(new THREE.MeshBasicMaterial({
-          color: 0x121828, transparent: true, opacity: 0.62, side: THREE.DoubleSide, depthWrite: false,
+          color: 0x141b2e, transparent: true, opacity: 0.66, side: THREE.DoubleSide, depthWrite: false,
         }));
         const m = new THREE.Mesh(geo, mat);
         m.rotation.x = -Math.PI / 2;
-        m.userData = { signSlice: s, baseOpacity: 0.62 };
+        m.userData = { signSlice: s, baseOpacity: 0.66 };
         // 元素彩弧: 嵌在环带内上缘 (不占刻度区, 不与针脚打架)
         const arc = new THREE.Mesh(
-          track(new THREE.RingGeometry(R_OUT - 0.13, R_OUT - 0.03, 20, 1, a1(s) + 0.012, 30 * DEG - 0.024)),
-          track(new THREE.MeshBasicMaterial({ color: ELEMENT_COLOR[el], transparent: true, opacity: 0.72, side: THREE.DoubleSide, depthWrite: false })),
+          track(new THREE.RingGeometry(R_OUT - 0.13, R_OUT - 0.03, 20, 1, a1(s) + 0.026, 30 * DEG - 0.052)),
+          track(new THREE.MeshBasicMaterial({ color: ELEMENT_COLOR[el], transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false })),
         );
         arc.rotation.x = -Math.PI / 2;
         root.add(arc);
@@ -246,12 +246,6 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
         gs.position.copy(polar((R_BAND + R_OUT) / 2, la(s * 30 + 15)));
         gs.scale.set(0.66, 0.66, 1);
         root.add(gs);
-        // 星座边界: 只画在星座带内 (R_BAND→R_OUT), 银白细线不与宫位金线混淆
-        const ab = la(s * 30);
-        root.add(new THREE.Line(
-          track(new THREE.BufferGeometry().setFromPoints([polar(R_BAND, ab), polar(R_OUT, ab)])),
-          track(new THREE.LineBasicMaterial({ color: 0x9aa8c4, transparent: true, opacity: 0.3 })),
-        ));
       }
     }
     if (hasHouses && cusps) {
@@ -269,23 +263,24 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
         m.userData = { houseSlice: h + 1, baseOpacity: 0.07 };
         root.add(m);
         houseSlices.push(m);
-        // 宫头线: 只贯穿宫位带 (R_SIGN→R_BAND); 角点金粗, 中间蓝灰细
+        // 宫头线: 细面片绘制 (WebGL 下 linewidth 无效, 用 quad 才拉得开粗细档)
         const isAcs = h % 3 === 0;
-        root.add(new THREE.Line(
-          track(new THREE.BufferGeometry().setFromPoints([polar(R_SIGN, a0), polar(R_BAND, a0)])),
-          track(new THREE.LineBasicMaterial({
-            color: isAcs ? GOLD : 0x6f84ab, transparent: true, opacity: isAcs ? 0.95 : 0.5,
-          })),
-        ));
-        // 四轴 (仅4条) 以金线跨过星座带, 与 ASC/MC 标签相接
-        if (isAcs) root.add(new THREE.Line(
-          track(new THREE.BufferGeometry().setFromPoints([polar(R_BAND, a0), polar(R_OUT, a0)])),
-          track(new THREE.LineBasicMaterial({ color: GOLD, transparent: true, opacity: 0.75 })),
-        ));
+        const radialQuad = (r0: number, r1: number, ang: number, w: number, op: number) => {
+          const dir = polar(1, ang).setY(0).normalize()
+          const perp = new THREE.Vector3(-dir.z, 0, dir.x).multiplyScalar(w / 2)
+          const a = polar(r0, ang).add(perp), b = polar(r0, ang).sub(perp)
+          const c = polar(r1, ang).add(perp), d = polar(r1, ang).sub(perp)
+          const g = new THREE.BufferGeometry().setFromPoints([a, c, d, a, d, b])
+          const mesh = new THREE.Mesh(g, track(new THREE.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: op, side: THREE.DoubleSide, depthWrite: false })))
+          root.add(mesh)
+          return mesh
+        }
+        const lineMesh = radialQuad(R_SIGN, R_BAND, a0, isAcs ? 0.055 : 0.013, isAcs ? 0.95 : 0.55)
+        if (isAcs) radialQuad(R_BAND, R_OUT, a0, 0.042, 0.85) // 四轴跨带接 ASC/MC 标签
         // 宫号 (宫位带扇区中点, 角点金色; 图层开关 nums)
         if (disp?.nums !== false) {
           const amid = a0 + (span * DEG) / 2;
-          const tex = track(textTexture(String(h + 1), 56, isAcs ? '#f0e2b6' : '#c3d0e8', 6));
+          const tex = track(textTexture(String(h + 1), 60, isAcs ? '#f8eecb' : '#e2eaf9', 6));
           const spr = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.95, depthWrite: false })));
           spr.position.copy(polar((R_SIGN + R_BAND) / 2, amid));
           spr.scale.set(0.4, 0.4, 1);
@@ -313,7 +308,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
     }
 
     // ---------- 外环金线 + 5°/10° 刻度针脚 ----------
-    for (const [r, op] of [[R_BAND, 0.55], [R_OUT, 0.6]] as const) {
+    for (const [r, op] of [[R_BAND, 0.55]] as const) {
       const ringLine = new THREE.Mesh(
         track(new THREE.RingGeometry(r, r + 0.013, 220)),
         track(new THREE.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: op, side: THREE.DoubleSide })),
@@ -321,28 +316,20 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       ringLine.rotation.x = -Math.PI / 2;
       root.add(ringLine);
     }
-    if (disp?.ticks !== false) for (let lon = 0; lon < 360; lon += 5) {
-      const major = lon % 30 === 0, med = lon % 10 === 0;
-      if (!med && !major) {
-        // 5°: 极细短针脚
-        const a = la(lon);
-        root.add(new THREE.Line(
-          track(new THREE.BufferGeometry().setFromPoints([polar(R_OUT + 0.01, a), polar(R_OUT + 0.07, a)])),
-          track(new THREE.LineBasicMaterial({ color: 0x8a98b8, transparent: true, opacity: 0.3 })),
-        ));
-        continue;
-      }
+    if (disp?.ticks !== false) for (let lon = 0; lon < 360; lon += 10) {
+      const major = lon % 30 === 0;
       const a = la(lon);
-      const len = major ? 0.17 : 0.12;
+      const len = major ? 0.17 : 0.1;
       root.add(new THREE.Line(
         track(new THREE.BufferGeometry().setFromPoints([polar(R_OUT + 0.01, a), polar(R_OUT + len, a)])),
-        track(new THREE.LineBasicMaterial({ color: major ? GOLD : 0x8a98b8, transparent: true, opacity: major ? 0.85 : 0.5 })),
+        track(new THREE.LineBasicMaterial({ color: GOLD, transparent: true, opacity: major ? 0.85 : 0.4 })),
       ));
     }
 
     // ---------- 行星: 同高度平铺 + 近距错层防遮挡 ----------
     const texLoader = new THREE.TextureLoader();
     const planetObjs: { name: string; group: THREE.Group; mesh: THREE.Mesh | THREE.Sprite; r: number; a: number; tScale: number; cScale: number; tDim: number; cDim: number; tEmi: number; cEmi: number }[] = [];
+    const footGroups: { name: string; obj: THREE.Group }[] = [];
     {
       // 按逆时针角度排序后聚类: 弧距 < 两半径和+0.10 的同组
       const items = chart.planets.map((p) => {
@@ -461,12 +448,13 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
         root.add(g);
         planetObjs.push({ name: p.name, group: g, mesh, r, a: it.a, tScale: 1, cScale: 1, tDim: 1, cDim: 1, tEmi: 1, cEmi: 1 });
 
-        // 脚线 + 刻度点 (球 → 真实黄经在星座带上的投影; 图层开关 feet)
+        // 脚线 + 刻度点: 乙方案 — 默认仅选中星显示 (feetAlways=true 全体常显)
         if (disp?.feet !== false) {
+          const fg = new THREE.Group();
           const foot = polar(R_BAND - 0.02, it.a); // 脚线点到宫位/星座分界, 正对外环刻度
-          root.add(new THREE.Line(
-            track(new THREE.BufferGeometry().setFromPoints([pos, foot])),
-            track(new THREE.LineBasicMaterial({ color: 0x8ea3c8, transparent: true, opacity: 0.3 })),
+          fg.add(new THREE.Line(
+            track(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(pos.x, 0, pos.z), foot])),
+            track(new THREE.LineBasicMaterial({ color: GOLD, transparent: true, opacity: 0.75 })),
           ));
           const el = ELEMENT_OF_SIGN[p.sign] ?? '风';
           const dot = new THREE.Mesh(
@@ -474,7 +462,10 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
             track(new THREE.MeshBasicMaterial({ color: ELEMENT_COLOR[el], transparent: true, opacity: 0.95, side: THREE.DoubleSide })),
           );
           dot.position.copy(foot); dot.rotation.x = -Math.PI / 2;
-          root.add(dot);
+          fg.add(dot);
+          fg.visible = !!disp?.feetAlways;
+          root.add(fg);
+          footGroups.push({ name: p.name, obj: fg });
         }
       }
     }
@@ -488,7 +479,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       if (!pa || !pb) continue;
       const ra = Math.max(0.5, pa.r - (BODY_R[asp.a] ?? 0.14) - 0.08);
       const rb = Math.max(0.5, pb.r - (BODY_R[asp.b] ?? 0.14) - 0.08);
-      const col = asp.type === 'conjunction' ? GOLD : (asp.type === 'trine' || asp.type === 'sextile') ? 0x8aa8d8 : 0xe8a08a;
+      const col = (asp.type === 'trine' || asp.type === 'sextile' || asp.type === 'conjunction') ? 0x8aa8d8 : 0xe8a08a;
       const mesh = new THREE.Line(
         track(new THREE.BufferGeometry().setFromPoints([polar(ra, pa.a), polar(rb, pb.a)])),
         track(new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: 0.5 })),
@@ -515,6 +506,8 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
         po.tDim = name ? (po.name === name ? 1 : 0.55) : 1;
         po.tEmi = name && po.name === name ? 1.7 : 1;
       }
+      // 脚线: 仅选中者显 (常显模式全显)
+      for (const fg of footGroups) fg.obj.visible = disp?.feetAlways ? true : (!!name && fg.name === name);
       for (const al of aspectLines) {
         const hot = name && (al.a === name || al.b === name);
         al.tOp = name ? (hot ? 0.95 : 0.16) : al.baseOp;

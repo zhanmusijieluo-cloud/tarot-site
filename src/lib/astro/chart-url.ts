@@ -48,6 +48,7 @@ export function settingsFromParams(sp: URLSearchParams): CastSettings | undefine
       else if (tok === 'top') d.ascPos = 'top';
       else if (tok === 'noasp') d.aspects = false;
       else if (tok === 'nofoot') d.feet = false;
+      else if (tok === 'foot') d.feetAlways = true;
       else if (tok === 'nonum') d.nums = false;
       else if (tok === 'notick') d.ticks = false;
     }
@@ -84,6 +85,7 @@ export function settingsToParams(s: CastSettings | undefined, p: URLSearchParams
     if (s.display.ascPos === 'top') toks.push('top');
     if (s.display.aspects === false) toks.push('noasp');
     if (s.display.feet === false) toks.push('nofoot');
+    if (s.display.feetAlways) toks.push('foot');
     if (s.display.nums === false) toks.push('nonum');
     if (s.display.ticks === false) toks.push('notick');
     if (toks.length) p.set('dp', toks.join('.'));
