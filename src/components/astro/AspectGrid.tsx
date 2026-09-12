@@ -72,37 +72,31 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
   }
   const cellOf = (x: string, y: string) => (x === y ? null : byPair.get(`${x}|${y}`) ?? null);
 
-  const symFs = dense ? 11 : 13;
-  const numFs = dense ? 7 : 8.5;
-
-  // 统一小格内件: aspect-square 保证等高 = 等宽 → 矩阵整齐
-  const Square = ({ children, label, className = '', style }: { children?: React.ReactNode; label?: React.ReactNode; className?: string; style?: React.CSSProperties }) => (
-    <div className={`relative flex aspect-square w-full items-center justify-center leading-none ${className}`} style={style}>
-      {children}
-      {label && <span className="absolute inset-x-0 bottom-[9%] text-center" style={{ fontSize: numFs, opacity: 0.95, letterSpacing: '-0.2px' }}>{label}</span>}
-    </div>
-  );
+  // 定稿: 下三角矩阵, 上三角纯空白 (宫神星式), 固定大格 42px (密则38)
+  const gs = dense ? 38 : 42
+  const symFs = 17
+  const numFs = 10
 
   return (
     <div className={bare ? '' : 'rounded-2xl border border-white/[0.07] bg-white/[0.015] p-3'}>
-      <table className="w-full border-separate" style={{ borderSpacing: dense ? '1.5px' : '2.5px', tableLayout: 'fixed' }}>
+      <table className="mx-auto border-separate" style={{ borderSpacing: 3, tableLayout: 'fixed' }}>
         <colgroup>
-          <col style={{ width: '1.6em' }} />
-          {cols.map((c) => <col key={c.name} />)}
+          <col style={{ width: gs }} />
+          {cols.map((c) => <col key={c.name} style={{ width: gs }} />)}
         </colgroup>
         <thead>
           <tr>
             <th />
             {cols.map((c) => (
-              <th key={c.name} className="p-0 align-bottom">
+              <th key={c.name} className="p-0" style={{ height: gs }}>
                 <button
                   onClick={() => onPick?.(selected === c.name ? null : c.name)}
-                  className={`w-full rounded-[5px] transition-colors ${selected === c.name ? 'bg-accent/20 text-accent' : 'text-frost/70 hover:bg-white/[0.06]'}`}
+                  className={`w-full rounded-[6px] text-[15px] leading-none transition-colors ${
+                    selected === c.name ? 'bg-accent/20 text-accent' : 'text-frost/70 hover:bg-white/[0.06]'
+                  }`}
                   title={zhMode ? c.zh : c.name}
                 >
-                  <Square style={{ fontSize: symFs }}>
-                    {c.symbol}{c.retrograde && <sup style={{ fontSize: 6.5 }} className="text-[#e8a08a]">R</sup>}
-                  </Square>
+                  {c.symbol}{c.retrograde && <sup style={{ fontSize: 8 }} className="text-[#e8a08a]">R</sup>}
                 </button>
               </th>
             ))}
@@ -111,34 +105,33 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
         <tbody>
           {cols.map((row, ri) => (
             <tr key={row.name}>
-              <td className="p-0">
+              <td className="p-0" style={{ height: gs }}>
                 <button
                   onClick={() => onPick?.(selected === row.name ? null : row.name)}
-                  className={`w-full rounded-[5px] transition-colors ${selected === row.name ? 'bg-accent/20 text-accent' : 'text-frost/70 hover:bg-white/[0.06]'}`}
+                  className={`w-full rounded-[6px] text-[15px] leading-none transition-colors ${
+                    selected === row.name ? 'bg-accent/20 text-accent' : 'text-frost/70 hover:bg-white/[0.06]'
+                  }`}
                   title={zhMode ? row.zh : row.name}
                 >
-                  <Square style={{ fontSize: symFs }}>
-                    {row.symbol}{row.retrograde && <sup style={{ fontSize: 6.5 }} className="text-[#e8a08a]">R</sup>}
-                  </Square>
+                  {row.symbol}{row.retrograde && <sup style={{ fontSize: 8 }} className="text-[#e8a08a]">R</sup>}
                 </button>
               </td>
               {cols.map((col, ci) => {
-                // 对称满铺 (astro.com 同款): 上下三角同显一格的相位, 对角留空
-                const a = ri === ci ? null : cellOf(row.name, col.name);
-                // 空格: 同样完整的方格淡底 (astro.com 式), 对角格稍深一档
-                if (!a) return (
-                  <td key={col.name} className="p-0">
-                    <Square className={ri === ci ? 'rounded-[5px] bg-white/[0.07]' : 'rounded-[5px] bg-white/[0.028]'} />
-                  </td>
-                );
+                // 上三角/对角: 纯空白, 什么都不画 (不乱的关键)
+                if (ci >= ri) return <td key={col.name} style={{ height: '10px' }} />;
+                const a = byPair.get(`${row.name}|${col.name}`);
+                if (!a) return <td key={col.name} style={{ height: gs }} />;
                 const color = ASPECT_COLOR[a.type] ?? '#9aa3b5';
                 return (
-                  <td key={col.name} className="p-0"
+                  <td key={col.name} className="p-0" style={{ height: gs }}
                     title={`${row.symbol} ${col.symbol} ${a.typeZh} ±${a.orb.toFixed(1)}°`}>
-                    <Square className="rounded-[5px]" style={{ background: `${color}30`, color }}
-                      label={<>{a.orb.toFixed(1)}{a.applying === true ? 'A' : a.applying === false ? 'S' : ''}</>}>
-                      <span style={{ fontSize: symFs, marginTop: dense ? -2 : -4 }}>{a.symbol}</span>
-                    </Square>
+                    <div className="relative flex h-full w-full items-center justify-center rounded-[6px] leading-none"
+                      style={{ background: `${color}33`, color }}>
+                      <span style={{ fontSize: symFs }}>{a.symbol}</span>
+                      <span className="absolute inset-x-0 bottom-[7%] text-center" style={{ fontSize: numFs, letterSpacing: '-0.2px' }}>
+                        {a.orb.toFixed(1)}{a.applying === true ? 'A' : a.applying === false ? 'S' : ''}
+                      </span>
+                    </div>
                   </td>
                 );
               })}

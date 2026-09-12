@@ -121,15 +121,19 @@ const zones = await page.evaluate(() => {
     features: /特征|features/i.test(t),
     recep: /互容接纳|mutual|被.*接纳|received/i.test(t),
     statusTable: /黄道状态|ecliptic status/i.test(t),
-    gridInLeftCol: (() => {
+    gridUnderWheel: (() => {
       const g = document.querySelector('table.border-separate')
       const c = document.querySelector('.cursor-grab canvas') || [...document.querySelectorAll('canvas')].find((x) => x.getBoundingClientRect().width < 1300)
       if (!g || !c) return false
-      return g.getBoundingClientRect().left < c.getBoundingClientRect().left // 网格在盘左侧
+      return g.getBoundingClientRect().top > c.getBoundingClientRect().bottom - 5 // 网格在盘下方(全宽放大)
+    })(),
+    gridBigCells: (() => {
+      const td = [...document.querySelectorAll('table.border-separate tbody td')].find((x) => x.querySelector('[title]'))
+      return !!td && td.getBoundingClientRect().width >= 40 // 格子≥40px (爸爸: 太小看不清)
     })(),
     legendVisible: /A=入相|A=applying/i.test(t),
     bodiesPanelGone: !/星体 · 1[0-9]/.test(t),
-    threeCol: !!document.querySelector('[class*="lg:grid-cols-[252px"]'),
+    twoCol: !!document.querySelector('[class*="lg:grid-cols-[minmax(0,1fr)_236px]"]'),
     wheelTall: (() => { const c = document.querySelector('.cursor-grab canvas') || [...document.querySelectorAll('canvas')].find((x) => x.getBoundingClientRect().width < 1300); return !!c && c.getBoundingClientRect().height >= 560 })(),
   }
 })
