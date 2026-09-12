@@ -328,7 +328,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
 
     // ---------- 行星: 同高度平铺 + 近距错层防遮挡 ----------
     const texLoader = new THREE.TextureLoader();
-    const planetObjs: { name: string; group: THREE.Group; mesh: THREE.Mesh | THREE.Sprite; r: number; a: number }[] = [];
+    const planetObjs: { name: string; group: THREE.Group; mesh: THREE.Mesh | THREE.Sprite; r: number; a: number; tScale: number; cScale: number; tDim: number; cDim: number; tEmi: number; cEmi: number }[] = [];
     {
       // 按逆时针角度排序后聚类: 弧距 < 两半径和+0.10 的同组
       const items = chart.planets.map((p) => {
@@ -445,7 +445,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
           g.add(ls);
         }
         root.add(g);
-        planetObjs.push({ name: p.name, group: g, mesh, r, a: it.a });
+        planetObjs.push({ name: p.name, group: g, mesh, r, a: it.a, tScale: 1, cScale: 1, tDim: 1, cDim: 1, tEmi: 1, cEmi: 1 });
 
         // 脚线 + 刻度点 (球 → 真实黄经在星座带上的投影; 图层开关 feet)
         if (disp?.feet !== false) {
@@ -467,7 +467,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
     root.add(sunLight); // 幂等兜底
 
     // ---------- 相位线 ----------
-    const aspectLines: { mesh: THREE.Line; a: string; b: string; baseOp: number }[] = [];
+    const aspectLines: { mesh: THREE.Line; a: string; b: string; baseOp: number; tOp: number }[] = [];
     for (const asp of aspects) {
       const pa = planetObjs.find((o) => o.name === asp.a);
       const pb = planetObjs.find((o) => o.name === asp.b);
@@ -480,7 +480,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
         track(new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: 0.5 })),
       );
       root.add(mesh);
-      aspectLines.push({ mesh, a: asp.a, b: asp.b, baseOp: 0.5 });
+      aspectLines.push({ mesh, a: asp.a, b: asp.b, baseOp: 0.5, tOp: 0.5 });
     }
 
     // ---------- 高亮 (不移动盘面) ----------
@@ -493,36 +493,33 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
         }
       });
     }
+    // 高亮只改"目标值", 由渲染循环缓动过渡 (点击不再突变动)
     const applyHighlight = (name: string | null) => {
       const sel = name ? chart.planets.find((x) => x.name === name) ?? null : null;
       for (const po of planetObjs) {
-        const dim = name ? (po.name === name ? 1 : 0.22) : 1;
-        po.group.scale.setScalar(po.name === name ? 1.45 : 1);
-        const m = po.mesh.material as THREE.MeshPhongMaterial;
-        if (m.emissiveIntensity !== undefined) m.emissiveIntensity = po.name === name ? 2.4 : 1;
-        po.group.traverse((o) => {
-          const sp = o as THREE.Sprite;
-          if (sp.isSprite) {
-            const base = (sp.material as THREE.SpriteMaterial).userData?.base as number | undefined ?? 1;
-            (sp.material as THREE.SpriteMaterial).opacity = base * dim;
-          }
-        });
+        po.tScale = name && po.name === name ? 1.18 : 1;
+        po.tDim = name ? (po.name === name ? 1 : 0.55) : 1;
+        po.tEmi = name && po.name === name ? 1.7 : 1;
       }
       for (const al of aspectLines) {
         const hot = name && (al.a === name || al.b === name);
-        (al.mesh.material as THREE.LineBasicMaterial).opacity = name ? (hot ? 0.98 : 0.05) : al.baseOp;
+        al.tOp = name ? (hot ? 0.95 : 0.16) : al.baseOp;
       }
       for (const hs of houseSlices) {
-        const ud = hs.userData as { signSlice?: number; houseSlice?: number; baseOpacity: number };
+        const ud = hs.userData as { signSlice?: number; houseSlice?: number; baseOpacity: number; tOpacity?: number };
         let target = ud.baseOpacity;
         if (sel) {
-          if (ud.signSlice !== undefined && SIGN_ORDER[ud.signSlice] === sel.sign) target = 0.4;
-          if (ud.houseSlice !== undefined && sel.house === ud.houseSlice) target = Math.max(target, 0.3);
+          if (ud.signSlice !== undefined && SIGN_ORDER[ud.signSlice] === sel.sign) target = Math.max(target, ud.baseOpacity + 0.14);
+          if (ud.houseSlice !== undefined && sel.house === ud.houseSlice) target = Math.max(target, ud.baseOpacity + 0.1);
         }
-        (hs.material as THREE.MeshBasicMaterial).opacity = target;
+        ud.tOpacity = target;
       }
     };
     applyHighlight(selected);
+    // 初帧落位 (重建场景时不从默认值淡入)
+    for (const po of planetObjs) { po.cScale = po.tScale; po.cDim = po.tDim; po.cEmi = po.tEmi; po.group.scale.setScalar(po.cScale) }
+    for (const al of aspectLines) (al.mesh.material as THREE.LineBasicMaterial).opacity = al.tOp
+    for (const hs of houseSlices) { const ud = hs.userData as { baseOpacity: number; tOpacity?: number }; (hs.material as THREE.MeshBasicMaterial).opacity = ud.tOpacity ?? ud.baseOpacity }
     const sceneCtl = { reset: () => { yawV = 0; idleT = 99; fastReturn = true; } };
     apiRef.current = { set: applyHighlight, ...sceneCtl };
     if (sceneApi) sceneApi.current = sceneCtl;
@@ -588,7 +585,34 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       root.rotation.x += (targetTilt - root.rotation.x) * Math.min(1, dt * 5);
       camera.fov += (fov - camera.fov) * Math.min(1, dt * 7);
       camera.updateProjectionMatrix();
-      for (const po of planetObjs) po.mesh.rotation.y += dt * 0.12;
+      // 高亮缓动 (0.2s 级别收敛, 消除点击瞬跳)
+      const hl = Math.min(1, dt * 9)
+      for (const po of planetObjs) {
+        po.mesh.rotation.y += dt * 0.12;
+        po.cScale += (po.tScale - po.cScale) * hl
+        po.cDim += (po.tDim - po.cDim) * hl
+        po.cEmi += (po.tEmi - po.cEmi) * hl
+        po.group.scale.setScalar(po.cScale)
+        const mm = po.mesh.material as THREE.MeshPhongMaterial
+        if (mm.emissiveIntensity !== undefined) mm.emissiveIntensity = po.cEmi
+        po.group.traverse((o) => {
+          const sp = o as THREE.Sprite
+          if (sp.isSprite) {
+            const base = (sp.material as THREE.SpriteMaterial).userData?.base as number | undefined ?? 1
+            ;(sp.material as THREE.SpriteMaterial).opacity = base * po.cDim
+          }
+        })
+      }
+      for (const al of aspectLines) {
+        const mo = al.mesh.material as THREE.LineBasicMaterial
+        mo.opacity += (al.tOp - mo.opacity) * hl
+      }
+      for (const hs of houseSlices) {
+        const ud = hs.userData as { baseOpacity: number; tOpacity?: number }
+        const mo = hs.material as THREE.MeshBasicMaterial
+        const tgt = ud.tOpacity ?? ud.baseOpacity
+        mo.opacity += (tgt - mo.opacity) * hl
+      }
       renderer.render(scene, camera);
       raf = requestAnimationFrame(tick);
     };
