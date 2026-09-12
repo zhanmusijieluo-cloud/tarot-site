@@ -117,7 +117,6 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
                 const a = cellOf(row.name, col.name);
                 if (!a) return <td key={col.name} className="h-[5px] rounded-[4px] bg-white/[0.05] p-0" />;
                 const color = ASPECT_COLOR[a.type] ?? '#9aa3b5';
-                const tight = a.orb <= 2; // 紧密相位才画偏差数字, 松的只留符号 → 不糊
                 return (
                   <td
                     key={col.name}
@@ -126,8 +125,8 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
                     title={`${row.symbol} ${col.symbol} ${a.typeZh} ±${a.orb.toFixed(1)}°`}
                   >
                     <div className="flex aspect-square w-full flex-col items-center justify-center leading-none">
-                      <span style={{ fontSize: symFs, lineHeight: 1 }}>{a.symbol}</span>
-                      {tight && !dense && <span style={{ fontSize: 8, opacity: 0.95 }}>{a.orb.toFixed(1)}{a.applying === true ? 'A' : a.applying === false ? 'S' : ''}</span>}
+                      <span style={{ fontSize: symFs, lineHeight: 1.05 }}>{a.symbol}</span>
+                      <span style={{ fontSize: dense ? 6.5 : 8, opacity: 0.95, letterSpacing: '-0.3px' }}>{a.orb.toFixed(1)}{a.applying === true ? 'A' : a.applying === false ? 'S' : ''}</span>
                     </div>
                   </td>
                 );
@@ -144,7 +143,7 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
               <span style={{ color: ASPECT_COLOR[k] }}>{SYM[k]}</span>{label}
             </span>
           ))}
-          <span className="ml-auto">{zhMode ? 'A=入相 S=出相 · 数字=偏差° (紧密相位才标注)' : 'A=applying S=separating · orb° (tight only)'}</span>
+          <span className="ml-auto">{zhMode ? 'A=入相 S=出相 · 数字=偏差°' : 'A=applying S=separating · orb°'}</span>
         </div>
       )}
     </div>
