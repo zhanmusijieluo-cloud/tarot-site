@@ -47,7 +47,7 @@ export interface VChart {
 // ---------- 布局常量 (俯视: 屏幕右=+X, 屏幕上=-Z) ----------
 const R_OUT = 5.0;    // 星座带外缘 (刻度环基线)
 const R_BAND = 3.98;  // 星座带内缘 = 宫位带外缘 (两带分界, 线不再互穿)
-const R_SIGN = 3.08;  // 宫位带内缘
+const R_SIGN = 3.38;  // 宫位带内缘
 const R_PLAN = 2.68;  // 行星基准半径
 const GOLD = 0xcdb88a;
 
@@ -298,7 +298,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       const ascA = la(norm360(cusps[0]));
       const mcA = la(norm360(cusps[9]));
       for (const [txt, ang, big] of [['ASC', ascA, 1.15], ['MC', mcA, 1.0]] as const) {
-        const tex = track(textTexture(txt, 88, '#ffe9b8', 14));
+        const tex = track(textTexture(txt, 88, '#d9a8b8', 14));
         const spr = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.95, depthWrite: false })));
         const p = polar(R_OUT + 0.44, ang);
         p.y = 0.26 * (big - 1);
