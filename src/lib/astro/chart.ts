@@ -120,6 +120,8 @@ export interface NatalChart {
   aspects: ChartAspect[]
   receptions: Reception[]
   hourRuler: string | null // 时主星 (英文星名; 未知时间=null)
+  combust: string[]        // 焦身/燃烧 (距日<8.5° 非日月)
+  viaCombusta: string[]    // 燃烧之路 (巨蟹14°55′—摩羯14°55′ 之间)
   warnings: string[]
 }
 
@@ -454,6 +456,23 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
   // 互溶接纳 (全部天体, 与盘面同一守护流派)
   const receptions = computeReceptions(allBodies.map(p => ({ name: p.name, sign: p.sign })))
 
+  // 焦身 ( combust: 距日 0~8.5°, 古典常用; 日月本身不适用)
+  const sunLon = planets.find((p) => p.name === 'Sun')?.longitude
+  const combust: string[] = []
+  const viaCombusta: string[] = []
+  if (sunLon !== undefined) {
+    for (const p of allBodies) {
+      if (p.name === 'Sun' || p.name === 'Moon') continue
+      const sep = Math.abs(((p.longitude - sunLon + 540) % 360) - 180)
+      if (sep <= 8.5) combust.push(p.name)
+    }
+  }
+  // 燃烧之路 Via Combusta: ♋14°55′ → ♑14°55′ (跨天秤/天蝎/射手/摩羯初), 以天蝎15°为中心的经典区间
+  for (const p of allBodies) {
+    const inZone = ((p.longitude - 104.9167) % 360 + 360) % 360 < 180 // 从巨蟹14°55′顺行180°内
+    if (inZone) viaCombusta.push(p.name)
+  }
+
   return {
     input: birth,
     settings,
@@ -463,7 +482,7 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
     planets: allBodies, angles,
     hourRuler: timeKnown ? hourRulerOf(birth.year, birth.month, birth.day, birth.hour) : null,
     cusps: cuspsOut,
-    aspects, receptions, warnings,
+    aspects, receptions, combust, viaCombusta, warnings,
   }
 }
 
@@ -476,6 +495,8 @@ export function chartEvidence(ch: NatalChart): string {
   lines.push(`出生: ${b.year}-${String(b.month).padStart(2, '0')}-${String(b.day).padStart(2, '0')} ${b.timeKnown !== false ? `${String(b.hour).padStart(2, '0')}:${String(b.minute).padStart(2, '0')}` : '时间未知'} 当地时间 (UTC${b.timezone >= 0 ? '+' : ''}${b.timezone}) ${b.city ?? ''} 纬度${b.latitude} 经度${b.longitude}`)
   lines.push(`分宫制: ${ch.houseSystemUsed}${ch.timeKnown ? '' : ' (未使用—时间未知)'}`)
   if (ch.hourRuler) lines.push(`时主星: ${PLANET_ZH[ch.hourRuler] ?? ch.hourRuler} (零点起加尔迪亚序)`)
+  if (ch.combust?.length) lines.push(`焦身·燃烧(距日≤8.5°): ${ch.combust.map((n) => PLANET_ZH[n] ?? n).join('、')}`)
+  if (ch.viaCombusta?.length) lines.push(`燃烧之路(巨蟹14°55′—摩羯14°55′): ${ch.viaCombusta.map((n) => PLANET_ZH[n] ?? n).join('、')}`)
   {
     const s = ch.settings ?? {}
     const bg = Object.entries(s.bodies ?? {}).filter(([, v]) => v).map(([k]) => ({ asteroids: '小行星', chiron: '凯龙', nodes: '交点', lots: '点位', lilith: '莉莉丝' })[k] ?? k)

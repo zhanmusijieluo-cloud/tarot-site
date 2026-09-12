@@ -55,6 +55,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
   const [selected, setSelected] = useState<string | null>(null);
   void modeProp; void onAspectMode; // 矩阵与清单同屏后不再需要切换 (URL ag 参数保留兼容旧链接)
   const zhOf = (name: string) => chart.planets.find((p) => p.name === name)?.zh ?? name;
+  const sSym = (name: string) => chart.planets.find((x) => x.name === name)?.symbol ?? name[0]
   const sz = (s: string) => SIGNS_ZH_MINI[s] ?? s;
 
   const sun = chart.planets.find((p) => p.name === 'Sun');
@@ -64,49 +65,47 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
   // ---- 左列行星竖列 ----
   const rows: VPlanet[] = [...chart.planets, asc, mc].filter(Boolean) as VPlanet[];
 
-  // ---- 右侧特征面板 (全符号版: ☉♉0°12′·11宫; 悬停出全称) ----
-  type Feat = { el: React.ReactNode; tone: 'gold' | 'soft' | 'warn'; tip: string }
+  // ---- 右侧特征面板 (宫神星格式: 判词全保留, 行星/星座用符号) ----
+  type Feat = { el: React.ReactNode; tone: 'gold' | 'soft' | 'warn' | 'hot'; tip?: string }
   const features: Feat[] = []
   const SIGN_SYM: Record<string, string> = { Aries: '♈', Taurus: '♉', Gemini: '♊', Cancer: '♋', Leo: '♌', Virgo: '♍', Libra: '♎', Scorpio: '♏', Sagittarius: '♐', Capricorn: '♑', Aquarius: '♒', Pisces: '♓' }
   const sgn = (name: string) => SIGN_SYM[name] ?? name
-  const sSym = (name: string) => chart.planets.find((x) => x.name === name)?.symbol ?? name[0]
-  const row = (label: string, p: VPlanet | null, extra = '') => {
-    if (!p) return null
-    return (
-      <span title={label}>
-        <b className="font-normal text-frost">{p.symbol || label}</b>
-        <span className="mx-1 text-accent/90">{sgn(p.sign)}</span>
-        <span className="text-muted">{dms(p.degInSign)}</span>
-        {p.house && <span className="ml-1 text-muted/70">·{p.house}宫</span>}
-        {p.retrograde && <span className="ml-0.5 text-[#e8a08a]">℞</span>}
-        {extra}
-      </span>
-    )
-  }
-  const r1 = row(zhMode ? `太阳 ${sz(sun?.sign ?? '')}` : 'Sun', sun ?? null); if (r1) features.push({ el: r1, tone: 'gold', tip: `太阳 ${sz(sun!.sign)} ${dms(sun!.degInSign)}` })
-  const r2 = row(zhMode ? '月亮' : 'Moon', moon ?? null); if (r2) features.push({ el: r2, tone: 'gold', tip: `月亮 ${sz(moon!.sign)} ${dms(moon!.degInSign)}` })
-  const r3 = row('AC', asc ?? null); if (r3) features.push({ el: r3, tone: 'gold', tip: zhMode ? '上升点' : 'Ascendant' })
-  const r4 = row('MC', mc ?? null); if (r4) features.push({ el: r4, tone: 'gold', tip: zhMode ? '中天' : 'Midheaven' })
-  // 尊贵: ♀♉入庙+5
+  const psym = (name: string) => chart.planets.find((x) => x.name === name)?.symbol ?? name
+  // 落座行: ☉ 双子 23°42′ · 9宫 (判词汉字在, 行星星座用符号)
+  const placeLine = (p: VPlanet, label: string) => (
+    <span>
+      <b className="font-normal text-frost">{p.symbol}</b>
+      <span className="ml-1.5 text-accent/90">{sgn(p.sign)}</span>
+      <span className="ml-1 text-muted/90">{p.signZh}</span>
+      <span className="mx-1.5 text-frost">{dms(p.degInSign)}</span>
+      {p.house ? <span className="text-muted/80">· 第{p.house}宫</span> : null}
+      {label ? <span className="ml-1.5 text-muted/50">{label}</span> : null}
+    </span>
+  )
+  if (sun) features.push({ el: placeLine(sun, ''), tone: 'gold' })
+  if (moon) features.push({ el: placeLine(moon, ''), tone: 'gold' })
+  if (asc) features.push({ el: placeLine(asc, '上升'), tone: 'gold' })
+  if (mc) features.push({ el: placeLine(mc, '中天'), tone: 'gold' })
+  // 尊贵行: ♀♍ 入庙+5 逆 / ☽♑ 失势
   for (const p of chart.planets) {
     if (p.dignity && p.dignity.state !== 'Peregrine') {
       const dz = DIGNITY_ZH[p.dignity.state] ?? p.dignity.state
       features.push({
         tone: p.dignity.strength > 0 ? 'soft' : 'warn',
-        tip: `${p.zh} ${sz(p.sign)} ${dz}${p.retrograde ? ' 逆行' : ''}`,
+        tip: `${p.zh} ${sz(p.sign)} ${dz}`,
         el: (
           <span>
             <b className="font-normal text-frost">{p.symbol}</b>
             <span className="mx-1 text-accent/90">{sgn(p.sign)}</span>
-            <span className={p.dignity.strength > 0 ? 'text-[#cdb88a]' : 'text-[#e8a08a]'}>{dz}{p.dignity.strength ? `${p.dignity.strength > 0 ? '+' : ''}${p.dignity.strength}` : ''}</span>
-            {p.retrograde && <span className="ml-1 text-[#e8a08a]">℞</span>}
+            <span className={p.dignity.strength > 0 ? 'text-[#cdb88a]' : 'text-[#e8a08a]'}>{dz}{p.dignity.strength ? ` ${p.dignity.strength > 0 ? '+' : ''}${p.dignity.strength}` : ''}</span>
+            {p.retrograde && <span className="ml-1.5 text-[#e8a08a]">逆行</span>}
           </span>
         ),
       })
     }
   }
-  // 互溶 · 接纳 (互溶对只列一次): ☉↦♀ 本垣♉ / ♀⇄♂ 互容
-  const recepLines: { el: React.ReactNode; tip: string }[] = [];
+  // 互溶 · 接纳 (宫神星判词句式): ☉ 被 ♀ 接纳 (本垣♉) / ♀ 与 ♂ 互溶 (♎/♈ 本垣)
+  const recepFeats: Feat[] = []
   {
     const seen = new Set<string>();
     for (const r of chart.receptions) {
@@ -115,32 +114,104 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
       seen.add(key);
       const kind = RECEPTION_KIND_ZH[r.kind] ?? r.kind
       const pa = chart.planets.find((x) => x.name === r.a), pb = chart.planets.find((x) => x.name === r.b)
-      const sa = pa?.symbol ?? r.a, sb = pb?.symbol ?? r.b
       if (r.mutual) {
         const rev = chart.receptions.find((x) => x.a === r.b && x.b === r.a)
-        recepLines.push({
+        recepFeats.push({
+          tone: 'soft',
           tip: `${pa?.zh ?? r.a} 与 ${pb?.zh ?? r.b} 互容接纳（互居对方${kind}之座 ${sz(r.bySign)}/${sz(rev?.bySign ?? '')}）`,
           el: (
             <span>
-              <b className="font-normal text-frost">{sa}</b><span className="mx-1 text-accent">⇄</span><b className="font-normal text-frost">{sb}</b>
-              <span className="ml-1.5 text-muted/80">{zhMode ? '互容' : 'mutual'}<span className="ml-1 text-accent/90">{sgn(r.bySign)}{rev ? '/' + sgn(rev.bySign) : ''}</span></span>
+              <b className="font-normal text-frost">{psym(r.a)}</b><span className="mx-1.5">与</span><b className="font-normal text-frost">{psym(r.b)}</b>
+              <span className="ml-1.5 text-[#cdb88a]">互溶</span>
+              <span className="ml-1 text-accent/90">{sgn(r.bySign)}{rev ? '/' + sgn(rev.bySign) : ''}</span>
             </span>
           ),
         })
       } else {
-        recepLines.push({
-          tip: zhMode ? `${pa?.zh ?? r.a} 被 ${pb?.zh ?? r.b} 接纳（居其${kind}·${sz(r.bySign)}）` : `${r.a} received by ${r.b}`,
+        recepFeats.push({
+          tone: 'soft',
+          tip: `${pa?.zh ?? r.a} 被 ${pb?.zh ?? r.b} 接纳（居其${kind}·${sz(r.bySign)}）`,
           el: (
             <span>
-              <b className="font-normal text-frost">{sa}</b><span className="mx-1 text-accent">↦</span><b className="font-normal text-frost">{sb}</b>
-              <span className="ml-1.5 text-muted/80">{kind}<span className="ml-1 text-accent/90">{sgn(r.bySign)}</span></span>
+              <b className="font-normal text-frost">{psym(r.a)}</b><span className="mx-1.5">被</span><b className="font-normal text-frost">{psym(r.b)}</b><span className="ml-1">接纳</span>
+              <span className="ml-1 text-muted/80">({kind}</span>
+              <span className="text-accent/90">{sgn(r.bySign)}</span>
+              <span className="text-muted/80">)</span>
             </span>
           ),
         })
       }
     }
   }
-  for (const l of recepLines) features.push({ el: l.el, tone: 'soft', tip: l.tip });
+  features.push(...recepFeats)
+  // 焦身 (燃烧): ☿ 焦身 (距日2.6°)
+  for (const cn of chart.combust ?? []) {
+    const p = chart.planets.find((x) => x.name === cn)
+    const sunP = chart.planets.find((x) => x.name === 'Sun')
+    const dist = p && sunP ? Math.abs(((p.longitude - sunP.longitude + 540) % 360) - 180) : 0
+    features.push({
+      tone: 'warn',
+      tip: `${p?.zh ?? cn} 焦身·燃烧 (距太阳 ${dist.toFixed(1)}°)`,
+      el: (
+        <span>
+          <b className="font-normal text-frost">{psym(cn)}</b><span className="ml-1.5 text-[#e07f7f]">焦身·燃烧</span>
+          <span className="ml-1 text-muted/80">(距日 {dist.toFixed(1)}°)</span>
+        </span>
+      ),
+    })
+  }
+  // 燃烧之路: ☽ 在燃烧之路 ♏ (天蝎区间) — 按所在星座分组注记
+  {
+    const vc = chart.viaCombusta ?? []
+    const inScorp = vc.filter((n) => chart.planets.find((x) => x.name === n)?.sign === 'Scorpio')
+    const others = vc.filter((n) => !inScorp.includes(n))
+    const mk = (names: string[], zone: string) => names.length ? {
+      tone: 'warn' as const,
+      tip: zhMode ? `${names.map((n) => chart.planets.find((x) => x.name === n)?.zh ?? n).join('、')} 位于燃烧之路${zone ? `核心段(${zone})` : ''}` : undefined,
+      el: (
+        <span>
+          {names.map((n) => <b key={n} className="ml-0.5 font-normal text-frost first:ml-0">{psym(n)}<span className="text-accent/90">{sgn(chart.planets.find((x) => x.name === n)?.sign ?? '')}</span></b>)}
+          <span className="ml-1.5 text-[#e8a08a]">在燃烧之路</span>
+          {zone && <span className="ml-1 text-accent/90">{zone}</span>}
+        </span>
+      ),
+    } : null
+    const a1 = mk(inScorp, '♏'); const a2v = mk(others, '')
+    if (a1) features.push(a1)
+    if (a2v) features.push(a2v)
+  }
+  // 映点 Antiscia: ♀♊ 与 ☿♊ 成映点 (对宫合相)
+  {
+    const antiKey = (lon: number) => (((180 - lon) % 360) + 360) % 360
+    const seenA = new Set<string>()
+    for (let i = 0; i < chart.planets.length; i++) {
+      for (let j = i + 1; j < chart.planets.length; j++) {
+        const pa = chart.planets[i], pb = chart.planets[j]
+        const d = Math.abs(antiKey(pa.longitude) - pb.longitude)
+        const sep = Math.min(d, 360 - d)
+        if (sep <= 2) {
+          const key = `${pa.name}|${pb.name}`
+          if (seenA.has(key)) continue
+          seenA.add(key)
+          features.push({
+            tone: 'soft',
+            tip: zhMode ? `${pa.zh} 与 ${pb.zh} 成映点 (Antiscia, 关于巨蟹-摩羯轴镜像重合)` : undefined,
+            el: (
+              <span>
+                <b className="font-normal text-frost">{pa.symbol}</b>
+                <span className="mx-1">{sgn(pa.sign)}</span>
+                <span className="mx-1">与</span>
+                <b className="font-normal text-frost">{pb.symbol}</b>
+                <span className="mx-1">{sgn(pb.sign)}</span>
+                <span className="text-[#8aa8d8]">成映点</span>
+                {sep < 0.5 ? <span className="ml-1 text-muted/70">0°</span> : <span className="ml-1 text-muted/70">{sep.toFixed(1)}°</span>}
+              </span>
+            ),
+          })
+        }
+      }
+    }
+  }
 
   // ---- 出生资料卡 (宫神星左上卡同款行式) ----
   const fmtDeg = (v: number, pos: string, neg: string) => `${Math.abs(v).toFixed(2)}° ${v >= 0 ? pos : neg}`

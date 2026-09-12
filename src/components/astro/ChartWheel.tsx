@@ -32,6 +32,7 @@ export interface VReception {
 export interface VChart {
   houseSystemUsed: string; timeKnown: boolean;
   hourRuler?: string | null;
+  combust?: string[]; viaCombusta?: string[];
   input: { year: number; month: number; day: number; hour: number; minute: number; city?: string; label?: string;
     latitude?: number; longitude?: number; timezone?: number; cnCode?: string };
   settings?: { display?: { dir?: 'ccw' | 'cw'; ascPos?: 'left' | 'top'; aspects?: boolean; feet?: boolean; nums?: boolean; ticks?: boolean } };
