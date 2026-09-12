@@ -12,6 +12,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useI18n } from '@/i18n';
 import { AspectLegend } from '@/components/astro/AspectGrid';
+import { aspectNum } from '@/lib/astro/aspect-colors';
 
 // ---------- 与 API 返回对齐的数据类型 ----------
 export interface VPlanet {
@@ -492,7 +493,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       const inset = (n: string) => (n === 'Sun' ? (BODY_R[n] ?? 0.14) * 1.18 * 2.4 * 0.5 : (BODY_R[n] ?? 0.14) * 1.18 + 0.06)
       const ra = Math.max(0.5, pa.r - inset(asp.a));
       const rb = Math.max(0.5, pb.r - inset(asp.b));
-      const col = (asp.type === 'trine' || asp.type === 'sextile' || asp.type === 'conjunction') ? 0x8aa8d8 : 0xe8a08a;
+      const col = aspectNum(asp.type); // 爸爸四色: 六合蓝/刑红/拱绿/冲紫 (与网格图例同源)
       const mesh = new THREE.Line(
         track(new THREE.BufferGeometry().setFromPoints([polar(ra, pa.a).setY(ASP_Y), polar(rb, pb.a).setY(ASP_Y)])),
         track(new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: 0.5 })),

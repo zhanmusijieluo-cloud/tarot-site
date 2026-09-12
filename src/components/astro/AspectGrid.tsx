@@ -9,22 +9,9 @@
 import type { VAspect, VChart } from '@/components/astro/ChartWheel';
 
 // 相位配色: 红=困难(刑冲) 绿/蓝=和谐(拱/六合) 金=合 紫=梅花
-export const ASPECT_COLOR: Record<string, string> = {
-  conjunction: '#cdb88a',
-  opposition: '#e8a08a',
-  square: '#e07f7f',
-  trine: '#7fb8a4',
-  sextile: '#8aa8d8',
-  quincunx: '#c48fd8',
-  'semi-square': '#d8a47f',
-  'sesquiquadrate': '#d8a47f',
-  'semi-sextile': '#9aa3b5',
-  quintile: '#8fd8d0',
-  biquintile: '#8fd8d0',
-  septile: '#b0a8d8',
-  novile: '#b0a8d8',
-  decile: '#b0a8d8',
-};
+import { ASPECT_HEX } from '@/lib/astro/aspect-colors';
+/** 相位配色 (唯一定义在 aspect-colors.ts, 盘线同源) */
+export const ASPECT_COLOR = ASPECT_HEX;
 const SYM: Record<string, string> = { conjunction: '☌', opposition: '☍', square: '□', trine: '△', sextile: '⚹', quincunx: '⚻' };
 // 图例用固定符号表 (不依赖当前盘是否恰好含该相位)
 const legendItems = (zhMode: boolean): [string, string][] => [
