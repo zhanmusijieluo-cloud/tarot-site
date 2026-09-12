@@ -18,7 +18,7 @@ export interface VPlanet {
   kind?: 'planet' | 'asteroid' | 'point';
   longitude: number; eclLat?: number; // 黄纬(度), 缺省0
   sign: string; signZh: string; degInSign: number; formatted: string;
-  house: number | null; retrograde: boolean;
+  house: number | null; retrograde: boolean; speed?: number;
   dignity: { state: string; strength: number } | null;
 }
 export interface VAspect {
@@ -30,7 +30,8 @@ export interface VReception {
 }
 export interface VChart {
   houseSystemUsed: string; timeKnown: boolean;
-  input: { year: number; month: number; day: number; hour: number; minute: number; city?: string; label?: string };
+  input: { year: number; month: number; day: number; hour: number; minute: number; city?: string; label?: string;
+    latitude?: number; longitude?: number; timezone?: number };
   settings?: { display?: { dir?: 'ccw' | 'cw'; ascPos?: 'left' | 'top'; aspects?: boolean; feet?: boolean; nums?: boolean; ticks?: boolean } };
   planets: VPlanet[];
   angles: { ascendant: VPlanet | null; midheaven: VPlanet | null };

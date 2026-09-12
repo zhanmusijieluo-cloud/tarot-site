@@ -26,11 +26,13 @@ const ASPECT_COLOR: Record<string, string> = {
   decile: '#b0a8d8',
 };
 
-export default function AspectGrid({ chart, zhMode, onPick, selected }: {
+export default function AspectGrid({ chart, zhMode, onPick, selected, bare }: {
   chart: VChart;
   zhMode: boolean;
   onPick?: (name: string | null) => void;
   selected?: string | null;
+  /** 嵌在外层 Panel 里时用: 不再自带边框 */
+  bare?: boolean;
 }) {
   // 列 = 盘上天体顺序 (与盘一致); 数量大时限 14 保证可读
   const cols = chart.planets.slice(0, 14);
@@ -57,7 +59,7 @@ export default function AspectGrid({ chart, zhMode, onPick, selected }: {
   const SYM: Record<string, string> = { conjunction: '☌', opposition: '☍', square: '□', trine: '△', sextile: '⚹', quincunx: '⚻' };
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-white/[0.07] bg-white/[0.015] p-3">
+    <div className={bare ? 'overflow-x-auto' : 'overflow-x-auto rounded-2xl border border-white/[0.07] bg-white/[0.015] p-3'}>
       <table className="border-separate" style={{ borderSpacing: '2px' }}>
         <thead>
           <tr>
@@ -117,11 +119,7 @@ export default function AspectGrid({ chart, zhMode, onPick, selected }: {
       </table>
       {/* 图例 */}
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 px-1 text-[10px] text-muted/70">
-        {[
-          ['conjunction', zhMode ? '合' : 'Conj'], ['opposition', zhMode ? '冲' : 'Opp'],
-          ['square', zhMode ? '刑' : 'Sqt'], ['trine', zhMode ? '拱' : 'Tri'],
-          ['sextile', zhMode ? '六合' : 'Sxt'], ['quincunx', zhMode ? '梅花' : 'Qnx'],
-        ].map(([k, label]) => (
+        {LEGEND.map(([k, label]) => (
           <span key={k} className="flex items-center gap-1">
             <span style={{ color: ASPECT_COLOR[k] }}>{SYM[k]}</span>{label}
           </span>

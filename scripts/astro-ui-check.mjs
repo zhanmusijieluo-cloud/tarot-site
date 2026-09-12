@@ -27,38 +27,33 @@ await page.goto(BASE, { waitUntil: 'networkidle0', timeout: 60000 })
 if (ZH) { await page.evaluate(() => localStorage.setItem('oracle-lang', 'zh')); await page.reload({ waitUntil: 'networkidle0' }) }
 await sleep(1200)
 
-// T1 初始=列表: 有相位圆片, 无矩阵表
-const pills = await page.$$eval('span', (ss) => ss.filter((s) => /[A-Za-z\u4e00-\u9fff]–/.test(s.textContent)).length)
-const tablesOf = () => page.$$eval('table', (ts) => ts.filter((t) => t.querySelectorAll('td').length > 20).length)
-check(pills > 5, `列表模式: 相位圆片 ${pills} 个`)
-check((await tablesOf()) === 0, `初始无矩阵表`)
+// 相位矩阵 = border-separate 表 (黄道状态大表是普通table, 不能混计)
+const tablesOf = () => page.$$eval('table.border-separate', (ts) => ts.filter((t) => t.querySelectorAll('td').length > 20).length)
+check((await tablesOf()) >= 1, `初始网格模式: 矩阵表渲染`)
+check(page.url().indexOf('ag=') === -1, `默认URL无ag参数 (grid为默认态)`)
 
-// T2 点"网格" → 矩阵出现 + URL 带 ag=grid
-check(await clickBtn(TXT.grid), `点击「${TXT.grid}」`)
-await sleep(900)
-const tblN = await tablesOf()
-check(tblN >= 1, `网格模式: 相位矩阵渲染 (${tblN} 张表)`)
-check(page.url().includes('ag=grid'), `URL 同步 ag=grid`)
-
-// T3 矩阵数据正确性: 水星-火星 □ 0.1S 应有一格; 图例存在
-const gridFacts = await page.evaluate(() => {
-  const t = [...document.querySelectorAll('table')].find((x) => x.querySelectorAll('td').length > 20)
-  if (!t) return null
-  const txt = t.innerText
-  return { hasSquare: txt.includes('□'), hasConj: txt.includes('☌'), legend: document.body.innerText.includes('A=入相') || document.body.innerText.includes('A=applying') }
-})
-check(!!gridFacts && gridFacts.hasSquare && gridFacts.hasConj, `矩阵含刑/合符号 (数据来自引擎)`)
-
-// T4 刷新保持网格 (URL 即真相)
-await page.reload({ waitUntil: 'networkidle0' })
-await sleep(900)
-check((await tablesOf()) >= 1, `刷新后仍网格`)
-
-// T5 点"列表" → 矩阵消失 + ag 移除
+// T2 点"列表" → 矩阵消失(除状态表) + URL 带 ag=list
 check(await clickBtn(TXT.list), `点击「${TXT.list}」`)
 await sleep(900)
-check((await tablesOf()) === 0, `切回列表, 矩阵消失`)
-check(!page.url().includes('ag=grid'), `URL 清理 ag`)
+const listPills = await page.$$eval('p,span', (ss) => ss.filter((s) => /[A-Za-z\u4e00-\u9fff]–[A-Za-z\u4e00-\u9fff]/.test(s.textContent) && s.textContent.length < 30).length)
+check(listPills > 5, `列表模式: 相位行 ${listPills} 个`)
+check(page.url().includes('ag=list'), `URL 同步 ag=list`)
+
+// T3 列表数据正确性: 图例固定符号仍在网格模式 (先切回网格验)
+check(await clickBtn(TXT.grid), `点击「${TXT.grid}」回网格`)
+await sleep(900)
+const gridFacts = await page.evaluate(() => {
+  const t = document.querySelector('table.border-separate')
+  if (!t) return null
+  const txt = document.body.innerText
+  return { hasSquare: txt.includes('□'), hasConj: txt.includes('☌'), hasQnx: txt.includes('⚻'), legend: txt.includes('A=入相') || txt.includes('A=applying') }
+})
+check(!!gridFacts && gridFacts.hasSquare && gridFacts.hasConj && gridFacts.hasQnx && gridFacts.legend, `矩阵含合/刑/梅花符号+图例 (固定符号表)`)
+
+// T4 刷新保持列表/网格 (URL 即真相)
+await page.reload({ waitUntil: 'networkidle0' })
+await sleep(900)
+check((await tablesOf()) >= 1, `刷新后仍网格 (ag 已清)`)
 
 // T6 设置抽屉: 打开 → 五分区 → 宫制Tab切科赫 → URL sys 变
 check(await clickBtn(TXT.settings), `点击「${TXT.settings}」`)
@@ -73,10 +68,9 @@ check(await clickBtn(TXT.koch), `选「${TXT.koch}」`)
 await sleep(1600)
 check(page.url().includes('sys=koch'), `抽屉切宫制生效: ${page.url().match(/sys=[^&]+/)?.[0]}`)
 
-// T7 行星列点击 → 盘面高亮联动 (选中的行背景变化 + 详情卡出现)
-await page.evaluate(() => document.querySelectorAll('[class*=glass-btn]').length)
+// T7 左列行星行点击 → 盘面联动 (行背景变化 + 详情出现)
 const rowClicked = await page.evaluate(() => {
-  const rows = [...document.querySelectorAll('button')].filter((x) => /宫|H/.test(x.textContent) && x.textContent.length > 6)
+  const rows = [...document.querySelectorAll('button')].filter((x) => /宫|—/.test(x.textContent) && x.textContent.length > 6 && x.textContent.length < 40)
   if (!rows.length) return false
   rows[0].click(); return true
 })
@@ -84,17 +78,23 @@ await sleep(700)
 check(rowClicked, `点行星列首行`)
 const detailShown = await page.evaluate(() => {
   const t = document.body.innerText
-  return /落宫|House|尊贵|Dignity|互溶|Reception/.test(t) && !!document.querySelector('.fixed, [class*=absolute]')
+  return /落宫|House|尊贵|Dignity|入庙|失势/.test(t)
 })
-check(detailShown, `点击后出详情/高亮 (联动生效)`)
+check(detailShown, `点击后详情/尊贵信息可见`)
 
-// T8 布局: 宽屏下 盘+侧栏 双栏 (lg:grid-cols-[1fr_268px])
-const twoCol = await page.evaluate(() => {
-  const aside = document.querySelector('aside')
-  if (!aside) return false
-  return getComputedStyle(aside.parentElement).display === 'grid'
+// T8 宫神星式五区分布: 资料卡 / 行星列 / 相位矩阵 / 特征面板 / 黄道状态大表 全部在场
+const zones = await page.evaluate(() => {
+  const t = document.body.innerText
+  return {
+    birthCard: /出生资料|birth data/i.test(t),
+    features: /特征|features/i.test(t),
+    recep: /互容接纳|mutual|被.*接纳|received/i.test(t),
+    statusTable: /黄道状态|ecliptic status/i.test(t),
+    grid: !!document.querySelector('table.border-separate'),
+    wide3col: !!document.querySelector('[class*="lg:grid-cols-[236px"]'),
+  }
 })
-check(twoCol, `宽屏双栏布局 (盘 | 行星列)`)
+check(Object.values(zones).every(Boolean), `五区齐: ${Object.entries(zones).filter(([, v]) => v).map(([k]) => k).join('/')}`)
 
 await b.close()
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败`)

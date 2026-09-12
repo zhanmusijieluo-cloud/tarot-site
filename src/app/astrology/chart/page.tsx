@@ -26,7 +26,7 @@ function ChartPageInner() {
 
   const birth = useMemo(() => birthFromParams(new URLSearchParams(sp.toString())), [sp]);
   const settings = useMemo(() => settingsFromParams(new URLSearchParams(sp.toString())) ?? {}, [sp]);
-  const aspectMode = (sp.get('ag') === 'grid' ? 'grid' : 'list') as 'list' | 'grid';
+  const aspectMode = (sp.get('ag') === 'list' ? 'list' : 'grid') as 'list' | 'grid';
 
   const [data, setData] = useState<VChart | null>(null);
   const [error, setError] = useState('');
@@ -134,7 +134,7 @@ function ChartPageInner() {
         {loading && !data && (
           <p className="py-20 text-center text-[12px] tracking-[0.3em] text-muted">{t('astro.form.casting')}</p>
         )}
-        {data && <ChartResult chart={data} zhMode={zhMode} aspectMode={aspectMode} onAspectMode={(m) => patchParams((p) => { if (m === 'grid') p.set('ag', 'grid'); else p.delete('ag'); })} />}
+        {data && <ChartResult chart={data} zhMode={zhMode} aspectMode={aspectMode} onAspectMode={(m) => patchParams((p) => { if (m === 'list') p.set('ag', 'list'); else p.delete('ag'); })} />}
       </section>
     </PageShell>
   );
