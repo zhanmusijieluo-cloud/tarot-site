@@ -526,6 +526,8 @@ const ja: Record<string, string> = {
   'astro.res.nextHint': 'AIリーディングは近日公開 · 今回は星のデータの表示のみ',
   'astro.view.top': '俯瞰 · ホロスコープ',
   'astro.view.side': '側面 · 黄道面',
+  'astro.view.reset': '位置に戻す',
+  'astro.view.resetTip': '盤面が回転したら、ASC左基準の向きに戻します',
   'astro.view.clear': '選択を解除',
   'astro.view.hintTop': 'ドラッグで回転 · ホイールで拡大 · 天体をタップで詳細',
   'astro.view.hintSide': '黄道面を縦に：天体は盤面と同じ高さに並び、足跡線は実際のサイン度数を示す',

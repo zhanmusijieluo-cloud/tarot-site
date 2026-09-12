@@ -146,15 +146,15 @@ interface SceneProps {
     dir?: 'ccw' | 'cw'; ascPos?: 'left' | 'top';
     aspects?: boolean; feet?: boolean; nums?: boolean; ticks?: boolean;
   };
-  /** 弹窗占位时收窄盘面 */
-  narrow?: boolean;
+  /** 外层按钮调场景指令 (回正等) */
+  sceneApi?: React.MutableRefObject<{ reset?: () => void } | null>;
   selected: string | null;
   onSelect: (name: string | null) => void;
 }
 
-function ChartScene({ chart, zhMode, view, disp, narrow, selected, onSelect }: SceneProps) {
+function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }: SceneProps) {
   const mountRef = useRef<HTMLDivElement>(null);
-  const apiRef = useRef<{ set: (n: string | null) => void } | null>(null);
+  const apiRef = useRef<{ set: (n: string | null) => void; reset?: () => void } | null>(null);
 
   const ascLon = chart.angles.ascendant?.longitude ?? 0;
   const DIR = disp?.dir ?? 'ccw';
@@ -521,13 +521,17 @@ function ChartScene({ chart, zhMode, view, disp, narrow, selected, onSelect }: S
       }
     };
     applyHighlight(selected);
-    apiRef.current = { set: applyHighlight };
+    const sceneCtl = { reset: () => { yawV = 0; idleT = 99; fastReturn = true; } };
+    apiRef.current = { set: applyHighlight, ...sceneCtl };
+    if (sceneApi) sceneApi.current = sceneCtl;
 
     // ---------- 拖拽旋转(惯性) + 滚轮变焦 + 点击 ----------
     let dragging = false, movedPx = 0, lastX = 0, lastY = 0;
     let yawV = 0, spinY = 0, fov = 42;
+    // A方案: 松手静止一会儿后自动弹回 ASC朝左(最近一圈基准); ⟳键立即快回
+    let idleT = 0, fastReturn = false;
     const el = renderer.domElement;
-    const onDown = (e: PointerEvent) => { dragging = true; movedPx = 0; lastX = e.clientX; lastY = e.clientY; };
+    const onDown = (e: PointerEvent) => { dragging = true; movedPx = 0; lastX = e.clientX; lastY = e.clientY; idleT = 0; fastReturn = false; };
     const onMove = (e: PointerEvent) => {
       if (!dragging) return;
       const dx = e.clientX - lastX, dy = e.clientY - lastY;
@@ -566,7 +570,17 @@ function ChartScene({ chart, zhMode, view, disp, narrow, selected, onSelect }: S
       const now = performance.now();
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      if (!dragging) { yawV *= 0.88; spinY += yawV; }
+      if (!dragging) {
+        yawV *= 0.88; spinY += yawV;
+        if (Math.abs(yawV) < 0.0015) {
+          idleT += dt;
+          if (idleT > 1.1 || fastReturn) {
+            const home = Math.round(spinY / (Math.PI * 2)) * Math.PI * 2; // 最短路径回最近基准圈
+            spinY += (home - spinY) * Math.min(1, dt * (fastReturn ? 7 : 2.2));
+            if (Math.abs(home - spinY) < 0.002) { spinY = home; fastReturn = false; }
+          }
+        } else idleT = 0;
+      }
       root.rotation.y += (spinY - root.rotation.y) * Math.min(1, dt * 9);
       const targetTilt = view === 'side' ? 1.02 : 0;
       root.rotation.x += (targetTilt - root.rotation.x) * Math.min(1, dt * 5);
@@ -609,8 +623,8 @@ function ChartScene({ chart, zhMode, view, disp, narrow, selected, onSelect }: S
   useEffect(() => { apiRef.current?.set(selected); }, [selected]);
 
   // 俯视: 满高正方形(3D盘为透明层, 与背后相位网格同层 → 方圆相融, 网格四角可见); 侧视: 扁面板
-  // 俯视满高; 弹窗打开时 (narrow 由父级传入) 盘收窄左移给小窗让位, 互不遮挡
-  return <div ref={mountRef} style={narrow ? { width: 'calc(100% - 296px)' } : undefined} className={`cursor-grab active:cursor-grabbing transition-[width] duration-300 ${view === 'side' ? 'h-[min(46vh,460px)]' : 'h-[min(78vh,760px)]'}`} />;
+  // 固定大小: 弹窗不再挤压盘面 (A方案定稿)
+  return <div ref={mountRef} className={`w-full cursor-grab active:cursor-grabbing ${view === 'side' ? 'h-[min(46vh,460px)]' : 'h-[min(78vh,760px)]'}`} />;
 }
 
 // ---------- 点击标注卡(纯标注, 无AI) ----------
@@ -722,6 +736,7 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
   const selected = selProp !== undefined ? selProp : selInner;
   const setSelected = onSelect ?? setSelInner;
   const selPlanet = selected ? [...chart.planets, chart.angles.ascendant, chart.angles.midheaven].find((p) => p?.name === selected) ?? null : null;
+  const sceneApiRef = useRef<{ reset?: () => void } | null>(null);
 
   return (
     <div className="relative rounded-2xl border border-white/[0.07] bg-black/20 p-2">
@@ -756,6 +771,13 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
           ))}
         </div>
         {actions}
+        <button
+          onClick={() => sceneApiRef.current?.reset?.()}
+          className="text-[10px] tracking-[0.2em] text-muted/70 transition-colors hover:text-accent"
+          title={t('astro.view.resetTip')}
+        >
+          ⟳ {t('astro.view.reset')}
+        </button>
         {selPlanet && (
           <button onClick={() => setSelected(null)} className="text-[10px] tracking-[0.2em] text-muted/70 hover:text-frost">
             {t('astro.view.clear')}
@@ -772,11 +794,11 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
           <div className="pointer-events-none absolute left-1/2 top-1/2 aspect-square w-[88%] -translate-x-1/2 -translate-y-1/2 rounded-full" style={{ background: 'rgba(6,8,15,0.92)' }} />
           {/* 前: 圆盘 */}
           <div className="relative">
-            <ChartScene chart={chart} zhMode={zhMode} view={view} disp={chart.settings?.display} narrow={!!selPlanet} selected={selected} onSelect={setSelected} />
+            <ChartScene chart={chart} zhMode={zhMode} view={view} disp={chart.settings?.display} sceneApi={sceneApiRef} selected={selected} onSelect={setSelected} />
           </div>
         </div>
       ) : (
-        <ChartScene chart={chart} zhMode={zhMode} view={view} disp={chart.settings?.display} narrow={!!selPlanet} selected={selected} onSelect={setSelected} />
+        <ChartScene chart={chart} zhMode={zhMode} view={view} disp={chart.settings?.display} sceneApi={sceneApiRef} selected={selected} onSelect={setSelected} />
       )}
 
       <p className="flex flex-wrap items-center justify-center gap-x-3 pb-2 pt-1 text-center text-[10px] tracking-[0.18em] text-muted/55">

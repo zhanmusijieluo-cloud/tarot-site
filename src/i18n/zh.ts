@@ -526,6 +526,8 @@ const zh: Record<string, string> = {
   'astro.res.nextHint': 'AI 深度解读即将接入 · 本轮排盘仅供查看盘面数据',
   'astro.view.top': '俯视 · 星盘',
   'astro.view.side': '侧视 · 黄道面',
+  'astro.view.reset': '回正',
+  'astro.view.resetTip': '盘面转歪了? 点这里回到上升朝左的标准方位',
   'astro.view.clear': '取消选中',
   'astro.view.hintTop': '拖拽旋转 · 滚轮缩放 · 点击星体查看标注',
   'astro.view.hintSide': '黄道面立起：行星与环同处一平面，脚线仍指向星座带刻度',

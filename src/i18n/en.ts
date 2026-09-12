@@ -535,6 +535,8 @@ const en: Record<string, string> = {
   'astro.res.nextHint': 'AI interpretation coming soon · this chart shows raw data only',
   'astro.view.top': 'Top · Chart',
   'astro.view.side': 'Side · Ecliptic',
+  'astro.view.reset': 'Recenter',
+  'astro.view.resetTip': 'Wheel tilted? Return to the standard ASC-left orientation',
   'astro.view.clear': 'Clear selection',
   'astro.view.hintTop': 'Drag to rotate · scroll to zoom · tap a planet for its data',
   'astro.view.hintSide': 'Ecliptic edge-on: planets share the disc plane; foot-lines still mark their true zodiac degrees',

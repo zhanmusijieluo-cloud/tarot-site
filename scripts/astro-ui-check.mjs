@@ -63,19 +63,24 @@ const gridFit = await page.evaluate(() => {
   return { overflowY: sec.scrollHeight - sec.clientHeight, overflowX: Math.round(g.scrollWidth - (g.parentElement?.clientWidth ?? 0)) }
 })
 check(!!gridFit && gridFit.overflowY <= 2 && gridFit.overflowX <= 2, `网格零滚动 (y溢=${gridFit?.overflowY} x溢=${gridFit?.overflowX})`)
+// 新契约 (A方案定稿): 盘固定大小 + 弹窗实色不透明
+const wBefore = await page.evaluate(() => document.querySelector('.cursor-grab canvas')?.getBoundingClientRect().width ?? 0)
 await page.evaluate(() => {
   const btns = [...document.querySelectorAll('button')].filter((x) => x.textContent.trim().startsWith('☉') && x.textContent.trim().length <= 3)
   btns[btns.length - 1]?.click()
 })
 await sleep(1100)
-const noOccl = await page.evaluate(() => {
+const popupFix = await page.evaluate(() => {
   const cv = document.querySelector('.cursor-grab canvas')
   const pop = [...document.querySelectorAll('div')].find((d) => d.className.toString().includes('lg:right-3'))
-  const a = cv?.getBoundingClientRect(), q = pop?.getBoundingClientRect()
-  if (!a || !q) return -1
-  return Math.max(0, Math.min(a.right, q.right) - Math.max(a.left, q.left))
+  const card = pop?.querySelector('div')
+  const bg = card ? getComputedStyle(card).backgroundColor : ''
+  const m = bg.match(/[\d.]+/g)
+  const alpha = m && m.length >= 4 ? Number(m[3]) : 0
+  return { wAfter: cv?.getBoundingClientRect().width ?? 0, alpha }
 })
-check(noOccl === 0, `弹窗与圆盘零重叠 (让位生效, 重叠=${noOccl}px)`)
+check(Math.abs(popupFix.wAfter - wBefore) < 2, `星盘大小固定 (弹窗开合宽度不变: ${Math.round(wBefore)}→${Math.round(popupFix.wAfter)})`)
+check(popupFix.alpha >= 0.9, `弹窗实色不透明 (alpha=${popupFix.alpha}, 文字不被盘穿透)`)
 await page.evaluate(() => { document.querySelector('[class*="lg:right-3"] button')?.click() }) // 关窗
 await sleep(600)
 
