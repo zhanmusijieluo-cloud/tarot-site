@@ -68,15 +68,12 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
   // ---- 右侧特征面板 (宫神星格式: 判词全保留, 行星/星座用符号) ----
   type Feat = { el: React.ReactNode; tone: 'gold' | 'soft' | 'warn' | 'hot'; tip?: string }
   const features: Feat[] = []
-  const SIGN_SYM: Record<string, string> = { Aries: '♈', Taurus: '♉', Gemini: '♊', Cancer: '♋', Leo: '♌', Virgo: '♍', Libra: '♎', Scorpio: '♏', Sagittarius: '♐', Capricorn: '♑', Aquarius: '♒', Pisces: '♓' }
-  const sgn = (name: string) => SIGN_SYM[name] ?? name
   const psym = (name: string) => chart.planets.find((x) => x.name === name)?.symbol ?? name
   // 落座行: ☉ 双子 23°42′ · 9宫 (判词汉字在, 行星星座用符号)
   const placeLine = (p: VPlanet, label: string) => (
     <span>
       <b className="font-normal text-frost">{p.symbol}</b>
-      <span className="ml-1.5 text-accent/90">{sgn(p.sign)}</span>
-      <span className="ml-1 text-muted/90">{p.signZh}</span>
+      <span className="ml-1.5 text-accent/95">{p.signZh}</span>
       <span className="mx-1.5 text-frost">{dms(p.degInSign)}</span>
       {p.house ? <span className="text-muted/80">· 第{p.house}宫</span> : null}
       {label ? <span className="ml-1.5 text-muted/50">{label}</span> : null}
@@ -96,7 +93,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
         el: (
           <span>
             <b className="font-normal text-frost">{p.symbol}</b>
-            <span className="mx-1 text-accent/90">{sgn(p.sign)}</span>
+            <span className="mx-1 text-accent/95">{p.signZh}</span>
             <span className={p.dignity.strength > 0 ? 'text-[#cdb88a]' : 'text-[#e8a08a]'}>{dz}{p.dignity.strength ? ` ${p.dignity.strength > 0 ? '+' : ''}${p.dignity.strength}` : ''}</span>
             {p.retrograde && <span className="ml-1.5 text-[#e8a08a]">逆行</span>}
           </span>
@@ -123,7 +120,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
             <span>
               <b className="font-normal text-frost">{psym(r.a)}</b><span className="mx-1.5">与</span><b className="font-normal text-frost">{psym(r.b)}</b>
               <span className="ml-1.5 text-[#cdb88a]">互溶</span>
-              <span className="ml-1 text-accent/90">{sgn(r.bySign)}{rev ? '/' + sgn(rev.bySign) : ''}</span>
+              <span className="ml-1 text-accent/95">{sz(r.bySign)}{rev ? '/' + sz(rev.bySign) : ''}</span>
             </span>
           ),
         })
@@ -134,8 +131,8 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
           el: (
             <span>
               <b className="font-normal text-frost">{psym(r.a)}</b><span className="mx-1.5">被</span><b className="font-normal text-frost">{psym(r.b)}</b><span className="ml-1">接纳</span>
-              <span className="ml-1 text-muted/80">({kind}</span>
-              <span className="text-accent/90">{sgn(r.bySign)}</span>
+              <span className="ml-1 text-muted/80">({kind} </span>
+              <span className="text-accent/95">{sz(r.bySign)}</span>
               <span className="text-muted/80">)</span>
             </span>
           ),
@@ -170,7 +167,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
       el: (
         <span>
           <b className="font-normal text-frost">{p2.symbol}</b>
-          <span className="mx-1 text-accent/90">{sgn(p2.sign)}</span>
+          <span className="mx-1 text-accent/95">{p2.signZh}</span>
           <span className="text-[#e8a08a]">在燃烧之路</span>
         </span>
       ),
@@ -195,10 +192,10 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
             el: (
               <span>
                 <b className="font-normal text-frost">{pa.symbol}</b>
-                <span className="mx-1">{sgn(pa.sign)}</span>
+                <span className="mx-1 text-accent/95">{pa.signZh}</span>
                 <span className="mx-1">与</span>
                 <b className="font-normal text-frost">{pb.symbol}</b>
-                <span className="mx-1">{sgn(pb.sign)}</span>
+                <span className="mx-1 text-accent/95">{pb.signZh}</span>
                 <span className="text-[#8aa8d8]">成映点</span>
                 {sep < 0.5 ? <span className="ml-1 text-muted/70">0°</span> : <span className="ml-1 text-muted/70">{sep.toFixed(1)}°</span>}
               </span>
@@ -222,7 +219,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
       <>{fmtDeg(chart.input.latitude!, zhMode ? '北' : 'N', zhMode ? '南' : 'S')} {fmtDeg(chart.input.longitude!, zhMode ? '东' : 'E', zhMode ? '西' : 'W')}</>
     )])
   if (chart.input.timezone !== undefined) infoRows.push(['时区' + (zhMode ? '' : '/TZ'), `GMT ${chart.input.timezone >= 0 ? '+' : ''}${chart.input.timezone.toFixed(2)}`])
-  infoRows.push([zhMode ? '黄道' : 'Zodiac', zhMode ? `回归黄道${asc ? ` · ${asc.signZh} ${dms(asc.degInSign)}` : ''}` : `Tropical${asc ? ` · ${asc.sign} ${dms(asc.degInSign)}` : ''}`])
+  infoRows.push([zhMode ? '黄道' : 'Zodiac', zhMode ? '回归黄道' : 'Tropical'])
   infoRows.push([zhMode ? '宫制' : 'Houses', `${zhMode ? (HOUSE_SYSTEM_ZH[chart.houseSystemUsed] ?? chart.houseSystemUsed) : chart.houseSystemUsed}`])
   if (hr) infoRows.push([zhMode ? '时主星' : 'Hour ruler', <span title={zhMode ? `时主星: ${hr.zh} — 零点起算, 加尔迪亚序 (流派众多, 此为通行法)` : `Hour ruler: ${hr.name} (Chaldean, from midnight)`}>{hr.symbol}</span>])
 
