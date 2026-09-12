@@ -182,7 +182,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
     camera.position.set(0, 10.6, 3.1);
     camera.lookAt(0, 0, 0);
-    let viewHalfH = 5.72; // 默认视高半径(世界单位), resize 时按画布比例算
+    let viewHalfH = 5.86; // 默认视高半径(世界单位), resize 时按画布比例算
 
     const root = new THREE.Group();
     root.rotation.order = 'YXZ';
@@ -227,16 +227,16 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       for (let s = 0; s < 12; s++) {
         const geo = track(new THREE.RingGeometry(R_BAND, R_OUT, 24, 1, a1(s), 30 * DEG));
         const el = ELEMENT_OF_SIGN[SIGN_ORDER[s]];
-        // D·墨盘金弧: 扇区统一墨蓝近黑, 元素性格交给外缘彩弧+符号色
+        // 扇区与最外彩弧同步: 同元素色低透明度铺满整带 (爸爸: 颜色与最外环同步)
         const mat = track(new THREE.MeshBasicMaterial({
-          color: 0x1d2848, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false,
+          color: ELEMENT_COLOR[el], transparent: true, opacity: 0.5, side: THREE.DoubleSide, depthWrite: false,
         }));
         const m = new THREE.Mesh(geo, mat);
         m.rotation.x = -Math.PI / 2;
-        m.userData = { signSlice: s, baseOpacity: 0.9 };
+        m.userData = { signSlice: s, baseOpacity: 0.5, baseColor: new THREE.Color(ELEMENT_COLOR[el]), litColor: new THREE.Color(0xffffff) };
         // 元素彩弧: 嵌在环带内上缘 (不占刻度区, 不与针脚打架)
         const arc = new THREE.Mesh(
-          track(new THREE.RingGeometry(R_OUT - 0.17, R_OUT - 0.025, 20, 1, a1(s) + 0.026, 30 * DEG - 0.052)),
+          track(new THREE.RingGeometry(R_OUT - 0.17, R_OUT - 0.025, 20, 1, a1(s), 30 * DEG)),
           track(new THREE.MeshBasicMaterial({ color: ELEMENT_COLOR[el], transparent: true, opacity: 0.95, side: THREE.DoubleSide, depthWrite: false })),
         );
         arc.rotation.x = -Math.PI / 2;
@@ -266,7 +266,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
         }));
         const m = new THREE.Mesh(geo, mat);
         m.rotation.x = -Math.PI / 2;
-        m.userData = { houseSlice: h + 1, baseOpacity: 0.13 };
+        m.userData = { houseSlice: h + 1, baseOpacity: 0.13, baseColor: new THREE.Color(ELEMENT_COLOR[el]), litColor: new THREE.Color(0xfdf6e0) };
         root.add(m);
         houseSlices.push(m);
         // 宫头线: 细面片绘制 (WebGL 下 linewidth 无效, 用 quad 才拉得开粗细档)
@@ -300,7 +300,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       for (const [txt, ang, big] of [['ASC', ascA, 1.15], ['MC', mcA, 1.0]] as const) {
         const tex = track(textTexture(txt, 88, '#ffe9b8', 14));
         const spr = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.95, depthWrite: false })));
-        const p = polar(R_OUT + 0.26, ang);
+        const p = polar(R_OUT + 0.44, ang);
         p.y = 0.26 * (big - 1);
         spr.position.copy(p);
         spr.scale.set(1.6 * big, 0.56 * big, 1);
@@ -512,7 +512,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       const sel = name ? chart.planets.find((x) => x.name === name) ?? null : null;
       for (const po of planetObjs) {
         po.tScale = name && po.name === name ? 1.18 : 1;
-        po.tDim = name ? (po.name === name ? 1 : 0.55) : 1;
+        po.tDim = name ? (po.name === name ? 1 : 0.5) : 1;
         po.tEmi = name && po.name === name ? 1.7 : 1;
       }
       // 脚线: 仅选中者显 (常显模式全显)
@@ -522,20 +522,26 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
         al.tOp = name ? (hot ? 0.95 : 0.16) : al.baseOp;
       }
       for (const hs of houseSlices) {
-        const ud = hs.userData as { signSlice?: number; houseSlice?: number; baseOpacity: number; tOpacity?: number };
-        let target = ud.baseOpacity;
-        if (sel) {
-          if (ud.signSlice !== undefined && SIGN_ORDER[ud.signSlice] === sel.sign) target = Math.max(target, ud.baseOpacity + 0.14);
-          if (ud.houseSlice !== undefined && sel.house === ud.houseSlice) target = Math.max(target, ud.baseOpacity + 0.1);
-        }
-        ud.tOpacity = target;
+        const ud = hs.userData as { signSlice?: number; houseSlice?: number; baseOpacity: number; tOpacity?: number; tMix?: number };
+        if (!sel) { ud.tOpacity = ud.baseOpacity; ud.tMix = 0; continue }
+        const isSign = ud.signSlice !== undefined && SIGN_ORDER[ud.signSlice] === sel.sign
+        const isHouse = ud.houseSlice !== undefined && sel.house === ud.houseSlice
+        if (isSign) { ud.tOpacity = 0.96; ud.tMix = 0.8 }          // 选中星座段: 混白近全白
+        else if (isHouse) { ud.tOpacity = 0.85; ud.tMix = 0.72 }    // 选中宫扇区: 基0.13须提足才跳
+        else { ud.tOpacity = ud.baseOpacity * (ud.signSlice !== undefined ? 0.42 : 0.35); ud.tMix = 0 } // 其余段: 压暗衬托
       }
     };
     applyHighlight(selected);
     // 初帧落位 (重建场景时不从默认值淡入)
     for (const po of planetObjs) { po.cScale = po.tScale; po.cDim = po.tDim; po.cEmi = po.tEmi; po.group.scale.setScalar(po.cScale) }
     for (const al of aspectLines) (al.mesh.material as THREE.LineBasicMaterial).opacity = al.tOp
-    for (const hs of houseSlices) { const ud = hs.userData as { baseOpacity: number; tOpacity?: number }; (hs.material as THREE.MeshBasicMaterial).opacity = ud.tOpacity ?? ud.baseOpacity }
+    for (const hs of houseSlices) {
+      const ud = hs.userData as { baseOpacity: number; baseColor: THREE.Color; litColor: THREE.Color; tOpacity?: number; tMix?: number; cMix?: number }
+      const mo = hs.material as THREE.MeshBasicMaterial
+      mo.opacity = ud.tOpacity ?? ud.baseOpacity
+      ud.cMix = ud.tMix ?? 0
+      mo.color.copy(ud.baseColor).lerp(ud.litColor, ud.cMix)
+    }
     const sceneCtl = { reset: () => { yawV = 0; idleT = 99; fastReturn = true; } };
     apiRef.current = { set: applyHighlight, ...sceneCtl };
     if (sceneApi) sceneApi.current = sceneCtl;
@@ -616,6 +622,9 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
         po.group.scale.setScalar(po.cScale)
         const mm = po.mesh.material as THREE.MeshPhongMaterial
         if (mm.emissiveIntensity !== undefined) mm.emissiveIntensity = po.cEmi
+        const baseCol = (mm.userData as { baseColor?: THREE.Color }).baseColor ?? mm.color
+        ;(mm.userData as { baseColor?: THREE.Color }).baseColor = baseCol
+        mm.color.copy(baseCol).multiplyScalar(po.cDim) // 球体本体随 dim 压暗 (保基色)
         po.group.traverse((o) => {
           const sp = o as THREE.Sprite
           if (sp.isSprite) {
@@ -629,10 +638,12 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
         mo.opacity += (al.tOp - mo.opacity) * hl
       }
       for (const hs of houseSlices) {
-        const ud = hs.userData as { baseOpacity: number; tOpacity?: number }
+        const ud = hs.userData as { baseOpacity: number; baseColor: THREE.Color; litColor: THREE.Color; tOpacity?: number; tMix?: number; cMix?: number }
         const mo = hs.material as THREE.MeshBasicMaterial
         const tgt = ud.tOpacity ?? ud.baseOpacity
         mo.opacity += (tgt - mo.opacity) * hl
+        ud.cMix = (ud.cMix ?? 0) + ((ud.tMix ?? 0) - (ud.cMix ?? 0)) * hl
+        mo.color.copy(ud.baseColor).lerp(ud.litColor, ud.cMix)
       }
       renderer.render(scene, camera);
       raf = requestAnimationFrame(tick);
@@ -643,7 +654,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       const w = mm.clientWidth, h = mm.clientHeight
       if (!w || !h) return
       const halfH = viewHalfH / orthoC
-      const halfW = Math.max(halfH * (w / h), 6.15 / orthoC) // 容ASC横探(5.26+0.8)
+      const halfW = Math.max(halfH * (w / h), 6.45 / orthoC) // 容外移后的角标 (5.44+0.8=6.24)
       camera.left = -halfW; camera.right = halfW; camera.top = halfH; camera.bottom = -halfH
       camera.updateProjectionMatrix()
     }
