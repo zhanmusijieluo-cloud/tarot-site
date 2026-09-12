@@ -11,6 +11,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useI18n } from '@/i18n';
+import { AspectLegend } from '@/components/astro/AspectGrid';
 
 // ---------- 与 API 返回对齐的数据类型 ----------
 export interface VPlanet {
@@ -600,8 +601,8 @@ function ChartScene({ chart, zhMode, view, disp, selected, onSelect }: SceneProp
   // selected 变化 → 只改高亮, 不动盘
   useEffect(() => { apiRef.current?.set(selected); }, [selected]);
 
-  // 盘面高度自适应视口: 矮屏(笔电800px)自动缩, 给盘下方相位网格留首屏空间; 高屏保持520
-  return <div ref={mountRef} className="w-full cursor-grab active:cursor-grabbing h-[min(52vh,520px)]" />;
+  // 俯视: 满高正方形(3D盘为透明层, 与背后相位网格同层 → 方圆相融, 网格四角可见); 侧视: 扁面板
+  return <div ref={mountRef} className={`w-full cursor-grab active:cursor-grabbing ${view === 'side' ? 'h-[min(46vh,460px)]' : 'aspect-square max-h-[min(74vh,680px)]'}`} />;
 }
 
 // ---------- 点击标注卡(纯标注, 无AI) ----------
@@ -698,10 +699,14 @@ function PlanetDetail({ p, chart, zhMode, onClose }: {
 }
 
 // ---------- 对外入口 ----------
-export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect }: {
+export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect, gridSlot, actions }: {
   chart: VChart; zhMode: boolean;
-  /** 受控选中 (ChartResult 侧栏行星列表共用): 不传则内部自管 */
+  /** 受控选中 (相位网格行头共用): 不传则内部自管 */
   selected?: string | null; onSelect?: (name: string | null) => void;
+  /** 圆盘背后的垫层 (相位网格 方圆重叠); 由父级传入避免循环依赖 */
+  gridSlot?: React.ReactNode;
+  /** 头部右侧附加按钮区 (列表/网格切换) */
+  actions?: React.ReactNode;
 }) {
   const { t } = useI18n();
   const [view, setView] = useState<'top' | 'side'>('top');
@@ -711,7 +716,7 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect 
   const selPlanet = selected ? [...chart.planets, chart.angles.ascendant, chart.angles.midheaven].find((p) => p?.name === selected) ?? null : null;
 
   return (
-    <div className="rounded-2xl border border-white/[0.07] bg-black/20 p-2">
+    <div className="relative rounded-2xl border border-white/[0.07] bg-black/20 p-2">
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
         <div className="flex gap-1.5">
           <button
@@ -742,6 +747,7 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect 
             </button>
           ))}
         </div>
+        {actions}
         {selPlanet && (
           <button onClick={() => setSelected(null)} className="text-[10px] tracking-[0.2em] text-muted/70 hover:text-frost">
             {t('astro.view.clear')}
@@ -749,13 +755,33 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect 
         )}
       </div>
 
-      <ChartScene chart={chart} zhMode={zhMode} view={view} disp={chart.settings?.display} selected={selected} onSelect={setSelected} />
+      {/* 方圆相融: 俯视+网格模式时, 网格垫底(圆外清晰可见), 圆盘浮前; 结构恒定防切视图重挂3D */}
+      {gridSlot && view === 'top' ? (
+        <div className="relative mx-auto w-full" style={{ maxWidth: 700 }}>
+          {/* 底: 相位网格 (撑满容器, 与圆盘同框) */}
+          <div className="absolute inset-0 flex items-center justify-center">{gridSlot}</div>
+          {/* 遮罩: 精确压住圆盘本体(半径=容器44%), 圆外网格不受影响 */}
+          <div className="pointer-events-none absolute left-1/2 top-1/2 aspect-square w-[88%] -translate-x-1/2 -translate-y-1/2 rounded-full" style={{ background: 'rgba(6,8,15,0.92)' }} />
+          {/* 前: 圆盘 */}
+          <div className="relative">
+            <ChartScene chart={chart} zhMode={zhMode} view={view} disp={chart.settings?.display} selected={selected} onSelect={setSelected} />
+          </div>
+        </div>
+      ) : (
+        <ChartScene chart={chart} zhMode={zhMode} view={view} disp={chart.settings?.display} selected={selected} onSelect={setSelected} />
+      )}
 
-      <p className="pb-2 text-center text-[10px] tracking-[0.18em] text-muted/55">
-        {view === 'top' ? t('astro.view.hintTop') : t('astro.view.hintSide')}
+      <p className="flex flex-wrap items-center justify-center gap-x-3 pb-2 pt-1 text-center text-[10px] tracking-[0.18em] text-muted/55">
+        {gridSlot && view === 'top' ? <AspectLegend zhMode={zhMode} /> : null}
+        <span>{view === 'top' ? t('astro.view.hintTop') : t('astro.view.hintSide')}</span>
       </p>
 
-      {selPlanet && <PlanetDetail p={selPlanet} chart={chart} zhMode={zhMode} onClose={() => setSelected(null)} />}
+      {/* 点击标注: 宽屏浮动在盘旁小窗, 窄屏退回盘下 */}
+      {selPlanet && (
+        <div className="mt-3 lg:absolute lg:right-3 lg:top-14 lg:z-30 lg:mt-0 lg:max-h-[calc(100%-5rem)] lg:w-[280px] lg:overflow-y-auto">
+          <PlanetDetail p={selPlanet} chart={chart} zhMode={zhMode} onClose={() => setSelected(null)} />
+        </div>
+      )}
     </div>
   );
 }

@@ -68,33 +68,38 @@ check(await clickBtn(TXT.koch), `选「${TXT.koch}」`)
 await sleep(1600)
 check(page.url().includes('sys=koch'), `抽屉切宫制生效: ${page.url().match(/sys=[^&]+/)?.[0]}`)
 
-// T7 左列行星行点击 → 盘面联动 (行背景变化 + 详情出现)
-const rowClicked = await page.evaluate(() => {
-  const rows = [...document.querySelectorAll('button')].filter((x) => /宫|—/.test(x.textContent) && x.textContent.length > 6 && x.textContent.length < 40)
-  if (!rows.length) return false
-  rows[0].click(); return true
+// T7 盘顶行星符号点击 → 浮动小窗详情 (含尊贵+接纳判词)
+const symClicked = await page.evaluate(() => {
+  const btns = [...document.querySelectorAll('button')].filter((x) => /^[☉☽☿♀♂♃♄♅♆♇]/.test(x.textContent.trim()) && x.textContent.trim().length <= 3)
+  if (!btns.length) return false
+  btns[0].click(); return true
 })
 await sleep(700)
-check(rowClicked, `点行星列首行`)
+check(symClicked, `点盘顶行星符号`)
 const detailShown = await page.evaluate(() => {
+  // 小窗应是 absolute 浮动窗 (lg+) 且内容含 星座/宫位/尊贵/接纳
   const t = document.body.innerText
-  return /落宫|House|尊贵|Dignity|入庙|失势/.test(t)
+  return /入庙|游走|Peregrine|失势/.test(t) && /接纳|received|互溶|Mutual/i.test(t)
 })
-check(detailShown, `点击后详情/尊贵信息可见`)
+check(detailShown, `弹窗小窗含尊贵+接纳判词 (替代已删星体列/信息不丢)`)
 
-// T8 宫神星式五区分布: 资料卡 / 行星列 / 相位矩阵 / 特征面板 / 黄道状态大表 全部在场
+// T8 新分布: 星图放大+网格垫底重叠 / 特征保留 / 状态大表保留 / 星体列已删
 const zones = await page.evaluate(() => {
   const t = document.body.innerText
+  const grid = document.querySelector('table.border-separate')
+  const wheelBox = grid?.closest('.relative.mx-auto')
   return {
-    birthCard: /出生资料|birth data|GMT ?[+−+-]?\d|回归黄道|tropical/i.test(t),
+    birthLine: /GMT ?[+−+-]?\d|回归黄道|tropical/i.test(t),
     features: /特征|features/i.test(t),
     recep: /互容接纳|mutual|被.*接纳|received/i.test(t),
     statusTable: /黄道状态|ecliptic status/i.test(t),
-    grid: !!document.querySelector('table.border-separate'),
-    wide3col: !!document.querySelector('[class*="lg:grid-cols-[236px"]'),
+    gridUnderWheel: !!wheelBox && !!wheelBox.querySelector('canvas'),
+    legendUnderWheel: /A=入相|A=applying/i.test(t),
+    bodiesPanelGone: !/星体 · 1[0-9]/.test(t),
+    twoCol: !!document.querySelector('[class*="lg:grid-cols-[minmax(0,1fr)_236px]"]'),
   }
 })
-check(Object.values(zones).every(Boolean), `五区齐: ${Object.entries(zones).filter(([, v]) => v).map(([k]) => k).join('/')}`)
+check(Object.values(zones).every(Boolean), `新分布齐: ${Object.entries(zones).filter(([, v]) => v).map(([k]) => k).join('/')}`)
 
 await b.close()
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败`)

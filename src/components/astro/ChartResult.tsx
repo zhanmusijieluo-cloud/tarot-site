@@ -120,69 +120,47 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
         </div>
       )}
 
-      {/* 三栏: 左行星列+网格 | 中盘 | 右特征 */}
-      <div className="grid items-start gap-4 lg:grid-cols-[236px_minmax(0,1fr)_236px]">
-        {/* ---- 左列 ---- */}
-        <div className="space-y-4">
-          {/* 出生资料一行小字 (宫神星资料卡压缩: 信息不丢, 不占位) */}
-          <p className="text-[10.5px] leading-relaxed text-muted/60">
-            {info.map((v, i) => <span key={i}>{i > 0 && <span className="mx-1.5 text-muted/30">·</span>}{v}</span>)}
-          </p>
-          <Panel title={`${zhMode ? '星体' : 'Bodies'} · ${rows.length}`}>
-            <div className="max-h-[380px] overflow-y-auto">
-              {rows.map((p) => (
-                <button
-                  key={p.name}
-                  onClick={() => setSelected(selected === p.name ? null : p.name)}
-                  className={`flex w-full items-baseline gap-2 border-b border-white/[0.04] px-3 py-[6px] text-left text-[12px] transition-colors last:border-0 ${
-                    selected === p.name ? 'bg-accent/[0.09]' : 'hover:bg-white/[0.03]'
-                  }`}
-                >
-                  <span className={`w-[1.9em] shrink-0 text-[13px] ${selected === p.name ? 'text-accent' : 'text-accent/75'}`}>
-                    {p.symbol}{p.retrograde && <sup className="text-[7.5px] text-[#e8a08a]">R</sup>}
-                  </span>
-                  <span className={`w-[3.4em] shrink-0 truncate ${selected === p.name ? 'text-frost' : 'text-frost/85'}`}>{p.zh}</span>
-                  <span className="flex-1 truncate text-muted">{sz(p.sign)} {dms(p.degInSign)}</span>
-                  <span className="w-[2.1em] shrink-0 text-right text-[11.5px] text-muted/80">{p.house ? `${p.house}宫` : '—'}</span>
-                </button>
-              ))}
-            </div>
-          </Panel>
+      {/* 出生资料一行小字 (占整行, 不进网格占格) */}
+      <p className="text-center text-[10.5px] leading-relaxed text-muted/60">
+        {info.map((v, i) => <span key={i}>{i > 0 && <span className="mx-1.5 text-muted/30">·</span>}{v}</span>)}
+      </p>
 
-        </div>
-
-        {/* ---- 中央: 星盘 ---- */}
-        <div className="min-w-0 space-y-4">
-          <ChartWheel chart={chart} zhMode={zhMode} selected={selected} onSelect={setSelected} />
-          {/* 相位网格 (爸爸指定: 星盘正下方, 首屏不滚就看见) */}
-          <Panel title={t('astro.res.aspects')}>
-            <div className="flex gap-1 border-b border-white/[0.05] px-2.5 py-2 text-[10.5px]">
-              {(['list', 'grid'] as const).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setAspectMode(m)}
-                  className={`rounded-full px-2.5 py-0.5 tracking-[0.12em] transition-colors ${aspectMode === m ? 'bg-accent/[0.12] text-accent' : 'text-muted hover:text-frost'}`}
-                >
-                  {m === 'list' ? t('astro.res.modeList') : t('astro.res.modeGrid')}
-                </button>
-              ))}
-            </div>
-            {aspectMode === 'grid' ? (
-              <div className="p-2">
-                <AspectGrid chart={chart} zhMode={zhMode} selected={selected} onPick={setSelected} bare />
-              </div>
-            ) : (
-              <div className="max-h-[420px] space-y-1 overflow-y-auto px-2.5 py-2.5">
-                {[...chart.aspects].sort((x, y) => x.orb - y.orb).map((a, i) => (
-                  <p key={i} className="text-[11.5px] leading-snug text-muted">
-                    {a.symbol} {zhMode ? `${zhOf(a.a)}–${zhOf(a.b)}` : `${a.a}–${a.b}`}{' '}
-                    <span className="text-accent/70">{a.orb.toFixed(1)}°</span>
-                    {a.applying === true && <span className="ml-0.5 text-[#8aa8d8]">→</span>}
-                  </p>
+      {/* 两栏: 星图(网格垫底,放大) | 特征 */}
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_236px]">
+        {/* ---- 中央: 星图板块 (俯视时相位网格垫在盘底, 方圆相融; 整块放大) ---- */}
+        <div className="min-w-0">
+          <ChartWheel
+            chart={chart} zhMode={zhMode} selected={selected} onSelect={setSelected}
+            actions={(
+              <div className="flex overflow-hidden rounded-full border border-white/[0.1] text-[10.5px]">
+                {(['list', 'grid'] as const).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setAspectMode(m)}
+                    className={`px-3 py-1 tracking-[0.12em] transition-colors ${aspectMode === m ? 'bg-accent/[0.12] text-accent' : 'text-muted hover:text-frost'}`}
+                  >
+                    {m === 'list' ? t('astro.res.modeList') : t('astro.res.modeGrid')}
+                  </button>
                 ))}
               </div>
             )}
-          </Panel>
+            gridSlot={aspectMode === 'grid' ? (() => {
+              const gcols = Math.min(chart.planets.length, 14)
+              const gcell = Math.max(30, Math.floor(600 / gcols) - 2)
+              return <AspectGrid chart={chart} zhMode={zhMode} selected={selected} onPick={setSelected} bare cellPx={gcell} hideLegend />
+            })() : undefined}
+          />
+          {aspectMode === 'list' && (
+            <div className="mt-3 grid max-h-[300px] grid-cols-2 gap-x-6 gap-y-1 overflow-y-auto rounded-2xl border border-white/[0.07] bg-black/20 px-4 py-3 lg:grid-cols-3">
+              {[...chart.aspects].sort((x, y) => x.orb - y.orb).map((a2, i) => (
+                <p key={i} className="truncate text-[11.5px] leading-snug text-muted">
+                  {a2.symbol} {zhMode ? `${zhOf(a2.a)}–${zhOf(a2.b)}` : `${a2.a}–${a2.b}`}{' '}
+                  <span className="text-accent/70">{a2.orb.toFixed(1)}°</span>
+                  {a2.applying === true && <span className="ml-0.5 text-[#8aa8d8]">→</span>}
+                </p>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* ---- 右侧: 特征 (宫神星同款: 落座/尊贵/接纳/互容 判词全在这一张卡) ---- */}
