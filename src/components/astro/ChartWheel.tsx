@@ -146,11 +146,13 @@ interface SceneProps {
     dir?: 'ccw' | 'cw'; ascPos?: 'left' | 'top';
     aspects?: boolean; feet?: boolean; nums?: boolean; ticks?: boolean;
   };
+  /** 弹窗占位时收窄盘面 */
+  narrow?: boolean;
   selected: string | null;
   onSelect: (name: string | null) => void;
 }
 
-function ChartScene({ chart, zhMode, view, disp, selected, onSelect }: SceneProps) {
+function ChartScene({ chart, zhMode, view, disp, narrow, selected, onSelect }: SceneProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<{ set: (n: string | null) => void } | null>(null);
 
@@ -578,13 +580,18 @@ function ChartScene({ chart, zhMode, view, disp, selected, onSelect }: SceneProp
 
     const onResize = () => {
       const w = mount.clientWidth, h = mount.clientHeight;
+      if (!w || !h) return;
       camera.aspect = w / h; camera.updateProjectionMatrix();
       renderer.setSize(w, h);
     };
     window.addEventListener('resize', onResize);
+    // 容器自身宽度变化 (弹窗开合让位/抽屉收展) 也要重设画布
+    const ro = new ResizeObserver(onResize);
+    ro.observe(mount);
 
     return () => {
       cancelAnimationFrame(raf);
+      ro.disconnect();
       window.removeEventListener('resize', onResize);
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
@@ -602,7 +609,8 @@ function ChartScene({ chart, zhMode, view, disp, selected, onSelect }: SceneProp
   useEffect(() => { apiRef.current?.set(selected); }, [selected]);
 
   // 俯视: 满高正方形(3D盘为透明层, 与背后相位网格同层 → 方圆相融, 网格四角可见); 侧视: 扁面板
-  return <div ref={mountRef} className={`w-full cursor-grab active:cursor-grabbing ${view === 'side' ? 'h-[min(46vh,460px)]' : 'h-[min(78vh,760px)]'}`} />;
+  // 俯视满高; 弹窗打开时 (narrow 由父级传入) 盘收窄左移给小窗让位, 互不遮挡
+  return <div ref={mountRef} style={narrow ? { width: 'calc(100% - 296px)' } : undefined} className={`cursor-grab active:cursor-grabbing transition-[width] duration-300 ${view === 'side' ? 'h-[min(46vh,460px)]' : 'h-[min(78vh,760px)]'}`} />;
 }
 
 // ---------- 点击标注卡(纯标注, 无AI) ----------
@@ -615,7 +623,7 @@ function PlanetDetail({ p, chart, zhMode, onClose }: {
   const signZh = (s: string) => SIGNS_ZH_MINI[s] ?? s;
 
   return (
-    <div className="mt-3 rounded-2xl border border-white/[0.09] bg-white/[0.03] p-5" style={{ animation: 'rise-in 0.35s cubic-bezier(0.16,1,0.3,1)' }}>
+    <div className="mt-3 rounded-2xl border border-white/[0.12] bg-[#0c101c]/[0.97] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.55)] backdrop-blur-md" style={{ animation: 'rise-in 0.35s cubic-bezier(0.16,1,0.3,1)' }}>
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           <span className="text-3xl text-accent">{p.symbol}</span>
@@ -764,11 +772,11 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
           <div className="pointer-events-none absolute left-1/2 top-1/2 aspect-square w-[88%] -translate-x-1/2 -translate-y-1/2 rounded-full" style={{ background: 'rgba(6,8,15,0.92)' }} />
           {/* 前: 圆盘 */}
           <div className="relative">
-            <ChartScene chart={chart} zhMode={zhMode} view={view} disp={chart.settings?.display} selected={selected} onSelect={setSelected} />
+            <ChartScene chart={chart} zhMode={zhMode} view={view} disp={chart.settings?.display} narrow={!!selPlanet} selected={selected} onSelect={setSelected} />
           </div>
         </div>
       ) : (
-        <ChartScene chart={chart} zhMode={zhMode} view={view} disp={chart.settings?.display} selected={selected} onSelect={setSelected} />
+        <ChartScene chart={chart} zhMode={zhMode} view={view} disp={chart.settings?.display} narrow={!!selPlanet} selected={selected} onSelect={setSelected} />
       )}
 
       <p className="flex flex-wrap items-center justify-center gap-x-3 pb-2 pt-1 text-center text-[10px] tracking-[0.18em] text-muted/55">

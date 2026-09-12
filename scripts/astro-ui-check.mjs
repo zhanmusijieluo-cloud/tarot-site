@@ -55,6 +55,30 @@ await page.reload({ waitUntil: 'networkidle0' })
 await sleep(900)
 check((await tablesOf()) >= 1, `刷新后仍网格 (ag 已清)`)
 
+// T5b 网格零滚动 + 弹窗不压盘 (爸爸两条硬性反馈的回归锁)
+const gridFit = await page.evaluate(() => {
+  const g = document.querySelector('table.border-separate')
+  const sec = g?.closest('section')
+  if (!g || !sec) return null
+  return { overflowY: sec.scrollHeight - sec.clientHeight, overflowX: Math.round(g.scrollWidth - (g.parentElement?.clientWidth ?? 0)) }
+})
+check(!!gridFit && gridFit.overflowY <= 2 && gridFit.overflowX <= 2, `网格零滚动 (y溢=${gridFit?.overflowY} x溢=${gridFit?.overflowX})`)
+await page.evaluate(() => {
+  const btns = [...document.querySelectorAll('button')].filter((x) => x.textContent.trim().startsWith('☉') && x.textContent.trim().length <= 3)
+  btns[btns.length - 1]?.click()
+})
+await sleep(1100)
+const noOccl = await page.evaluate(() => {
+  const cv = document.querySelector('.cursor-grab canvas')
+  const pop = [...document.querySelectorAll('div')].find((d) => d.className.toString().includes('lg:right-3'))
+  const a = cv?.getBoundingClientRect(), q = pop?.getBoundingClientRect()
+  if (!a || !q) return -1
+  return Math.max(0, Math.min(a.right, q.right) - Math.max(a.left, q.left))
+})
+check(noOccl === 0, `弹窗与圆盘零重叠 (让位生效, 重叠=${noOccl}px)`)
+await page.evaluate(() => { document.querySelector('[class*="lg:right-3"] button')?.click() }) // 关窗
+await sleep(600)
+
 // T6 设置抽屉: 打开 → 五分区 → 宫制Tab切科赫 → URL sys 变
 check(await clickBtn(TXT.settings), `点击「${TXT.settings}」`)
 await sleep(500)
