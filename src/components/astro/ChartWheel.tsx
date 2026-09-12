@@ -224,12 +224,20 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       for (let s = 0; s < 12; s++) {
         const geo = track(new THREE.RingGeometry(R_BAND, R_OUT, 24, 1, a1(s), 30 * DEG));
         const el = ELEMENT_OF_SIGN[SIGN_ORDER[s]];
+        // D·墨盘金弧: 扇区统一墨蓝近黑, 元素性格交给外缘彩弧+符号色
         const mat = track(new THREE.MeshBasicMaterial({
-          color: ELEMENT_COLOR[el], transparent: true, opacity: 0.22, side: THREE.DoubleSide, depthWrite: false,
+          color: 0x121828, transparent: true, opacity: 0.62, side: THREE.DoubleSide, depthWrite: false,
         }));
         const m = new THREE.Mesh(geo, mat);
         m.rotation.x = -Math.PI / 2;
-        m.userData = { signSlice: s, baseOpacity: 0.22 };
+        m.userData = { signSlice: s, baseOpacity: 0.62 };
+        // 元素彩弧: 嵌在环带内上缘 (不占刻度区, 不与针脚打架)
+        const arc = new THREE.Mesh(
+          track(new THREE.RingGeometry(R_OUT - 0.13, R_OUT - 0.03, 20, 1, a1(s) + 0.012, 30 * DEG - 0.024)),
+          track(new THREE.MeshBasicMaterial({ color: ELEMENT_COLOR[el], transparent: true, opacity: 0.72, side: THREE.DoubleSide, depthWrite: false })),
+        );
+        arc.rotation.x = -Math.PI / 2;
+        root.add(arc);
         root.add(m);
         houseSlices.push(m);
         // 符号: 元素色 + 微光, 大尺寸
