@@ -623,9 +623,9 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
         po.group.scale.setScalar(po.cScale)
         const mm = po.mesh.material as THREE.MeshPhongMaterial
         if (mm.emissiveIntensity !== undefined) mm.emissiveIntensity = po.cEmi
-        const baseCol = (mm.userData as { baseColor?: THREE.Color }).baseColor ?? mm.color
-        ;(mm.userData as { baseColor?: THREE.Color }).baseColor = baseCol
-        mm.color.copy(baseCol).multiplyScalar(po.cDim) // 球体本体随 dim 压暗 (保基色)
+        const mUd = mm.userData as { baseColor?: THREE.Color }
+        if (!mUd.baseColor) mUd.baseColor = mm.color.clone() // 必须 clone: 存引用会逐帧自乘衰减→漆黑 (爸爸抓到的bug)
+        mm.color.copy(mUd.baseColor).multiplyScalar(po.cDim) // 球体本体随 dim 压暗 (每帧从基色重算, 不叠加)
         po.group.traverse((o) => {
           const sp = o as THREE.Sprite
           if (sp.isSprite) {
