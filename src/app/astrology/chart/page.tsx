@@ -99,17 +99,8 @@ function ChartPageInner() {
       compact
     >
       <section className="mb-10 mt-4">
-        {/* 身份一行 (学宫神星资料卡压缩版): 档案名 · 生辰 · 地点 · 宫制(点开设置) · ⚙ */}
-        <div className="mb-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11.5px] text-muted">
-          {birth.label && <span className="font-display text-[13px] tracking-[0.1em] text-accent">{birth.label}</span>}
-          {birth.label && <span className="text-muted/30">·</span>}
-          <span>
-            {birth.year}-{birth.month}-{birth.day}{' '}
-            {birth.timeKnown === false ? t('astro.res.noTime') : `${String(birth.hour).padStart(2, '0')}:${String(birth.minute ?? 0).padStart(2, '0')}`}
-          </span>
-          <span className="text-muted/30">·</span>
-          <span>{birth.cnCode ? birth.cnCode.split('~').join(' ') : birth.city ?? ''}</span>
-          <span className="text-muted/30">·</span>
+        {/* 控制行: 身份资料已嵌入盘内左上角卡片, 顶行只留操作件 (宫制切换入口 + 设置) */}
+        <div className="mb-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11.5px] text-muted">
           <button
             onClick={() => openSettings('houses')}
             className="rounded-full border border-white/[0.12] px-2.5 py-0.5 text-[10.5px] text-frost/75 transition-colors hover:border-accent/40 hover:text-accent"

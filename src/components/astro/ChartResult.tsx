@@ -128,27 +128,26 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
         </div>
       )}
 
-      {/* 出生资料卡 (宫神星左上款: 盘名+逐行键值) */}
-      <div className="mx-auto mb-1 w-fit min-w-[280px] rounded-2xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 lg:mx-0">
-        <p className="mb-1.5 flex items-baseline gap-2">
-          <span className="font-display text-[15px] tracking-[0.12em] text-accent">{chart.input.label || (zhMode ? '本命盘' : 'Natal Chart')}</span>
-          <span className="text-[10px] tracking-[0.2em] text-muted/60 uppercase">{zhMode ? '本命图' : 'Natal'}</span>
-        </p>
-        <dl className="space-y-[3px]">
-          {infoRows.map(([k, v]) => (
-            <div key={k} className="flex items-baseline gap-3 text-[12px]">
-              <dt className="w-[3.6em] shrink-0 text-[10.5px] tracking-[0.08em] text-muted/70">{k}</dt>
-              <dd className="text-frost/90">{v}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-
       {/* 两栏: 星盘(主区) | 特征 */}
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_236px]">
         {/* ---- 中央: 星盘主区 ---- */}
         <div className="min-w-0">
-          <ChartWheel chart={chart} zhMode={zhMode} selected={selected} onSelect={setSelected} />
+          <ChartWheel chart={chart} zhMode={zhMode} selected={selected} onSelect={setSelected} cornerSlot={
+      <div className="pointer-events-auto w-[248px] rounded-2xl border border-white/[0.1] bg-[#0a0e19]/90 px-3.5 py-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.45)] backdrop-blur-sm">
+        <p className="mb-1 flex items-baseline gap-2">
+          <span className="font-display text-[14px] tracking-[0.12em] text-accent">{chart.input.label || (zhMode ? '本命盘' : 'Natal Chart')}</span>
+          <span className="text-[9px] tracking-[0.2em] text-muted/60 uppercase">{zhMode ? '本命图' : 'Natal'}</span>
+        </p>
+        <dl className="space-y-[2px]">
+          {infoRows.map(([k, v]) => (
+            <div key={k} className="flex items-baseline gap-2.5 text-[11.5px] leading-snug">
+              <dt className="w-[3.2em] shrink-0 text-[10px] tracking-[0.08em] text-muted/70">{k}</dt>
+              <dd className="truncate text-frost/90">{v}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+          } />
         </div>
 
         {/* ---- 右侧: 特征 (宫神星同款: 落座/尊贵/接纳/互容 判词全在这一张卡) ---- */}

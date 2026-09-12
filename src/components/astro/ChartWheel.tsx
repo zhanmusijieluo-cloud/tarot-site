@@ -722,12 +722,14 @@ function PlanetDetail({ p, chart, zhMode, onClose }: {
 }
 
 // ---------- 对外入口 ----------
-export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect, gridSlot, actions }: {
+export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect, gridSlot, cornerSlot, actions }: {
   chart: VChart; zhMode: boolean;
   /** 受控选中 (相位网格行头共用): 不传则内部自管 */
   selected?: string | null; onSelect?: (name: string | null) => void;
   /** 圆盘背后的垫层 (相位网格 方圆重叠); 由父级传入避免循环依赖 */
   gridSlot?: React.ReactNode;
+  /** 盘框左上角内嵌槽 (圆外空隙, 放出生资料卡) */
+  cornerSlot?: React.ReactNode;
   /** 头部右侧附加按钮区 (列表/网格切换) */
   actions?: React.ReactNode;
 }) {
@@ -785,6 +787,11 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
           </button>
         )}
       </div>
+
+      {/* 左上角内嵌: 盘框圆外空隙放资料卡 (与右侧弹窗对称) */}
+      {cornerSlot && (
+        <div className="pointer-events-none absolute left-3 top-14 z-[6] hidden lg:block">{cornerSlot}</div>
+      )}
 
       {/* 方圆相融: 俯视+网格模式时, 网格垫底(圆外清晰可见), 圆盘浮前; 结构恒定防切视图重挂3D */}
       {gridSlot && view === 'top' ? (
