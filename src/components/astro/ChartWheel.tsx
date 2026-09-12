@@ -182,7 +182,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
     camera.position.set(0, 10.6, 3.1);
     camera.lookAt(0, 0, 0);
-    let viewHalfH = 5.9; // 默认视高半径(世界单位), resize 时按画布比例算
+    let viewHalfH = 5.72; // 默认视高半径(世界单位), resize 时按画布比例算
 
     const root = new THREE.Group();
     root.rotation.order = 'YXZ';
@@ -229,25 +229,28 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
         const el = ELEMENT_OF_SIGN[SIGN_ORDER[s]];
         // D·墨盘金弧: 扇区统一墨蓝近黑, 元素性格交给外缘彩弧+符号色
         const mat = track(new THREE.MeshBasicMaterial({
-          color: 0x141b2e, transparent: true, opacity: 0.66, side: THREE.DoubleSide, depthWrite: false,
+          color: 0x1d2848, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false,
         }));
         const m = new THREE.Mesh(geo, mat);
         m.rotation.x = -Math.PI / 2;
-        m.userData = { signSlice: s, baseOpacity: 0.66 };
+        m.userData = { signSlice: s, baseOpacity: 0.9 };
         // 元素彩弧: 嵌在环带内上缘 (不占刻度区, 不与针脚打架)
         const arc = new THREE.Mesh(
-          track(new THREE.RingGeometry(R_OUT - 0.13, R_OUT - 0.03, 20, 1, a1(s) + 0.026, 30 * DEG - 0.052)),
-          track(new THREE.MeshBasicMaterial({ color: ELEMENT_COLOR[el], transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false })),
+          track(new THREE.RingGeometry(R_OUT - 0.17, R_OUT - 0.025, 20, 1, a1(s) + 0.026, 30 * DEG - 0.052)),
+          track(new THREE.MeshBasicMaterial({ color: ELEMENT_COLOR[el], transparent: true, opacity: 0.95, side: THREE.DoubleSide, depthWrite: false })),
         );
         arc.rotation.x = -Math.PI / 2;
+        // 扇区/彩弧/符号共面 → 必须钉死绘制顺序, 否则倾斜视角下上半弧被扇区盖住(上暗下亮的真凶)
+        m.renderOrder = 1; arc.renderOrder = 2;
         root.add(arc);
         root.add(m);
         houseSlices.push(m);
         // 符号: 元素色 + 微光, 大尺寸
-        const gt = track(textTexture(SIGN_GLYPH[s], 96, ELEMENT_HEX[el], 16));
+        const gt = track(textTexture(SIGN_GLYPH[s], 120, '#f2f5ff', 26));
         const gs = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: gt, transparent: true, opacity: 0.95, depthWrite: false })));
         gs.position.copy(polar((R_BAND + R_OUT) / 2, la(s * 30 + 15)));
-        gs.scale.set(0.66, 0.66, 1);
+        gs.scale.set(1.0, 1.0, 1); // 符号加大 (爸爸: 太浅太小)
+        gs.renderOrder = 3
         root.add(gs);
       }
     }
@@ -259,11 +262,11 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
         const geo = track(new THREE.RingGeometry(R_SIGN, R_BAND - 0.03, 40, 1, a0, span * DEG));
         const el = ELEMENT_OF_SIGN[SIGN_ORDER[Math.floor(c0 / 30) % 12]] ?? '风';
         const mat = track(new THREE.MeshBasicMaterial({
-          color: ELEMENT_COLOR[el], transparent: true, opacity: 0.07, side: THREE.DoubleSide, depthWrite: false,
+          color: ELEMENT_COLOR[el], transparent: true, opacity: 0.13, side: THREE.DoubleSide, depthWrite: false,
         }));
         const m = new THREE.Mesh(geo, mat);
         m.rotation.x = -Math.PI / 2;
-        m.userData = { houseSlice: h + 1, baseOpacity: 0.07 };
+        m.userData = { houseSlice: h + 1, baseOpacity: 0.13 };
         root.add(m);
         houseSlices.push(m);
         // 宫头线: 细面片绘制 (WebGL 下 linewidth 无效, 用 quad 才拉得开粗细档)
@@ -283,10 +286,11 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
         // 宫号 (宫位带扇区中点, 角点金色; 图层开关 nums)
         if (disp?.nums !== false) {
           const amid = a0 + (span * DEG) / 2;
-          const tex = track(textTexture(String(h + 1), 60, isAcs ? '#f8eecb' : '#e2eaf9', 6));
-          const spr = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.95, depthWrite: false })));
+          const tex = track(textTexture(String(h + 1), 92, isAcs ? '#fff6d8' : '#f4f8ff', 14));
+          const spr = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 1, depthWrite: false })));
           spr.position.copy(polar((R_SIGN + R_BAND) / 2, amid));
-          spr.scale.set(0.4, 0.4, 1);
+          spr.scale.set(0.9, 0.9, 1);
+          spr.renderOrder = 5;
           root.add(spr);
         }
       }
@@ -294,12 +298,12 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       const ascA = la(norm360(cusps[0]));
       const mcA = la(norm360(cusps[9]));
       for (const [txt, ang, big] of [['ASC', ascA, 1.15], ['MC', mcA, 1.0]] as const) {
-        const tex = track(textTexture(txt, 40, '#e3d3a3'));
+        const tex = track(textTexture(txt, 88, '#ffe9b8', 14));
         const spr = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.95, depthWrite: false })));
-        const p = polar(R_OUT + 0.34, ang);
+        const p = polar(R_OUT + 0.26, ang);
         p.y = 0.26 * (big - 1);
         spr.position.copy(p);
-        spr.scale.set(0.62 * big, 0.24 * big, 1);
+        spr.scale.set(1.6 * big, 0.56 * big, 1);
         root.add(spr);
       }
     } else {
@@ -357,7 +361,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
           groups.pop();
         }
       }
-      const OFFSETS = [0, -0.5, 0.42, -0.95, 0.8, -1.35, 1.15]; // 先内后外; 最外沿 2.68+1.15+球0.3<3.98 不蹭星座带
+      const OFFSETS = [0, -0.5, 0.42, -0.95, 0.8, -1.35, 1.0]; // 先内后外; 下面还有一道按球径夹紧
       const radiusOf = new Map<string, number>();
       for (const g of groups) {
         g.forEach((idx, k) => radiusOf.set(items[idx].p.name, R_PLAN + (OFFSETS[k % OFFSETS.length] ?? (k % 2 ? -1.6 : 1.25))));
@@ -366,7 +370,9 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       for (const it of items) {
         const p = it.p;
         const kind = p.kind ?? 'planet';
-        const r = radiusOf.get(p.name) ?? R_PLAN;
+        // 夹紧: 球缘(含选中放大档)绝不越过宫位带内缘; 内侧也不怼盘心
+        const brForClamp = (kind === 'asteroid' ? (BODY_R[p.name] ?? 0.14) * 0.55 : BODY_R[p.name] ?? 0.14)
+        const r = Math.max(1.15, Math.min(radiusOf.get(p.name) ?? R_PLAN, R_BAND - 0.10 - brForClamp * 1.30));
         const pos = polar(r, it.a);
         const g = new THREE.Group();
         g.position.copy(pos);
@@ -411,7 +417,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
             const gs = new THREE.Sprite(track(new THREE.SpriteMaterial({
               map: gt, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending,
             })));
-            gs.scale.set(br * 5.2, br * 5.2, 1);
+            gs.scale.set(br * 2.9, br * 2.9, 1);
             g.add(gs);
             sunLight.position.copy(pos);
             root.add(sunLight);
@@ -637,7 +643,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       const w = mm.clientWidth, h = mm.clientHeight
       if (!w || !h) return
       const halfH = viewHalfH / orthoC
-      const halfW = Math.max(halfH * (w / h), 6.4 / orthoC) // 盘半径5.3+刻度标签, 高不足则加宽
+      const halfW = Math.max(halfH * (w / h), 6.15 / orthoC) // 容ASC横探(5.26+0.8)
       camera.left = -halfW; camera.right = halfW; camera.top = halfH; camera.bottom = -halfH
       camera.updateProjectionMatrix()
     }
@@ -673,7 +679,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
 
   // 俯视: 满高正方形(3D盘为透明层, 与背后相位网格同层 → 方圆相融, 网格四角可见); 侧视: 扁面板
   // 固定大小: 弹窗不再挤压盘面 (A方案定稿)
-  return <div ref={mountRef} className={`w-full cursor-grab active:cursor-grabbing ${view === 'side' ? 'h-[min(46vh,460px)]' : 'h-[min(78vh,760px)]'}`} />;
+  return <div ref={mountRef} className={`w-full cursor-grab active:cursor-grabbing ${view === 'side' ? 'h-[min(46vh,460px)]' : 'h-[min(84vh,880px)]'}`} />;
 }
 
 // ---------- 点击标注卡(纯标注, 无AI) ----------
