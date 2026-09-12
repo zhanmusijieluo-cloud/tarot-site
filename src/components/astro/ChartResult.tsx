@@ -16,13 +16,11 @@ const SIGNS_ZH_MINI: Record<string, string> = {
   Libra: '天秤', Scorpio: '天蝎', Scorpius: '天蝎', Sagittarius: '射手', Capricorn: '摩羯',
   Capricornus: '摩羯', Aquarius: '水瓶', Pisces: '双鱼',
 };
-const PLANET_ZH_MINI: Record<string, string> = {
-  Sun: '太阳', Moon: '月亮', Mercury: '水星', Venus: '金星', Mars: '火星',
-  Jupiter: '木星', Saturn: '土星', Uranus: '天王星', Neptune: '海王星', Pluto: '冥王星',
-};
 
 export default function ChartResult({ chart, zhMode }: { chart: VChart; zhMode: boolean }) {
   const { t } = useI18n();
+  // 天体中文名: 直接查引擎返回的 planets (含小行星/虚点), 不再用硬编码小表
+  const zhOf = (name: string) => chart.planets.find((p) => p.name === name)?.zh ?? name;
   // 接纳一览归并: 互溶对只列一次
   const recepLines: string[] = [];
   {
@@ -36,11 +34,11 @@ export default function ChartResult({ chart, zhMode }: { chart: VChart; zhMode: 
       if (r.mutual) {
         const rev = chart.receptions.find((x) => x.a === r.b && x.b === r.a);
         recepLines.push(zhMode
-          ? `⇄ ${PLANET_ZH_MINI[r.a] ?? r.a} 与 ${PLANET_ZH_MINI[r.b] ?? r.b} 互溶（互居对方${kind}之座 · ${sz(r.bySign)}/${sz(rev?.bySign ?? '')}）`
+          ? `⇄ ${zhOf(r.a)} 与 ${zhOf(r.b)} 互溶（互居对方${kind}之座 · ${sz(r.bySign)}/${sz(rev?.bySign ?? '')}）`
           : `⇄ ${r.a} ↔ ${r.b} mutual reception`);
       } else {
         recepLines.push(zhMode
-          ? `↦ ${PLANET_ZH_MINI[r.b] ?? r.b} 接纳 ${PLANET_ZH_MINI[r.a] ?? r.a}（居其${kind} · ${sz(r.bySign)}）`
+          ? `↦ ${zhOf(r.b)} 接纳 ${zhOf(r.a)}（居其${kind} · ${sz(r.bySign)}）`
           : `↦ ${r.a} received by ${r.b} (${r.kind} · ${sz(r.bySign)})`);
       }
     }
@@ -135,7 +133,7 @@ export default function ChartResult({ chart, zhMode }: { chart: VChart; zhMode: 
         <div className="flex flex-wrap gap-2">
           {[...chart.aspects].sort((x, y) => x.orb - y.orb).slice(0, 14).map((a, i) => (
             <span key={i} className="rounded-full border border-white/[0.08] bg-white/[0.02] px-3 py-1.5 text-[11px] text-muted">
-              {a.symbol} {zhMode ? `${PLANET_ZH_MINI[a.a] ?? a.a}–${PLANET_ZH_MINI[a.b] ?? a.b}` : `${a.a}–${a.b}`}{' '}
+              {a.symbol} {zhMode ? `${zhOf(a.a)}–${zhOf(a.b)}` : `${a.a}–${a.b}`}{' '}
               <span className="text-accent/70">{a.orb.toFixed(1)}°</span>
               {a.applying === true && <span className="ml-1 text-[#8aa8d8]">→</span>}
             </span>

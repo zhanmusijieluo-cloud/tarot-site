@@ -37,6 +37,7 @@ export interface ChartPlanet {
   name: string       // 英文, 如 'Sun'
   zh: string         // 中文, 如 '太阳'
   symbol: string     // '☉'
+  kind: 'planet' | 'asteroid' | 'point'  // 分层渲染依据: 星球/小行星/虚点符号
   longitude: number  // 黄经 0-360
   eclLat: number     // 黄纬(度) — 3D 侧视悬浮高度
   sign: string       // 星座英文 'Leo'
@@ -51,15 +52,27 @@ export interface ChartPlanet {
 
 export interface ChartAspect {
   a: string; b: string
-  type: string      // conjunction|sextile|square|trine|opposition
+  type: string      // conjunction|sextile|square|trine|opposition|+minor
   typeZh: string
   symbol: string
   orb: number       // 偏离整相位的度数(越小越紧)
   applying: boolean | null
 }
 
+// ---------- 排盘设置 (设置面板 → URL → API → 引擎) ----------
+export type BodyGroup = 'asteroids' | 'chiron' | 'nodes' | 'lots' | 'lilith'
+export interface CastSettings {
+  /** 天体分组开关 (十主星恒含) */
+  bodies?: Partial<Record<BodyGroup, boolean>>
+  /** 参与相位计算/展示的相位类型 (默认五大) */
+  aspectTypes?: string[]
+  /** 各相位容许度覆盖 (度) */
+  orbs?: Record<string, number>
+}
+
 export interface NatalChart {
   input: BirthData
+  settings: CastSettings
   houseSystemUsed: HouseSystem
   timeKnown: boolean
   jd: number
@@ -81,14 +94,29 @@ const PLANET_ZH: Record<string, string> = {
   Sun: '太阳', Moon: '月亮', Mercury: '水星', Venus: '金星', Mars: '火星',
   Jupiter: '木星', Saturn: '土星', Uranus: '天王星', Neptune: '海王星', Pluto: '冥王星',
   Chiron: '凯龙星', Ceres: '谷神星', Pallas: '智神星', Juno: '婚神星', Vesta: '灶神星',
-  'North Node': '北交点', 'South Node': '南交点', Ascendant: '上升', Midheaven: '中天',
-  'Part of Fortune': '福点',
+  'North Node': '北交点', 'South Node': '南交点', 'True North Node': '真北交点', 'True South Node': '真南交点',
+  'Mean North Node': '平北交点', 'Mean South Node': '平南交点',
+  'Mean Lilith': '平均莉莉丝', 'True Lilith': '真莉莉丝',
+  'Part of Fortune': '福点', 'Part of Spirit': '精神点', Vertex: '宿命点',
+  Ascendant: '上升', Midheaven: '中天',
 }
 const PLANET_SYMBOL: Record<string, string> = {
   Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀', Mars: '♂', Jupiter: '♃',
   Saturn: '♄', Uranus: '♅', Neptune: '♆', Pluto: '♇', Chiron: '⚷',
   Ceres: '⚳', Pallas: '⚴', Juno: '⚵', Vesta: '⚶',
-  'North Node': '☊', 'South Node': '☋', Ascendant: 'ASC', Midheaven: 'MC',
+  'North Node': '☊', 'South Node': '☋', 'True North Node': '☊', 'True South Node': '☋',
+  'Mean North Node': '☊', 'Mean South Node': '☋',
+  'Mean Lilith': '⚸', 'True Lilith': '⚸', 'Part of Fortune': '⊕', 'Part of Spirit': '⊖',
+  Vertex: '⎈', Ascendant: 'ASC', Midheaven: 'MC',
+}
+// 分层: 渲染时行星=星球实体, 小行星=小球, 虚点=纯符号
+const BODY_KIND: Record<string, 'planet' | 'asteroid' | 'point'> = {
+  Ceres: 'asteroid', Pallas: 'asteroid', Juno: 'asteroid', Vesta: 'asteroid',
+  Chiron: 'point', 'North Node': 'point', 'South Node': 'point',
+  'True North Node': 'point', 'True South Node': 'point',
+  'Mean North Node': 'point', 'Mean South Node': 'point',
+  'Mean Lilith': 'point', 'True Lilith': 'point',
+  'Part of Fortune': 'point', 'Part of Spirit': 'point', Vertex: 'point',
 }
 const ASPECT_ZH: Record<string, string> = {
   conjunction: '合', sextile: '六合', square: '刑', trine: '拱', opposition: '冲',
@@ -108,12 +136,8 @@ const FALL_SIGN: Record<string, string> = {
   Mars: 'Cancer', Jupiter: 'Capricorn', Saturn: 'Aries',
   Uranus: '', Neptune: '', Pluto: '',
 }
-// 客户主盘十星(不含小行星); 小行星留骨架二期按需开
-const CORE_BODIES = [
-  'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
-  'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto',
-]
-const HIGH_LAT = 66.5 // 高纬 Placidus 数学不收敛区
+// 高纬 Placidus 数学不收敛区
+const HIGH_LAT = 66.5
 
 const norm = (d: number) => ((d % 360) + 360) % 360
 const toPct = (x: number) => Math.round(x * 100) / 100
@@ -184,6 +208,7 @@ function bodyToPlanet(
     name: raw.name,
     zh: PLANET_ZH[raw.name] ?? raw.name,
     symbol: PLANET_SYMBOL[raw.name] ?? raw.name,
+    kind: BODY_KIND[raw.name] ?? 'planet',
     longitude: toPct(norm(raw.longitude)),
     eclLat: toPct(raw.latitude ?? 0),
     sign: raw.signName,
@@ -198,7 +223,7 @@ function bodyToPlanet(
 }
 
 // ---------- 主入口: 排盘 ----------
-export function castNatalChart(birth: BirthData): NatalChart {
+export function castNatalChart(birth: BirthData, settings: CastSettings = {}): NatalChart {
   const warnings: string[] = []
   const timeKnown = birth.timeKnown !== false
   let system: HouseSystem = birth.houseSystem ?? 'placidus'
@@ -214,7 +239,8 @@ export function castNatalChart(birth: BirthData): NatalChart {
     warnings.push('未提供出生时间: 上升与宫位不可算, 月亮位置为当地正午近似(误差可达±6°)')
   }
 
-  // 未知时间 → 当地正午 12:00; 客户主盘只算十星, 小行星/虚点留二期
+  // 天体分组开关 (默认只开十主星, 与旧行为一致)
+  const B = settings.bodies ?? {}
   const c = calculateChart(
     {
       year: birth.year, month: birth.month, day: birth.day,
@@ -226,27 +252,41 @@ export function castNatalChart(birth: BirthData): NatalChart {
     },
     {
       houseSystem: system,
-      includeAsteroids: false, includeChiron: false,
-      includeNodes: false, includeLots: false, includeLilith: false,
+      includeAsteroids: !!B.asteroids, includeChiron: !!B.chiron,
+      includeNodes: B.nodes ? 'true' : false,
+      includeLots: !!B.lots, includeLilith: B.lilith ? 'mean' : false,
     },
   )
 
   const planets = c.planets
-    .filter((p: { name: string }) => CORE_BODIES.includes(p.name))
     .map((p: Parameters<typeof bodyToPlanet>[0]) => bodyToPlanet(p, timeKnown))
+  // 虚点合并: 交点/莉莉丝/福精点 (结构同行星, 无速度/尊贵)
+  const extra: ChartPlanet[] = []
+  for (const n of (c.nodes ?? []) as { name: string; type?: string; longitude: number; signName: string; degree: number; minute: number; formatted: string; house?: number }[]) {
+    const nm = n.type === 'Mean' ? `Mean ${n.name}` : n.type === 'True' ? `True ${n.name}` : n.name
+    extra.push(bodyToPlanet({ ...n, name: nm }, timeKnown))
+  }
+  for (const l of (c.lilith ?? []) as { name: string; longitude: number; signName: string; degree: number; minute: number; formatted: string; house?: number }[]) {
+    extra.push(bodyToPlanet({ ...l, name: l.name }, timeKnown))
+  }
+  for (const lot of (c.lots ?? []) as { name: string; longitude: number; signName: string; degree: number; minute: number; formatted: string; house?: number }[]) {
+    extra.push(bodyToPlanet({ ...lot, name: lot.name }, timeKnown))
+  }
+  const allBodies = [...planets, ...extra]
 
   const angles = timeKnown ? {
     ascendant: bodyToPlanet({ ...c.angles.ascendant, name: 'Ascendant' }, true),
     midheaven: bodyToPlanet({ ...c.angles.midheaven, name: 'Midheaven' }, true),
   } : { ascendant: null, midheaven: null }
 
-  // 十大主星之间的相位(不含小行星, 客户盘干净)
-  const core = c.planets.filter((p: { name: string }) => CORE_BODIES.includes(p.name))
+  // 相位: 类型与容许度由设置驱动 (默认五大相位, 与旧行为一致)
+  const at = (settings.aspectTypes?.length ? settings.aspectTypes : ['conjunction', 'sextile', 'square', 'trine', 'opposition']) as AspectType[]
+  const orbsCfg = settings.orbs as Partial<Record<AspectType, number>> | undefined
   const { aspects: rawAspects } = calculateAspects(
-    core.map((p: { name: string; longitude: number; longitudeSpeed: number }) => ({
-      name: p.name, longitude: p.longitude, longitudeSpeed: p.longitudeSpeed,
+    allBodies.map((p) => ({
+      name: p.name, longitude: p.longitude, longitudeSpeed: p.speed,
     })),
-    { aspectTypes: [AspectType.Conjunction, AspectType.Sextile, AspectType.Square, AspectType.Trine, AspectType.Opposition] },
+    { aspectTypes: at, orbs: orbsCfg },
   )
   const aspects: ChartAspect[] = rawAspects.map((a: {
     body1: string; body2: string; type: string; deviation: number; isApplying: boolean | null; symbol: string
@@ -255,15 +295,16 @@ export function castNatalChart(birth: BirthData): NatalChart {
     symbol: a.symbol, orb: toPct(a.deviation), applying: a.isApplying,
   }))
 
-  // 互溶接纳 (十星之间, 与盘面同一守护流派)
-  const receptions = computeReceptions(planets.map(p => ({ name: p.name, sign: p.sign })))
+  // 互溶接纳 (全部天体, 与盘面同一守护流派)
+  const receptions = computeReceptions(allBodies.map(p => ({ name: p.name, sign: p.sign })))
 
   return {
     input: birth,
+    settings,
     houseSystemUsed: system,
     timeKnown,
     jd: c.calculated?.julianDate ?? 0,
-    planets, angles,
+    planets: allBodies, angles,
     cusps: timeKnown
       ? (c.houses as unknown as { cusps: (number | { longitude: number })[] }).cusps.map(x => typeof x === 'number' ? x : x.longitude)
       : null,
@@ -279,6 +320,14 @@ export function chartEvidence(ch: NatalChart): string {
   lines.push(`【本命盘数据】(引擎计算, 勿改动)`)
   lines.push(`出生: ${b.year}-${String(b.month).padStart(2, '0')}-${String(b.day).padStart(2, '0')} ${b.timeKnown !== false ? `${String(b.hour).padStart(2, '0')}:${String(b.minute).padStart(2, '0')}` : '时间未知'} 当地时间 (UTC${b.timezone >= 0 ? '+' : ''}${b.timezone}) ${b.city ?? ''} 纬度${b.latitude} 经度${b.longitude}`)
   lines.push(`分宫制: ${ch.houseSystemUsed}${ch.timeKnown ? '' : ' (未使用—时间未知)'}`)
+  {
+    const s = ch.settings ?? {}
+    const bg = Object.entries(s.bodies ?? {}).filter(([, v]) => v).map(([k]) => ({ asteroids: '小行星', chiron: '凯龙', nodes: '交点', lots: '点位', lilith: '莉莉丝' })[k] ?? k)
+    const at = s.aspectTypes && s.aspectTypes.length !== 5 ? `相位${s.aspectTypes.length}种` : null
+    const ob = s.orbs && Object.keys(s.orbs).length ? `自定义容许度(${Object.entries(s.orbs).map(([k, v]) => `${ASPECT_ZH[k] ?? k}±${v}°`).join(' ')})` : null
+    const bits = [bg.length ? `含${bg.join('、')}` : null, at, ob].filter(Boolean)
+    if (bits.length) lines.push(`排盘设置: ${bits.join('; ')}`)
+  }
   if (ch.angles.ascendant) lines.push(`上升: ${ch.angles.ascendant.signZh} ${ch.angles.ascendant.degInSign}° | 中天: ${ch.angles.midheaven?.signZh} ${ch.angles.midheaven?.degInSign}°`)
   lines.push(`【行星落座落宫】`)
   for (const p of ch.planets) {

@@ -11,9 +11,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import PageShell, { SectionHead } from '@/components/PageShell';
 import { useI18n } from '@/i18n';
 import ChartResult from '@/components/astro/ChartResult';
+import ChartSettings from '@/components/astro/ChartSettings';
 import type { VChart } from '@/components/astro/ChartWheel';
-import { birthFromParams } from '@/lib/astro/chart-url';
-import type { HouseSystem } from '@/lib/astro/chart';
+import { birthFromParams, settingsFromParams, settingsToParams } from '@/lib/astro/chart-url';
+import type { BirthData, CastSettings, HouseSystem } from '@/lib/astro/chart';
 
 const SYSTEMS: HouseSystem[] = ['placidus', 'koch', 'equal', 'whole-sign', 'porphyry', 'regiomontanus', 'campanus'];
 const SYS_ZH: Record<string, string> = {
@@ -28,6 +29,7 @@ function ChartPageInner() {
   const sp = useSearchParams();
 
   const birth = useMemo(() => birthFromParams(new URLSearchParams(sp.toString())), [sp]);
+  const settings = useMemo(() => settingsFromParams(new URLSearchParams(sp.toString())) ?? {}, [sp]);
 
   const [data, setData] = useState<VChart | null>(null);
   const [error, setError] = useState('');
@@ -35,14 +37,14 @@ function ChartPageInner() {
   const lastKeyRef = useRef('');
   const reqSeq = useRef(0);
 
-  const cast = useCallback((sys: HouseSystem) => {
+  const cast = useCallback((sys: HouseSystem, s: CastSettings) => {
     if (!birth) return;
     const seq = ++reqSeq.current; // 竞态守卫: 只接受最后一次请求的结果
     setLoading(true); setError('');
     fetch('/api/astro/chart', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ birth: { ...birth, houseSystem: sys } }),
+      body: JSON.stringify({ birth: { ...birth, houseSystem: sys }, settings: s }),
     })
       .then(async (r) => {
         const j = await r.json();
@@ -55,21 +57,25 @@ function ChartPageInner() {
   }, [birth, t]);
 
   useEffect(() => {
-    // 只在生辰(非宫制)变化时自动排盘; sysKey 防同盘重复请求
+    // 生辰或设置变化 → 重排盘; key 去重防同盘重复请求
     if (!birth) return;
-    const key = `${birth.year}-${birth.month}-${birth.day}-${birth.hour}-${birth.minute}-${birth.latitude}-${birth.longitude}`;
+    const key = `${birth.year}-${birth.month}-${birth.day}-${birth.hour}-${birth.minute}-${birth.latitude}-${birth.longitude}-${birth.houseSystem}-${JSON.stringify(settings)}`;
     if (key === lastKeyRef.current) return;
     lastKeyRef.current = key;
-    cast(birth.houseSystem ?? 'placidus');
-  }, [birth, cast]);
+    cast(birth.houseSystem ?? 'placidus', settings);
+  }, [birth, settings, cast]);
 
-  const switchSystem = (sys: HouseSystem) => {
-    // 直接重排盘 (不依赖 URL 变化触发); URL 仅同步地址, 失败也不影响盘面
-    cast(sys);
+  // 写 URL (URL 始终是盘面真相); 保留其余参数
+  const patchParams = (mut: (p: URLSearchParams) => void) => {
     const next = new URLSearchParams(sp.toString());
-    next.set('sys', sys);
+    mut(next);
     router.replace(`/astrology/chart?${next.toString()}`, { scroll: false });
   };
+  const switchSystem = (sys: HouseSystem) => patchParams((p) => p.set('sys', sys));
+  const applySettings = (s: CastSettings) => patchParams((p) => {
+    p.delete('bd'); p.delete('as'); p.delete('ob');
+    settingsToParams(s, p);
+  });
 
   if (!birth) {
     return (
@@ -94,7 +100,7 @@ function ChartPageInner() {
       <section className="mb-10 mt-8">
         <SectionHead no="01" title={t('astro.chart.section')} sub={t('astro.chart.sectionSub')} />
 
-        {/* 宫制切换条 */}
+        {/* 宫制切换条 + 设置 */}
         <div className="mb-6 flex flex-wrap items-center justify-center gap-2">
           <span className="mr-1 text-[10px] tracking-[0.25em] text-muted uppercase">{t('astro.form.system')}</span>
           {SYSTEMS.map((s) => (
@@ -110,11 +116,13 @@ function ChartPageInner() {
               {zhMode ? SYS_ZH[s] : s}
             </button>
           ))}
+          <span className="mx-1 h-4 w-px bg-white/[0.1]" />
+          <ChartSettings value={settings} onChange={applySettings} />
         </div>
 
         {error && (
           <p className="mb-5 rounded-xl border border-[#e8a08a]/25 bg-[#e8a08a]/[0.05] px-4 py-3 text-center text-[12px] text-[#e8a08a]">
-            {error} · <button onClick={() => cast(birth.houseSystem ?? 'placidus')} className="underline">{t('astro.chart.retry')}</button>
+            {error} · <button onClick={() => cast(birth.houseSystem ?? 'placidus', settings)} className="underline">{t('astro.chart.retry')}</button>
           </p>
         )}
         {loading && !data && (

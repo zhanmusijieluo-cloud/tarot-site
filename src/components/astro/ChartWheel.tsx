@@ -15,7 +15,8 @@ import { useI18n } from '@/i18n';
 // ---------- 与 API 返回对齐的数据类型 ----------
 export interface VPlanet {
   name: string; zh: string; symbol: string;
-  longitude: number; eclLat?: number; // 黄纬(度)
+  kind?: 'planet' | 'asteroid' | 'point';
+  longitude: number; eclLat?: number; // 黄纬(度), 缺省0
   sign: string; signZh: string; degInSign: number; formatted: string;
   house: number | null; retrograde: boolean;
   dignity: { state: string; strength: number } | null;
@@ -307,7 +308,7 @@ function ChartScene({ chart, zhMode, view, selected, onSelect }: SceneProps) {
 
     // ---------- 行星: 同高度平铺 + 近距错层防遮挡 ----------
     const texLoader = new THREE.TextureLoader();
-    const planetObjs: { name: string; group: THREE.Group; mesh: THREE.Mesh; r: number; a: number }[] = [];
+    const planetObjs: { name: string; group: THREE.Group; mesh: THREE.Mesh | THREE.Sprite; r: number; a: number }[] = [];
     {
       // 按逆时针角度排序后聚类: 弧距 < 两半径和+0.10 的同组
       const items = chart.planets.map((p) => {
@@ -340,69 +341,89 @@ function ChartScene({ chart, zhMode, view, selected, onSelect }: SceneProps) {
 
       for (const it of items) {
         const p = it.p;
+        const kind = p.kind ?? 'planet';
         const r = radiusOf.get(p.name) ?? R_PLAN;
         const pos = polar(r, it.a);
         const g = new THREE.Group();
         g.position.copy(pos);
 
-        let mat: THREE.Material;
-        if (p.name === 'Sun') mat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-        else mat = new THREE.MeshPhongMaterial({
-          color: p.name === 'Pluto' ? 0xb8b0a8 : 0xffffff,
-          emissive: 0x121622, emissiveIntensity: 1, shininess: p.name === 'Moon' ? 2 : 8,
-        });
-        const geo = track(new THREE.SphereGeometry(it.br, 24, 14));
-        const mesh = new THREE.Mesh(geo, track(mat));
-        mesh.userData = { planet: p.name };
-        g.add(mesh);
-        if (TEX[p.name]) {
-          texLoader.load(TEX[p.name], (t) => {
-            t.colorSpace = THREE.SRGBColorSpace;
-            (mat as THREE.MeshPhongMaterial).map = t;
-            (mat as THREE.MeshPhongMaterial).needsUpdate = true;
-          });
-        }
-        if (p.name === 'Sun') {
-          const gt = track(glowTexture('#ffce7a'));
-          const gs = new THREE.Sprite(track(new THREE.SpriteMaterial({
-            map: gt, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending,
-          })));
-          gs.scale.set(it.br * 5.2, it.br * 5.2, 1);
-          g.add(gs);
-          sunLight.position.copy(pos);
-          root.add(sunLight);
-        } else {
+        let mesh: THREE.Mesh | THREE.Sprite;
+        if (kind === 'point') {
+          // 虚点: 纯发光符号 (无球体), 元素色微光
           const el = ELEMENT_OF_SIGN[p.sign] ?? '风';
-          const gt = track(glowTexture(ELEMENT_HEX[el]));
+          const gt = track(glowTexture(ELEMENT_HEX[el], 128));
           const gs = new THREE.Sprite(track(new THREE.SpriteMaterial({
-            map: gt, transparent: true, opacity: 0.3, depthWrite: false, blending: THREE.AdditiveBlending,
+            map: gt, transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending,
           })));
-          gs.scale.set(it.br * 3.4, it.br * 3.4, 1);
+          gs.scale.set(0.5, 0.5, 1);
           g.add(gs);
-        }
-        if (p.name === 'Saturn') {
-          const rg = track(new THREE.RingGeometry(it.br * 1.4, it.br * 2.3, 40, 1));
-          const pArr = rg.attributes.position, uvA = rg.attributes.uv;
-          const v3 = new THREE.Vector3();
-          for (let i = 0; i < pArr.count; i++) {
-            v3.fromBufferAttribute(pArr, i);
-            uvA.setXY(i, (v3.length() - it.br * 1.4) / (it.br * 0.95), 0.5);
-          }
-          const ringMat = track(new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0 }));
-          texLoader.load('/textures/planet/2k_saturn_ring_alpha.png', (t) => {
-            t.colorSpace = THREE.SRGBColorSpace;
-            ringMat.map = t; ringMat.opacity = 0.9; ringMat.needsUpdate = true;
+          const st = track(textTexture(`${p.symbol}${p.retrograde ? '℞' : ''}`, 52, '#eef3ff', 8));
+          mesh = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: st, transparent: true, depthWrite: false })));
+          mesh.scale.set(0.4, 0.4, 1);
+          mesh.userData = { planet: p.name };
+          g.add(mesh);
+        } else {
+          const br = kind === 'asteroid' ? it.br * 0.55 : it.br;
+          let mat: THREE.Material;
+          if (p.name === 'Sun') mat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+          else mat = new THREE.MeshPhongMaterial({
+            color: kind === 'asteroid' ? 0x9aa3b5 : p.name === 'Pluto' ? 0xb8b0a8 : 0xffffff,
+            emissive: 0x121622, emissiveIntensity: 1, shininess: p.name === 'Moon' ? 2 : 8,
           });
-          const rm = new THREE.Mesh(rg, ringMat);
-          rm.rotation.x = Math.PI / 2 + 0.45;
-          g.add(rm);
+          const geo = track(new THREE.SphereGeometry(br, 24, 14));
+          const m = new THREE.Mesh(geo, track(mat));
+          m.userData = { planet: p.name };
+          g.add(m);
+          mesh = m;
+          if (kind !== 'asteroid' && TEX[p.name]) {
+            texLoader.load(TEX[p.name], (t) => {
+              t.colorSpace = THREE.SRGBColorSpace;
+              (mat as THREE.MeshPhongMaterial).map = t;
+              (mat as THREE.MeshPhongMaterial).needsUpdate = true;
+            });
+          }
+          if (p.name === 'Sun') {
+            const gt = track(glowTexture('#ffce7a'));
+            const gs = new THREE.Sprite(track(new THREE.SpriteMaterial({
+              map: gt, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending,
+            })));
+            gs.scale.set(br * 5.2, br * 5.2, 1);
+            g.add(gs);
+            sunLight.position.copy(pos);
+            root.add(sunLight);
+          } else {
+            const el = ELEMENT_OF_SIGN[p.sign] ?? '风';
+            const gt = track(glowTexture(ELEMENT_HEX[el]));
+            const gs = new THREE.Sprite(track(new THREE.SpriteMaterial({
+              map: gt, transparent: true, opacity: kind === 'asteroid' ? 0.18 : 0.3, depthWrite: false, blending: THREE.AdditiveBlending,
+            })));
+            gs.scale.set(br * 3.4, br * 3.4, 1);
+            g.add(gs);
+          }
+          if (p.name === 'Saturn') {
+            const rg = track(new THREE.RingGeometry(br * 1.4, br * 2.3, 40, 1));
+            const pArr = rg.attributes.position, uvA = rg.attributes.uv;
+            const v3 = new THREE.Vector3();
+            for (let i = 0; i < pArr.count; i++) {
+              v3.fromBufferAttribute(pArr, i);
+              uvA.setXY(i, (v3.length() - br * 1.4) / (br * 0.95), 0.5);
+            }
+            const ringMat = track(new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0 }));
+            texLoader.load('/textures/planet/2k_saturn_ring_alpha.png', (t) => {
+              t.colorSpace = THREE.SRGBColorSpace;
+              ringMat.map = t; ringMat.opacity = 0.9; ringMat.needsUpdate = true;
+            });
+            const rm = new THREE.Mesh(rg, ringMat);
+            rm.rotation.x = Math.PI / 2 + 0.45;
+            g.add(rm);
+          }
+          // 符号标签 (行星/小行星: 球上方)
+          const lt = track(textTexture(`${p.symbol}${p.retrograde ? '℞' : ''}`, 44, '#f2f6ff', 6));
+          const ls = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: lt, transparent: true, depthWrite: false })));
+          ls.position.set(0, br + 0.3, 0);
+          ls.scale.set(0.44, 0.44, 1);
+          g.add(ls);
         }
-        // 符号标签 (统一挂在所有星球同一高度上方)
-        const lt = track(textTexture(`${p.symbol}${p.retrograde ? '℞' : ''}`, 44, '#f2f6ff', 6));
-        const ls = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: lt, transparent: true, depthWrite: false })));
-        ls.position.set(0, it.br + 0.3, 0);
-        ls.scale.set(0.44, 0.44, 1);
-        g.add(ls);
         root.add(g);
         planetObjs.push({ name: p.name, group: g, mesh, r, a: it.a });
 

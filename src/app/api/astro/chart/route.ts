@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { castNatalChart, chartEvidence, type BirthData, type HouseSystem } from '@/lib/astro/chart'
+import { castNatalChart, chartEvidence, type BirthData, type CastSettings, type HouseSystem } from '@/lib/astro/chart'
 
 /**
  * 占星排盘 API (骨架 v0.1)
@@ -43,6 +43,25 @@ export async function POST(request: NextRequest) {
     const houseSystem: HouseSystem =
       HOUSE_SYSTEMS.includes(b.houseSystem) ? b.houseSystem : 'placidus'
 
+    // ---- 排盘设置 (白名单收窄) ----
+    const VALID_ASPECTS = new Set(['conjunction','sextile','square','trine','opposition','quincunx','semi-sextile','semi-square','sesquiquadrate','quintile','biquintile','septile','novile','decile'])
+    const VALID_GROUPS = new Set(['asteroids','chiron','nodes','lots','lilith'])
+    const s = body?.settings ?? {}
+    const settings: CastSettings = {}
+    if (s.bodies && typeof s.bodies === 'object') {
+      settings.bodies = {}
+      for (const k of VALID_GROUPS) if (s.bodies[k] === true) (settings.bodies as Record<string, boolean>)[k] = true
+    }
+    if (Array.isArray(s.aspectTypes)) {
+      settings.aspectTypes = s.aspectTypes.filter((x: unknown) => typeof x === 'string' && VALID_ASPECTS.has(x))
+    }
+    if (s.orbs && typeof s.orbs === 'object') {
+      settings.orbs = {}
+      for (const [k, v] of Object.entries(s.orbs)) {
+        if (VALID_ASPECTS.has(k) && typeof v === 'number' && v >= 0.5 && v <= 15) (settings.orbs as Record<string, number>)[k] = v
+      }
+    }
+
     const birth: BirthData = {
       year, month, day,
       hour: timeKnown ? hour : 12,
@@ -55,7 +74,7 @@ export async function POST(request: NextRequest) {
       timeKnown,
     }
 
-    const chart = castNatalChart(birth)
+    const chart = castNatalChart(birth, settings)
     return NextResponse.json({ chart, evidence: chartEvidence(chart) })
   } catch (e) {
     console.error('[astro/chart] error:', e)
