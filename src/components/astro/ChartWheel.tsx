@@ -600,7 +600,8 @@ function ChartScene({ chart, zhMode, view, disp, selected, onSelect }: SceneProp
   // selected 变化 → 只改高亮, 不动盘
   useEffect(() => { apiRef.current?.set(selected); }, [selected]);
 
-  return <div ref={mountRef} className="h-[420px] w-full cursor-grab active:cursor-grabbing sm:h-[520px]" />;
+  // 盘面高度自适应视口: 矮屏(笔电800px)自动缩, 给盘下方相位网格留首屏空间; 高屏保持520
+  return <div ref={mountRef} className="w-full cursor-grab active:cursor-grabbing h-[min(52vh,520px)]" />;
 }
 
 // ---------- 点击标注卡(纯标注, 无AI) ----------

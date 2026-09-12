@@ -149,7 +149,12 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
             </div>
           </Panel>
 
-          {/* 相位网格 (宫神星: 左列下方) */}
+        </div>
+
+        {/* ---- 中央: 星盘 ---- */}
+        <div className="min-w-0 space-y-4">
+          <ChartWheel chart={chart} zhMode={zhMode} selected={selected} onSelect={setSelected} />
+          {/* 相位网格 (爸爸指定: 星盘正下方, 首屏不滚就看见) */}
           <Panel title={t('astro.res.aspects')}>
             <div className="flex gap-1 border-b border-white/[0.05] px-2.5 py-2 text-[10.5px]">
               {(['list', 'grid'] as const).map((m) => (
@@ -178,11 +183,6 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
               </div>
             )}
           </Panel>
-        </div>
-
-        {/* ---- 中央: 星盘 ---- */}
-        <div className="min-w-0">
-          <ChartWheel chart={chart} zhMode={zhMode} selected={selected} onSelect={setSelected} />
         </div>
 
         {/* ---- 右侧: 特征 (宫神星同款: 落座/尊贵/接纳/互容 判词全在这一张卡) ---- */}
