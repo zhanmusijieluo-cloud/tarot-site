@@ -5,6 +5,7 @@
    各组件用 clamp() 自行做响应式缩放。
 */
 html {
+  scrollbar-gutter: stable; /* 弹窗开合/页面增高时, 滚动条永不挤压布局 */
   font-size: 16px;
   overflow-x: clip;
 }

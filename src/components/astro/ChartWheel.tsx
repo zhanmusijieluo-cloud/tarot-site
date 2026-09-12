@@ -530,7 +530,8 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
     // A方案: 松手静止一会儿后自动弹回 ASC朝左(最近一圈基准); ⟳键立即快回
     let idleT = 0, fastReturn = false;
     const el = renderer.domElement;
-    const onDown = (e: PointerEvent) => { dragging = true; movedPx = 0; lastX = e.clientX; lastY = e.clientY; idleT = 0; fastReturn = false; };
+    let spinAtDown = 0; // 按下瞬间的盘角 (点击级微移要原样归还)
+    const onDown = (e: PointerEvent) => { dragging = true; movedPx = 0; lastX = e.clientX; lastY = e.clientY; idleT = 0; fastReturn = false; spinAtDown = spinY; };
     const onMove = (e: PointerEvent) => {
       if (!dragging) return;
       const dx = e.clientX - lastX, dy = e.clientY - lastY;
@@ -542,7 +543,10 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
     const onUp = (e: PointerEvent) => {
       if (!dragging) return;
       dragging = false;
-      if (movedPx > 7) return;
+      if (movedPx <= 7) {
+        // 这是点击不是拖拽: 撤销按下期间所有微转动+惯性, 盘面纹丝不动
+        spinY = spinAtDown; yawV = 0;
+      } else return;
       const rect = el.getBoundingClientRect();
       const ndc = new THREE.Vector2(
         ((e.clientX - rect.left) / rect.width) * 2 - 1,
@@ -806,11 +810,12 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
         >
           ⟳ {t('astro.view.reset')}
         </button>
-        {selPlanet && (
-          <button onClick={() => setSelected(null)} className="text-[10px] tracking-[0.2em] text-muted/70 hover:text-frost">
-            {t('astro.view.clear')}
-          </button>
-        )}
+        <button
+          onClick={() => setSelected(null)}
+          className={`text-[10px] tracking-[0.2em] text-muted/70 transition-opacity hover:text-frost ${selPlanet ? 'opacity-100' : 'invisible'}`}
+        >
+          {t('astro.view.clear')}
+        </button>
       </div>
 
       {/* 左上角内嵌: 盘框圆外空隙放资料卡 (与右侧弹窗对称) */}
