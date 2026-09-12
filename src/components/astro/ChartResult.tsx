@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import { useI18n } from '@/i18n';
 import ChartWheel, { type VChart, type VPlanet } from '@/components/astro/ChartWheel';
-import AspectGrid from '@/components/astro/AspectGrid';
+import AspectGrid, { AspectLegend, ASPECT_COLOR } from '@/components/astro/AspectGrid';
 
 const DIGNITY_ZH: Record<string, string> = {
   Domicile: '入庙', Exalted: '耀升', Detriment: '失势', Fall: '落陷', Peregrine: '游走',
@@ -52,9 +52,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
 }) {
   const { t } = useI18n();
   const [selected, setSelected] = useState<string | null>(null);
-  const [modeInner, setModeInner] = useState<'list' | 'grid'>('grid');
-  const aspectMode = modeProp ?? modeInner;
-  const setAspectMode = onAspectMode ?? setModeInner;
+  void modeProp; void onAspectMode; // 矩阵与清单同屏后不再需要切换 (URL ag 参数保留兼容旧链接)
   const zhOf = (name: string) => chart.planets.find((p) => p.name === name)?.zh ?? name;
   const sz = (s: string) => SIGNS_ZH_MINI[s] ?? s;
 
@@ -148,34 +146,36 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
         </div>
       </div>
 
-      {/* 相位矩阵: 全宽铺开 (爸爸: 窄栏格子太小堆一起看不清 → 挪出来放大) */}
+      {/* 相位区: 左=下三角矩阵, 右=相位清单 (填满宽, 不留大白; 爸爸: 对称满铺乱 → 用右侧列表补白) */}
       <Panel title={t('astro.res.aspects')}>
-        <div className="flex gap-1 border-b border-white/[0.05] px-2.5 py-2 text-[10.5px]">
-          {(['list', 'grid'] as const).map((m) => (
-            <button
-              key={m}
-              onClick={() => setAspectMode(m)}
-              className={`rounded-full px-2.5 py-0.5 tracking-[0.12em] transition-colors ${aspectMode === m ? 'bg-accent/[0.12] text-accent' : 'text-muted hover:text-frost'}`}
-            >
-              {m === 'list' ? t('astro.res.modeList') : t('astro.res.modeGrid')}
-            </button>
-          ))}
+        <div className="flex items-center gap-3 border-b border-white/[0.05] px-3 py-2">
+          <AspectLegend zhMode={zhMode} />
         </div>
-        {aspectMode === 'grid' ? (
-          <div className="overflow-x-auto p-3">
-            <AspectGrid chart={chart} zhMode={zhMode} selected={selected} onPick={setSelected} bare />
+        <div className="grid gap-4 p-3 lg:grid-cols-[minmax(0,max-content)_minmax(0,1fr)]">
+          <div className="overflow-x-auto">
+            <AspectGrid chart={chart} zhMode={zhMode} selected={selected} onPick={setSelected} bare hideLegend />
           </div>
-        ) : (
-          <div className="grid max-h-[300px] grid-cols-2 gap-x-8 gap-y-1 overflow-y-auto px-4 py-3 lg:grid-cols-4">
-            {[...chart.aspects].sort((x, y) => x.orb - y.orb).map((a2, i) => (
-              <p key={i} className="truncate text-[11.5px] leading-snug text-muted">
-                {a2.symbol} {zhMode ? `${zhOf(a2.a)}–${zhOf(a2.b)}` : `${a2.a}–${a2.b}`}{' '}
-                <span className="text-accent/70">{a2.orb.toFixed(1)}°</span>
-                {a2.applying === true && <span className="ml-0.5 text-[#8aa8d8]">→</span>}
-              </p>
-            ))}
-          </div>
-        )}
+          {/* 右列: 紧密相位排行 (双列铺开填满矩阵旁空间, 行内紧凑不留大缝) */}
+          <ul className="grid grid-cols-1 gap-x-4 gap-y-[3px] sm:grid-cols-2">
+            {[...chart.aspects].sort((x, y) => x.orb - y.orb).map((a2, i) => {
+              const col = ASPECT_COLOR[a2.type] ?? '#9aa3b5'
+              return (
+                <li key={i}>
+                  <button
+                    onClick={() => setSelected(selected === a2.a ? null : a2.a)}
+                    className={`flex w-full items-center gap-1.5 rounded-lg border-l-2 px-2 py-[5px] text-left text-[11.5px] transition-colors hover:bg-white/[0.04] ${selected === a2.a || selected === a2.b ? 'bg-white/[0.05]' : ''}`}
+                    style={{ borderColor: col }}
+                  >
+                    <span className="w-4 shrink-0 text-center text-[12px]" style={{ color: col }}>{a2.symbol}</span>
+                    <span className="min-w-0 flex-1 truncate text-frost/85">{zhMode ? `${zhOf(a2.a)}–${zhOf(a2.b)}` : `${a2.a}–${a2.b}`}</span>
+                    <span className="shrink-0 text-[10px]" style={{ color: col }}>{a2.typeZh}</span>
+                    <span className="w-[3.6em] shrink-0 text-right tabular-nums" style={{ color: col }}>{a2.orb.toFixed(1)}°{a2.applying === true ? 'A' : a2.applying === false ? 'S' : ''}</span>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
       </Panel>
 
       {/* ---- 底部: 黄道状态大表 (宫神星同款横向铺开) ---- */}

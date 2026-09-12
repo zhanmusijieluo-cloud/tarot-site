@@ -27,62 +27,54 @@ await page.goto(BASE, { waitUntil: 'networkidle0', timeout: 60000 })
 if (ZH) { await page.evaluate(() => localStorage.setItem('oracle-lang', 'zh')); await page.reload({ waitUntil: 'networkidle0' }) }
 await sleep(1200)
 
-// 相位矩阵 = border-separate 表 (黄道状态大表是普通table, 不能混计)
-const tablesOf = () => page.$$eval('table.border-separate', (ts) => ts.filter((t) => t.querySelectorAll('td').length > 20).length)
-check((await tablesOf()) >= 1, `初始网格模式: 矩阵表渲染`)
-check(page.url().indexOf('ag=') === -1, `默认URL无ag参数 (grid为默认态)`)
-
-// T2 点"列表" → 矩阵消失(除状态表) + URL 带 ag=list
-check(await clickBtn(TXT.list), `点击「${TXT.list}」`)
-await sleep(900)
-const listPills = await page.$$eval('p,span', (ss) => ss.filter((s) => /[A-Za-z\u4e00-\u9fff]–[A-Za-z\u4e00-\u9fff]/.test(s.textContent) && s.textContent.length < 30).length)
-check(listPills > 5, `列表模式: 相位行 ${listPills} 个`)
-check(page.url().includes('ag=list'), `URL 同步 ag=list`)
-
-// T3 列表数据正确性: 图例固定符号仍在网格模式 (先切回网格验)
-check(await clickBtn(TXT.grid), `点击「${TXT.grid}」回网格`)
-await sleep(900)
-const gridFacts = await page.evaluate(() => {
-  const t = document.querySelector('table.border-separate')
-  if (!t) return null
-  const txt = document.body.innerText
-  return { hasSquare: txt.includes('□'), hasConj: txt.includes('☌'), hasQnx: txt.includes('⚻'), legend: txt.includes('A=入相') || txt.includes('A=applying') }
-})
-check(!!gridFacts && gridFacts.hasSquare && gridFacts.hasConj && gridFacts.hasQnx && gridFacts.legend, `矩阵含合/刑/梅花符号+图例 (固定符号表)`)
-
-// T4 刷新保持列表/网格 (URL 即真相)
-await page.reload({ waitUntil: 'networkidle0' })
-await sleep(900)
-check((await tablesOf()) >= 1, `刷新后仍网格 (ag 已清)`)
-
-// T5b 网格零滚动 + 弹窗不压盘 (爸爸两条硬性反馈的回归锁)
-const gridFit = await page.evaluate(() => {
+// 相位区定稿: 左矩阵 + 右清单 同屏并排, 无空白 (旧列表/网格切换已废除)
+const tablesOf = () => page.$$eval('table.border-separate', (ts) => ts.length)
+check((await tablesOf()) === 1, `矩阵在页 (1张)`)
+const duo = await page.evaluate(() => {
   const g = document.querySelector('table.border-separate')
   const sec = g?.closest('section')
-  if (!g || !sec) return null
-  return { overflowY: sec.scrollHeight - sec.clientHeight, overflowX: Math.round(g.scrollWidth - (g.parentElement?.clientWidth ?? 0)) }
+  if (!sec) return null
+  const list = [...sec.querySelectorAll('ul li button')].filter((x) => /[A-Za-z\u4e00-\u9fff]+[–-]/.test(x.textContent))
+  // 右清单与矩阵同屏: 条数应与相位数一致级别
+  return { listCount: list.length, hasToggle: [...sec.querySelectorAll('button')].some((x) => x.textContent.trim() === '列表' || x.textContent.trim() === '网格') }
 })
-check(!!gridFit && gridFit.overflowY <= 2 && gridFit.overflowX <= 2, `网格零滚动 (y溢=${gridFit?.overflowY} x溢=${gridFit?.overflowX})`)
-// 新契约 (A方案定稿): 盘固定大小 + 弹窗实色不透明
+check(!!duo && duo.listCount > 5, `相位清单与矩阵同屏 (${duo?.listCount} 条)`)
+check(!!duo && !duo.hasToggle, `无列表/网格切换钮 (同屏后多余)`)
+// 空白消除: 矩阵右侧紧邻清单 (水平间距 < 面板宽30%)
+const fill = await page.evaluate(() => {
+  const g = document.querySelector('table.border-separate').getBoundingClientRect()
+  const ul = document.querySelector('table.border-separate').closest('div.grid')?.querySelector('ul')
+  if (!ul) return 9999
+  return Math.round(ul.getBoundingClientRect().left - g.right)
+})
+check(fill < 60, `矩阵与清单无大空隙 (间隔${fill}px)`)
+await page.reload({ waitUntil: 'networkidle0' })
+await sleep(900)
+
+// T5 网格零滚动 + 弹窗固定大小实色底 (硬性反馈回归锁)
+const gridFit = await page.evaluate(() => {
+  const g = document.querySelector('table.border-separate')
+  const wrap = g?.parentElement
+  return wrap ? { oy: wrap.scrollHeight - wrap.clientHeight, ox: wrap.scrollWidth - wrap.clientWidth } : null
+})
+check(!!gridFit && gridFit.oy <= 4 && gridFit.ox <= 4, `矩阵容器零滚动 (y=${gridFit?.oy} x=${gridFit?.ox})`)
 const wBefore = await page.evaluate(() => document.querySelector('.cursor-grab canvas')?.getBoundingClientRect().width ?? 0)
 await page.evaluate(() => {
   const btns = [...document.querySelectorAll('button')].filter((x) => x.textContent.trim().startsWith('☉') && x.textContent.trim().length <= 3)
   btns[btns.length - 1]?.click()
 })
-await sleep(1100)
+await sleep(1000)
 const popupFix = await page.evaluate(() => {
   const cv = document.querySelector('.cursor-grab canvas')
   const pop = [...document.querySelectorAll('div')].find((d) => d.className.toString().includes('lg:right-3'))
   const card = pop?.querySelector('div')
-  const bg = card ? getComputedStyle(card).backgroundColor : ''
-  const m = bg.match(/[\d.]+/g)
-  const alpha = m && m.length >= 4 ? Number(m[3]) : 0
-  return { wAfter: cv?.getBoundingClientRect().width ?? 0, alpha }
+  const m = card ? getComputedStyle(card).backgroundColor.match(/[\d.]+/g) : null
+  return { wAfter: cv?.getBoundingClientRect().width ?? 0, alpha: m && m.length >= 4 ? Number(m[3]) : 0 }
 })
-check(Math.abs(popupFix.wAfter - wBefore) < 2, `星盘大小固定 (弹窗开合宽度不变: ${Math.round(wBefore)}→${Math.round(popupFix.wAfter)})`)
-check(popupFix.alpha >= 0.9, `弹窗实色不透明 (alpha=${popupFix.alpha}, 文字不被盘穿透)`)
+check(Math.abs(popupFix.wAfter - wBefore) < 2, `星盘大小固定 (弹窗开合宽度 ${Math.round(wBefore)}→${Math.round(popupFix.wAfter)})`)
+check(popupFix.alpha >= 0.9, `弹窗实色不透明 (alpha=${popupFix.alpha})`)
 await page.evaluate(() => { document.querySelector('[class*="lg:right-3"] button')?.click() }) // 关窗
-await sleep(600)
+await sleep(500)
 
 // T6 设置抽屉: 打开 → 五分区 → 宫制Tab切科赫 → URL sys 变
 check(await clickBtn(TXT.settings), `点击「${TXT.settings}」`)

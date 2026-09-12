@@ -9,7 +9,7 @@
 import type { VAspect, VChart } from '@/components/astro/ChartWheel';
 
 // 相位配色: 红=困难(刑冲) 绿/蓝=和谐(拱/六合) 金=合 紫=梅花
-const ASPECT_COLOR: Record<string, string> = {
+export const ASPECT_COLOR: Record<string, string> = {
   conjunction: '#cdb88a',
   opposition: '#e8a08a',
   square: '#e07f7f',
