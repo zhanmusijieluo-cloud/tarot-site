@@ -76,6 +76,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
       <span className="ml-1.5 text-accent/95">{p.signZh}</span>
       <span className="mx-1.5 text-frost">{dms(p.degInSign)}</span>
       {p.house ? <span className="text-muted/80">· 第{p.house}宫</span> : null}
+      {p.retrograde ? <span className="ml-1.5 text-[#e8a08a]">逆行</span> : null}
       {label ? <span className="ml-1.5 text-muted/50">{label}</span> : null}
     </span>
   )
@@ -83,24 +84,6 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
   if (moon) features.push({ el: placeLine(moon, ''), tone: 'gold' })
   if (asc) features.push({ el: placeLine(asc, '上升'), tone: 'gold' })
   if (mc) features.push({ el: placeLine(mc, '中天'), tone: 'gold' })
-  // 尊贵行: ♀♍ 入庙+5 逆 / ☽♑ 失势
-  for (const p of chart.planets) {
-    if (p.dignity && p.dignity.state !== 'Peregrine') {
-      const dz = DIGNITY_ZH[p.dignity.state] ?? p.dignity.state
-      features.push({
-        tone: p.dignity.strength > 0 ? 'soft' : 'warn',
-        tip: `${p.zh} ${sz(p.sign)} ${dz}`,
-        el: (
-          <span>
-            <b className="font-normal text-frost">{p.symbol}</b>
-            <span className="mx-1 text-accent/95">{p.signZh}</span>
-            <span className={p.dignity.strength > 0 ? 'text-[#cdb88a]' : 'text-[#e8a08a]'}>{dz}{p.dignity.strength ? ` ${p.dignity.strength > 0 ? '+' : ''}${p.dignity.strength}` : ''}</span>
-            {p.retrograde && <span className="ml-1.5 text-[#e8a08a]">逆行</span>}
-          </span>
-        ),
-      })
-    }
-  }
   // 互溶 · 接纳 (宫神星判词句式): ☉ 被 ♀ 接纳 (本垣♉) / ♀ 与 ♂ 互溶 (♎/♈ 本垣)
   const recepFeats: Feat[] = []
   {
