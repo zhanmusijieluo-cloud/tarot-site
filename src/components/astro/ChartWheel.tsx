@@ -336,7 +336,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
 
     // ---------- 行星: 同高度平铺 + 近距错层防遮挡 ----------
     const texLoader = new THREE.TextureLoader();
-    const planetObjs: { name: string; group: THREE.Group; mesh: THREE.Mesh | THREE.Sprite; r: number; a: number; tScale: number; cScale: number; tDim: number; cDim: number; tEmi: number; cEmi: number }[] = [];
+    const planetObjs: { name: string; group: THREE.Group; mesh: THREE.Mesh | THREE.Sprite; r: number; a: number; vr: number; tScale: number; cScale: number; tDim: number; cDim: number; tEmi: number; cEmi: number }[] = [];
     const footGroups: { name: string; obj: THREE.Group }[] = [];
     {
       // 按逆时针角度排序后聚类: 弧距 < 两半径和+0.10 的同组
@@ -457,7 +457,10 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
           g.add(ls);
         }
         root.add(g);
-        planetObjs.push({ name: p.name, group: g, mesh, r, a: it.a, tScale: 1, cScale: 1, tDim: 1, cDim: 1, tEmi: 1, cEmi: 1 });
+        // 视觉半径(线端让位用): 虚点=符号半高; 太阳=光晕半宽; 土星=环外沿; 其余=球缘; 统一含选中1.18x档+固定小缝
+        const brNow = kind === 'point' ? 0 : (kind === 'asteroid' ? it.br * 0.55 : it.br)
+        const vBase = kind === 'point' ? 0.2 : brNow * (p.name === 'Sun' ? 1.2 : p.name === 'Saturn' ? 2.3 : 1)
+        planetObjs.push({ name: p.name, group: g, mesh, r, a: it.a, vr: vBase * 1.18 + 0.05, tScale: 1, cScale: 1, tDim: 1, cDim: 1, tEmi: 1, cEmi: 1 });
 
         // 脚线 + 刻度点: 乙方案 — 默认仅选中星显示 (feetAlways=true 全体常显)
         if (disp?.feet !== false) {
@@ -489,13 +492,18 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       const pa = planetObjs.find((o) => o.name === asp.a);
       const pb = planetObjs.find((o) => o.name === asp.b);
       if (!pa || !pb) continue;
-      // 端点按最坏占用收 (球体选中会放大1.18x + 光晕半径), 线头绝不扎进球盘
-      const inset = (n: string) => (n === 'Sun' ? (BODY_R[n] ?? 0.14) * 1.18 * 2.4 * 0.5 : (BODY_R[n] ?? 0.14) * 1.18 + 0.06)
-      const ra = Math.max(0.5, pa.r - inset(asp.a));
-      const rb = Math.max(0.5, pb.r - inset(asp.b));
+      // 端点: 沿两星球心连线方向, 各自退出自己的视觉半径 → 大球小球一律"贴边留缝", 不再忽中忽边忽左右
+      const P1 = polar(pa.r, pa.a), P2 = polar(pb.r, pb.a)
+      const dirV = new THREE.Vector3(P2.x - P1.x, 0, P2.z - P1.z)
+      const lenSeg = dirV.length()
+      let va = pa.vr, vb = pb.vr
+      if (lenSeg < va + vb + 0.08) { const half = Math.max(0.03, lenSeg / 2 - 0.04); va = half; vb = half } // 两球贴身(合相): 各退一半防端点交叉
+      dirV.normalize()
+      const A = P1.clone().addScaledVector(dirV, va).setY(ASP_Y)
+      const B = P2.clone().addScaledVector(dirV, -vb).setY(ASP_Y)
       const col = aspectNum(asp.type); // 爸爸四色: 六合蓝/刑红/拱绿/冲紫 (与网格图例同源)
       const mesh = new THREE.Line(
-        track(new THREE.BufferGeometry().setFromPoints([polar(ra, pa.a).setY(ASP_Y), polar(rb, pb.a).setY(ASP_Y)])),
+        track(new THREE.BufferGeometry().setFromPoints([A, B])),
         track(new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: 0.5 })),
       );
       root.add(mesh);
