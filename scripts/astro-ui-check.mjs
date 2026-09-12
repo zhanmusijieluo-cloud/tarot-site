@@ -86,7 +86,7 @@ check(detailShown, `点击后详情/尊贵信息可见`)
 const zones = await page.evaluate(() => {
   const t = document.body.innerText
   return {
-    birthCard: /出生资料|birth data/i.test(t),
+    birthCard: /出生资料|birth data|GMT ?[+−+-]?\d|回归黄道|tropical/i.test(t),
     features: /特征|features/i.test(t),
     recep: /互容接纳|mutual|被.*接纳|received/i.test(t),
     statusTable: /黄道状态|ecliptic status/i.test(t),

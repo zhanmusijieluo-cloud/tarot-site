@@ -96,8 +96,9 @@ function ChartPageInner() {
       title={t('astro.chart.title')}
       subtitle={t('astro.chart.sub')}
       wide
+      compact
     >
-      <section className="mb-10 mt-6">
+      <section className="mb-10 mt-4">
         {/* 身份一行 (学宫神星资料卡压缩版): 档案名 · 生辰 · 地点 · 宫制(点开设置) · ⚙ */}
         <div className="mb-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11.5px] text-muted">
           {birth.label && <span className="font-display text-[13px] tracking-[0.1em] text-accent">{birth.label}</span>}

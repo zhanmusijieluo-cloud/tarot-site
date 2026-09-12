@@ -99,16 +99,13 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
   }
   for (const l of recepLines) features.push({ icon: '⇄', text: l, tone: 'soft' });
 
-  // ---- 顶部资料卡 (宫神星式多行) ----
-  const info: [string, string][] = [];
-  if (chart.input.label) info.push([zhMode ? '档案' : 'Label', chart.input.label]);
-  info.push([zhMode ? '日期' : 'Date', `${chart.input.year}-${String(chart.input.month).padStart(2, '0')}-${String(chart.input.day).padStart(2, '0')} ${chart.timeKnown ? `${String(chart.input.hour).padStart(2, '0')}:${String(chart.input.minute).padStart(2, '0')}` : '—'}`]);
-  if (chart.input.city) info.push([zhMode ? '地点' : 'Place', chart.input.city]);
+  // ---- 出生资料 (展开为身份行下方一行小字) ----
+  const info: string[] = []
   if (chart.input.latitude !== undefined && chart.input.longitude !== undefined)
-    info.push([zhMode ? '经纬' : 'Lat/Lon', `${chart.input.latitude.toFixed(2)}, ${chart.input.longitude.toFixed(2)}`]);
-  if (chart.input.timezone !== undefined) info.push(['UTC', `GMT ${chart.input.timezone >= 0 ? '+' : ''}${chart.input.timezone.toFixed(2)}`]);
-  info.push([zhMode ? '黄道' : 'Zodiac', zhMode ? '回归黄道' : 'Tropical']);
-  info.push([zhMode ? '宫制' : 'Houses', chart.houseSystemUsed]);
+    info.push(`${zhMode ? '经纬' : 'Lat/Lon'} ${chart.input.latitude.toFixed(2)}, ${chart.input.longitude.toFixed(2)}`)
+  if (chart.input.timezone !== undefined) info.push(`GMT ${chart.input.timezone >= 0 ? '+' : ''}${chart.input.timezone.toFixed(2)}`)
+  info.push(zhMode ? '回归黄道' : 'Tropical')
+  info.push(`${zhMode ? '宫制' : 'Houses'} ${chart.houseSystemUsed}`)
 
   return (
     <div className="space-y-4">
@@ -123,21 +120,14 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
         </div>
       )}
 
-      {/* 三栏: 左资料+行星列+网格 | 中盘 | 右特征 */}
+      {/* 三栏: 左行星列+网格 | 中盘 | 右特征 */}
       <div className="grid items-start gap-4 lg:grid-cols-[236px_minmax(0,1fr)_236px]">
         {/* ---- 左列 ---- */}
         <div className="space-y-4">
-          <Panel title={zhMode ? '出生资料' : 'Birth Data'}>
-            <dl className="divide-y divide-white/[0.04]">
-              {info.map(([k, v]) => (
-                <div key={k} className="flex items-baseline gap-2 px-3 py-[7px]">
-                  <dt className="w-[3.2em] shrink-0 text-[10px] tracking-[0.12em] text-muted/70 uppercase">{k}</dt>
-                  <dd className="flex-1 text-[12px] text-frost/90">{v}</dd>
-                </div>
-              ))}
-            </dl>
-          </Panel>
-
+          {/* 出生资料一行小字 (宫神星资料卡压缩: 信息不丢, 不占位) */}
+          <p className="text-[10.5px] leading-relaxed text-muted/60">
+            {info.map((v, i) => <span key={i}>{i > 0 && <span className="mx-1.5 text-muted/30">·</span>}{v}</span>)}
+          </p>
           <Panel title={`${zhMode ? '星体' : 'Bodies'} · ${rows.length}`}>
             <div className="max-h-[380px] overflow-y-auto">
               {rows.map((p) => (
