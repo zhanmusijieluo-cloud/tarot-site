@@ -169,6 +169,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
+    const mm = mount; // fitOrtho 提升函数闭包用, 保 TS 非空窄化
     const W = mount.clientWidth, H = mount.clientHeight;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -177,9 +178,11 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
     mount.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(42, W / H, 0.1, 100);
+    // 正交相机: 平行投影, 盘面上下边缘同大小 (透视投影会让下沿大 24%, 即"上小下大"错觉根源)
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
     camera.position.set(0, 10.6, 3.1);
     camera.lookAt(0, 0, 0);
+    let viewHalfH = 5.9; // 默认视高半径(世界单位), resize 时按画布比例算
 
     const root = new THREE.Group();
     root.rotation.order = 'YXZ';
@@ -533,7 +536,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
 
     // ---------- 拖拽旋转(惯性) + 滚轮变焦 + 点击 ----------
     let dragging = false, movedPx = 0, lastX = 0, lastY = 0;
-    let yawV = 0, spinY = 0, fov = 42;
+    let yawV = 0, spinY = 0, fov = 42; // fov 在正交下仅作滚轮档位累加器
     // A方案: 松手静止一会儿后自动弹回 ASC朝左(最近一圈基准); ⟳键立即快回
     let idleT = 0, fastReturn = false;
     const el = renderer.domElement;
@@ -567,8 +570,9 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
     };
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      fov = Math.min(75, Math.max(16, fov + e.deltaY * 0.02));
+      orthoT = Math.min(1.7, Math.max(0.5, orthoT + e.deltaY * 0.0011)); // 正交缩放档
     };
+    let orthoT = 1, orthoC = 1;
     el.addEventListener('pointerdown', onDown);
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
@@ -594,8 +598,8 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       root.rotation.y += (spinY - root.rotation.y) * Math.min(1, dt * 9);
       const targetTilt = view === 'side' ? 1.02 : 0;
       root.rotation.x += (targetTilt - root.rotation.x) * Math.min(1, dt * 5);
-      camera.fov += (fov - camera.fov) * Math.min(1, dt * 7);
-      camera.updateProjectionMatrix();
+      orthoC += (orthoT - orthoC) * Math.min(1, dt * 7);
+      fitOrtho();
       // 高亮缓动 (0.2s 级别收敛, 消除点击瞬跳)
       const hl = Math.min(1, dt * 9)
       for (const po of planetObjs) {
@@ -629,10 +633,18 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
     };
     tick();
 
+    function fitOrtho() { // function 声明可提升: 首帧 tick() 同步调用早于此处
+      const w = mm.clientWidth, h = mm.clientHeight
+      if (!w || !h) return
+      const halfH = viewHalfH / orthoC
+      const halfW = Math.max(halfH * (w / h), 6.4 / orthoC) // 盘半径5.3+刻度标签, 高不足则加宽
+      camera.left = -halfW; camera.right = halfW; camera.top = halfH; camera.bottom = -halfH
+      camera.updateProjectionMatrix()
+    }
     const onResize = () => {
       const w = mount.clientWidth, h = mount.clientHeight;
       if (!w || !h) return;
-      camera.aspect = w / h; camera.updateProjectionMatrix();
+      fitOrtho();
       renderer.setSize(w, h);
     };
     window.addEventListener('resize', onResize);
