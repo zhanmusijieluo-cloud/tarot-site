@@ -521,6 +521,8 @@ const ja: Record<string, string> = {
   'astro.res.house': 'ハウス',
   'astro.res.state': '尊貴',
   'astro.res.aspects': '主要アスペクト（緊密度順）',
+  'astro.res.modeList': 'リスト',
+  'astro.res.modeGrid': 'グリッド',
   'astro.res.nextHint': 'AIリーディングは近日公開 · 今回は星のデータの表示のみ',
   'astro.view.top': '俯瞰 · ホロスコープ',
   'astro.view.side': '側面 · 黄道面',

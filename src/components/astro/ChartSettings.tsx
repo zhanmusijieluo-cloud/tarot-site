@@ -5,10 +5,13 @@
 // 五区: 时间 / 天体 / 宫制扩展 / 相位(类型+容许度+规则) / 显示
 // ============================================================
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/i18n';
 import type { BodyGroup, CastSettings } from '@/lib/astro/chart';
+import { HOUSE_SYSTEM_LIST } from '@/lib/astro/chart';
 import { DEFAULT_ORBS } from '@/lib/astro/chart-url';
+
+const HOUSE_LIST = HOUSE_SYSTEM_LIST;
 
 const GROUPS: { key: BodyGroup; zh: string; en: string; hint: string }[] = [
   { key: 'asteroids', zh: '小行星', en: 'Asteroids', hint: '谷神⚳ 智神⚴ 婚神⚵ 灶神⚶' },
@@ -39,14 +42,26 @@ const MINOR = [
 
 type Tab = 'time' | 'bodies' | 'houses' | 'aspects' | 'display';
 
-export default function ChartSettings({ value, onChange }: {
+export default function ChartSettings({ value, onChange, sys, onSysChange, tabSignal }: {
   value: CastSettings;
   onChange: (s: CastSettings) => void;
+  sys?: string;
+  onSysChange?: (s: string) => void;
+  /** 父级请求直接打开某 Tab (nonce 变化触发) */
+  tabSignal?: { tab: string; nonce: number };
 }) {
   const { t, lang } = useI18n();
   const zhMode = lang !== 'en';
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<Tab>('bodies');
+  const seenNonce = useRef(-1);
+
+  useEffect(() => {
+    if (!tabSignal || tabSignal.nonce === undefined || tabSignal.nonce === seenNonce.current) return;
+    seenNonce.current = tabSignal.nonce;
+    setTab(tabSignal.tab as Tab);
+    setOpen(true);
+  }, [tabSignal?.nonce, tabSignal?.tab]);
 
   const set = (patch: Partial<CastSettings>) => onChange({ ...value, ...patch });
   const bodies = value.bodies ?? {};
@@ -210,11 +225,22 @@ export default function ChartSettings({ value, onChange }: {
               {tab === 'houses' && (
                 <>
                   <p className="text-[11px] leading-relaxed text-muted/70">{t('astro.set.houseHint')}</p>
-                  <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-[11px] leading-relaxed text-muted">
-                    {zhMode
-                      ? '7 种主流宫制在星盘页顶栏直接切换；Morinus(莫里努斯)与 Vettius(维提乌斯)在顶栏最右两个按钮。'
-                      : 'Switch the 9 systems from the bar above the wheel.'}
-                  </div>
+                  {onSysChange && sys && (
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {HOUSE_LIST.map((h) => (
+                        <button
+                          key={h.id}
+                          onClick={() => onSysChange(h.id)}
+                          className={`rounded-lg border px-2 py-2 text-center text-[11px] transition-colors ${
+                            sys === h.id ? 'border-accent/45 bg-accent/[0.07] text-accent' : 'border-white/[0.08] bg-white/[0.02] text-muted hover:border-white/20'
+                          }`}
+                        >
+                          <span className="block">{zhMode ? h.zh : h.en}</span>
+                          <span className="block text-[8.5px] text-muted/60">{h.id}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   <Row label={zhMode ? '整宫制起点' : 'Whole-sign basis'}>
                     <p className="text-[11px] leading-relaxed text-muted/70">
                       {zhMode ? '本盘整宫制以上升星座为首宫（行业默认）。宫头制间差异属流派问题，无对错。' : 'Whole sign starts at the ASC sign (industry default).'}

@@ -8,20 +8,15 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import PageShell, { SectionHead } from '@/components/PageShell';
+import PageShell from '@/components/PageShell';
 import { useI18n } from '@/i18n';
 import ChartResult from '@/components/astro/ChartResult';
 import ChartSettings from '@/components/astro/ChartSettings';
 import type { VChart } from '@/components/astro/ChartWheel';
 import { birthFromParams, settingsFromParams, settingsToParams } from '@/lib/astro/chart-url';
-import type { BirthData, CastSettings, HouseSystem } from '@/lib/astro/chart';
+import { HOUSE_SYSTEM_ZH, type BirthData, type CastSettings, type HouseSystem } from '@/lib/astro/chart';
 
-const SYSTEMS: HouseSystem[] = ['placidus', 'koch', 'equal', 'whole-sign', 'porphyry', 'regiomontanus', 'campanus', 'morinus', 'vettius'];
-const SYS_ZH: Record<string, string> = {
-  placidus: '普拉西德', koch: '科赫', equal: '等宫', 'whole-sign': '整宫',
-  porphyry: '波菲里', regiomontanus: '雷吉奥', campanus: '坎帕努斯',
-  morinus: '莫里努斯', vettius: '维提乌斯',
-};
+const SYS_ZH = HOUSE_SYSTEM_ZH;
 
 function ChartPageInner() {
   const { t, lang } = useI18n();
@@ -31,6 +26,7 @@ function ChartPageInner() {
 
   const birth = useMemo(() => birthFromParams(new URLSearchParams(sp.toString())), [sp]);
   const settings = useMemo(() => settingsFromParams(new URLSearchParams(sp.toString())) ?? {}, [sp]);
+  const aspectMode = (sp.get('ag') === 'grid' ? 'grid' : 'list') as 'list' | 'grid';
 
   const [data, setData] = useState<VChart | null>(null);
   const [error, setError] = useState('');
@@ -77,6 +73,9 @@ function ChartPageInner() {
     for (const k of ['bd', 'as', 'ob', 'nd', 'lil', 'oos', 'pen', 'min', 'sc', 'ts', 'dp']) p.delete(k);
     settingsToParams(s, p);
   });
+  // 打开设置抽屉指定 Tab (nonce 触发)
+  const [tabSignal, setTabSignal] = useState<{ tab: string; nonce: number } | undefined>(undefined);
+  const openSettings = (tab: string) => setTabSignal({ tab, nonce: Date.now() });
 
   if (!birth) {
     return (
@@ -98,27 +97,33 @@ function ChartPageInner() {
       subtitle={t('astro.chart.sub')}
       wide
     >
-      <section className="mb-10 mt-8">
-        <SectionHead no="01" title={t('astro.chart.section')} sub={t('astro.chart.sectionSub')} />
-
-        {/* 宫制切换条 + 设置 */}
-        <div className="mb-6 flex flex-wrap items-center justify-center gap-2">
-          <span className="mr-1 text-[10px] tracking-[0.25em] text-muted uppercase">{t('astro.form.system')}</span>
-          {SYSTEMS.map((s) => (
-            <button
-              key={s}
-              onClick={() => switchSystem(s)}
-              className={`rounded-full border px-3 py-1 text-[11px] tracking-[0.1em] transition-colors ${
-                (data?.houseSystemUsed ?? birth.houseSystem) === s
-                  ? 'border-accent/50 bg-accent/[0.08] text-accent'
-                  : 'border-white/[0.1] text-muted hover:border-white/25'
-              }`}
-            >
-              {zhMode ? SYS_ZH[s] : s}
-            </button>
-          ))}
-          <span className="mx-1 h-4 w-px bg-white/[0.1]" />
-          <ChartSettings value={settings} onChange={applySettings} />
+      <section className="mb-10 mt-6">
+        {/* 身份一行 (学宫神星资料卡压缩版): 档案名 · 生辰 · 地点 · 宫制(点开设置) · ⚙ */}
+        <div className="mb-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11.5px] text-muted">
+          {birth.label && <span className="font-display text-[13px] tracking-[0.1em] text-accent">{birth.label}</span>}
+          {birth.label && <span className="text-muted/30">·</span>}
+          <span>
+            {birth.year}-{birth.month}-{birth.day}{' '}
+            {birth.timeKnown === false ? t('astro.res.noTime') : `${String(birth.hour).padStart(2, '0')}:${String(birth.minute ?? 0).padStart(2, '0')}`}
+          </span>
+          <span className="text-muted/30">·</span>
+          <span>{birth.cnCode ? birth.cnCode.split('~').join(' ') : birth.city ?? ''}</span>
+          <span className="text-muted/30">·</span>
+          <button
+            onClick={() => openSettings('houses')}
+            className="rounded-full border border-white/[0.12] px-2.5 py-0.5 text-[10.5px] text-frost/75 transition-colors hover:border-accent/40 hover:text-accent"
+            title={t('astro.set.houseHint')}
+          >
+            {zhMode ? (SYS_ZH[data?.houseSystemUsed ?? birth.houseSystem ?? 'placidus'] ?? data?.houseSystemUsed ?? '普拉西德') : (data?.houseSystemUsed ?? birth.houseSystem ?? 'placidus')}
+            <span className="ml-1 text-[8px] text-muted/60">▾</span>
+          </button>
+          <ChartSettings
+            value={settings}
+            onChange={applySettings}
+            sys={data?.houseSystemUsed ?? birth.houseSystem ?? 'placidus'}
+            onSysChange={(s) => switchSystem(s as HouseSystem)}
+            tabSignal={tabSignal}
+          />
         </div>
 
         {error && (
@@ -129,7 +134,7 @@ function ChartPageInner() {
         {loading && !data && (
           <p className="py-20 text-center text-[12px] tracking-[0.3em] text-muted">{t('astro.form.casting')}</p>
         )}
-        {data && <ChartResult chart={data} zhMode={zhMode} />}
+        {data && <ChartResult chart={data} zhMode={zhMode} aspectMode={aspectMode} onAspectMode={(m) => patchParams((p) => { if (m === 'grid') p.set('ag', 'grid'); else p.delete('ag'); })} />}
       </section>
     </PageShell>
   );

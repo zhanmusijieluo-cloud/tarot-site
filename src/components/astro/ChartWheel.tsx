@@ -696,11 +696,17 @@ function PlanetDetail({ p, chart, zhMode, onClose }: {
 }
 
 // ---------- 对外入口 ----------
-export default function ChartWheel({ chart, zhMode }: { chart: VChart; zhMode: boolean }) {
+export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect }: {
+  chart: VChart; zhMode: boolean;
+  /** 受控选中 (ChartResult 侧栏行星列表共用): 不传则内部自管 */
+  selected?: string | null; onSelect?: (name: string | null) => void;
+}) {
   const { t } = useI18n();
   const [view, setView] = useState<'top' | 'side'>('top');
-  const [selected, setSelected] = useState<string | null>(null);
-  const selPlanet = selected ? chart.planets.find((p) => p.name === selected) ?? null : null;
+  const [selInner, setSelInner] = useState<string | null>(null);
+  const selected = selProp !== undefined ? selProp : selInner;
+  const setSelected = onSelect ?? setSelInner;
+  const selPlanet = selected ? [...chart.planets, chart.angles.ascendant, chart.angles.midheaven].find((p) => p?.name === selected) ?? null : null;
 
   return (
     <div className="rounded-2xl border border-white/[0.07] bg-black/20 p-2">

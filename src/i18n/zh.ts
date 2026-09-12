@@ -521,6 +521,8 @@ const zh: Record<string, string> = {
   'astro.res.house': '宫位',
   'astro.res.state': '尊贵',
   'astro.res.aspects': '主要相位（按紧密度）',
+  'astro.res.modeList': '列表',
+  'astro.res.modeGrid': '网格',
   'astro.res.nextHint': 'AI 深度解读即将接入 · 本轮排盘仅供查看盘面数据',
   'astro.view.top': '俯视 · 星盘',
   'astro.view.side': '侧视 · 黄道面',

@@ -530,6 +530,8 @@ const en: Record<string, string> = {
   'astro.res.house': 'House',
   'astro.res.state': 'Dignity',
   'astro.res.aspects': 'Major aspects (by tightness)',
+  'astro.res.modeList': 'List',
+  'astro.res.modeGrid': 'Grid',
   'astro.res.nextHint': 'AI interpretation coming soon · this chart shows raw data only',
   'astro.view.top': 'Top · Chart',
   'astro.view.side': 'Side · Ecliptic',

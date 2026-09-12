@@ -12,6 +12,20 @@ export type HouseSystem =
   | 'porphyry' | 'regiomontanus' | 'campanus'
   | 'morinus' | 'vettius'   // 封装层自算: MC等宫 / 卦限三分 (celestine 无, 数学公开)
 
+// 宫制清单 + 双语标签 (单一数据源: 顶栏/设置面板/URL 共用)
+export const HOUSE_SYSTEM_LIST: { id: HouseSystem; zh: string; en: string }[] = [
+  { id: 'placidus', zh: '普拉西德', en: 'Placidus' },
+  { id: 'koch', zh: '科赫', en: 'Koch' },
+  { id: 'equal', zh: '等宫', en: 'Equal' },
+  { id: 'whole-sign', zh: '整宫', en: 'Whole Sign' },
+  { id: 'porphyry', zh: '波菲里', en: 'Porphyry' },
+  { id: 'regiomontanus', zh: '雷吉奥', en: 'Regiomontanus' },
+  { id: 'campanus', zh: '坎帕努斯', en: 'Campanus' },
+  { id: 'morinus', zh: '莫里努斯', en: 'Morinus' },
+  { id: 'vettius', zh: '维提乌斯', en: 'Vettius' },
+]
+export const HOUSE_SYSTEM_ZH: Record<string, string> = Object.fromEntries(HOUSE_SYSTEM_LIST.map((h) => [h.id, h.zh]))
+
 export interface BirthData {
   year: number
   month: number
@@ -144,7 +158,12 @@ const BODY_KIND: Record<string, 'planet' | 'asteroid' | 'point'> = {
 }
 const ASPECT_ZH: Record<string, string> = {
   conjunction: '合', sextile: '六合', square: '刑', trine: '拱', opposition: '冲',
+  quincunx: '梅花', 'semi-sextile': '半六合', 'semi-square': '半刑', sesquiquadrate: '倍半刑',
+  quintile: '五分相', biquintile: '倍五分相', septile: '七分相', novile: '九分相', decile: '十分相',
 }
+export const PLANET_ZH_OF = (n: string) => PLANET_ZH[n] ?? n
+export const ASPECT_SYMBOL_OF = (n: string) => PLANET_SYMBOL[n] ?? n
+export const ASPECT_ZH_OF = (t: string) => ASPECT_ZH[t] ?? t
 
 // ---------- 互溶接纳 (Reception) ----------
 // 庙座表(现代守护)与传统守护表直接复用 celestine getSignInfo; 耀升表为托勒密公版知识:
