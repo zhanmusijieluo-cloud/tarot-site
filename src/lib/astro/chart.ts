@@ -467,9 +467,9 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
       if (sep <= 8.5) combust.push(p.name)
     }
   }
-  // 燃烧之路 Via Combusta: ♋14°55′ → ♑14°55′ (跨天秤/天蝎/射手/摩羯初), 以天蝎15°为中心的经典区间
+  // 燃烧之路 Via Combusta (窄版·爸爸定标): ♎14°55′ → ♏14°55′ (秋分点±15°的30°暗区, 托勒密"从螯钳到蝎心")
   for (const p of allBodies) {
-    const inZone = ((p.longitude - 104.9167) % 360 + 360) % 360 < 180 // 从巨蟹14°55′顺行180°内
+    const inZone = ((p.longitude - 194.9167) % 360 + 360) % 360 < 30 // 天秤14°55′起顺行30°内
     if (inZone) viaCombusta.push(p.name)
   }
 
@@ -496,7 +496,7 @@ export function chartEvidence(ch: NatalChart): string {
   lines.push(`分宫制: ${ch.houseSystemUsed}${ch.timeKnown ? '' : ' (未使用—时间未知)'}`)
   if (ch.hourRuler) lines.push(`时主星: ${PLANET_ZH[ch.hourRuler] ?? ch.hourRuler} (零点起加尔迪亚序)`)
   if (ch.combust?.length) lines.push(`焦身·燃烧(距日≤8.5°): ${ch.combust.map((n) => PLANET_ZH[n] ?? n).join('、')}`)
-  if (ch.viaCombusta?.length) lines.push(`燃烧之路(巨蟹14°55′—摩羯14°55′): ${ch.viaCombusta.map((n) => PLANET_ZH[n] ?? n).join('、')}`)
+  if (ch.viaCombusta?.length) lines.push(`燃烧之路(窄版 天秤14°55′—天蝎14°55′): ${ch.viaCombusta.map((n) => PLANET_ZH[n] ?? n).join('、')}`)
   {
     const s = ch.settings ?? {}
     const bg = Object.entries(s.bodies ?? {}).filter(([, v]) => v).map(([k]) => ({ asteroids: '小行星', chiron: '凯龙', nodes: '交点', lots: '点位', lilith: '莉莉丝' })[k] ?? k)

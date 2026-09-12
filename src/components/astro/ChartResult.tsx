@@ -160,25 +160,21 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
       ),
     })
   }
-  // 燃烧之路: ☽ 在燃烧之路 ♏ (天蝎区间) — 按所在星座分组注记
-  {
-    const vc = chart.viaCombusta ?? []
-    const inScorp = vc.filter((n) => chart.planets.find((x) => x.name === n)?.sign === 'Scorpio')
-    const others = vc.filter((n) => !inScorp.includes(n))
-    const mk = (names: string[], zone: string) => names.length ? {
-      tone: 'warn' as const,
-      tip: zhMode ? `${names.map((n) => chart.planets.find((x) => x.name === n)?.zh ?? n).join('、')} 位于燃烧之路${zone ? `核心段(${zone})` : ''}` : undefined,
+  // 燃烧之路 (窄版): ☽♏ 在燃烧之路 — 逐星一行
+  for (const n of chart.viaCombusta ?? []) {
+    const p2 = chart.planets.find((x) => x.name === n)
+    if (!p2) continue
+    features.push({
+      tone: 'warn',
+      tip: zhMode ? `${p2.zh} 位于燃烧之路 (天秤14°55′—天蝎14°55′, 秋分点之暗区)` : undefined,
       el: (
         <span>
-          {names.map((n) => <b key={n} className="ml-0.5 font-normal text-frost first:ml-0">{psym(n)}<span className="text-accent/90">{sgn(chart.planets.find((x) => x.name === n)?.sign ?? '')}</span></b>)}
-          <span className="ml-1.5 text-[#e8a08a]">在燃烧之路</span>
-          {zone && <span className="ml-1 text-accent/90">{zone}</span>}
+          <b className="font-normal text-frost">{p2.symbol}</b>
+          <span className="mx-1 text-accent/90">{sgn(p2.sign)}</span>
+          <span className="text-[#e8a08a]">在燃烧之路</span>
         </span>
       ),
-    } : null
-    const a1 = mk(inScorp, '♏'); const a2v = mk(others, '')
-    if (a1) features.push(a1)
-    if (a2v) features.push(a2v)
+    })
   }
   // 映点 Antiscia: ♀♊ 与 ☿♊ 成映点 (对宫合相)
   {
