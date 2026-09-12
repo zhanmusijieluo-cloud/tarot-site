@@ -483,15 +483,18 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
 
     // ---------- 相位线 ----------
     const aspectLines: { mesh: THREE.Line; a: string; b: string; baseOp: number; tOp: number }[] = [];
+    const ASP_Y = 0.62 // 相位网抬到球体顶之上: 盘是平躺的, 抬高在俯视图里毫无变化, 但球体(最高太阳0.5)再也挡不住线
     for (const asp of aspects) {
       const pa = planetObjs.find((o) => o.name === asp.a);
       const pb = planetObjs.find((o) => o.name === asp.b);
       if (!pa || !pb) continue;
-      const ra = Math.max(0.5, pa.r - (BODY_R[asp.a] ?? 0.14) - 0.08);
-      const rb = Math.max(0.5, pb.r - (BODY_R[asp.b] ?? 0.14) - 0.08);
+      // 端点按最坏占用收 (球体选中会放大1.18x + 光晕半径), 线头绝不扎进球盘
+      const inset = (n: string) => (n === 'Sun' ? (BODY_R[n] ?? 0.14) * 1.18 * 2.4 * 0.5 : (BODY_R[n] ?? 0.14) * 1.18 + 0.06)
+      const ra = Math.max(0.5, pa.r - inset(asp.a));
+      const rb = Math.max(0.5, pb.r - inset(asp.b));
       const col = (asp.type === 'trine' || asp.type === 'sextile' || asp.type === 'conjunction') ? 0x8aa8d8 : 0xe8a08a;
       const mesh = new THREE.Line(
-        track(new THREE.BufferGeometry().setFromPoints([polar(ra, pa.a), polar(rb, pb.a)])),
+        track(new THREE.BufferGeometry().setFromPoints([polar(ra, pa.a).setY(ASP_Y), polar(rb, pb.a).setY(ASP_Y)])),
         track(new THREE.LineBasicMaterial({ color: col, transparent: true, opacity: 0.5 })),
       );
       root.add(mesh);
