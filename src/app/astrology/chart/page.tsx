@@ -16,10 +16,11 @@ import type { VChart } from '@/components/astro/ChartWheel';
 import { birthFromParams, settingsFromParams, settingsToParams } from '@/lib/astro/chart-url';
 import type { BirthData, CastSettings, HouseSystem } from '@/lib/astro/chart';
 
-const SYSTEMS: HouseSystem[] = ['placidus', 'koch', 'equal', 'whole-sign', 'porphyry', 'regiomontanus', 'campanus'];
+const SYSTEMS: HouseSystem[] = ['placidus', 'koch', 'equal', 'whole-sign', 'porphyry', 'regiomontanus', 'campanus', 'morinus', 'vettius'];
 const SYS_ZH: Record<string, string> = {
   placidus: '普拉西德', koch: '科赫', equal: '等宫', 'whole-sign': '整宫',
   porphyry: '波菲里', regiomontanus: '雷吉奥', campanus: '坎帕努斯',
+  morinus: '莫里努斯', vettius: '维提乌斯',
 };
 
 function ChartPageInner() {
@@ -73,7 +74,7 @@ function ChartPageInner() {
   };
   const switchSystem = (sys: HouseSystem) => patchParams((p) => p.set('sys', sys));
   const applySettings = (s: CastSettings) => patchParams((p) => {
-    p.delete('bd'); p.delete('as'); p.delete('ob');
+    for (const k of ['bd', 'as', 'ob', 'nd', 'lil', 'oos', 'pen', 'min', 'sc', 'ts', 'dp']) p.delete(k);
     settingsToParams(s, p);
   });
 

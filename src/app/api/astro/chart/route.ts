@@ -9,6 +9,7 @@ import { castNatalChart, chartEvidence, type BirthData, type CastSettings, type 
 
 const HOUSE_SYSTEMS: HouseSystem[] = [
   'placidus', 'koch', 'equal', 'whole-sign', 'porphyry', 'regiomontanus', 'campanus',
+  'morinus', 'vettius',
 ]
 
 function bad(msg: string) {
@@ -52,6 +53,8 @@ export async function POST(request: NextRequest) {
       settings.bodies = {}
       for (const k of VALID_GROUPS) if (s.bodies[k] === true) (settings.bodies as Record<string, boolean>)[k] = true
     }
+    if (s.nodeType === 'mean' || s.nodeType === 'true') settings.nodeType = s.nodeType
+    if (s.lilithType === 'mean' || s.lilithType === 'true' || s.lilithType === 'both') settings.lilithType = s.lilithType
     if (Array.isArray(s.aspectTypes)) {
       settings.aspectTypes = s.aspectTypes.filter((x: unknown) => typeof x === 'string' && VALID_ASPECTS.has(x))
     }
@@ -60,6 +63,18 @@ export async function POST(request: NextRequest) {
       for (const [k, v] of Object.entries(s.orbs)) {
         if (VALID_ASPECTS.has(k) && typeof v === 'number' && v >= 0.5 && v <= 15) (settings.orbs as Record<string, number>)[k] = v
       }
+    }
+    if (s.outOfSign === false) settings.outOfSign = false
+    if (typeof s.oosPenalty === 'number' && s.oosPenalty >= 0 && s.oosPenalty <= 1) settings.oosPenalty = s.oosPenalty
+    if (typeof s.minStrength === 'number' && s.minStrength >= 0 && s.minStrength <= 100) settings.minStrength = s.minStrength
+    if (['core', 'planets', 'asteroids', 'all'].includes(s.aspectScope)) settings.aspectScope = s.aspectScope
+    if (s.trueSolar === true) settings.trueSolar = true
+    if (s.display && typeof s.display === 'object') {
+      const d: NonNullable<CastSettings['display']> = {}
+      if (s.display.dir === 'cw') d.dir = 'cw'
+      if (s.display.ascPos === 'top') d.ascPos = 'top'
+      for (const k of ['aspects', 'feet', 'nums', 'ticks'] as const) if (s.display[k] === false) d[k] = false
+      if (Object.keys(d).length) settings.display = d
     }
 
     const birth: BirthData = {

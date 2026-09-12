@@ -31,6 +31,7 @@ export interface VReception {
 export interface VChart {
   houseSystemUsed: string; timeKnown: boolean;
   input: { year: number; month: number; day: number; hour: number; minute: number; city?: string; label?: string };
+  settings?: { display?: { dir?: 'ccw' | 'cw'; ascPos?: 'left' | 'top'; aspects?: boolean; feet?: boolean; nums?: boolean; ticks?: boolean } };
   planets: VPlanet[];
   angles: { ascendant: VPlanet | null; midheaven: VPlanet | null };
   cusps: number[] | null;
@@ -47,9 +48,13 @@ const R_PLAN = 2.68;  // 行星基准半径
 const GOLD = 0xcdb88a;
 
 // 黄经 → 屏幕角: rel=自ASC逆时针角; a=180°+rel → rel=0在左(9点), 逆时针走
-function lonToAngle(lon: number, ascLon: number): number {
+// 黄经 → 屏幕角: rel=自ASC起沿盘序角(逆时针默认); 默认 a=180°+rel → ASC在左(9点)
+// dir=cw: 盘序反向(顺时针); ascPos=top: ASC移到12点(360°)
+function lonToAngle(lon: number, ascLon: number, dir: 'ccw' | 'cw' = 'ccw', ascPos: 'left' | 'top' = 'left'): number {
   const rel = (((lon - ascLon) % 360) + 360) % 360;
-  return (180 + rel) * Math.PI / 180;
+  const signed = dir === 'cw' ? -rel : rel;
+  const base = ascPos === 'top' ? 360 : 180;
+  return (base + signed) * Math.PI / 180;
 }
 function polar(r: number, a: number): THREE.Vector3 {
   return new THREE.Vector3(Math.cos(a) * r, 0, -Math.sin(a) * r);
@@ -135,15 +140,22 @@ interface SceneProps {
   chart: VChart;
   zhMode: boolean;
   view: 'top' | 'side';
+  disp?: {
+    dir?: 'ccw' | 'cw'; ascPos?: 'left' | 'top';
+    aspects?: boolean; feet?: boolean; nums?: boolean; ticks?: boolean;
+  };
   selected: string | null;
   onSelect: (name: string | null) => void;
 }
 
-function ChartScene({ chart, zhMode, view, selected, onSelect }: SceneProps) {
+function ChartScene({ chart, zhMode, view, disp, selected, onSelect }: SceneProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<{ set: (n: string | null) => void } | null>(null);
 
   const ascLon = chart.angles.ascendant?.longitude ?? 0;
+  const DIR = disp?.dir ?? 'ccw';
+  const ASCP = disp?.ascPos ?? 'left';
+  const la = (lon: number) => lonToAngle(lon, ascLon, DIR, ASCP);
   const hasHouses = chart.timeKnown && !!chart.cusps;
   const aspects = useMemo(() => [...chart.aspects].sort((a, b) => a.orb - b.orb).slice(0, 14), [chart]);
 
@@ -201,7 +213,7 @@ function ChartScene({ chart, zhMode, view, selected, onSelect }: SceneProps) {
     const houseSlices: THREE.Mesh[] = [];
     const cusps = chart.cusps as number[] | null;
     {
-      const a1 = (s: number) => lonToAngle(s * 30, ascLon); // 星座带扇区起始角(跟随ASC)
+      const a1 = (s: number) => la(s * 30); // 星座带扇区起始角(跟随ASC)
       for (let s = 0; s < 12; s++) {
         const geo = track(new THREE.RingGeometry(R_SIGN, R_BAND, 24, 1, a1(s), 30 * DEG));
         const el = ELEMENT_OF_SIGN[SIGN_ORDER[s]];
@@ -216,11 +228,11 @@ function ChartScene({ chart, zhMode, view, selected, onSelect }: SceneProps) {
         // 符号: 元素色 + 微光, 大尺寸
         const gt = track(textTexture(SIGN_GLYPH[s], 96, ELEMENT_HEX[el], 10));
         const gs = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: gt, transparent: true, opacity: 0.95, depthWrite: false })));
-        gs.position.copy(polar((R_SIGN + R_BAND) / 2, lonToAngle(s * 30 + 15, ascLon)));
+        gs.position.copy(polar((R_SIGN + R_BAND) / 2, la(s * 30 + 15)));
         gs.scale.set(0.6, 0.6, 1);
         root.add(gs);
         // 星座边界: 30° 金色细线
-        const ab = lonToAngle(s * 30, ascLon);
+        const ab = la(s * 30);
         root.add(new THREE.Line(
           track(new THREE.BufferGeometry().setFromPoints([polar(R_SIGN, ab), polar(R_OUT, ab)])),
           track(new THREE.LineBasicMaterial({ color: GOLD, transparent: true, opacity: 0.32 })),
@@ -231,7 +243,7 @@ function ChartScene({ chart, zhMode, view, selected, onSelect }: SceneProps) {
       for (let h = 0; h < 12; h++) {
         const c0 = norm360(cusps[h]), c1 = norm360(cusps[(h + 1) % 12]);
         let span = norm360(c1 - c0); if (span < 1) span = 30;
-        const a0 = lonToAngle(c0, ascLon);
+        const a0 = la(c0);
         const geo = track(new THREE.RingGeometry(R_BAND + 0.04, R_OUT, 40, 1, a0, span * DEG));
         const el = ELEMENT_OF_SIGN[SIGN_ORDER[Math.floor(c0 / 30) % 12]] ?? '风';
         const mat = track(new THREE.MeshBasicMaterial({
@@ -250,17 +262,19 @@ function ChartScene({ chart, zhMode, view, selected, onSelect }: SceneProps) {
             color: isAcs ? GOLD : 0x6f84ab, transparent: true, opacity: isAcs ? 0.95 : 0.6,
           })),
         ));
-        // 宫号 (扇区中点, 角点金色)
-        const amid = a0 + (span * DEG) / 2;
-        const tex = track(textTexture(String(h + 1), 46, isAcs ? '#e3d3a3' : '#9fb2d4'));
-        const spr = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.95, depthWrite: false })));
-        spr.position.copy(polar((R_BAND + R_OUT) / 2, amid));
-        spr.scale.set(0.3, 0.3, 1);
-        root.add(spr);
+        // 宫号 (扇区中点, 角点金色; 图层开关 nums)
+        if (disp?.nums !== false) {
+          const amid = a0 + (span * DEG) / 2;
+          const tex = track(textTexture(String(h + 1), 46, isAcs ? '#e3d3a3' : '#9fb2d4'));
+          const spr = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.95, depthWrite: false })));
+          spr.position.copy(polar((R_BAND + R_OUT) / 2, amid));
+          spr.scale.set(0.3, 0.3, 1);
+          root.add(spr);
+        }
       }
       // ASC / MC 锚点标签 (带外)
-      const ascA = lonToAngle(norm360(cusps[0]), ascLon);
-      const mcA = lonToAngle(norm360(cusps[9]), ascLon);
+      const ascA = la(norm360(cusps[0]));
+      const mcA = la(norm360(cusps[9]));
       for (const [txt, ang, big] of [['ASC', ascA, 1.15], ['MC', mcA, 1.0]] as const) {
         const tex = track(textTexture(txt, 40, '#e3d3a3'));
         const spr = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.95, depthWrite: false })));
@@ -287,18 +301,18 @@ function ChartScene({ chart, zhMode, view, selected, onSelect }: SceneProps) {
       ringLine.rotation.x = -Math.PI / 2;
       root.add(ringLine);
     }
-    for (let lon = 0; lon < 360; lon += 5) {
+    if (disp?.ticks !== false) for (let lon = 0; lon < 360; lon += 5) {
       const major = lon % 30 === 0, med = lon % 10 === 0;
       if (!med && !major) {
         // 5°: 极细短针脚
-        const a = lonToAngle(lon, ascLon);
+        const a = la(lon);
         root.add(new THREE.Line(
           track(new THREE.BufferGeometry().setFromPoints([polar(R_OUT + 0.01, a), polar(R_OUT + 0.07, a)])),
           track(new THREE.LineBasicMaterial({ color: 0x8a98b8, transparent: true, opacity: 0.3 })),
         ));
         continue;
       }
-      const a = lonToAngle(lon, ascLon);
+      const a = la(lon);
       const len = major ? 0.17 : 0.12;
       root.add(new THREE.Line(
         track(new THREE.BufferGeometry().setFromPoints([polar(R_OUT + 0.01, a), polar(R_OUT + len, a)])),
@@ -312,7 +326,7 @@ function ChartScene({ chart, zhMode, view, selected, onSelect }: SceneProps) {
     {
       // 按逆时针角度排序后聚类: 弧距 < 两半径和+0.10 的同组
       const items = chart.planets.map((p) => {
-        const a = lonToAngle(p.longitude, ascLon);
+        const a = la(p.longitude);
         const rel = norm360(p.longitude - ascLon);
         return { p, a, rel, br: BODY_R[p.name] ?? 0.14 };
       }).sort((x, y) => x.rel - y.rel);
@@ -427,19 +441,21 @@ function ChartScene({ chart, zhMode, view, selected, onSelect }: SceneProps) {
         root.add(g);
         planetObjs.push({ name: p.name, group: g, mesh, r, a: it.a });
 
-        // 脚线 + 刻度点 (球 → 真实黄经在星座带上的投影)
-        const foot = polar(R_SIGN - 0.01, it.a);
-        root.add(new THREE.Line(
-          track(new THREE.BufferGeometry().setFromPoints([pos, foot])),
-          track(new THREE.LineBasicMaterial({ color: 0x8ea3c8, transparent: true, opacity: 0.3 })),
-        ));
-        const el = ELEMENT_OF_SIGN[p.sign] ?? '风';
-        const dot = new THREE.Mesh(
-          track(new THREE.CircleGeometry(0.055, 14)),
-          track(new THREE.MeshBasicMaterial({ color: ELEMENT_COLOR[el], transparent: true, opacity: 0.95, side: THREE.DoubleSide })),
-        );
-        dot.position.copy(foot); dot.rotation.x = -Math.PI / 2;
-        root.add(dot);
+        // 脚线 + 刻度点 (球 → 真实黄经在星座带上的投影; 图层开关 feet)
+        if (disp?.feet !== false) {
+          const foot = polar(R_SIGN - 0.01, it.a);
+          root.add(new THREE.Line(
+            track(new THREE.BufferGeometry().setFromPoints([pos, foot])),
+            track(new THREE.LineBasicMaterial({ color: 0x8ea3c8, transparent: true, opacity: 0.3 })),
+          ));
+          const el = ELEMENT_OF_SIGN[p.sign] ?? '风';
+          const dot = new THREE.Mesh(
+            track(new THREE.CircleGeometry(0.055, 14)),
+            track(new THREE.MeshBasicMaterial({ color: ELEMENT_COLOR[el], transparent: true, opacity: 0.95, side: THREE.DoubleSide })),
+          );
+          dot.position.copy(foot); dot.rotation.x = -Math.PI / 2;
+          root.add(dot);
+        }
       }
     }
     root.add(sunLight); // 幂等兜底
@@ -725,7 +741,7 @@ export default function ChartWheel({ chart, zhMode }: { chart: VChart; zhMode: b
         )}
       </div>
 
-      <ChartScene chart={chart} zhMode={zhMode} view={view} selected={selected} onSelect={setSelected} />
+      <ChartScene chart={chart} zhMode={zhMode} view={view} disp={chart.settings?.display} selected={selected} onSelect={setSelected} />
 
       <p className="pb-2 text-center text-[10px] tracking-[0.18em] text-muted/55">
         {view === 'top' ? t('astro.view.hintTop') : t('astro.view.hintSide')}

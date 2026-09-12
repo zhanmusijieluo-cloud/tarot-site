@@ -10,6 +10,7 @@ import { calculateChart, calculateAspects, AspectType, getSignInfo } from 'celes
 export type HouseSystem =
   | 'placidus' | 'koch' | 'equal' | 'whole-sign'
   | 'porphyry' | 'regiomontanus' | 'campanus'
+  | 'morinus' | 'vettius'   // 封装层自算: MC等宫 / 卦限三分 (celestine 无, 数学公开)
 
 export interface BirthData {
   year: number
@@ -64,10 +65,33 @@ export type BodyGroup = 'asteroids' | 'chiron' | 'nodes' | 'lots' | 'lilith'
 export interface CastSettings {
   /** 天体分组开关 (十主星恒含) */
   bodies?: Partial<Record<BodyGroup, boolean>>
+  /** 交点类型 (默认 true) */
+  nodeType?: 'true' | 'mean'
+  /** 莉莉丝类型 (默认 mean) */
+  lilithType?: 'mean' | 'true' | 'both'
   /** 参与相位计算/展示的相位类型 (默认五大) */
   aspectTypes?: string[]
   /** 各相位容许度覆盖 (度) */
   orbs?: Record<string, number>
+  /** 跨星座相位 (默认开) */
+  outOfSign?: boolean
+  /** 跨星座相位强度惩罚 0~1 (默认0) */
+  oosPenalty?: number
+  /** 相位最低强度 0~100 (默认0) */
+  minStrength?: number
+  /** 相位参与范围: core=十主星 planets=+凯龙交点等主虚点 asteroids=+小行星 all=全部(默认) */
+  aspectScope?: 'core' | 'planets' | 'asteroids' | 'all'
+  /** 真太阳时校正 (钟表时→视太阳时; 经度差+时差公式) */
+  trueSolar?: boolean
+  /** 盘面显示偏好 (渲染层) */
+  display?: {
+    dir?: 'ccw' | 'cw'          // 逆时针(默认)/顺时针盘
+    ascPos?: 'left' | 'top'     // ASC 在左(默认)/在上
+    aspects?: boolean           // 相位线 (默认开)
+    feet?: boolean              // 脚线刻度 (默认开)
+    nums?: boolean              // 宫号 (默认开)
+    ticks?: boolean             // 度刻度针脚 (默认开)
+  }
 }
 
 export interface NatalChart {
@@ -136,6 +160,11 @@ const FALL_SIGN: Record<string, string> = {
   Mars: 'Cancer', Jupiter: 'Capricorn', Saturn: 'Aries',
   Uranus: '', Neptune: '', Pluto: '',
 }
+// 十主星 (默认盘面; 小行星/虚点由 settings.bodies 开关追加)
+const CORE_BODIES = [
+  'Sun', 'Moon', 'Mercury', 'Venus', 'Mars',
+  'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto',
+]
 // 高纬 Placidus 数学不收敛区
 const HIGH_LAT = 66.5
 
@@ -222,6 +251,69 @@ function bodyToPlanet(
   }
 }
 
+// ---------- 真太阳时校正 ----------
+// 钟表时 → 视太阳时: ①经度差 (每偏时区中央经线1°=4分钟, 东经为正) ②均时差EoT(Meeus 28.4, 分钟)
+function equationOfTimeMinutes(jd: number): number {
+  const T = (jd - 2451545) / 36525
+  const L0 = (280.4664567 + 36000.76983 * T + 0.0003032 * T * T) % 360 // 太阳平黄经
+  const M = (357.52911 + 35999.05029 * T - 0.0001537 * T * T) % 360    // 太阳平近点角
+  const Mr = M * DEG2R
+  const eps = (23.439291 - 0.0130042 * T) * DEG2R
+  const y = Math.tan(eps / 2) ** 2
+  const l0r = L0 * DEG2R
+  const eot =
+    y * Math.sin(2 * l0r) - 2 * 0.016708 * Math.sin(Mr) +
+    4 * 0.016708 * y * Math.sin(Mr) * Math.cos(2 * l0r) -
+    0.5 * y * y * Math.sin(4 * l0r) - 1.25 * 0.016708 * 0.016708 * Math.sin(2 * Mr)
+  return (eot * 180 / Math.PI) * 4 // 度→分钟 (1°=4m)
+}
+const DEG2R = Math.PI / 180
+
+function applyTrueSolar(birth: BirthData, timeKnown: boolean, warnings: string[]): BirthData {
+  if (!timeKnown) return birth
+  // 先以钟表时粗算 JD 求均时差 (EoT 日变化<30s, 一次迭代足够)
+  const jd0 = Date.UTC(birth.year, birth.month - 1, birth.day, birth.hour, birth.minute) / 86400000
+    - birth.timezone / 24 + 2440587.5
+  const lonCorrection = (birth.longitude - birth.timezone * 15) * 4 // 分钟, 东经偏东为正
+  const eot = equationOfTimeMinutes(jd0)
+  const shiftMin = lonCorrection + eot
+  if (Math.abs(shiftMin) < 0.5) return birth
+  const total = birth.hour * 60 + birth.minute + shiftMin
+  const wrapped = ((total % 1440) + 1440) % 1440
+  const dayShift = Math.floor(total / 1440) // 跨日(如时差+经度差把子时推到前一日)
+  const d = new Date(Date.UTC(birth.year, birth.month - 1, birth.day + dayShift))
+  warnings.push(`真太阳时校正: 钟表时${birth.hour}:${String(birth.minute).padStart(2, '0')} → 视太阳时${Math.floor(wrapped / 60)}:${String(Math.round(wrapped % 60)).padStart(2, '0')} (经度${lonCorrection >= 0 ? '+' : ''}${lonCorrection.toFixed(1)}m + 均时差${eot >= 0 ? '+' : ''}${eot.toFixed(1)}m)`)
+  return {
+    ...birth,
+    year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate(),
+    hour: Math.floor(wrapped / 60), minute: Math.round(wrapped % 60),
+  }
+}
+
+// ---------- Morinus / Vettius 分宫 (封装层自算, celestine 无) ----------
+// Morinus: 自ASC起12等分黄道 (以赤经起算的等宫制, 简化为黄道等分自ASC)
+// Vettius: 四分仪制 — ASC/MC 定四轴后, 每卦限(12宫象限)三等分
+function cuspsFor(system: HouseSystem, asc: number, mc: number): number[] | null {
+  if (system === 'morinus') {
+    return Array.from({ length: 12 }, (_, i) => norm(asc + i * 30))
+  }
+  if (system === 'vettius') {
+    // 四分仪三等分 (Porphyry/Vettius): 四轴按黄经增方向从ASC起排, 相邻轴间三等分
+    // 通用: 取各轴相对ASC的[0,360)偏移排序 → 逐卦限插两点
+    const ic = norm(mc + 180), dsc = norm(asc + 180)
+    const rel = [0, norm(ic - asc), norm(dsc - asc), norm(mc - asc)].sort((a, b) => a - b)
+    const out: number[] = []
+    for (let i = 0; i < 4; i++) {
+      const a0 = asc + rel[i]
+      const a1 = i < 3 ? asc + rel[i + 1] : asc + 360
+      const span = a1 - a0
+      out.push(norm(a0), norm(a0 + span / 3), norm(a0 + 2 * span / 3))
+    }
+    return out.slice(0, 12)
+  }
+  return null // celestine 原生支持
+}
+
 // ---------- 主入口: 排盘 ----------
 export function castNatalChart(birth: BirthData, settings: CastSettings = {}): NatalChart {
   const warnings: string[] = []
@@ -239,22 +331,25 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
     warnings.push('未提供出生时间: 上升与宫位不可算, 月亮位置为当地正午近似(误差可达±6°)')
   }
 
+  // 真太阳时校正 (可选): 钟表时 → 视太阳时
+  const effBirth = settings.trueSolar ? applyTrueSolar(birth, timeKnown, warnings) : birth
+
   // 天体分组开关 (默认只开十主星, 与旧行为一致)
   const B = settings.bodies ?? {}
   const c = calculateChart(
     {
-      year: birth.year, month: birth.month, day: birth.day,
-      hour: timeKnown ? birth.hour : 12,
-      minute: timeKnown ? birth.minute : 0,
+      year: effBirth.year, month: effBirth.month, day: effBirth.day,
+      hour: timeKnown ? effBirth.hour : 12,
+      minute: timeKnown ? effBirth.minute : 0,
       second: 0,
-      timezone: birth.timezone,
-      latitude: birth.latitude, longitude: birth.longitude,
+      timezone: effBirth.timezone,
+      latitude: effBirth.latitude, longitude: effBirth.longitude,
     },
     {
-      houseSystem: system,
+      houseSystem: (['morinus', 'vettius'].includes(system) ? 'placidus' : system) as 'placidus' | 'koch' | 'equal' | 'whole-sign' | 'porphyry' | 'regiomontanus' | 'campanus',
       includeAsteroids: !!B.asteroids, includeChiron: !!B.chiron,
-      includeNodes: B.nodes ? 'true' : false,
-      includeLots: !!B.lots, includeLilith: B.lilith ? 'mean' : false,
+      includeNodes: B.nodes ? (settings.nodeType ?? 'true') : false,
+      includeLots: !!B.lots, includeLilith: B.lilith ? (settings.lilithType ?? 'mean') : false,
     },
   )
 
@@ -279,14 +374,45 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
     midheaven: bodyToPlanet({ ...c.angles.midheaven, name: 'Midheaven' }, true),
   } : { ascendant: null, midheaven: null }
 
-  // 相位: 类型与容许度由设置驱动 (默认五大相位, 与旧行为一致)
+  // Morinus/Vettius: 用四轴自算宫头 (celestine 的宫头仅对 placidus 系有效)
+  let cuspsOut: number[] | null = null
+  if (timeKnown) {
+    const rawCusps = (c.houses as unknown as { cusps: (number | { longitude: number })[] }).cusps.map(x => typeof x === 'number' ? x : x.longitude)
+    const selfCusps = cuspsFor(system, rawCusps[0], rawCusps[9])
+    cuspsOut = selfCusps ?? rawCusps
+    if (selfCusps) {
+      // 自算宫制: 重挂所有天体的宫位号 (按宫头区间)
+      const assign = (p: ChartPlanet) => {
+        for (let h = 0; h < 12; h++) {
+          const a0 = norm(selfCusps[h]), span = norm(selfCusps[(h + 1) % 12] - a0 + 360) % 360 || 30
+          const rel = norm(p.longitude - a0)
+          if (rel < span) { p.house = h + 1; break }
+        }
+      }
+      if (timeKnown) allBodies.forEach(assign)
+    }
+  }
+
+  // 相位: 类型/容许度/跨星座/强度/范围 全由设置驱动
   const at = (settings.aspectTypes?.length ? settings.aspectTypes : ['conjunction', 'sextile', 'square', 'trine', 'opposition']) as AspectType[]
   const orbsCfg = settings.orbs as Partial<Record<AspectType, number>> | undefined
+  const scope = settings.aspectScope ?? 'all'
+  const SCOPE_PLANETS = new Set([...CORE_BODIES, 'Chiron', 'True North Node', 'True South Node', 'Mean North Node', 'Mean South Node', 'North Node', 'South Node'])
+  const scopeBodies = allBodies.filter((p) =>
+    scope === 'all' ? true
+      : scope === 'asteroids' ? (SCOPE_PLANETS.has(p.name) || p.kind === 'asteroid')
+      : scope === 'planets' ? SCOPE_PLANETS.has(p.name)
+      : CORE_BODIES.includes(p.name))
   const { aspects: rawAspects } = calculateAspects(
-    allBodies.map((p) => ({
+    scopeBodies.map((p) => ({
       name: p.name, longitude: p.longitude, longitudeSpeed: p.speed,
     })),
-    { aspectTypes: at, orbs: orbsCfg },
+    {
+      aspectTypes: at, orbs: orbsCfg,
+      includeOutOfSign: settings.outOfSign !== false,
+      outOfSignPenalty: settings.oosPenalty ?? 0,
+      minimumStrength: settings.minStrength ?? 0,
+    },
   )
   const aspects: ChartAspect[] = rawAspects.map((a: {
     body1: string; body2: string; type: string; deviation: number; isApplying: boolean | null; symbol: string
@@ -305,9 +431,7 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
     timeKnown,
     jd: c.calculated?.julianDate ?? 0,
     planets: allBodies, angles,
-    cusps: timeKnown
-      ? (c.houses as unknown as { cusps: (number | { longitude: number })[] }).cusps.map(x => typeof x === 'number' ? x : x.longitude)
-      : null,
+    cusps: cuspsOut,
     aspects, receptions, warnings,
   }
 }
@@ -325,7 +449,15 @@ export function chartEvidence(ch: NatalChart): string {
     const bg = Object.entries(s.bodies ?? {}).filter(([, v]) => v).map(([k]) => ({ asteroids: '小行星', chiron: '凯龙', nodes: '交点', lots: '点位', lilith: '莉莉丝' })[k] ?? k)
     const at = s.aspectTypes && s.aspectTypes.length !== 5 ? `相位${s.aspectTypes.length}种` : null
     const ob = s.orbs && Object.keys(s.orbs).length ? `自定义容许度(${Object.entries(s.orbs).map(([k, v]) => `${ASPECT_ZH[k] ?? k}±${v}°`).join(' ')})` : null
-    const bits = [bg.length ? `含${bg.join('、')}` : null, at, ob].filter(Boolean)
+    const bits = [
+      bg.length ? `含${bg.join('、')}` : null, at, ob,
+      s.aspectScope && s.aspectScope !== 'all' ? `相位范围=${({ core: '仅十主星', planets: '主星+虚点', asteroids: '含小行星' })[s.aspectScope]}` : null,
+      s.minStrength ? `相位最低强度${s.minStrength}%` : null,
+      s.outOfSign === false ? '不计跨星座相位' : null,
+      s.nodeType === 'mean' ? '交点用平交点' : null,
+      s.lilithType && s.lilithType !== 'mean' ? `莉莉丝=${s.lilithType}` : null,
+      s.trueSolar ? '已真太阳时校正' : null,
+    ].filter(Boolean)
     if (bits.length) lines.push(`排盘设置: ${bits.join('; ')}`)
   }
   if (ch.angles.ascendant) lines.push(`上升: ${ch.angles.ascendant.signZh} ${ch.angles.ascendant.degInSign}° | 中天: ${ch.angles.midheaven?.signZh} ${ch.angles.midheaven?.degInSign}°`)

@@ -3,7 +3,7 @@
 import { ALL_CITIES, findCity } from '@/lib/astro/cities';
 import type { BirthData, CastSettings, HouseSystem } from '@/lib/astro/chart';
 
-const SYS: HouseSystem[] = ['placidus', 'koch', 'equal', 'whole-sign', 'porphyry', 'regiomontanus', 'campanus'];
+const SYS: HouseSystem[] = ['placidus', 'koch', 'equal', 'whole-sign', 'porphyry', 'regiomontanus', 'campanus', 'morinus', 'vettius'];
 
 // settings 的 URL 编码: bd=小行星.凯龙.交点.福点.莉莉丝(0/1) | as=追加的次要相位 | ob=合,冲,拱,刑,六合容许度
 const MINOR_ASPECTS = ['quincunx', 'semi-sextile', 'semi-square', 'sesquiquadrate', 'quintile', 'biquintile', 'septile', 'novile', 'decile'] as const;
@@ -19,6 +19,9 @@ export function settingsFromParams(sp: URLSearchParams): CastSettings | undefine
     s.bodies = {};
     groups.forEach((g, i) => { if (flags[i] === '1') (s.bodies as Record<string, boolean>)[g] = true; });
   }
+  if (sp.get('nd') === 'mean') s.nodeType = 'mean';
+  const lil = sp.get('lil');
+  if (lil === 'true' || lil === 'both') s.lilithType = lil;
   const as = sp.get('as');
   const types = ['conjunction', 'sextile', 'square', 'trine', 'opposition'];
   if (as) types.push(...as.split('.').filter((x): x is string => (MINOR_ASPECTS as readonly string[]).includes(x)));
@@ -28,6 +31,27 @@ export function settingsFromParams(sp: URLSearchParams): CastSettings | undefine
     const vals = ob.split('.').map(Number);
     s.orbs = {};
     MAJOR_ORDER.forEach((k, i) => { if (Number.isFinite(vals[i]) && vals[i] >= 0.5 && vals[i] <= 15) (s.orbs as Record<string, number>)[k] = vals[i]; });
+  }
+  if (sp.get('oos') === '0') s.outOfSign = false;
+  const pen = Number(sp.get('pen'));
+  if (Number.isFinite(pen) && pen > 0 && pen <= 1) s.oosPenalty = pen;
+  const min = Number(sp.get('min'));
+  if (Number.isFinite(min) && min > 0 && min <= 100) s.minStrength = min;
+  const sc = sp.get('sc');
+  if (sc === 'core' || sc === 'planets' || sc === 'asteroids') s.aspectScope = sc;
+  if (sp.get('ts') === '1') s.trueSolar = true;
+  const dp = sp.get('dp'); // 显示偏好: dir.cw / asc.top / 关掉的图层(逗号)
+  if (dp) {
+    const d: NonNullable<CastSettings['display']> = {};
+    for (const tok of dp.split('.')) {
+      if (tok === 'cw') d.dir = 'cw';
+      else if (tok === 'top') d.ascPos = 'top';
+      else if (tok === 'noasp') d.aspects = false;
+      else if (tok === 'nofoot') d.feet = false;
+      else if (tok === 'nonum') d.nums = false;
+      else if (tok === 'notick') d.ticks = false;
+    }
+    if (Object.keys(d).length) s.display = d;
   }
   return Object.keys(s).length ? s : undefined;
 }
@@ -39,6 +63,8 @@ export function settingsToParams(s: CastSettings | undefined, p: URLSearchParams
     const flags = ['asteroids', 'chiron', 'nodes', 'lots', 'lilith'].map((g) => (b[g] ? '1' : '0')).join('.');
     if (flags !== '0.0.0.0.0') p.set('bd', flags);
   }
+  if (s.nodeType === 'mean') p.set('nd', 'mean');
+  if (s.lilithType && s.lilithType !== 'mean') p.set('lil', s.lilithType);
   if (s.aspectTypes?.length) {
     const minor = s.aspectTypes.filter((x) => (MINOR_ASPECTS as readonly string[]).includes(x));
     if (minor.length) p.set('as', minor.join('.'));
@@ -46,6 +72,21 @@ export function settingsToParams(s: CastSettings | undefined, p: URLSearchParams
   if (s.orbs && Object.keys(s.orbs).length) {
     const vals = MAJOR_ORDER.map((k) => s.orbs?.[k] ?? DEFAULT_ORBS[k]).join('.');
     if (vals !== Object.values(DEFAULT_ORBS).join('.')) p.set('ob', vals);
+  }
+  if (s.outOfSign === false) p.set('oos', '0');
+  if (s.oosPenalty) p.set('pen', String(s.oosPenalty));
+  if (s.minStrength) p.set('min', String(s.minStrength));
+  if (s.aspectScope && s.aspectScope !== 'all') p.set('sc', s.aspectScope);
+  if (s.trueSolar) p.set('ts', '1');
+  if (s.display) {
+    const toks: string[] = [];
+    if (s.display.dir === 'cw') toks.push('cw');
+    if (s.display.ascPos === 'top') toks.push('top');
+    if (s.display.aspects === false) toks.push('noasp');
+    if (s.display.feet === false) toks.push('nofoot');
+    if (s.display.nums === false) toks.push('nonum');
+    if (s.display.ticks === false) toks.push('notick');
+    if (toks.length) p.set('dp', toks.join('.'));
   }
 }
 
