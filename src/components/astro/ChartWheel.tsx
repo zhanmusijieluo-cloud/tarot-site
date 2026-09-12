@@ -457,10 +457,10 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
           g.add(ls);
         }
         root.add(g);
-        // 视觉半径(线端让位用): 虚点=符号半高; 太阳=光晕半宽; 土星=环外沿; 其余=球缘; 统一含选中1.18x档+固定小缝
+        // 视觉半径(线端让位用): 虚点=符号半高; 土星=环外沿(爸爸指定保留缝); 其余=球缘紧贴不留缝
         const brNow = kind === 'point' ? 0 : (kind === 'asteroid' ? it.br * 0.55 : it.br)
-        const vBase = kind === 'point' ? 0.2 : brNow * (p.name === 'Sun' ? 1.2 : p.name === 'Saturn' ? 2.3 : 1)
-        planetObjs.push({ name: p.name, group: g, mesh, r, a: it.a, vr: vBase * 1.18 + 0.05, tScale: 1, cScale: 1, tDim: 1, cDim: 1, tEmi: 1, cEmi: 1 });
+        const vBase = kind === 'point' ? 0.2 : brNow * (p.name === 'Saturn' ? 2.3 : 1)
+        planetObjs.push({ name: p.name, group: g, mesh, r, a: it.a, vr: vBase, tScale: 1, cScale: 1, tDim: 1, cDim: 1, tEmi: 1, cEmi: 1 });
 
         // 脚线 + 刻度点: 乙方案 — 默认仅选中星显示 (feetAlways=true 全体常显)
         if (disp?.feet !== false) {
