@@ -35,7 +35,7 @@ function PlanetRow({ p, selected, onClick }: { p: VPlanet; selected: boolean; on
       </span>
       <span className={`w-[4.2em] shrink-0 truncate ${selected ? 'text-frost' : 'text-frost/80'}`}>{p.zh}</span>
       <span className="flex-1 truncate text-muted">{p.signZh} {p.degInSign.toFixed(1)}°</span>
-      <span className="w-6 shrink-0 text-right text-muted/80">{p.house ? `${p.house}宫` : '—'}</span>
+      <span className="w-8 shrink-0 text-right text-muted/80">{p.house ? `${p.house}宫` : '—'}</span>
       <span className="w-8 shrink-0 text-right text-[10.5px]">
         {p.dignity && p.dignity.state !== 'Peregrine' ? (
           <span className={p.dignity.strength > 0 ? 'text-[#cdb88a]' : 'text-[#e8a08a]'}>
@@ -130,7 +130,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
                 <span className="w-6 shrink-0 text-center text-[12px] text-frost/60">{p.symbol}</span>
                 <span className="w-[4.2em] shrink-0 truncate text-frost/70">{p.zh}</span>
                 <span className="flex-1 truncate text-muted">{p.signZh} {p.degInSign.toFixed(1)}°</span>
-                <span className="w-6 shrink-0 text-right text-muted/80">{p.house ? `${p.house}宫` : '—'}</span>
+                <span className="w-8 shrink-0 text-right text-muted/80">{p.house ? `${p.house}宫` : '—'}</span>
                 <span className="w-8" />
               </div>
             ))}

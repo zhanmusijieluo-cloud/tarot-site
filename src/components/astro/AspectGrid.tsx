@@ -48,6 +48,13 @@ export default function AspectGrid({ chart, zhMode, onPick, selected }: {
     return byPair.get(`${x}|${y}`) ?? null;
   };
   const dim = (x: string, y: string, v: number) => (v >= 4 ? 1 : 0.55 + v * 0.1);
+  // 图例用固定符号表 (不依赖当前盘是否恰好含该相位)
+  const LEGEND: [string, string][] = [
+    ['conjunction', zhMode ? '合' : 'Conj'], ['opposition', zhMode ? '冲' : 'Opp'],
+    ['square', zhMode ? '刑' : 'Sqt'], ['trine', zhMode ? '拱' : 'Tri'],
+    ['sextile', zhMode ? '六合' : 'Sxt'], ['quincunx', zhMode ? '梅花' : 'Qnx'],
+  ];
+  const SYM: Record<string, string> = { conjunction: '☌', opposition: '☍', square: '□', trine: '△', sextile: '⚹', quincunx: '⚻' };
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-white/[0.07] bg-white/[0.015] p-3">
@@ -114,14 +121,11 @@ export default function AspectGrid({ chart, zhMode, onPick, selected }: {
           ['conjunction', zhMode ? '合' : 'Conj'], ['opposition', zhMode ? '冲' : 'Opp'],
           ['square', zhMode ? '刑' : 'Sqt'], ['trine', zhMode ? '拱' : 'Tri'],
           ['sextile', zhMode ? '六合' : 'Sxt'], ['quincunx', zhMode ? '梅花' : 'Qnx'],
-        ].map(([k, label]) => {
-          const one = chart.aspects.find((a) => a.type === k);
-          return (
-            <span key={k} className="flex items-center gap-1">
-              <span style={{ color: ASPECT_COLOR[k] }}>{one?.symbol ?? '·'}</span>{label}
-            </span>
-          );
-        })}
+        ].map(([k, label]) => (
+          <span key={k} className="flex items-center gap-1">
+            <span style={{ color: ASPECT_COLOR[k] }}>{SYM[k]}</span>{label}
+          </span>
+        ))}
         <span className="ml-auto">{zhMode ? 'A=入相 S=出相 · 数字=偏差°' : 'A=applying S=separating · orb°'}</span>
       </div>
     </div>
