@@ -119,6 +119,7 @@ export interface NatalChart {
   cusps: number[] | null
   aspects: ChartAspect[]
   receptions: Reception[]
+  hourRuler: string | null // 时主星 (英文星名; 未知时间=null)
   warnings: string[]
 }
 
@@ -333,6 +334,16 @@ function cuspsFor(system: HouseSystem, asc: number, mc: number): number[] | null
   return null // celestine 原生支持
 }
 
+// ---------- 时主星 (Hour Ruler) ----------
+// 通行法: 当日0点所在宫由星期主星值日, 此后每1小时按加尔迪亚序 (土木火日金月水) 递推
+// 参照验证: 1998-02-19 (周四, 木星日) 09:50 → 太阳 ☉, 与宫神星显示一致
+const CHALDEAN = ['Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury', 'Moon']
+const DAY_RULER = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn'] // index = getUTCDay (0=周日)
+export function hourRulerOf(y: number, mo: number, d: number, hour: number): string {
+  const dow = new Date(Date.UTC(y, mo - 1, d)).getUTCDay()
+  return CHALDEAN[(CHALDEAN.indexOf(DAY_RULER[dow]) + hour) % 7]
+}
+
 // ---------- 主入口: 排盘 ----------
 export function castNatalChart(birth: BirthData, settings: CastSettings = {}): NatalChart {
   const warnings: string[] = []
@@ -450,6 +461,7 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
     timeKnown,
     jd: c.calculated?.julianDate ?? 0,
     planets: allBodies, angles,
+    hourRuler: timeKnown ? hourRulerOf(birth.year, birth.month, birth.day, birth.hour) : null,
     cusps: cuspsOut,
     aspects, receptions, warnings,
   }
@@ -463,6 +475,7 @@ export function chartEvidence(ch: NatalChart): string {
   lines.push(`【本命盘数据】(引擎计算, 勿改动)`)
   lines.push(`出生: ${b.year}-${String(b.month).padStart(2, '0')}-${String(b.day).padStart(2, '0')} ${b.timeKnown !== false ? `${String(b.hour).padStart(2, '0')}:${String(b.minute).padStart(2, '0')}` : '时间未知'} 当地时间 (UTC${b.timezone >= 0 ? '+' : ''}${b.timezone}) ${b.city ?? ''} 纬度${b.latitude} 经度${b.longitude}`)
   lines.push(`分宫制: ${ch.houseSystemUsed}${ch.timeKnown ? '' : ' (未使用—时间未知)'}`)
+  if (ch.hourRuler) lines.push(`时主星: ${PLANET_ZH[ch.hourRuler] ?? ch.hourRuler} (零点起加尔迪亚序)`)
   {
     const s = ch.settings ?? {}
     const bg = Object.entries(s.bodies ?? {}).filter(([, v]) => v).map(([k]) => ({ asteroids: '小行星', chiron: '凯龙', nodes: '交点', lots: '点位', lilith: '莉莉丝' })[k] ?? k)

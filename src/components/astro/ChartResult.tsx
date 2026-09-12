@@ -9,6 +9,7 @@
 import { useState } from 'react';
 import { useI18n } from '@/i18n';
 import ChartWheel, { type VChart, type VPlanet } from '@/components/astro/ChartWheel';
+import { HOUSE_SYSTEM_ZH } from '@/lib/astro/chart';
 import AspectGrid, { AspectLegend, ASPECT_COLOR } from '@/components/astro/AspectGrid';
 
 const DIGNITY_ZH: Record<string, string> = {
@@ -97,13 +98,22 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
   }
   for (const l of recepLines) features.push({ icon: '⇄', text: l, tone: 'soft' });
 
-  // ---- 出生资料 (展开为身份行下方一行小字) ----
-  const info: string[] = []
+  // ---- 出生资料卡 (宫神星左上卡同款行式) ----
+  const fmtDeg = (v: number, pos: string, neg: string) => `${Math.abs(v).toFixed(2)}° ${v >= 0 ? pos : neg}`
+  const hr = chart.hourRuler ? chart.planets.find((x) => x.name === chart.hourRuler) : null
+  const infoRows: [string, React.ReactNode][] = [
+    [zhMode ? '日期' : 'Date', `${chart.input.year}-${String(chart.input.month).padStart(2, '0')}-${String(chart.input.day).padStart(2, '0')} ${chart.timeKnown ? `${String(chart.input.hour).padStart(2, '0')}:${String(chart.input.minute).padStart(2, '0')}` : (zhMode ? '时间未知' : 'unknown')}`],
+  ]
+  const placeName = chart.input.cnCode ? chart.input.cnCode.split('~').join(' ') : chart.input.city
+  if (placeName) infoRows.push([zhMode ? '地点' : 'Place', placeName])
   if (chart.input.latitude !== undefined && chart.input.longitude !== undefined)
-    info.push(`${zhMode ? '经纬' : 'Lat/Lon'} ${chart.input.latitude.toFixed(2)}, ${chart.input.longitude.toFixed(2)}`)
-  if (chart.input.timezone !== undefined) info.push(`GMT ${chart.input.timezone >= 0 ? '+' : ''}${chart.input.timezone.toFixed(2)}`)
-  info.push(zhMode ? '回归黄道' : 'Tropical')
-  info.push(`${zhMode ? '宫制' : 'Houses'} ${chart.houseSystemUsed}`)
+    infoRows.push([zhMode ? '经纬' : 'Lat/Lon', (
+      <>{fmtDeg(chart.input.latitude!, zhMode ? '北' : 'N', zhMode ? '南' : 'S')} {fmtDeg(chart.input.longitude!, zhMode ? '东' : 'E', zhMode ? '西' : 'W')}</>
+    )])
+  if (chart.input.timezone !== undefined) infoRows.push(['时区' + (zhMode ? '' : '/TZ'), `GMT ${chart.input.timezone >= 0 ? '+' : ''}${chart.input.timezone.toFixed(2)}`])
+  infoRows.push([zhMode ? '黄道' : 'Zodiac', zhMode ? `回归黄道${asc ? ` · ${asc.signZh} ${dms(asc.degInSign)}` : ''}` : `Tropical${asc ? ` · ${asc.sign} ${dms(asc.degInSign)}` : ''}`])
+  infoRows.push([zhMode ? '宫制' : 'Houses', `${zhMode ? (HOUSE_SYSTEM_ZH[chart.houseSystemUsed] ?? chart.houseSystemUsed) : chart.houseSystemUsed}`])
+  if (hr) infoRows.push([zhMode ? '时主星' : 'Hour ruler', <span title={zhMode ? '零点起算, 加尔迪亚序 (时主星流派众多, 此为通行法)' : 'Chaldean order from midnight'}>{hr.symbol} {hr.zh}</span>])
 
   return (
     <div className="space-y-4">
@@ -118,10 +128,21 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
         </div>
       )}
 
-      {/* 出生资料一行小字 (占整行, 不进网格占格) */}
-      <p className="text-center text-[10.5px] leading-relaxed text-muted/60">
-        {info.map((v, i) => <span key={i}>{i > 0 && <span className="mx-1.5 text-muted/30">·</span>}{v}</span>)}
-      </p>
+      {/* 出生资料卡 (宫神星左上款: 盘名+逐行键值) */}
+      <div className="mx-auto mb-1 w-fit min-w-[280px] rounded-2xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 lg:mx-0">
+        <p className="mb-1.5 flex items-baseline gap-2">
+          <span className="font-display text-[15px] tracking-[0.12em] text-accent">{chart.input.label || (zhMode ? '本命盘' : 'Natal Chart')}</span>
+          <span className="text-[10px] tracking-[0.2em] text-muted/60 uppercase">{zhMode ? '本命图' : 'Natal'}</span>
+        </p>
+        <dl className="space-y-[3px]">
+          {infoRows.map(([k, v]) => (
+            <div key={k} className="flex items-baseline gap-3 text-[12px]">
+              <dt className="w-[3.6em] shrink-0 text-[10.5px] tracking-[0.08em] text-muted/70">{k}</dt>
+              <dd className="text-frost/90">{v}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
 
       {/* 两栏: 星盘(主区) | 特征 */}
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_236px]">
