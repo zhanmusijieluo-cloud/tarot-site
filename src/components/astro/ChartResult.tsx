@@ -64,39 +64,83 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
   // ---- 左列行星竖列 ----
   const rows: VPlanet[] = [...chart.planets, asc, mc].filter(Boolean) as VPlanet[];
 
-  // ---- 右侧特征面板 ----
-  const features: { icon: string; text: string; tone: 'gold' | 'soft' | 'warn' }[] = [];
-  if (sun) features.push({ icon: '☉', text: zhMode ? `太阳 ${sz(sun.sign)} ${dms(sun.degInSign)}${sun.house ? ` · 第${sun.house}宫` : ''}` : `Sun in ${sun.sign}`, tone: 'gold' });
-  if (moon) features.push({ icon: '☽', text: zhMode ? `月亮 ${sz(moon.sign)} ${dms(moon.degInSign)}${moon.house ? ` · 第${moon.house}宫` : ''}` : `Moon in ${moon.sign}`, tone: 'gold' });
-  if (asc) features.push({ icon: 'AC', text: zhMode ? `上升 ${sz(asc.sign)} ${dms(asc.degInSign)}` : `ASC ${asc.sign}`, tone: 'gold' });
-  if (mc) features.push({ icon: 'MC', text: zhMode ? `中天 ${sz(mc.sign)} ${dms(mc.degInSign)}` : `MC ${mc.sign}`, tone: 'gold' });
-  // 尊贵要点
+  // ---- 右侧特征面板 (全符号版: ☉♉0°12′·11宫; 悬停出全称) ----
+  type Feat = { el: React.ReactNode; tone: 'gold' | 'soft' | 'warn'; tip: string }
+  const features: Feat[] = []
+  const SIGN_SYM: Record<string, string> = { Aries: '♈', Taurus: '♉', Gemini: '♊', Cancer: '♋', Leo: '♌', Virgo: '♍', Libra: '♎', Scorpio: '♏', Sagittarius: '♐', Capricorn: '♑', Aquarius: '♒', Pisces: '♓' }
+  const sgn = (name: string) => SIGN_SYM[name] ?? name
+  const sSym = (name: string) => chart.planets.find((x) => x.name === name)?.symbol ?? name[0]
+  const row = (label: string, p: VPlanet | null, extra = '') => {
+    if (!p) return null
+    return (
+      <span title={label}>
+        <b className="font-normal text-frost">{p.symbol || label}</b>
+        <span className="mx-1 text-accent/90">{sgn(p.sign)}</span>
+        <span className="text-muted">{dms(p.degInSign)}</span>
+        {p.house && <span className="ml-1 text-muted/70">·{p.house}宫</span>}
+        {p.retrograde && <span className="ml-0.5 text-[#e8a08a]">℞</span>}
+        {extra}
+      </span>
+    )
+  }
+  const r1 = row(zhMode ? `太阳 ${sz(sun?.sign ?? '')}` : 'Sun', sun ?? null); if (r1) features.push({ el: r1, tone: 'gold', tip: `太阳 ${sz(sun!.sign)} ${dms(sun!.degInSign)}` })
+  const r2 = row(zhMode ? '月亮' : 'Moon', moon ?? null); if (r2) features.push({ el: r2, tone: 'gold', tip: `月亮 ${sz(moon!.sign)} ${dms(moon!.degInSign)}` })
+  const r3 = row('AC', asc ?? null); if (r3) features.push({ el: r3, tone: 'gold', tip: zhMode ? '上升点' : 'Ascendant' })
+  const r4 = row('MC', mc ?? null); if (r4) features.push({ el: r4, tone: 'gold', tip: zhMode ? '中天' : 'Midheaven' })
+  // 尊贵: ♀♉入庙+5
   for (const p of chart.planets) {
     if (p.dignity && p.dignity.state !== 'Peregrine') {
+      const dz = DIGNITY_ZH[p.dignity.state] ?? p.dignity.state
       features.push({
-        icon: p.symbol, tone: p.dignity.strength > 0 ? 'soft' : 'warn',
-        text: zhMode ? `${p.zh} ${DIGNITY_ZH[p.dignity.state] ?? p.dignity.state}${p.retrograde ? ' · 逆行' : ''}` : `${p.name} ${p.dignity.state}`,
-      });
+        tone: p.dignity.strength > 0 ? 'soft' : 'warn',
+        tip: `${p.zh} ${sz(p.sign)} ${dz}${p.retrograde ? ' 逆行' : ''}`,
+        el: (
+          <span>
+            <b className="font-normal text-frost">{p.symbol}</b>
+            <span className="mx-1 text-accent/90">{sgn(p.sign)}</span>
+            <span className={p.dignity.strength > 0 ? 'text-[#cdb88a]' : 'text-[#e8a08a]'}>{dz}{p.dignity.strength ? `${p.dignity.strength > 0 ? '+' : ''}${p.dignity.strength}` : ''}</span>
+            {p.retrograde && <span className="ml-1 text-[#e8a08a]">℞</span>}
+          </span>
+        ),
+      })
     }
   }
-  // 互溶 · 接纳 (互溶对只列一次)
-  const recepLines: string[] = [];
+  // 互溶 · 接纳 (互溶对只列一次): ☉↦♀ 本垣♉ / ♀⇄♂ 互容
+  const recepLines: { el: React.ReactNode; tip: string }[] = [];
   {
     const seen = new Set<string>();
     for (const r of chart.receptions) {
       const key = [r.a, r.b].sort().join('|');
       if (seen.has(key)) continue;
       seen.add(key);
-      const kind = RECEPTION_KIND_ZH[r.kind] ?? r.kind;
+      const kind = RECEPTION_KIND_ZH[r.kind] ?? r.kind
+      const pa = chart.planets.find((x) => x.name === r.a), pb = chart.planets.find((x) => x.name === r.b)
+      const sa = pa?.symbol ?? r.a, sb = pb?.symbol ?? r.b
       if (r.mutual) {
-        const rev = chart.receptions.find((x) => x.a === r.b && x.b === r.a);
-        recepLines.push(zhMode ? `${zhOf(r.a)} 与 ${zhOf(r.b)} 互容接纳（${sz(r.bySign)}/${sz(rev?.bySign ?? '')}）` : `${r.a} ↔ ${r.b} mutual`);
+        const rev = chart.receptions.find((x) => x.a === r.b && x.b === r.a)
+        recepLines.push({
+          tip: `${pa?.zh ?? r.a} 与 ${pb?.zh ?? r.b} 互容接纳（互居对方${kind}之座 ${sz(r.bySign)}/${sz(rev?.bySign ?? '')}）`,
+          el: (
+            <span>
+              <b className="font-normal text-frost">{sa}</b><span className="mx-1 text-accent">⇄</span><b className="font-normal text-frost">{sb}</b>
+              <span className="ml-1.5 text-muted/80">{zhMode ? '互容' : 'mutual'}<span className="ml-1 text-accent/90">{sgn(r.bySign)}{rev ? '/' + sgn(rev.bySign) : ''}</span></span>
+            </span>
+          ),
+        })
       } else {
-        recepLines.push(zhMode ? `${zhOf(r.a)} 被 ${zhOf(r.b)} 接纳（${kind} · ${sz(r.bySign)}）` : `${r.a} received by ${r.b}`);
+        recepLines.push({
+          tip: zhMode ? `${pa?.zh ?? r.a} 被 ${pb?.zh ?? r.b} 接纳（居其${kind}·${sz(r.bySign)}）` : `${r.a} received by ${r.b}`,
+          el: (
+            <span>
+              <b className="font-normal text-frost">{sa}</b><span className="mx-1 text-accent">↦</span><b className="font-normal text-frost">{sb}</b>
+              <span className="ml-1.5 text-muted/80">{kind}<span className="ml-1 text-accent/90">{sgn(r.bySign)}</span></span>
+            </span>
+          ),
+        })
       }
     }
   }
-  for (const l of recepLines) features.push({ icon: '⇄', text: l, tone: 'soft' });
+  for (const l of recepLines) features.push({ el: l.el, tone: 'soft', tip: l.tip });
 
   // ---- 出生资料卡 (宫神星左上卡同款行式) ----
   const fmtDeg = (v: number, pos: string, neg: string) => `${Math.abs(v).toFixed(2)}° ${v >= 0 ? pos : neg}`
@@ -113,7 +157,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
   if (chart.input.timezone !== undefined) infoRows.push(['时区' + (zhMode ? '' : '/TZ'), `GMT ${chart.input.timezone >= 0 ? '+' : ''}${chart.input.timezone.toFixed(2)}`])
   infoRows.push([zhMode ? '黄道' : 'Zodiac', zhMode ? `回归黄道${asc ? ` · ${asc.signZh} ${dms(asc.degInSign)}` : ''}` : `Tropical${asc ? ` · ${asc.sign} ${dms(asc.degInSign)}` : ''}`])
   infoRows.push([zhMode ? '宫制' : 'Houses', `${zhMode ? (HOUSE_SYSTEM_ZH[chart.houseSystemUsed] ?? chart.houseSystemUsed) : chart.houseSystemUsed}`])
-  if (hr) infoRows.push([zhMode ? '时主星' : 'Hour ruler', <span title={zhMode ? '零点起算, 加尔迪亚序 (时主星流派众多, 此为通行法)' : 'Chaldean order from midnight'}>{hr.symbol} {hr.zh}</span>])
+  if (hr) infoRows.push([zhMode ? '时主星' : 'Hour ruler', <span title={zhMode ? `时主星: ${hr.zh} — 零点起算, 加尔迪亚序 (流派众多, 此为通行法)` : `Hour ruler: ${hr.name} (Chaldean, from midnight)`}>{hr.symbol}</span>])
 
   return (
     <div className="space-y-4">
@@ -155,9 +199,8 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
           <Panel title={zhMode ? '特征' : 'Features'}>
             <ul className="divide-y divide-white/[0.04]">
               {features.map((f, i) => (
-                <li key={i} className="flex items-baseline gap-2 px-3 py-[7px] text-[12px] leading-snug">
-                  <span className={`w-[2em] shrink-0 text-[11px] ${f.tone === 'gold' ? 'text-accent' : f.tone === 'warn' ? 'text-[#e8a08a]' : 'text-frost/70'}`}>{f.icon}</span>
-                  <span className={f.tone === 'gold' ? 'flex-1 text-frost/95' : 'flex-1 text-muted'}>{f.text}</span>
+                <li key={i} title={f.tip} className={`cursor-default px-3 py-[6.5px] text-[12px] leading-snug ${f.tone === 'warn' ? '' : 'text-muted'}`}>
+                  {f.el}
                 </li>
               ))}
               {features.length === 0 && <li className="px-3 py-3 text-[12px] text-muted/60">—</li>}
@@ -187,7 +230,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
                     style={{ borderColor: col }}
                   >
                     <span className="w-4 shrink-0 text-center text-[12px]" style={{ color: col }}>{a2.symbol}</span>
-                    <span className="min-w-0 flex-1 truncate text-frost/85">{zhMode ? `${zhOf(a2.a)}–${zhOf(a2.b)}` : `${a2.a}–${a2.b}`}</span>
+                    <span className="shrink-0 text-[13px] text-frost/90" title={zhMode ? `${zhOf(a2.a)}–${zhOf(a2.b)}` : undefined}>{sSym(a2.a)}<span className="mx-0.5 text-muted/50">–</span>{sSym(a2.b)}</span>
                     <span className="shrink-0 text-[10px]" style={{ color: col }}>{a2.typeZh}</span>
                     <span className="w-[3.6em] shrink-0 text-right tabular-nums" style={{ color: col }}>{a2.orb.toFixed(1)}°{a2.applying === true ? 'A' : a2.applying === false ? 'S' : ''}</span>
                   </button>

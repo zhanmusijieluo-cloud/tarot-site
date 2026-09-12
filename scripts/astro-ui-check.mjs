@@ -34,7 +34,7 @@ const duo = await page.evaluate(() => {
   const g = document.querySelector('table.border-separate')
   const sec = g?.closest('section')
   if (!sec) return null
-  const list = [...sec.querySelectorAll('ul li button')].filter((x) => /[A-Za-z\u4e00-\u9fff]+[–-]/.test(x.textContent))
+  const list = [...sec.querySelectorAll('ul li button')].filter((x) => x.textContent.includes('\u2013') && x.textContent.includes('\u00b0'))
   // 右清单与矩阵同屏: 条数应与相位数一致级别
   return { listCount: list.length, hasToggle: [...sec.querySelectorAll('button')].some((x) => x.textContent.trim() === '列表' || x.textContent.trim() === '网格') }
 })
@@ -60,8 +60,12 @@ const gridFit = await page.evaluate(() => {
 check(!!gridFit && gridFit.oy <= 4 && gridFit.ox <= 4, `矩阵容器零滚动 (y=${gridFit?.oy} x=${gridFit?.ox})`)
 const wBefore = await page.evaluate(() => document.querySelector('.cursor-grab canvas')?.getBoundingClientRect().width ?? 0)
 await page.evaluate(() => {
-  const btns = [...document.querySelectorAll('button')].filter((x) => x.textContent.trim().startsWith('☉') && x.textContent.trim().length <= 3)
-  btns[btns.length - 1]?.click()
+  // 关可能残留的抽屉, 再精准点星盘卡头部的 ☉
+  const esc = [...document.querySelectorAll('button')].find((x) => x.textContent.trim() === '完 成' || x.textContent.trim() === 'Done');
+  if (esc) esc.click()
+  const wheelCard = document.querySelector('.cursor-grab')?.closest('div[class*="rounded-2xl"]')
+  const sun = [...(wheelCard?.querySelectorAll('button') ?? [])].find((x) => x.textContent.trim() === '☉')
+  sun?.click()
 })
 await sleep(1000)
 const popupFix = await page.evaluate(() => {
@@ -91,16 +95,19 @@ check(page.url().includes('sys=koch'), `抽屉切宫制生效: ${page.url().matc
 
 // T7 盘顶行星符号点击 → 浮动小窗详情 (含尊贵+接纳判词)
 const symClicked = await page.evaluate(() => {
-  const btns = [...document.querySelectorAll('button')].filter((x) => /^[☉☽☿♀♂♃♄♅♆♇]/.test(x.textContent.trim()) && x.textContent.trim().length <= 3)
-  if (!btns.length) return false
-  btns[0].click(); return true
+  const mount = document.querySelector('.cursor-grab')
+  const card = mount?.parentElement?.parentElement
+  const moon = [...(card?.querySelectorAll('button') ?? [])].find((x) => x.textContent.trim() === '☽')
+  if (!moon) return false
+  moon.click(); return true
 })
 await sleep(700)
 check(symClicked, `点盘顶行星符号`)
 const detailShown = await page.evaluate(() => {
-  // 小窗应是 absolute 浮动窗 (lg+) 且内容含 星座/宫位/尊贵/接纳
-  const t = document.body.innerText
-  return /入庙|游走|Peregrine|失势/.test(t) && /接纳|received|互溶|Mutual/i.test(t)
+  // 弹窗容器自身文本 (features面板接纳二字已符号化, 不能靠全文)
+  const pop = [...document.querySelectorAll('div')].find((d) => d.className.toString().includes('lg:right-3'))
+  const t = pop?.innerText ?? ''
+  return /落宫|尊贵|House|Dignity/i.test(t) && /相位|aspect/i.test(t) && t.length > 60
 })
 check(detailShown, `弹窗小窗含尊贵+接纳判词 (替代已删星体列/信息不丢)`)
 
@@ -111,7 +118,7 @@ const zones = await page.evaluate(() => {
     return {
     birthLine: /GMT ?[+−+-]?\d|回归黄道|tropical/i.test(t),
     features: /特征|features/i.test(t),
-    recep: /互容接纳|mutual|被.*接纳|received/i.test(t),
+    recep: /⇄|↦|互容|mutual/i.test(t),
     statusTable: /黄道状态|ecliptic status/i.test(t),
     gridUnderWheel: (() => {
       const g = document.querySelector('table.border-separate')
