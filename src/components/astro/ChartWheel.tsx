@@ -45,9 +45,9 @@ export interface VChart {
 }
 
 // ---------- 布局常量 (俯视: 屏幕右=+X, 屏幕上=-Z) ----------
-const R_OUT = 5.0;    // 宫位带外缘
-const R_BAND = 4.42;  // 宫位带内缘(星座带外缘)
-const R_SIGN = 3.45;  // 星座带内缘
+const R_OUT = 5.0;    // 星座带外缘 (刻度环基线)
+const R_BAND = 3.98;  // 星座带内缘 = 宫位带外缘 (两带分界, 线不再互穿)
+const R_SIGN = 3.08;  // 宫位带内缘
 const R_PLAN = 2.68;  // 行星基准半径
 const GOLD = 0xcdb88a;
 
@@ -125,7 +125,7 @@ function glowTexture(hex: string, px = 128): THREE.Texture {
   return t;
 }
 function textTexture(text: string, font: number, color = '#e6ecff', glow = 0): THREE.Texture {
-  const size = Math.max(128, Math.ceil(font * 2.6));
+  const size = Math.max(256, Math.ceil(font * 4));
   const c = document.createElement('canvas');
   c.width = c.height = size;
   const ctx = c.getContext('2d')!;
@@ -137,6 +137,7 @@ function textTexture(text: string, font: number, color = '#e6ecff', glow = 0): T
   ctx.fillText(text, size / 2, size / 2);
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8; // 斜视角下文字不发糊
   return t;
 }
 
@@ -215,33 +216,33 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       root.add(cs);
     }
 
-    // ---------- 宫位带 (外环: 细分扇区 + 金刻度) ----------
+    // ---------- 星座带 (外环 R_BAND→R_OUT) + 宫位带 (内环 R_SIGN→R_BAND): 两带分界不互穿 ----------
     const houseSlices: THREE.Mesh[] = [];
     const cusps = chart.cusps as number[] | null;
     {
       const a1 = (s: number) => la(s * 30); // 星座带扇区起始角(跟随ASC)
       for (let s = 0; s < 12; s++) {
-        const geo = track(new THREE.RingGeometry(R_SIGN, R_BAND, 24, 1, a1(s), 30 * DEG));
+        const geo = track(new THREE.RingGeometry(R_BAND, R_OUT, 24, 1, a1(s), 30 * DEG));
         const el = ELEMENT_OF_SIGN[SIGN_ORDER[s]];
         const mat = track(new THREE.MeshBasicMaterial({
-          color: ELEMENT_COLOR[el], transparent: true, opacity: 0.10, side: THREE.DoubleSide, depthWrite: false,
+          color: ELEMENT_COLOR[el], transparent: true, opacity: 0.22, side: THREE.DoubleSide, depthWrite: false,
         }));
         const m = new THREE.Mesh(geo, mat);
         m.rotation.x = -Math.PI / 2;
-        m.userData = { signSlice: s, baseOpacity: 0.10 };
+        m.userData = { signSlice: s, baseOpacity: 0.22 };
         root.add(m);
         houseSlices.push(m);
         // 符号: 元素色 + 微光, 大尺寸
-        const gt = track(textTexture(SIGN_GLYPH[s], 96, ELEMENT_HEX[el], 10));
+        const gt = track(textTexture(SIGN_GLYPH[s], 96, ELEMENT_HEX[el], 16));
         const gs = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: gt, transparent: true, opacity: 0.95, depthWrite: false })));
-        gs.position.copy(polar((R_SIGN + R_BAND) / 2, la(s * 30 + 15)));
-        gs.scale.set(0.6, 0.6, 1);
+        gs.position.copy(polar((R_BAND + R_OUT) / 2, la(s * 30 + 15)));
+        gs.scale.set(0.66, 0.66, 1);
         root.add(gs);
-        // 星座边界: 30° 金色细线
+        // 星座边界: 只画在星座带内 (R_BAND→R_OUT), 银白细线不与宫位金线混淆
         const ab = la(s * 30);
         root.add(new THREE.Line(
-          track(new THREE.BufferGeometry().setFromPoints([polar(R_SIGN, ab), polar(R_OUT, ab)])),
-          track(new THREE.LineBasicMaterial({ color: GOLD, transparent: true, opacity: 0.32 })),
+          track(new THREE.BufferGeometry().setFromPoints([polar(R_BAND, ab), polar(R_OUT, ab)])),
+          track(new THREE.LineBasicMaterial({ color: 0x9aa8c4, transparent: true, opacity: 0.3 })),
         ));
       }
     }
@@ -250,31 +251,36 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
         const c0 = norm360(cusps[h]), c1 = norm360(cusps[(h + 1) % 12]);
         let span = norm360(c1 - c0); if (span < 1) span = 30;
         const a0 = la(c0);
-        const geo = track(new THREE.RingGeometry(R_BAND + 0.04, R_OUT, 40, 1, a0, span * DEG));
+        const geo = track(new THREE.RingGeometry(R_SIGN, R_BAND - 0.03, 40, 1, a0, span * DEG));
         const el = ELEMENT_OF_SIGN[SIGN_ORDER[Math.floor(c0 / 30) % 12]] ?? '风';
         const mat = track(new THREE.MeshBasicMaterial({
-          color: ELEMENT_COLOR[el], transparent: true, opacity: 0.045, side: THREE.DoubleSide, depthWrite: false,
+          color: ELEMENT_COLOR[el], transparent: true, opacity: 0.07, side: THREE.DoubleSide, depthWrite: false,
         }));
         const m = new THREE.Mesh(geo, mat);
         m.rotation.x = -Math.PI / 2;
-        m.userData = { houseSlice: h + 1, baseOpacity: 0.045 };
+        m.userData = { houseSlice: h + 1, baseOpacity: 0.07 };
         root.add(m);
         houseSlices.push(m);
-        // 宫头线 (角点1/4/7/10用金色)
+        // 宫头线: 只贯穿宫位带 (R_SIGN→R_BAND); 角点金粗, 中间蓝灰细
         const isAcs = h % 3 === 0;
         root.add(new THREE.Line(
-          track(new THREE.BufferGeometry().setFromPoints([polar(R_SIGN, a0), polar(R_OUT, a0)])),
+          track(new THREE.BufferGeometry().setFromPoints([polar(R_SIGN, a0), polar(R_BAND, a0)])),
           track(new THREE.LineBasicMaterial({
-            color: isAcs ? GOLD : 0x6f84ab, transparent: true, opacity: isAcs ? 0.95 : 0.6,
+            color: isAcs ? GOLD : 0x6f84ab, transparent: true, opacity: isAcs ? 0.95 : 0.5,
           })),
         ));
-        // 宫号 (扇区中点, 角点金色; 图层开关 nums)
+        // 四轴 (仅4条) 以金线跨过星座带, 与 ASC/MC 标签相接
+        if (isAcs) root.add(new THREE.Line(
+          track(new THREE.BufferGeometry().setFromPoints([polar(R_BAND, a0), polar(R_OUT, a0)])),
+          track(new THREE.LineBasicMaterial({ color: GOLD, transparent: true, opacity: 0.75 })),
+        ));
+        // 宫号 (宫位带扇区中点, 角点金色; 图层开关 nums)
         if (disp?.nums !== false) {
           const amid = a0 + (span * DEG) / 2;
-          const tex = track(textTexture(String(h + 1), 46, isAcs ? '#e3d3a3' : '#9fb2d4'));
+          const tex = track(textTexture(String(h + 1), 56, isAcs ? '#f0e2b6' : '#c3d0e8', 6));
           const spr = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.95, depthWrite: false })));
-          spr.position.copy(polar((R_BAND + R_OUT) / 2, amid));
-          spr.scale.set(0.3, 0.3, 1);
+          spr.position.copy(polar((R_SIGN + R_BAND) / 2, amid));
+          spr.scale.set(0.4, 0.4, 1);
           root.add(spr);
         }
       }
@@ -291,15 +297,15 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
         root.add(spr);
       }
     } else {
-      // 未知时间: 无宫位环, 只留刻度圈
-      const g = track(new THREE.RingGeometry(R_BAND + 0.04, R_OUT, 128));
+      // 未知时间: 无宫位环, 内环占位淡盘
+      const g = track(new THREE.RingGeometry(R_SIGN, R_BAND - 0.03, 128));
       const m = new THREE.Mesh(g, track(new THREE.MeshBasicMaterial({ color: 0x1a2136, transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false })));
       m.rotation.x = -Math.PI / 2;
       root.add(m);
     }
 
     // ---------- 外环金线 + 5°/10° 刻度针脚 ----------
-    for (const [r, op] of [[R_BAND + 0.02, 0.5], [R_OUT, 0.6]] as const) {
+    for (const [r, op] of [[R_BAND, 0.55], [R_OUT, 0.6]] as const) {
       const ringLine = new THREE.Mesh(
         track(new THREE.RingGeometry(r, r + 0.013, 220)),
         track(new THREE.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: op, side: THREE.DoubleSide })),
@@ -353,10 +359,10 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
           groups.pop();
         }
       }
-      const OFFSETS = [0, -0.62, 0.55, -1.18, 1.05]; // 先内后外, 外扩封顶贴星座带
+      const OFFSETS = [0, -0.5, 0.42, -0.95, 0.8, -1.35, 1.15]; // 先内后外; 最外沿 2.68+1.15+球0.3<3.98 不蹭星座带
       const radiusOf = new Map<string, number>();
       for (const g of groups) {
-        g.forEach((idx, k) => radiusOf.set(items[idx].p.name, R_PLAN + (OFFSETS[k % OFFSETS.length] ?? (k % 2 ? -1.4 : 1.4))));
+        g.forEach((idx, k) => radiusOf.set(items[idx].p.name, R_PLAN + (OFFSETS[k % OFFSETS.length] ?? (k % 2 ? -1.6 : 1.25))));
       }
 
       for (const it of items) {
@@ -438,7 +444,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
             g.add(rm);
           }
           // 符号标签 (行星/小行星: 球上方)
-          const lt = track(textTexture(`${p.symbol}${p.retrograde ? '℞' : ''}`, 44, '#f2f6ff', 6));
+          const lt = track(textTexture(`${p.symbol}${p.retrograde ? '℞' : ''}`, 48, '#ffffff', 10));
           const ls = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: lt, transparent: true, depthWrite: false })));
           ls.position.set(0, br + 0.3, 0);
           ls.scale.set(0.44, 0.44, 1);
@@ -449,7 +455,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
 
         // 脚线 + 刻度点 (球 → 真实黄经在星座带上的投影; 图层开关 feet)
         if (disp?.feet !== false) {
-          const foot = polar(R_SIGN - 0.01, it.a);
+          const foot = polar(R_BAND - 0.02, it.a); // 脚线点到宫位/星座分界, 正对外环刻度
           root.add(new THREE.Line(
             track(new THREE.BufferGeometry().setFromPoints([pos, foot])),
             track(new THREE.LineBasicMaterial({ color: 0x8ea3c8, transparent: true, opacity: 0.3 })),
