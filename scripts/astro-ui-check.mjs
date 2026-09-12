@@ -87,16 +87,21 @@ check(detailShown, `弹窗小窗含尊贵+接纳判词 (替代已删星体列/�
 const zones = await page.evaluate(() => {
   const t = document.body.innerText
   const grid = document.querySelector('table.border-separate')
-  const wheelBox = grid?.closest('.relative.mx-auto')
-  return {
+    return {
     birthLine: /GMT ?[+−+-]?\d|回归黄道|tropical/i.test(t),
     features: /特征|features/i.test(t),
     recep: /互容接纳|mutual|被.*接纳|received/i.test(t),
     statusTable: /黄道状态|ecliptic status/i.test(t),
-    gridUnderWheel: !!wheelBox && !!wheelBox.querySelector('canvas'),
-    legendUnderWheel: /A=入相|A=applying/i.test(t),
+    gridInLeftCol: (() => {
+      const g = document.querySelector('table.border-separate')
+      const c = document.querySelector('.cursor-grab canvas') || [...document.querySelectorAll('canvas')].find((x) => x.getBoundingClientRect().width < 1300)
+      if (!g || !c) return false
+      return g.getBoundingClientRect().left < c.getBoundingClientRect().left // 网格在盘左侧
+    })(),
+    legendVisible: /A=入相|A=applying/i.test(t),
     bodiesPanelGone: !/星体 · 1[0-9]/.test(t),
-    twoCol: !!document.querySelector('[class*="lg:grid-cols-[minmax(0,1fr)_236px]"]'),
+    threeCol: !!document.querySelector('[class*="lg:grid-cols-[252px"]'),
+    wheelTall: (() => { const c = document.querySelector('.cursor-grab canvas') || [...document.querySelectorAll('canvas')].find((x) => x.getBoundingClientRect().width < 1300); return !!c && c.getBoundingClientRect().height >= 560 })(),
   }
 })
 check(Object.values(zones).every(Boolean), `新分布齐: ${Object.entries(zones).filter(([, v]) => v).map(([k]) => k).join('/')}`)

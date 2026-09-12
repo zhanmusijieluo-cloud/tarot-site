@@ -125,35 +125,33 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
         {info.map((v, i) => <span key={i}>{i > 0 && <span className="mx-1.5 text-muted/30">·</span>}{v}</span>)}
       </p>
 
-      {/* 两栏: 星图(网格垫底,放大) | 特征 */}
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_236px]">
-        {/* ---- 中央: 星图板块 (俯视时相位网格垫在盘底, 方圆相融; 整块放大) ---- */}
-        <div className="min-w-0">
-          <ChartWheel
-            chart={chart} zhMode={zhMode} selected={selected} onSelect={setSelected}
-            actions={(
-              <div className="flex overflow-hidden rounded-full border border-white/[0.1] text-[10.5px]">
-                {(['list', 'grid'] as const).map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => setAspectMode(m)}
-                    className={`px-3 py-1 tracking-[0.12em] transition-colors ${aspectMode === m ? 'bg-accent/[0.12] text-accent' : 'text-muted hover:text-frost'}`}
-                  >
-                    {m === 'list' ? t('astro.res.modeList') : t('astro.res.modeGrid')}
-                  </button>
-                ))}
+      {/* 三栏: 相位面板(1号位) | 星盘(放大主区) | 特征 */}
+      <div className="grid items-start gap-4 lg:grid-cols-[252px_minmax(0,1fr)_236px]">
+        {/* ---- 1号位: 相位网格/列表 ---- */}
+        <Panel title={t('astro.res.aspects')} className="order-2 lg:order-1">
+          <div className="flex gap-1 border-b border-white/[0.05] px-2.5 py-2 text-[10.5px]">
+            {(['list', 'grid'] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => setAspectMode(m)}
+                className={`rounded-full px-2.5 py-0.5 tracking-[0.12em] transition-colors ${aspectMode === m ? 'bg-accent/[0.12] text-accent' : 'text-muted hover:text-frost'}`}
+              >
+                {m === 'list' ? t('astro.res.modeList') : t('astro.res.modeGrid')}
+              </button>
+            ))}
+          </div>
+          {aspectMode === 'grid' ? (() => {
+            const gcols = Math.min(chart.planets.length, 14)
+            const gcell = Math.max(18, Math.floor(228 / gcols))
+            return (
+              <div className="p-2">
+                <AspectGrid chart={chart} zhMode={zhMode} selected={selected} onPick={setSelected} bare cellPx={gcell} />
               </div>
-            )}
-            gridSlot={aspectMode === 'grid' ? (() => {
-              const gcols = Math.min(chart.planets.length, 14)
-              const gcell = Math.max(30, Math.floor(600 / gcols) - 2)
-              return <AspectGrid chart={chart} zhMode={zhMode} selected={selected} onPick={setSelected} bare cellPx={gcell} hideLegend />
-            })() : undefined}
-          />
-          {aspectMode === 'list' && (
-            <div className="mt-3 grid max-h-[300px] grid-cols-2 gap-x-6 gap-y-1 overflow-y-auto rounded-2xl border border-white/[0.07] bg-black/20 px-4 py-3 lg:grid-cols-3">
+            )
+          })() : (
+            <div className="max-h-[420px] space-y-1 overflow-y-auto px-2.5 py-2.5">
               {[...chart.aspects].sort((x, y) => x.orb - y.orb).map((a2, i) => (
-                <p key={i} className="truncate text-[11.5px] leading-snug text-muted">
+                <p key={i} className="text-[11.5px] leading-snug text-muted">
                   {a2.symbol} {zhMode ? `${zhOf(a2.a)}–${zhOf(a2.b)}` : `${a2.a}–${a2.b}`}{' '}
                   <span className="text-accent/70">{a2.orb.toFixed(1)}°</span>
                   {a2.applying === true && <span className="ml-0.5 text-[#8aa8d8]">→</span>}
@@ -161,10 +159,15 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
               ))}
             </div>
           )}
+        </Panel>
+
+        {/* ---- 中央: 星盘主区 (无垫层, 全力放大) ---- */}
+        <div className="min-w-0 order-1 lg:order-2">
+          <ChartWheel chart={chart} zhMode={zhMode} selected={selected} onSelect={setSelected} />
         </div>
 
         {/* ---- 右侧: 特征 (宫神星同款: 落座/尊贵/接纳/互容 判词全在这一张卡) ---- */}
-        <div className="space-y-4">
+        <div className="order-3 space-y-4">
           <Panel title={zhMode ? '特征' : 'Features'}>
             <ul className="divide-y divide-white/[0.04]">
               {features.map((f, i) => (

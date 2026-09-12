@@ -602,7 +602,7 @@ function ChartScene({ chart, zhMode, view, disp, selected, onSelect }: SceneProp
   useEffect(() => { apiRef.current?.set(selected); }, [selected]);
 
   // 俯视: 满高正方形(3D盘为透明层, 与背后相位网格同层 → 方圆相融, 网格四角可见); 侧视: 扁面板
-  return <div ref={mountRef} className={`w-full cursor-grab active:cursor-grabbing ${view === 'side' ? 'h-[min(46vh,460px)]' : 'aspect-square max-h-[min(74vh,680px)]'}`} />;
+  return <div ref={mountRef} className={`w-full cursor-grab active:cursor-grabbing ${view === 'side' ? 'h-[min(46vh,460px)]' : 'h-[min(78vh,760px)]'}`} />;
 }
 
 // ---------- 点击标注卡(纯标注, 无AI) ----------
@@ -757,7 +757,7 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
 
       {/* 方圆相融: 俯视+网格模式时, 网格垫底(圆外清晰可见), 圆盘浮前; 结构恒定防切视图重挂3D */}
       {gridSlot && view === 'top' ? (
-        <div className="relative mx-auto w-full" style={{ maxWidth: 700 }}>
+        <div className="relative w-full">
           {/* 底: 相位网格 (撑满容器, 与圆盘同框) */}
           <div className="absolute inset-0 flex items-center justify-center">{gridSlot}</div>
           {/* 遮罩: 精确压住圆盘本体(半径=容器44%), 圆外网格不受影响 */}
