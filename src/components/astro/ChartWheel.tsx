@@ -370,9 +370,10 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       for (const it of items) {
         const p = it.p;
         const kind = p.kind ?? 'planet';
-        // 夹紧: 球缘(含选中放大档)绝不越过宫位带内缘; 内侧也不怼盘心
+        // 夹紧: 按最大占用算 (选中1.18x放大 + 土星环2.3x + 环倾斜投影余量), 绝不允许碰宫位带内缘
         const brForClamp = (kind === 'asteroid' ? (BODY_R[p.name] ?? 0.14) * 0.55 : BODY_R[p.name] ?? 0.14)
-        const r = Math.max(1.15, Math.min(radiusOf.get(p.name) ?? R_PLAN, R_BAND - 0.10 - brForClamp * 1.30));
+        const maxExtent = p.name === 'Saturn' ? brForClamp * 2.3 * 1.18 : brForClamp * 1.18
+        const r = Math.max(1.15, Math.min(radiusOf.get(p.name) ?? R_PLAN, R_BAND - 0.08 - maxExtent));
         const pos = polar(r, it.a);
         const g = new THREE.Group();
         g.position.copy(pos);
@@ -417,7 +418,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
             const gs = new THREE.Sprite(track(new THREE.SpriteMaterial({
               map: gt, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending,
             })));
-            gs.scale.set(br * 2.9, br * 2.9, 1);
+            gs.scale.set(br * 2.4, br * 2.4, 1);
             g.add(gs);
             sunLight.position.copy(pos);
             root.add(sunLight);
@@ -512,8 +513,8 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       const sel = name ? chart.planets.find((x) => x.name === name) ?? null : null;
       for (const po of planetObjs) {
         po.tScale = name && po.name === name ? 1.18 : 1;
-        po.tDim = name ? (po.name === name ? 1 : 0.5) : 1;
-        po.tEmi = name && po.name === name ? 1.7 : 1;
+        po.tDim = name ? (po.name === name ? 1 : 0.82) : 1;
+        po.tEmi = name && po.name === name ? 1.45 : 1;
       }
       // 脚线: 仅选中者显 (常显模式全显)
       for (const fg of footGroups) fg.obj.visible = disp?.feetAlways ? true : (!!name && fg.name === name);
@@ -523,12 +524,12 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       }
       for (const hs of houseSlices) {
         const ud = hs.userData as { signSlice?: number; houseSlice?: number; baseOpacity: number; tOpacity?: number; tMix?: number };
-        if (!sel) { ud.tOpacity = ud.baseOpacity; ud.tMix = 0; continue }
-        const isSign = ud.signSlice !== undefined && SIGN_ORDER[ud.signSlice] === sel.sign
-        const isHouse = ud.houseSlice !== undefined && sel.house === ud.houseSlice
-        if (isSign) { ud.tOpacity = 0.96; ud.tMix = 0.8 }          // 选中星座段: 混白近全白
-        else if (isHouse) { ud.tOpacity = 0.85; ud.tMix = 0.72 }    // 选中宫扇区: 基0.13须提足才跳
-        else { ud.tOpacity = ud.baseOpacity * (ud.signSlice !== undefined ? 0.42 : 0.35); ud.tMix = 0 } // 其余段: 压暗衬托
+        // 轻触原则(爸爸): 保持原色原深浅, 选中段只微调透明度, 未选段绝不变黑
+        ud.tOpacity = ud.baseOpacity; ud.tMix = 0
+        if (sel) {
+          if (ud.signSlice !== undefined && SIGN_ORDER[ud.signSlice] === sel.sign) ud.tOpacity = 0.68 // 原0.5微亮一点
+          if (ud.houseSlice !== undefined && sel.house === ud.houseSlice) ud.tOpacity = 0.3           // 原0.13→0.3 同色系加深一档
+        }
       }
     };
     applyHighlight(selected);
