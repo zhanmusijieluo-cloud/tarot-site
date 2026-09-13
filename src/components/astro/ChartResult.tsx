@@ -6,7 +6,7 @@
 // 中央=星盘(绝对主角) · 右侧=特征面板(格局/尊贵/互容接纳)
 // 底部=黄道状态大表
 // ============================================================
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useI18n } from '@/i18n';
 import ChartWheel, { type VChart, type VPlanet } from '@/components/astro/ChartWheel';
 import { HOUSE_SYSTEM_ZH } from '@/lib/astro/chart';
@@ -59,10 +59,11 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
     ?? ({ Ascendant: '上升', Descendant: '下降', Midheaven: '中天', IC: '天底' } as Record<string, string>)[name]
     ?? name;
   const sSym = (name: string) =>
-    chart.planets.find((x) => x.name === name)?.symbol
-    ?? ({ Ascendant: 'ASC', Descendant: 'DSC', Midheaven: 'MC', IC: 'IC' } as Record<string, string>)[name]
-    ?? name[0]
-  const sz = (s: string) => SIGNS_ZH_MINI[s] ?? s;
+      chart.planets.find((x) => x.name === name)?.symbol
+      ?? ({ Ascendant: 'ASC', Descendant: 'DSC', Midheaven: 'MC', IC: 'IC' } as Record<string, string>)[name]
+      ?? name[0]
+    const firstChar = (n: string) => chart.planets.find((x) => x.name === n)?.symbol ?? ({ Ascendant: 'ASC', Descendant: 'DSC', Midheaven: 'MC', IC: 'IC' } as Record<string, string>)[n] ?? n[0]
+    const sz = (s: string) => SIGNS_ZH_MINI[s] ?? s;
 
   const sun = chart.planets.find((p) => p.name === 'Sun');
   const moon = chart.planets.find((p) => p.name === 'Moon');
@@ -300,36 +301,51 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
           <div className="overflow-x-auto">
             <AspectGrid chart={chart} zhMode={zhMode} selected={selected} onPick={setSelected} bare hideLegend />
           </div>
-          {/* 右列: 相位清单 — 按星体重要度分组排列 (爸爸: 排列好乱; 七大→三王→4轴→其他, 组内合→六合→刑→拱→冲) */}
-          <ul className="grid grid-cols-1 gap-x-4 gap-y-[3px] sm:grid-cols-2">
-            {[...chart.aspects].sort((x, y) => {
+          {/* 右列: 相位清单 — 单列竖排 + 按星体分组(加组头), 一组到底不截断 (爸爸: 竖着排列会不会更好) */}
+          <ul className="grid grid-cols-1 gap-y-[3px]">
+            {(() => {
               const TYPE_ORDER: Record<string, number> = { conjunction: 1, sextile: 2, square: 3, trine: 4, opposition: 5, quincunx: 6 };
               const impMax = (a: { a: string; b: string }) => Math.max(impOf(a.a), impOf(a.b));
               const otherOf = (a: { a: string; b: string }, sel: string) => (a.a === sel ? a.b : a.a);
-              const dImp = impMax(y) - impMax(x);                 // ① 涉及的重要星体分组
-              if (dImp) return dImp;
-              const dType = (TYPE_ORDER[x.type] ?? 9) - (TYPE_ORDER[y.type] ?? 9);  // ② 组内相位类型固定序
-              if (dType) return dType;
-              const xMain = otherOf(x, impOf(x.a) >= impOf(x.b) ? x.a : x.b);
-              const yMain = otherOf(y, impOf(y.a) >= impOf(y.b) ? y.a : y.b);
-              return impOf(yMain) - impOf(xMain);                 // ③ 次要星重要度
-            }).map((a2, i) => {
-              const col = ASPECT_COLOR[a2.type] ?? '#9aa3b5'
-              return (
-                <li key={i}>
-                  <button
-                    onClick={() => setSelected(selected === a2.a ? null : a2.a)}
-                    className={`flex w-full items-center gap-1.5 rounded-lg border-l-2 px-2 py-[5px] text-left text-[11.5px] transition-colors hover:bg-white/[0.04] ${selected === a2.a || selected === a2.b ? 'bg-white/[0.05]' : ''}`}
-                    style={{ borderColor: col }}
-                  >
-                    <span className="w-4 shrink-0 text-center text-[12px]" style={{ color: col }}>{a2.symbol}</span>
-                    <span className="shrink-0 text-[13px] text-frost/90" title={zhMode ? `${zhOf(a2.a)}–${zhOf(a2.b)}` : undefined}>{sSym(a2.a)}<span className="mx-0.5 text-muted/50">–</span>{sSym(a2.b)}</span>
-                    <span className="shrink-0 text-[10px]" style={{ color: col }}>{a2.typeZh}</span>
-                    <span className="w-[3.6em] shrink-0 text-right tabular-nums" style={{ color: col }}>{a2.orb.toFixed(1)}°{a2.applying === true ? 'A' : a2.applying === false ? 'S' : ''}</span>
-                  </button>
-                </li>
-              )
-            })}
+              const sorted = [...chart.aspects].sort((x, y) => {
+                const dImp = impMax(y) - impMax(x);                 // ① 涉及的重要星体分组
+                if (dImp) return dImp;
+                const dType = (TYPE_ORDER[x.type] ?? 9) - (TYPE_ORDER[y.type] ?? 9);  // ② 组内相位类型固定序
+                if (dType) return dType;
+                const xMain = otherOf(x, impOf(x.a) >= impOf(x.b) ? x.a : x.b);
+                const yMain = otherOf(y, impOf(y.a) >= impOf(y.b) ? y.a : y.b);
+                return impOf(yMain) - impOf(xMain);                 // ③ 次要星重要度
+              });
+              let lastGroup = -1;
+              return sorted.map((a2, i) => {
+                const col = ASPECT_COLOR[a2.type] ?? '#9aa3b5'
+                const main = impOf(a2.a) >= impOf(a2.b) ? a2.a : a2.b;
+                const header = impOf(main) !== lastGroup ? (
+                  <li key={`h${i}`} className="mb-0.5 flex items-center gap-1.5 pt-1 text-[10px] tracking-[0.18em] text-muted/60 uppercase">
+                    <span className="w-4 text-center text-[11px]">{firstChar(main)}</span>
+                    <span>{zhMode ? `${zhOf(main).slice(0, 1)}星 相关相位` : `${main} aspects`}</span>
+                  </li>
+                ) : null;
+                lastGroup = impOf(main);
+                return (
+                  <React.Fragment key={i}>
+                    {header}
+                    <li>
+                      <button
+                        onClick={() => setSelected(selected === a2.a ? null : a2.a)}
+                        className={`flex w-full items-center gap-1.5 rounded-lg border-l-2 px-2 py-[5px] text-left text-[11.5px] transition-colors hover:bg-white/[0.04] ${selected === a2.a || selected === a2.b ? 'bg-white/[0.05]' : ''}`}
+                        style={{ borderColor: col }}
+                      >
+                        <span className="w-4 shrink-0 text-center text-[12px]" style={{ color: col }}>{a2.symbol}</span>
+                        <span className="shrink-0 text-[13px] text-frost/90" title={zhMode ? `${zhOf(a2.a)}–${zhOf(a2.b)}` : undefined}>{sSym(a2.a)}<span className="mx-0.5 text-muted/50">–</span>{sSym(a2.b)}</span>
+                        <span className="shrink-0 text-[10px]" style={{ color: col }}>{a2.typeZh}</span>
+                        <span className="w-[3.6em] shrink-0 text-right tabular-nums" style={{ color: col }}>{a2.orb.toFixed(1)}°{a2.applying === true ? 'A' : a2.applying === false ? 'S' : ''}</span>
+                      </button>
+                    </li>
+                  </React.Fragment>
+                )
+              })
+            })()}
           </ul>
         </div>
       </Panel>
