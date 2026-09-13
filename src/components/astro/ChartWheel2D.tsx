@@ -13,7 +13,7 @@ import { aspectHex } from '@/lib/astro/aspect-colors';
 import { GLYPH_PATHS, SYMBOL_TO_GLYPH, ZODIAC_GLYPH_NAMES } from '@/lib/astro/glyph-paths';
 
 // 矢量符号渲染: 统一描边粗细 + 双层(白色防粘底+彩色笔画) (爸爸: 像宫神星那样, 系统字体的Unicode符号天然粗细不一)
-const GLYPH_SIZE = 26;   // 目标视觉高度 (px)
+const GLYPH_SIZE = 24;   // 目标视觉高度 (px) — 爸爸: 再稍微缩小一点点 (26→24)
 const GLYPH_STROKE = 1.5; // 统一笔画宽度 — 所有符号同一支"笔"
 function GlyphPath({ name, cx, cy, color, bg, size = GLYPH_SIZE }: { name: string; cx: number; cy: number; color: string; bg?: string; size?: number }) {
   const g = GLYPH_PATHS[name];
@@ -146,7 +146,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect }: {
         return (
           <g key={si}>
             <line x1={bx1} y1={by1} x2={bx2} y2={by2} stroke={P.ring} strokeWidth="1" />
-            <GlyphPath name={ZODIAC_GLYPH_NAMES[si]} cx={mx} cy={my} color={SHADE[ELEMENTS[si] as 'fire']} size={22} />
+            <GlyphPath name={ZODIAC_GLYPH_NAMES[si]} cx={mx} cy={my} color={SHADE[ELEMENTS[si] as 'fire']} size={21} />
           </g>
         );
       })}
