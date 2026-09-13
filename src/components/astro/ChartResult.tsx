@@ -300,9 +300,20 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
           <div className="overflow-x-auto">
             <AspectGrid chart={chart} zhMode={zhMode} selected={selected} onPick={setSelected} bare hideLegend />
           </div>
-          {/* 右列: 紧密相位排行 (双列铺开填满矩阵旁空间, 行内紧凑不留大缝) */}
+          {/* 右列: 相位清单 — 按星体重要度分组排列 (爸爸: 排列好乱; 七大→三王→4轴→其他, 组内合→六合→刑→拱→冲) */}
           <ul className="grid grid-cols-1 gap-x-4 gap-y-[3px] sm:grid-cols-2">
-            {[...chart.aspects].sort((x, y) => x.orb - y.orb).map((a2, i) => {
+            {[...chart.aspects].sort((x, y) => {
+              const TYPE_ORDER: Record<string, number> = { conjunction: 1, sextile: 2, square: 3, trine: 4, opposition: 5, quincunx: 6 };
+              const impMax = (a: { a: string; b: string }) => Math.max(impOf(a.a), impOf(a.b));
+              const otherOf = (a: { a: string; b: string }, sel: string) => (a.a === sel ? a.b : a.a);
+              const dImp = impMax(y) - impMax(x);                 // ① 涉及的重要星体分组
+              if (dImp) return dImp;
+              const dType = (TYPE_ORDER[x.type] ?? 9) - (TYPE_ORDER[y.type] ?? 9);  // ② 组内相位类型固定序
+              if (dType) return dType;
+              const xMain = otherOf(x, impOf(x.a) >= impOf(x.b) ? x.a : x.b);
+              const yMain = otherOf(y, impOf(y.a) >= impOf(y.b) ? y.a : y.b);
+              return impOf(yMain) - impOf(xMain);                 // ③ 次要星重要度
+            }).map((a2, i) => {
               const col = ASPECT_COLOR[a2.type] ?? '#9aa3b5'
               return (
                 <li key={i}>
