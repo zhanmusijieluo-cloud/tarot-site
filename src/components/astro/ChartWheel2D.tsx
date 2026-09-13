@@ -68,7 +68,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect }: {
     const n = chart.planets.length;
     const arr = chart.planets.map((p) => ({ p, realA: la(p.longitude), a: la(p.longitude) }));
     if (n > 1) {
-      const MIN_G = 46 / R_PLANET;   // 弦距46px≈9.3°: 22px符号+1.5描边(净宽~26, ℞~33)不碰
+      const MIN_G = 50 / R_PLANET;   // 弦距50px≈10.1°: 逐符号调校后最大⚸28px+℞~40px宽, 留10px余量
       for (let iter = 0; iter < 400; iter++) {
         arr.forEach((it) => { it.a = ((it.a % TAU) + TAU) % TAU; });   // ±π归一化防排序错邻 (koch盘实测bug)
         arr.sort((x, y) => x.a - y.a);
@@ -183,6 +183,18 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect }: {
         const isSel = selected === p.name;
         const relatedSel = selected && chart.aspects.some((x) => (x.a === p.name || x.b === p.name) && (x.a === selected || x.b === selected));
         const dim = selected && !isSel && !relatedSel;
+        // 逐符号调校表(爸爸: 单独一个个调) — 基准=♂♀(w22/墨~10%), 窄符号放大字号, 胖符号减描边
+        const SYM_TUNE: Record<string, { fs: number; sw: number }> = {
+          // 墨迹面积自动拟合: 目标=♀♂基准176px², 偏差全部≤6% (♅♆⊕⚶减描边1.2)
+          '☉': { fs: 24, sw: 1.8 }, '☽': { fs: 26, sw: 1.5 }, '☿': { fs: 22, sw: 1.5 },
+          '♀': { fs: 22, sw: 1.5 }, '♂': { fs: 22, sw: 1.5 }, '♃': { fs: 22, sw: 1.5 },
+          '♄': { fs: 24, sw: 1.5 }, '♅': { fs: 20, sw: 1.2 }, '♆': { fs: 20, sw: 1.2 },
+          '♇': { fs: 24, sw: 1.5 }, '⚷': { fs: 26, sw: 1.5 }, '⚴': { fs: 26, sw: 1.5 },
+          '⚳': { fs: 30, sw: 1.5 }, '⚶': { fs: 22, sw: 1.5 }, '☊': { fs: 20, sw: 1.5 },
+          '☋': { fs: 20, sw: 1.5 }, '⚸': { fs: 30, sw: 1.5 }, '⊕': { fs: 20, sw: 1.2 },
+          '⊖': { fs: 22, sw: 1.5 }, '⚵': { fs: 22, sw: 1.5 },
+        };
+        const tune = SYM_TUNE[p.symbol] ?? { fs: 22, sw: 1.5 };
         const TAU = Math.PI * 2;
         const slipAmt = ((a - realA) % TAU + TAU * 1.5) % TAU - Math.PI;
         const slipped = Math.abs(slipAmt) > 0.052;
@@ -195,8 +207,8 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect }: {
             <line x1={tk1x} y1={tk1y} x2={tk2x} y2={tk2y} stroke={col} strokeWidth="1.4" opacity="0.9" />
             {slipped && <line x1={lx1} y1={ly1} x2={lx2} y2={ly2} stroke={P.houseLine} strokeWidth="0.7" opacity="0.5" />}
             {isSel && <circle cx={gx} cy={gy} r="13.5" fill="none" stroke={P.sel} strokeWidth="1.4" />}
-            <text x={gx} y={gy + 6.5} textAnchor="middle" fontSize="22" fontWeight={700} fill="none" stroke={P.bg} strokeWidth="4">{p.symbol}{p.retrograde ? '℞' : ''}</text>
-            <text x={gx} y={gy + 6.5} textAnchor="middle" fontSize="22" fontWeight={700} fill={col} stroke={col} strokeWidth="1.5" paintOrder="stroke">{p.symbol}{p.retrograde ? '℞' : ''}</text>
+            <text x={gx} y={gy + tune.fs * 0.29} textAnchor="middle" fontSize={tune.fs} fontWeight={700} fill="none" stroke={P.bg} strokeWidth="4">{p.symbol}{p.retrograde ? '℞' : ''}</text>
+            <text x={gx} y={gy + tune.fs * 0.29} textAnchor="middle" fontSize={tune.fs} fontWeight={700} fill={col} stroke={col} strokeWidth={tune.sw} paintOrder="stroke">{p.symbol}{p.retrograde ? '℞' : ''}</text>
             <text x={d1x} y={d1y + 3} textAnchor="middle" fontSize="8.8" fontWeight={600} fill={P.ink} stroke={P.bg} strokeWidth="1.4" paintOrder="stroke">{dg1}</text>
             <text x={d2x} y={d2y + 3} textAnchor="middle" fontSize="8.8" fontWeight={600} fill={P.ink} stroke={P.bg} strokeWidth="1.4" paintOrder="stroke">{dg2}</text>
           </g>
