@@ -41,3 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# 内嵌密钥的本地脚本, 永不入 git
+scripts/enrich-card-meanings.mjs
+scripts/enrich-progress.json
