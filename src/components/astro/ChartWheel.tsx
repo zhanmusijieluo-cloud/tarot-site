@@ -88,7 +88,7 @@ export const DIGNITY_ZH: Record<string, string> = {
   Domicile: '入庙', Exalted: '耀升', Detriment: '失势', Fall: '落陷', Peregrine: '游走',
 };
 const RECEPTION_KIND_ZH: Record<string, string> = {
-  domicile: '庙座', exaltation: '耀升', detriment: '失势', fall: '落陷',
+  domicile: '庙座', exaltation: '耀升', detriment: '失势', triplicity: '三分', fall: '落陷',
 };
 const SIGNS_ZH_MINI: Record<string, string> = {
   Aries: '白羊', Taurus: '金牛', Gemini: '双子', Cancer: '巨蟹', Leo: '狮子', Virgo: '处女',
