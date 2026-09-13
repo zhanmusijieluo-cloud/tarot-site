@@ -121,7 +121,9 @@ export interface NatalChart {
   aspects: ChartAspect[]
   receptions: Reception[]
   hourRuler: string | null // 时主星 (英文星名; 未知时间=null)
-  combust: string[]        // 焦身/燃烧 (距日<8.5° 非日月)
+  combust: string[]        // 焦身/燃烧段名单 (距日17′~8°30′, 星性难发挥)
+  Cazimi?: string[]        // 日核: 距日 0°~17′ (PPT33) 如皇帝内臣, 倍受宠爱反强
+  underBeams?: string[]    // 在日光下: 距日 8°30′~17° (PPT33) 受影响程度轻, 兼有"近贵" 
   viaCombusta: string[]    // 燃烧之路 (巨蟹14°55′—摩羯14°55′ 之间)
   warnings: string[]
 }
@@ -460,15 +462,21 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
   // 互容接纳 (全部天体, 与盘面同一守护流派)
   const receptions = computeReceptions(allBodies.map(p => ({ name: p.name, sign: p.sign })), { aspectPairs: aspects.map(x => [x.a, x.b].sort().join('|')) })
 
-  // 焦身 ( combust: 距日 0~8.5°, 古典常用; 日月本身不适用)
+  // 接近太阳三段 (木木PPT33·宫神星口径): 日核≤17′ / 燃烧17′~8°30′ / 日光下8°30′~17°; 日月本身不适用
   const sunLon = planets.find((p) => p.name === 'Sun')?.longitude
   const combust: string[] = []
+  const combustOld: string[] = []
+  const cazimi: string[] = []
+  const underBeams: string[] = []
   const viaCombusta: string[] = []
   if (sunLon !== undefined) {
     for (const p of allBodies) {
       if (p.name === 'Sun' || p.name === 'Moon') continue
       const sep = Math.abs(((p.longitude - sunLon + 540) % 360) - 180)
-      if (sep <= 8.5) combust.push(p.name)
+      if (sep <= 17) combust.push(p.name) // 兼容字段: 17°内均受影响
+      if (sep <= 17 / 60) cazimi.push(p.name)
+      else if (sep <= 8.5) combustOld.push(p.name) // 燃烧段 (17′~8°30′, 8.5取8°30′)
+      else underBeams.push(p.name)
     }
   }
   // 燃烧之路 Via Combusta (窄版·爸爸定标): ♎14°55′ → ♏14°55′ (秋分点±15°的30°暗区, 托勒密"从螯钳到蝎心")
@@ -486,7 +494,7 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
     planets: allBodies, angles,
     hourRuler: timeKnown ? hourRulerOf(birth.year, birth.month, birth.day, birth.hour) : null,
     cusps: cuspsOut,
-    aspects, receptions, combust, viaCombusta, warnings,
+    aspects, receptions, combust: combustOld, Cazimi: cazimi, underBeams, viaCombusta, warnings,
   }
 }
 
@@ -499,7 +507,9 @@ export function chartEvidence(ch: NatalChart): string {
   lines.push(`出生: ${b.year}-${String(b.month).padStart(2, '0')}-${String(b.day).padStart(2, '0')} ${b.timeKnown !== false ? `${String(b.hour).padStart(2, '0')}:${String(b.minute).padStart(2, '0')}` : '时间未知'} 当地时间 (UTC${b.timezone >= 0 ? '+' : ''}${b.timezone}) ${b.city ?? ''} 纬度${b.latitude} 经度${b.longitude}`)
   lines.push(`分宫制: ${ch.houseSystemUsed}${ch.timeKnown ? '' : ' (未使用—时间未知)'}`)
   if (ch.hourRuler) lines.push(`时主星: ${PLANET_ZH[ch.hourRuler] ?? ch.hourRuler} (零点起加尔迪亚序)`)
-  if (ch.combust?.length) lines.push(`焦身·燃烧(距日≤8.5°): ${ch.combust.map((n) => PLANET_ZH[n] ?? n).join('、')}`)
+  if (ch.Cazimi?.length) lines.push(`日核Cazimi(距日≤0°17′, 反强如内臣近贵): ${ch.Cazimi.map((n) => PLANET_ZH[n] ?? n).join('、')}`)
+  if (ch.combust?.length) lines.push(`焦身·燃烧(距日17′~8°30′, 星性难发挥): ${ch.combust.map((n) => PLANET_ZH[n] ?? n).join('、')}`)
+  if (ch.underBeams?.length) lines.push(`在日光下(距日8°30′~17°, 影响轻兼近贵): ${ch.underBeams.map((n) => PLANET_ZH[n] ?? n).join('、')}`)
   if (ch.viaCombusta?.length) lines.push(`燃烧之路(窄版 天秤14°55′—天蝎14°55′): ${ch.viaCombusta.map((n) => PLANET_ZH[n] ?? n).join('、')}`)
   {
     const s = ch.settings ?? {}

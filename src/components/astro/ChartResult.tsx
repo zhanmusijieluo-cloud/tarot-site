@@ -132,21 +132,28 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
     }
   }
   features.push(...recepFeats)
-  // 焦身 (燃烧): ☿ 焦身 (距日2.6°)
-  for (const cn of chart.combust ?? []) {
-    const p = chart.planets.find((x) => x.name === cn)
+  // 接近太阳三段 (木木PPT33): 日核Cazimi反强 / 燃烧·焦身难发挥 / 日光下轻+近贵
+  {
     const sunP = chart.planets.find((x) => x.name === 'Sun')
-    const dist = p && sunP ? Math.abs(((p.longitude - sunP.longitude + 540) % 360) - 180) : 0
-    features.push({
-      tone: 'warn',
-      tip: `${p?.zh ?? cn} 焦身·燃烧 (距太阳 ${dist.toFixed(1)}°)`,
-      el: (
-        <span>
-          <b className="font-normal text-frost">{psym(cn)}</b><span className="ml-1.5 text-[#e07f7f]">焦身·燃烧</span>
-          <span className="ml-1 text-muted/80">(距日 {dist.toFixed(1)}°)</span>
-        </span>
-      ),
-    })
+    const near = [...(chart.Cazimi ?? []), ...(chart.combust ?? [])] // 仅≤8°30′进特征卡; 17°内只进底部大表+AI证据(防刷屏)
+    for (const cn of near) {
+      const p = chart.planets.find((x) => x.name === cn)
+      const dist = p && sunP ? Math.abs(((p.longitude - sunP.longitude + 540) % 360) - 180) : 0
+      const caz = (chart.Cazimi ?? []).includes(cn)
+      const beams = (chart.underBeams ?? []).includes(cn)
+      const label = caz ? '日核Cazimi' : beams ? '在日光下' : '焦身·燃烧'
+      const tone = caz ? 'gold' : beams ? 'soft' : 'warn'
+      features.push({
+        tone,
+        tip: caz ? `${p?.zh ?? cn} 日核Cazimi (距日≤0°17′, 如皇帝内臣, 反强)` : beams ? `${p?.zh ?? cn} 在日光下 (距日8°30′~17°, 影响轻, 兼近贵)` : `${p?.zh ?? cn} 焦身·燃烧 (距日17′~8°30′, 星性难发挥)`,
+        el: (
+          <span>
+            <b className="font-normal text-frost">{psym(cn)}</b><span className={`ml-1.5 ${caz ? 'text-[#cdb88a]' : beams ? 'text-muted' : 'text-[#e07f7f]'}`}>{label}</span>
+            <span className="ml-1 text-muted/80">(距日 {dist < 1 ? dist.toFixed(3).replace(/0+$/, '').replace(/\.$/, '0') : dist.toFixed(1)}°)</span>
+          </span>
+        ),
+      })
+    }
   }
   // 燃烧之路 (窄版): ☽♏ 在燃烧之路 — 逐星一行
   for (const n of chart.viaCombusta ?? []) {
@@ -173,7 +180,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
         const pa = chart.planets[i], pb = chart.planets[j]
         const d = Math.abs(antiKey(pa.longitude) - pb.longitude)
         const sep = Math.min(d, 360 - d)
-        if (sep <= 2) {
+        if (sep <= 1) { // 木木PPT32: 映点/反映点容许度1°
           const key = `${pa.name}|${pb.name}`
           if (seenA.has(key)) continue
           seenA.add(key)
