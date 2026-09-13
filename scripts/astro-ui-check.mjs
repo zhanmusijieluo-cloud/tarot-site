@@ -124,11 +124,14 @@ const zones = await page.evaluate(() => {
     recep: /⇄|↦|互容|mutual/i.test(t),
     statusTable: /黄道状态|ecliptic status/i.test(t),
     gridUnderWheel: (() => {
-      const g = document.querySelector('table.border-separate')
-      const c = document.querySelector('.cursor-grab canvas') || [...document.querySelectorAll('canvas')].find((x) => x.getBoundingClientRect().width < 1300)
-      if (!g || !c) return false
-      return g.getBoundingClientRect().top > c.getBoundingClientRect().bottom - 5 // 网格在盘下方(全宽放大)
-    })(),
+          const g = document.querySelector('table.border-separate')
+          // 盘=3D画布(.cursor-grab canvas)或线条盘大SVG(viewBox 920); 默认视图已是线条盘
+          const c = document.querySelector('.cursor-grab canvas')
+            || [...document.querySelectorAll('svg')].find((x) => (x.getAttribute('viewBox') || '').startsWith('0 0 920'))
+            || [...document.querySelectorAll('canvas')].find((x) => x.getBoundingClientRect().width < 1300)
+          if (!g || !c) return false
+          return g.getBoundingClientRect().top > c.getBoundingClientRect().bottom - 5 // 网格在盘下方(全宽放大)
+        })(),
     gridBigCells: (() => {
       const td = [...document.querySelectorAll('table.border-separate tbody td')].find((x) => x.querySelector('[title]'))
       return !!td && td.getBoundingClientRect().width >= 40 // 格子≥40px (爸爸: 太小看不清)
