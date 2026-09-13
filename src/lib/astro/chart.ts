@@ -142,7 +142,7 @@ const PLANET_ZH: Record<string, string> = {
   'Mean North Node': '平北交点', 'Mean South Node': '平南交点',
   'Mean Lilith': '平均莉莉丝', 'True Lilith': '真莉莉丝',
   'Part of Fortune': '福点', 'Part of Spirit': '精神点', Vertex: '宿命点',
-  Ascendant: '上升', Midheaven: '中天',
+  Ascendant: '上升', Midheaven: '中天', Descendant: '下降', IC: '天底',
 }
 const PLANET_SYMBOL: Record<string, string> = {
   Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀', Mars: '♂', Jupiter: '♃',
@@ -151,7 +151,7 @@ const PLANET_SYMBOL: Record<string, string> = {
   'North Node': '☊', 'South Node': '☋', 'True North Node': '☊', 'True South Node': '☋',
   'Mean North Node': '☊', 'Mean South Node': '☋',
   'Mean Lilith': '⚸', 'True Lilith': '⚸', 'Part of Fortune': '⊕', 'Part of Spirit': '⊖',
-  Vertex: '⎈', Ascendant: 'ASC', Midheaven: 'MC',
+  Vertex: '⎈', Ascendant: 'ASC', Midheaven: 'MC', Descendant: 'DSC', IC: 'IC',
 }
 // 分层: 渲染时行星=星球实体, 小行星=小球, 虚点=纯符号
 const BODY_KIND: Record<string, 'planet' | 'asteroid' | 'point'> = {
@@ -441,10 +441,21 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
       : scope === 'asteroids' ? (SCOPE_PLANETS.has(p.name) || p.kind === 'asteroid')
       : scope === 'planets' ? SCOPE_PLANETS.has(p.name)
       : CORE_BODIES.includes(p.name))
+  // 四轴相位 (爸爸: 盘上没四轴相位 — 宫神星/astro.com 标配; DSC=ASC对宫, IC=MC对宫)
+  const AXIS_NAMES = ['Ascendant', 'Descendant', 'Midheaven', 'IC'] as const
+  const axisBodies: { name: string; longitude: number; longitudeSpeed: number }[] = timeKnown && angles.ascendant && angles.midheaven ? [
+    { name: 'Ascendant', longitude: angles.ascendant.longitude, longitudeSpeed: 0 },
+    { name: 'Midheaven', longitude: angles.midheaven.longitude, longitudeSpeed: 0 },
+    { name: 'Descendant', longitude: norm(angles.ascendant.longitude + 180), longitudeSpeed: 0 },
+    { name: 'IC', longitude: norm(angles.midheaven.longitude + 180), longitudeSpeed: 0 },
+  ] : []
   const { aspects: rawAspects } = calculateAspects(
-    scopeBodies.map((p) => ({
-      name: p.name, longitude: p.longitude, longitudeSpeed: p.speed,
-    })),
+    [
+      ...scopeBodies.map((p) => ({
+        name: p.name, longitude: p.longitude, longitudeSpeed: p.speed,
+      })),
+      ...axisBodies,
+    ],
     {
       aspectTypes: at, orbs: orbsCfg,
       includeOutOfSign: settings.outOfSign !== false,
@@ -452,7 +463,11 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
       minimumStrength: settings.minStrength ?? 0,
     },
   )
-  const aspects: ChartAspect[] = rawAspects.map((a: {
+  // 过滤 轴×轴: ASC-DSC 恒180°/MC-IC 恒180° 是定义非相位; 轴只与真星体成相
+  const axisSet = new Set<string>(AXIS_NAMES)
+  const axisAspects = rawAspects.filter((a: { body1: string; body2: string }) =>
+    !(axisSet.has(a.body1) && axisSet.has(a.body2)))
+  const aspects: ChartAspect[] = axisAspects.map((a: {
     body1: string; body2: string; type: string; deviation: number; isApplying: boolean | null; symbol: string
   }) => ({
     a: a.body1, b: a.body2, type: a.type, typeZh: ASPECT_ZH[a.type] ?? a.type,

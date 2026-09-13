@@ -184,9 +184,22 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect }: {
       })}
       {/* 相位弦线: 端点=真实度数落在内圆边界, 四色细线 */}
       {aspList.map((a, i) => {
-        const ga = glyphs.find((g) => g.p.name === a.a), gb = glyphs.find((g) => g.p.name === a.b);
-        if (!ga || !gb) return null;
-        const [x1, y1] = xy(R_ASPECT, ga.realA), [x2, y2] = xy(R_ASPECT, gb.realA);
+        // 四轴端点: 轴点黄经(ASC/MC直取, DSC/IC=对宫) → 与角标同位置; glyphs 只有行星
+        const AX_ANGLE: Record<string, number> = {
+          Ascendant: chart.angles.ascendant?.longitude ?? NaN,
+          Midheaven: chart.angles.midheaven?.longitude ?? NaN,
+          Descendant: chart.angles.ascendant ? wrap(chart.angles.ascendant.longitude + 180) : NaN,
+          IC: chart.angles.midheaven ? wrap(chart.angles.midheaven.longitude + 180) : NaN,
+        };
+        const angOf = (n: string) => {
+          const g = glyphs.find((x) => x.p.name === n);
+          if (g) return g.realA;
+          const ax = AX_ANGLE[n];
+          return Number.isNaN(ax) ? null : la(ax);
+        };
+        const ra = angOf(a.a), rb = angOf(a.b);
+        if (ra === null || rb === null) return null;
+        const [x1, y1] = xy(R_ASPECT, ra), [x2, y2] = xy(R_ASPECT, rb);
         const hot = rel(a);
         return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={aspectHex(a.type)} strokeWidth={selected && hot ? 1.8 : 0.9} opacity={selected ? (hot ? 0.95 : 0.06) : 0.38} style={{ transition: 'opacity 0.25s' }} />;
       })}

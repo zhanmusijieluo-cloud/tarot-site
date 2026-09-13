@@ -492,11 +492,22 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
     const zoomBy = (f: number) => { orthoT = Math.min(1.7, Math.max(0.5, orthoT * f)) };
     const aspectLines: { mesh: THREE.Line; a: string; b: string; baseOp: number; tOp: number }[] = [];
     const ASP_Y = 0.62 // 相位网抬到球体顶之上: 盘是平躺的, 抬高在俯视图里毫无变化, 但球体(最高太阳0.5)再也挡不住线
+    // 四轴虚拟锚点: 相位线端点回退用 (盘沿 R_OUT 处, 与 ASC/MC 角标同角; 四轴本身无球体)
+    const AXIS_ANCHOR = (() => {
+      if (!chart.angles.ascendant || !chart.angles.midheaven) return {};
+      const mk = (lon: number) => ({ r: R_OUT - 0.35, a: la(norm360(lon)), vr: 0.25 });
+      return {
+        Ascendant: mk(chart.angles.ascendant.longitude),
+        Midheaven: mk(chart.angles.midheaven.longitude),
+        Descendant: mk(norm360(chart.angles.ascendant.longitude + 180)),
+        IC: mk(norm360(chart.angles.midheaven.longitude + 180)),
+      };
+    })();
     for (const asp of aspects) {
-      const pa = planetObjs.find((o) => o.name === asp.a);
-      const pb = planetObjs.find((o) => o.name === asp.b);
+      const pa = planetObjs.find((o) => o.name === asp.a) ?? (AXIS_ANCHOR as Record<string, { r: number; a: number; vr: number }>)[asp.a];
+      const pb = planetObjs.find((o) => o.name === asp.b) ?? (AXIS_ANCHOR as Record<string, { r: number; a: number; vr: number }>)[asp.b];
       if (!pa || !pb) continue;
-      // 端点: 沿两星球心连线方向, 各自退出自己的视觉半径 → 大球小球一律"贴边留缝", 不再忽中忽边忽左右
+      // 端点: 沿两球心连线方向, 各自退出自己的视觉半径 → 大球小球一律"贴边留缝", 不再忽中忽边忽左右
       const P1 = polar(pa.r, pa.a), P2 = polar(pb.r, pb.a)
       const dirV = new THREE.Vector3(P2.x - P1.x, 0, P2.z - P1.z)
       const lenSeg = dirV.length()
