@@ -1,7 +1,7 @@
 {
  "version": 2,
  "generated": "2026-09-13",
- "count": 1944,
+ "count": 2460,
  "rules": [
   {
    "category": "planet_nature",
@@ -17498,6 +17498,4650 @@
    "source_page": 169,
    "confidence": "高",
    "_batch": "灵魂的功课"
+  },
+  {
+   "category": "aspect",
+   "rule": "合相(0°): 圆周未被划分, 核心意义是「1」与合一, 两股行星能量融合为一体, 本身不带好坏、轻松或困难属性, 吉凶全看两星能否相容; 越接近精确度数影响力越强。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 51,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "合相: 精确合相者主观上觉得两颗行星是同一颗(自己看不见差异), 别人反能分辨; 凡涉及太阳的合相都会影响身份认同, 当事人对该相位力量缺乏自觉(盲点), 需借关系之「镜」才看得清。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 52,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "合相: 星图中合相多的人自动自发、自主, 不向外寻求自我定义, 较少自我怀疑, 但难通过人际互动认清自己; 合相如壁炉般是能量焦点, 观察星图时应优先注意(尤其涉及个人行星)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 53,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与金星呈合相(中性): 滋养与情感反应(Venus柔顺)融合后不易改变原有的柔顺特质。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 53,
+   "confidence": "中",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与土星呈合相(负): 滋养能力与自发情绪反应(月亮)被谨慎、自制、恐惧、责任、义务和掌控的能量(土星)压制, 感受不舒适。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 53,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "三颗或以上行星在8°内合相即成「星群」: 强化合相特质, 是星图焦点, 也常成个案盲点(难意识到该领域态度之偏颇); 阐释法为先把其中最强势行星独立出来(该星座守护星、入 own 星座者、或能量最沉重的外行星)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 54,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "星群经守护关系会波及它所辖行星(及星座)守护的所有宫位; 若把相关宫位行星纳入考量, 星群可视为个案整张生命的关键(心理学家所谓「情结」)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 54,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "合相中通常外行星对内行星的影响比较强烈。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 54,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "对分相(180°): 圆周分两等份, 核心是「2」与二元对立; 两星渴望对方拥有的东西, 反向与正向息息相关, 需觉知并善用两个面向, 否则会被困在「非此即彼」。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 55,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "对分相: 符合自我形象的那颗行星易被接纳, 被排斥的(较沉重或社会不容的)行星会透过投射以「受害者」经验入侵生活, 排斥多久、投射就有多强, 直到发展出觉知才终止; 西方文化普遍较易接纳月亮金星、排斥火星土星及外行星。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 56,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "忽略被排斥的对立面不会使它离开, 反倒增强它「进入屋内」的决心; 对分相的两面互补如反对党互相监督, 但也彼此推向极端(右更右、左更左)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 57,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "星图布满对分相的人: 易摆荡到两端形成极端行为, 或难以决断、凡事要与人商量、无法自己采取行动; 对分相与其他困难相位最大不同在于它通常显现在关系领域, 是通过关系提升觉知的相位。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 58,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "三分相(120°): 最主要的柔和相位, 两星同元素、互不干扰且相互支持; 标示与生俱来的才华、感到愉悦享受之事与最少阻力之路, 有精神提振与疗愈充电效果。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 59,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "三分相: 促成接纳与轻松, 但不必然带来幸运利益; 当事人对其领域毫无质疑, 反成盲区(例: 水象大三角土金冥者以「爱」合理化对夫儿的严苛而不自知), 有困难相位者反而更易看见自己的心理活动。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 60,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "三分相非常被动, 不会像困难相位那样迫人行动; 事情变糟时它让人被动接受。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 61,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "三分相加上困难相位: 可减轻压力紧张, 具疗愈效果; 但若三分相容许度小而困难相位容许度宽, 三分相会让人太容易接受困难情境、以合理化不当的应对方式。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 61,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "星图三分相太多的人: 永远拣容易的路走、容易「脱逃」, 好运自然降临却认不出自身才华(以为人人皆能), 可能花一辈子做自己并不擅长(困难相位)之事。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 62,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "四分相(90°): 由不相容元素构成, 两星不但渴望不同且彼此干扰(「上与左」的冲突), 比对分相更容易带来紧张与压力, 但紧张促使行动、成长、更卓越。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 62,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "四分相: 当事人先以极端方式强行解决问题, 招致挫败与外境干扰(用头撞墙感); 但不断想证实的驱动力会增强力量、促成伟大成就, 并使态度更圆融、内在更有力量。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 63,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "四分相如土星, 越老越能胜任其议题; 努力解决四分相是成长与成熟的重要经验; 星图缺四分相的人成熟较晚、易走捷径选阻力小的路。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 64,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "四分相(「4」=物质与显化): 因能量过多倾向过度兴奋, 必借外在事件与行为具体显现; 最负面展现是找不到两星和解之道而一事无成、能量受阻停滞——尤其落在固定星座或触及冥王星时; 四分相必须在物质世界找到出口, 否则反过来操弄当事人或损伤别人。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 64,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "五分相72°、倍五分相144°, 延伸出18°/36°/108°; 此系列容许度极小, 甚至不应超过几分的度数。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 65,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "五分相系列: 与「5」(收获/处女座/水星)相应, 代表风格、艺术形式、心智能力与沟通——把思想经由说、写或双手变成具体形式; 强调做、联结、安排与让想法成形, 亦关联掌握物质的欲望与权力渴望; 艾迪称其「把自己的想法强加于世人身上」。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 66,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与土星呈五分相: 个人风格自制、自律、自我保护、严肃认真, 才华涉规划与结构、头脑系统化(与太土困难相位的议题同源, 但以风格/才华方式表达而非冲突); 其父亦带自制严肃与规划才华。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 67,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "五分相带执迷特质: 令人朝着同样主题反复思考, 但因出自五分相, 不一定在外境以事件(如婚姻)形式显化, 而更乐于以艺术形式公之于众(例: 奥斯汀太月、金火五分相, 执迷关系议题而写成小说)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 68,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与海王星呈五分相: 有利于想象力与创造力。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 68,
+   "confidence": "中",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与月亮呈五分相: 有创作才能, 关切阴性法则与阳性法则的结合。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 68,
+   "confidence": "中",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "六分相(60°): 阐释近于三分相但被动性较低——蒂尔尼喻四分相为驱动力、三分相为允许、六分相为「诱使」; 落在不同却相容的元素(火风、土水)上, 元素差异提供刺激。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 69,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "六分相=「机会」相位: 当事人有能力与资质做出其所代表之事, 但需一些努力, 因较不顺遂反比三分相才华更被当事人重视。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 69,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "六分相带金星特质(6这个数字): 象征享受、欢娱与价值(尤其心智上的价值), 与韵律、重复节奏有关, 象征舞者或音乐人; 重视合作但需努力才能学会合作。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 69,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "半四分相(45°)与八分之三相(135°): 实际观察上与四分相十分类似, 是四分相的派生; 紧密的半四分相比宽松的四分相更重要。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 70,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "半四分相与八分之三相: 不像四分相带迟疑与不确定, 而有清楚目标, 会以非常外向的方式促成事件形成、具体生产出东西(能量整合受短暂干扰后被强迫释放)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 71,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "半四分相与八分之三相的心理议题不易被察觉、深埋无意识, 因而在外在以「意外事件」形式爆发; 当事人较难与这类议题做心理联结。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 71,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "意外事件星图特征(作者观察): 多三分相与对分相、缺四分相, 土元素与土星弱, 半四分相/八分之三相多——三分相使能量畅然无阻(如火灾燃烧无阻)、四分相反而阻碍能量(灾难受限)、对分相助长极端、合相增强行星能量; 可见三分相未必好消息、四分相未必坏消息。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 70,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "十二分之五相(150°): 两星来自不同源头、发展方向不同、互不相见(如两架飞机各走航线), 不直接挑战也不彼此干扰; 其心理议题多为次要, 常在主要相位的重大议题处理后才被留意到。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 74,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "十二分之五相: 卡特等将其与疾病甚至死亡联系(因六宫、八宫与上升点成150°), 作者持保留; 较可信的机理是造成潜藏的愤怒与虚弱体质的慢性压力, 及缺乏韵律感、组织力、笨拙、吹毛求疵的不适感, 迫人付出努力化解轻度摩擦。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 75,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "十二分之五相的星座既不同模式亦不同元素、乍看毫无共通, 但彼此能修正对方的极端使其不偏颇(双鱼需狮子之自我中心、水瓶需巨蟹之顾家), 因源头不同而不会像对分相那样带来极端化。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 75,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "合盘中十二分之五相与对分相一样常见, 常现于一方的太阳星座与另一方太阳或上升点之间; 此类关系多由工作互动开始, 其成败对健康与安宁影响极大, 具转化力量(行星落入伴侣八宫且涉个人行星与上升点时, 关系即属重要)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 76,
+   "confidence": "中",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "十二分之五相会带来洞见与新信息, 强化星图已具备的特质; 应视为次要相位。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 77,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "半六分相(30°): 若无其他要素参与可忽略(卡特及作者立场); 但能起联结作用——使两组原本不相干的相位连成一组复杂能量、整合两个次人格; 在推进盘上常为其提供支持与确定感; 连续两星座本质和谐, 被星图强化时会造成特定事业形式(对比分散相位之兴趣广泛不专注)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 77,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "总纲: 行星组合引发的议题不随相位类型而改变(火冥相位者无论三分、四分、五分相, 永远关注生存、勇气与胜利); 阅读工具书式判词时, 凡三分相、六分相处应「淡化」其解释, 其他相位的解释也无法完全呈现现实。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 79,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "关键词提示法: 阐释相位卡住时, 分别列出两行星的意涵清单再两两拼合(土星×天王星→「谨慎的改革」「与权威决裂」「惧怕真相」「新时代的独裁者」「不传统的父亲」), 可生出新洞见; 神话故事亦可深化行星关系的理解。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 80,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "斟酌轻重优先序: 1)与四交点成紧密合相的行星最明显(出生时间不准则须谨慎, 可能根本不存在) 2)精确相位及接近精确的相位 3)涉及太阳、月亮、上升点及上升守护星的相位比其他重要 4)入星座(own sign)或入宫(own house)的行星特质更纯粹、影响力更大 5)「双重撞击」——守护关系重复叠加(如上升白羊+水星火星互作+水星落双子三宫+处女六宫)使该能量纯粹而显著。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 83,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "学院派容许度: 合、对分、三分、四分8°; 六分4°; 十二分五、五分、倍五分、半四分、八分之三、半六分2°; 涉及日月可扩至10°; 22.5°与36°仅1°; 18°不超过0.5°。作者主张紧密容许度: 合相及重要困难相4°、三分3°、六分2°、其他1°, 出相位时尤应收紧; 容许度过大会使相位性质搅混。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 84,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "容许度宽相位的效力判定: 客户通常感受不到宽容许度相位(10°以上), 除非其星图相位很少; 若星图紧密相位多, 宽相位需刻意觉知才被感知; 但宽相位两星的中点若被其他行星精确触发, 其能量即可被感受(撒切尔例: 太阳-火星10°宽合相之中点被紧密木冥对分相四分触发, 视同精确合相成立)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 86,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "行星重量: 远日外行星对近日内行星带来「无法阻挡的力量」(如土星限制金星), 但此说过于夸大——内行星亦可反向软化外行星; 谁压制谁应检视双方何者能量更强(入庙落座、所辖星座宫位轻重、该相位本身的强度)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 88,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "入相位(applying)较出相位(separating)能量强(以较快行星论入出): 入相位关联行动、未来与肇因, 自由意志较能运作, 阐释为努力、好动、富攻击性; 出相位代表已发生之事的效应, 稳定、宁静、不活泼, 其容许度应比入相位更小; 入相位多者外在活动较频繁。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 88,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "行进出相位的体感因行星本质而异: 土星「离开时」的感觉比精确成相时还强(与延迟有关); 火星行进有「过早发生」感; 三王星的行进则无一定规律。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 89,
+   "confidence": "中",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "赤纬相位: 两天体在赤道同侧同度数=平行(阐释如合相); 分处两侧同度数=反向平行(阐释如对分相); 容许度1°, 可确定星图其他要素的性质。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 90,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "阐释相位除行星组合外必须同时考量相位涉及的星座、宫位与主宰行星; 整体解盘需理解元素与模式如何运作。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 91,
+   "confidence": "中",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "基本星座的大十字/对分/四分相: 在个人与家庭生活领域制造严酷现实冲突(追求自己目标vs满足伴侣; 社会事业vs家庭生活; 与父母相处/扮演父母角色)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 92,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "基本星座困难相位者: 主要才华是勇于面对冲突, 无充分计划即直接行动, 驱力强大、永远忙碌、不断开创但不一定能完成(需强土星或许多固定星座能量弥补); 对外加之于己的限制听而不闻。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 92,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "基本星座被强化者易与权威冲突, 坚持以自己的方式和速度行事; 若相位涉及白羊座或火星该倾向更明显; 基本星座缺耐性、稳定性与平衡性。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 92,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "白羊座与天秤座呈对分相: 我与我们/独立与关系/果决与犹豫; 极在意一对一关系, 斗争责任常落在白羊一侧、天秤为正义与价值(金钱)而战, 婚姻中因差异起争执; 最佳状态=不带攻击性地确立自己并平衡自我与合作, 课题是聆听、接纳、容许别人有不同需求而不失立场。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 93,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "巨蟹座与摩羯座呈对分相: 流畅与僵固/家庭与事业/母亲与父亲; 组合保守负责自律, 多为家族、社会与现状的维护者, 尊重历史传统; 调和良好可成理想父母, 常关注政治与社会议题并投入辩论(巨蟹=家庭家族, 摩羯=社会国家)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 94,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "白羊座与巨蟹座呈四分相: 月亮与火星分落两星座时极易火爆, 家族(尤其房子/家)受威胁时特别恼怒; 白羊独立开创vs巨蟹依赖恋家, 想出击又被家庭与家族历史拖累而生挫败; 有利于摆脱过往历史、为传统/家族而战(圣战)及社区开发工作。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 94,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "白羊座与摩羯座呈四分相: 强大野心、驱力与开创力, 利于一切企业活动与登山攀岩类勇气型事务; 但太急于登顶而不择手段、自私粗鲁忽略他人感受(火星与土星主宰), 需较多水风元素或金星能量减轻; 过度发展则不断挫败并更奋力对抗权威; 既有利对抗政府传统建制, 也见于想在社会架构内登高者; 也可能无事业野心却给自己设极难目标。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 95,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "巨蟹座与天秤座呈四分相: 极重视伴侣、家庭与家的议题, 四分相有时显现为「为了成家而结婚」, 或觉得家与孩子阻碍一对一关系; 双星座过度强化则无法独立自主面对问题——顺从、犹豫、有伸缩性, 心理易动摇; 冲突源于天秤求平等vs巨蟹求滋养被滋养; 常为孩子滞留不快乐关系, 不信赖自己关于公平的感觉(源自怕独居)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 96,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "天秤座与摩羯座呈四分相: 圆滑不易扰动、文明老练心平气和, 适合公众人物/不得罪人的角色; 在意他人看法、强烈需要被尊重, 会为提高地位结盟; 挑战=兼顾关系与事业; 天秤犹豫vs摩羯权威(大家长与民主不可兼得), 「丝绒手套里的铁手腕」; 重视对与错及法律秩序(摩羯管社会法则、天秤求公平), 延伸至宇宙律法(因果律), 一生渴望秩序。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 96,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "固定星座的对分相/四分相(大十字)多者: 可靠、稳定、果决但抗拒改变; 金牛执著财物安全感、天蝎执著情感欲望权力、狮子执著自尊个人特质、水瓶执著理念法则; 坚持可靠可发展强大意志力, 但缺伸缩与适应; 常被「被迫放弃拥有物」以解决深层心理问题; 反应模式二选一: 忍耐到底强迫接受, 或谨慎缓慢果决地一点一滴解决。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 97,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "固定星座大十字: 意志力强大能量源源不绝, 但讨厌变动而选择保留精力, 故改变很难自然发生、常以剧烈方式爆发; 关系里拒绝被对方迫使推动(既是美德也是缺点); 若能觉知何时执著何时放下, 可完成不可能的任务。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 98,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金牛座与天蝎座呈对分相: 建造者与秘密破坏者/安全与诱惑/性与禁忌; 两星座皆关涉欲望满足(金钱、性、权力), 易碰此类议题而生嫉妒愤怒, 有一个以上此对分相则更明显; 天蝎求深切交融(与灵魂/与人), 金牛扎根物质安全食物财物累积、性重感官享受。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 98,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "狮子座与水瓶座呈对分相: 个人与团体/专制与民主/占有与自由; 产生骄傲、固着、不依常规或凭独特性出众; 化解专制与民主矛盾的方式=爬到重要位置再宣扬民主自由平等, 或以原创与怪异成名; 重视爱与友情, 玩乐(狮子)常是发展团体关系(水瓶)第一步; 狮子「你是我的」vs水瓶「因为爱你所以给你自由」。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 99,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金牛座与狮子座呈四分相: 稳定可靠但顽固缺伸缩, 自尊心强; 两星座都渴望美好生活(美酒美食), 加倍要求舒适与稳定基础, 食物胃口大、生活各层面求适; 可能因饮食过丰或不投入真爱工作而生健康问题, 缺和谐情感性关系时过度沉溺物质; 利于经商/金融(金牛稳定谨慎+狮子投机冒险赌性), 有贪婪倾向且不在乎行为准则与反弹; 也极有创造力(金牛要生产具体物)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 99,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金牛座与水瓶座呈四分相: 金牛保存传统建构物质基础vs水瓶抽离反传统重友情团体; 矛盾明显但会努力整合务实与理想——卡特所谓「务实的理想主义」; 适合激进特质企业(电脑业)、简朴近自然生活、公社式/反传统而稳固的生活(嬉皮士、地球之友式和平运动常见此类相位, 天王星落金牛同样); 有了解土地的本能与发明才能, 利于有机农业、改良大众食物、为朋友俱乐部备户外餐饮。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 100,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "狮子座与天蝎座呈四分相: 热情温暖, 也可能骄傲、嫉妒、顽固; 两星座都喜欢权力、维持现状; 第八宫(他人钱财)关联使其利于银行业与大型金融业; 狮子求赞美注意vs天蝎求隐私; 喜戏剧化生活、少平静, 利于娱乐业/艺术创作出口; 情感深切但易冻结、烦恼难驱散, 加性自尊强易生报复与尖刻——需创造性出口(否则利于黑社会地下活动), 风象多可助其抽离宏观看事。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 101,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "天蝎座与水瓶座呈四分相: 天蝎求隐私孤独vs水瓶友群重诚实, 矛盾源自此; 会以反传统生活形式解决冲突(日常保隐私+事业忙碌), 对性、玄学、死亡持反传统观点, 想分享又怕不获接受, 故投入同好小团体; 卡特称可能「排斥人类」——不信赖他人动机、只对少数人热情; 两星座皆对心理学有兴趣(强化时投入心理学研究/治疗团体); 意见情绪强烈信念深, 但热情投入下一刻可毫不在乎, 有冷淡无情与强烈想改造他人倾向; 不畏退缩、反社会倾向(仍看金星能量); 最佳=天蝎洞见+水瓶人道理想主义造就高度改革者。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 102,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "变动星座大十字/T三角: 遇困难典型反应是逃避、为逃挑战不惜任何牺牲; 双子射手处女双鱼皆关涉理念知识搜集与理想, 成对分/四分易致内外交战(理想、理念、信念的挣扎); 不在乎权力故三模式中最不危险, 但双子射手显著可致明显交通事故。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 103,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "变动星座被掌控者: 伸缩适应力超强,但渴望改变好动难获稳定安全感(本人不太担忧, 更求探索自由); 多数时候不知自己要什么而生强烈不满足; 最适应要求伸缩性的工作——教育沟通(双子射手)与服务他人(处女双鱼); 非目标导向, 能适应当下; 其T三角与大十字最严重问题=缺乏一贯、太易妥协, 最糟状态漫无目标摇摆不定; 课题是集中精力, 不集中致看不清事物、担忧、神经紧张; 火星落入的星座宫位若能给明确方向可减轻。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 103,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "双子座与射手座呈对分相: 琐碎信息与完整画面/理性与直觉/知识与智慧/短途与长途旅行; 重教育旅行各面向、资讯搜集联结传播; 对什么都感兴趣、健谈、急于获取信息; 双子如学生天真无道德感不断问「为什么」(似塔罗愚人), 射手如应知一切的老师重智慧道德判断; 组合可为「永远的年轻人」。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 104,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "处女座与双鱼座呈对分相: 划分与合一/秩序与混乱/批判与慈悲/完美与完整; 性格柔顺善服务, 处女辨认批判+双鱼谦卑仁慈同情=有用喜给予; 处女求实际服务、双鱼倾向奉献牺牲, 故有明显自我牺牲倾向, 常扮演受害者/烈士/救赎者角色, 救赎与被救赎是其关系常态; 冲突源于处女求纯粹秩序vs双鱼混乱相对主义; 双鱼随波逐流、臣服于人。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 104,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "双子座与处女座呈四分相: 同由水星主宰, 判其运作要看水星落座落宫与相位; 变动性特别明显, 难下决定, 卡特称变动型最大弱点「缺乏动机」、找不到有价值目标, 易不满足; 最糟表现=批评、易怒、永远找茬(「吹毛求疵的态度」); 水星强则利语言文学才华; 兴趣广而杂、搜集过多资讯无法消化、什么都知道一点而肤浅自满、觉乏味无价值; 火象或爆发性行星可给方向热诚信心; 利资讯搜集分类细部研究、校对类官僚工作(但除非土星/摩羯强否则并不真正有条理), 实际理性现实枯燥亦机智, 利各种写作。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 105,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "双子座与双鱼座呈四分相: 不安分; 双子重概念事实知识vs双鱼重理想、相对价值与内在经验, 人在客观现实与内在真相间挣扎, 人生目标即整合两者; 水星位置好则利研究非理性议题, 利于诗词与想象力写作; 卡特联系此相位与恐惧、孤独, 怕自己发疯, 有人被脑内想法意象淹没, 过度理性分析感受与不了解之物, 想让事实吻合想法否则焦虑, 心智易困惑; 交谈是最佳解药, 以艺术形式沟通亦是良方。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 106,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "处女座与射手座呈四分相: 水星+木星=多话不安分; 处女关注日常细节令求冒险的射手觉得被局限, 常显「小题大做、吹毛求疵」; 常批判别人信念、对自己的信念自大; 但利于研究分析各意识形态与信仰、研究健康治疗哲学、提供建议; 会把人生哲学与服务结合, 适合慈善组织义工。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 107,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "射手座与双鱼座呈四分相: 追梦人、做大梦; 不是真去异国就是心里神游; 天王星强则适合写科幻小说; 两星座都不喜被局限、渴望敞开大门, 不安分不易满足, 常成浪迹天涯之人; 双鱼使射手活力细致、射手给双鱼热情, 合成天真的渴望与洞察力、渴望深入了解他人, 兼具天真与无法轻信人的矛盾; 有夸张与粗心大意倾向; 两星座皆关注信念, 四分相易在政治宗教上生冲突、信念互相对立且难以理性坚守(水星强可减轻), 常发现信念与环境抵触而须调整。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 107,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火象星座三分相/大三角: 增强热情、享受生命, 支持直觉与自我中心; 重视未来动向、直觉嗅到可能性, 但缺四分相则难以实现; 爱冒险且易涉险境、意识不到恐惧而不自认勇敢; 追求兴奋、保持活力充沛、相信不会遭坏事, 这份「受保护」的信心常真的使其免于受伤; 享受别人带来的娱乐但不亲自演戏。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 108,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土象星座三分相/大三角: 强调物质保障、在意金钱, 相对不必担忧贫穷(最关心经济独立与物质安全); 带来实际、可靠、现实、社会化特质, 渴望在物质世界生产具体之物; 能照顾好身体与现实(知何时进食、如何照料自己与他人), 了解金钱、懂得切实地在物质世界生活。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 109,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "风象星座三分相/大三角: 代表消化信息与概念的能力而非博学智力; 增强交流与社交适应力, 带来兴趣与好奇心但不必然增智; 若无其他要素(如三宫九宫行星或水星困难相位)反造成肤浅的认知——满足于心智才能而不求进展(来上课却不记笔记不进步只享心智刺激)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 109,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水象星座三分相/大三角: 强烈依赖性但需求易被满足故无须面对依赖课题; 带来支持保护他人的能力, 主要动机是安全感; 对自己的感受觉知敏锐、判断不受「应该如何」标准影响; 增加对本能反应的觉知与体会他人感觉, 但「感受」不等于「了解」——不必然了解或能分享自己的感受; 才华=立即与自己的感受建立联结且处理感受更快; 争执时比缺水者更能消化情绪、不担心损害关系、不被感觉扰得手忙脚乱; 不会阶段性着迷于某人, 能接纳并维持关系; 容易知足、显得被动。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 110,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与月亮呈合相(新月人): 需求与目标一致、焦点方向目的统一(「所有鸡蛋放一个箩筐」, 箩筐模样看合相落座落宫); 强化日月所落星座宫位元素, 成为星图核心焦点, 与新月形成的相位须仔细检视。",
+   "school": "psychological",
+   "source_page": 116,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与月亮呈合相: 多出自父母角色单一(或态度目标相似)的家庭, 听不到第二种权威观点, 故成年后难向人求教学习、渴望自己是最高权威、少上咨询室; 当父母时径自扮演双亲角色不与配偶分工。",
+   "school": "psychological",
+   "source_page": 116,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与月亮呈合相: 非常主观、认同自己的完整性, 不易认同别人、察觉别人需求(与狭隘心性有关); 阴阳融合故易雌雄同体倾向或性别困惑(男孩多女人环绕、女孩显阳性特质); 男性常有满月脸孔、认同母亲大于父亲, 女性可能认同父亲。",
+   "school": "psychological",
+   "source_page": 117,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与月亮呈合相: 敏感重滋养与施受, 但感受别人需求很慢(对比满月人永远清晰察觉别人需求); 与家庭关系极紧密, 难「离开原来的窝」(可到45岁), 或完全摆脱家族历史; 童年经历影响极大、潜意识惯性深埋, 难接受无意识概念; 人生目标=借专注过去影响未来, 须认清童年发生过什么。",
+   "school": "psychological",
+   "source_page": 118,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与月亮呈合相: 典型者从不妥协、一味勇往直前(积极或被动看所涉星座), 带白羊座开拓精神, 非发起人亦乐于参与草创; 果决、聚焦、强势、目标清晰是共性, 即使内向者也显缺乏伸缩性的强烈性格。",
+   "school": "psychological",
+   "source_page": 118,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与月亮呈对分相(满月人): 不易集中焦点、较不果决, 对关系有强烈需求+内心不安全感, 常从外界人物寻求满足(占星师咨询室的常客); 关系是其存在的理由, 借一对一关系界定自己、厘清目标, 因而具客观性与觉知力, 能欣赏暧昧性与悖论, 但难果决推动事情(总意识到其他可能性)。",
+   "school": "psychological",
+   "source_page": 119,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与月亮呈对分相: 眼中父母角色截然不同(一内向一外向/一持家一外务), 父母分居离异时极易因渴望留在双亲身边而生极大不安全感; 自觉如夹心饼, 长大后难把两种人格面向统合; 极敏感易发脾气(需被关注+不安全的表现); 父母之一未表达的真实感觉由孩子替他们发泄。",
+   "school": "psychological",
+   "source_page": 119,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与月亮呈四分相: 议题如对分相但更易焦虑不安, 需下苦功才能获得情绪安全感、认清自己是谁; 渴望(太阳)与需求(月亮)分裂是全部太月困难相位的共同显现, 目标=统合两种心理要素; 找到人生目标时又现现实障碍(惯性模式或家庭拖累), 难弄清并表达自己真正渴望。",
+   "school": "psychological",
+   "source_page": 120,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与月亮呈四分相: 似乎真需要达成某些成就让家人骄傲; 童年觉得父母不以己为傲的欠缺感促使不断成长(也可能成为阻碍); 父母不断冲突彼此阻挠, 孩子自觉是冲突原因而羞于表现、压抑自我(涉土星能量); 家庭分裂、不愿与双亲保持紧密关系, 或父母之一阻碍其与另一方亲近; 须整合个人目标的矛盾需求与家族过去现在未来。",
+   "school": "psychological",
+   "source_page": 120,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与月亮呈三分相/六分相: 对自己与人生感到舒服, 不觉显意识/潜意识分裂或过去现在未来冲突; 双亲关系通常稳定、早期家庭生活有安全感; 能自在表达感觉; 负面=自满、不质疑自己, 太接纳自己反难转化星图中其他困难议题; 正向=对自己有足够好感, 有能力应付人生困境。",
+   "school": "psychological",
+   "source_page": 121,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与水星只能成合相(距离不超28°): 借意见伸张自我, 强烈认同「理性」思考与自己的想法、说出的话, 渴望话语受重视, 视知识为骄傲与力量, 人生目标=成为某领域真正权威; 有机会成为真正的独立思考者。",
+   "school": "psychological",
+   "source_page": 122,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与水星呈合相: 最大问题=无法接纳别人意见且意识不到自身主观(卡特: 思想固执、冥顽不灵、坚持己见、傲慢而不自知, 如伊卡洛斯蜡翼近日而坠); 别人不赞同其看法时视为人身攻击; 最佳=独立思考者, 最糟=观点极为狭隘。",
+   "school": "psychological",
+   "source_page": 123,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "水星被太阳「燃烧」传统: 距日5°内称被烧焦、30'内称casimi(极度燃烧), 有权威称casimi水星=卓越智力、轻烧=智力弱; 作者观察既不能肯定也不能否定, 认为太水合相反给水星带来力量。",
+   "school": "psychological",
+   "source_page": 122,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与水星呈合相+该合相与土星呈四分相: 对自己的想法不确定、沟通能力缺信心, 反而极度渴望自己的想法与话语受到重视。",
+   "school": "psychological",
+   "source_page": 124,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与水星呈合相落固定星座: 显坚持己见与顽固(水瓶座例外); 落水象风象则此倾向较轻。",
+   "school": "psychological",
+   "source_page": 124,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与水星呈合相: 重视兄弟姐妹情谊与眼前环境他人; 除非与土星或冥王星成相位, 多来自人来人往、爱交谈的大家庭(父亲常健谈), 好奇、有趣、擅学习, 利于教育、中介、运输及涉及人/地方/概念的活动。",
+   "school": "psychological",
+   "source_page": 124,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与金星只能成合相、半六分相、半四分相(距离不超48°): 最渴望爱与被爱, 自认且有爱心温暖, 渴望被视为受欢迎仁慈亲切; 懂取悦人故人缘好(尤其受女性青睐); 难面对不愉快议题、难坚持己见(怕掀起波澜), 只看自己想看到的(短视); 能接纳旁人无法接纳者、给人留余地。",
+   "school": "psychological",
+   "source_page": 125,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与金星呈合相: 强调关系和谐+逃避痛苦+渴望受欢迎=在压力下显懦弱、易被制服, 不利领导者工作(太柔顺难守原则); 紧密合相者从所爱对象反观自己——只能通过人际关系看清自己。",
+   "school": "psychological",
+   "source_page": 126,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与金星呈合相: 父亲(或其面向)带此特质——优雅有艺术细胞、不爱粗野, 或有爱心, 或逃避挑战/无法有效扮演父亲/对受欢迎上瘾/维持婚姻讨人喜欢; 孩子自视为「爸爸的好女儿/好儿子」。",
+   "school": "psychological",
+   "source_page": 126,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与金星呈合相: 关键词=自爱, 英雄之旅是发展自爱能力; 若与其他行星成困难相位则真正自爱不易, 若与木星等成柔和/困难相位可阐释为虚荣心; 难与自己和平相处, 长程目标=追求内在与外在的宁静。",
+   "school": "psychological",
+   "source_page": 127,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与金星呈任何相位: 有艺术鉴赏力与优雅品位(或才华), 见美景美乐即精神一振; 格外喜欢音乐, 半四分相与半六分相常出现在歌手星图; 重视阴性法则, 被动或懒散, 性情愉悦和顺、逃避粗糙, 爱甜食浓味, 奢华倾向重金钱、不愿投入竞争激烈的商界。",
+   "school": "psychological",
+   "source_page": 127,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "太阳-金星合相的落座元素修饰: 落风象=特别理性公平; 落水象=关怀慈悲; 落土象=格外乐于助人、自我沉溺、有生意头脑; 落火象=特别温暖有爱心。",
+   "school": "psychological",
+   "source_page": 127,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与火星呈任何相位: 真正的个人主义者, 喜欢当领袖与参与者而非追随者; 精力充沛(除非星图有相反元素), 渴望积极做事; 非常专注、知道自己要什么且以最快方式得到, 认为强力获取最快(有时涉不法且易被逮); 野心大、富竞争性、急于争先, 为勇气胆识自豪; 冲动鲁莽不假思索栽进情况犯严重错误(除非土星能量强, 成功不如渴望的容易), 随年纪经验减轻。",
+   "school": "psychological",
+   "source_page": 128,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与火星呈困难相位: 顽强战斗力、内在驱力与领导潜力, 一味想赢, 获胜后渴望征服新领域; 善用之道=为弱者抗争; 缺平等心、稳定性、平衡性, 不善平静解决问题(除非天秤/金星能量突出)。",
+   "school": "psychological",
+   "source_page": 129,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与火星呈任何相位: 可能碰壁撞杆、涉危险暴力、刀伤碰伤擦伤(尤其头部, 如同上升点与火星的相位); 利于从军、展现战斗力之作、竞技运动(网球拳击壁球)或与自己/历史/他人竞争; 也可能因设想后果太糟而放弃竞争但内心竞争性强; 无奋斗通道则惹是生非。",
+   "school": "psychological",
+   "source_page": 129,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与火星呈任何相位: 经常与自己为敌或早期与父亲对立; 父亲可能是好战分子(孩子为自卫与其对立)、有不自知的强烈性欲、与孩子有竞争性、从事火星式工作(军人/外科医生/屠夫等金属工具见血职业), 或父亲在某阶段遭遇勇气挑战(如上战场或像拒服兵役者那样为自己的信念与体制为敌)。",
+   "school": "psychological",
+   "source_page": 130,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与火星呈四分相: 很难确定自己是否有勇气、怕被视为懦夫, 故制造情况展现无惧以证明自己; 对分相者更易陷入一对一战争(年轻时尤甚, 容易把别人看成具有攻击性); 合相者较认同自己的火星面向(勇敢大胆热情)而不知果决该止于何处; 关键词「勇气」原义=用心投入(字根cor-=爱心)。",
+   "school": "psychological",
+   "source_page": 131,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与火星呈相位=罹患心脏病的倾向(卡特、埃贝廷; 作者补充: 凡触及太阳的相位都可能影响心脏——太金或致心跳缓慢、太木心室肥大、太土太天心律不齐或心肌梗死), 机理是太火型过度忙碌难以停歇; 行进推进上成立(尤其对分相); 反过来说手上无事可做也会因恼火挫败而生健康问题(中年后尤甚)。",
+   "school": "psychological",
+   "source_page": 131,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "女性星图太阳与火星呈任何相位(双阳性元素): 容易被展现火星特质的男人吸引(军人、开拓者、冒险者)。",
+   "school": "psychological",
+   "source_page": 132,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与木星呈任何相位: 带乐观主义与信心(柔和相位=乐天知命的温和心性; 困难相位=过度自信与显著活力; 合相=两者轮换); 慷慨(不仅外在)、动机善良、以友善角度阐释他人动机; 亦有自大特质, 最糟=同情心变纡尊降贵的施恩傲慢、视同胞为低于自己、假设「认同上帝绝对必要」而显大家长作风。",
+   "school": "psychological",
+   "source_page": 132,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与木星呈困难相位: 最糟面=自我膨胀与浮夸——缺乏现实基础的自大, 自我看似大实则极脆弱; 自认如上帝无所不能、坏事不会上身; 其实并不如显现的那么自信(真有信心无须辛苦展现过度自信); 粗心大意易发生意外(火星天王星卷入时尤甚); 但遇难不必负太多责任便过关, 毫不在乎重新开始, 能从不幸看到更伟大的命运。",
+   "school": "psychological",
+   "source_page": 133,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与木星呈任何相位: 伟大的梦想家——直觉看到自己在整个事件中的位置、从更大画面看情况、见未来更佳可能; 目标看似过高却常能让美梦成真(通常需固定星座上的土星涉入); 骨子里是赌徒, 热爱冒险、少意识到失败与危险、深信计划受神庇佑, 这份信心颇能给他人带来信心。",
+   "school": "psychological",
+   "source_page": 133,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与木星呈任何相位: 高超领导能力, 对权威及成为权威持正向态度; 深信成长与自由, 形成政治兴趣但不特别民主(爱按自己方式做事); 其他元素配合时促人在领域内日益显赫; 利于咨询业(扮演上帝角色)与舞台表演(夸张宣扬自我)。",
+   "school": "psychological",
+   "source_page": 134,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与木星呈困难相位(尤其落变动星座): 因失望而痛苦, 总觉别处的草绿, 不满足感促使重大改变; 面临困境时也懂自处并激起别人的希望; 乐观使其拒绝落面对严酷现实(「被神庇佑的大孩子」)。",
+   "school": "psychological",
+   "source_page": 135,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与木星呈任何相位: 不必然隶属正统教会但有强烈信仰; 困难相位=「信仰上的困难」; 父亲可能有信仰/道德问题且其信念道德观阻碍孩子发展, 常被视作道德观强; 父亲喜旅行需空间自由、经常不在家, 留给孩子探险家印象, 或被孩子看成神一样的人物/难以接触; 柔和相位则父亲带哲学倾向且慷慨; 当事人须把内化的父亲信念与自己的信念整合审视。",
+   "school": "psychological",
+   "source_page": 135,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "凡行星被土星触及: 让人特别渴望该行星代表的事物, 因对该领域有缺憾感。太土相位者渴望变成重要人物(太阳关键词=重要性), 因为他们认为或害怕自己微不足道, 且从小如此。",
+   "school": "psychological",
+   "source_page": 136,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与土星呈任何相位: 童年独特性未被父母接受认可——出风头倾向被打压, 或父母把孩子当附属品(父母自己亦未被其父母肯定); 身份认同受严重压制, 主要问题多半出在身份认同; (尤其合相与困难相位)要以非常辛苦的方式建构真正属于自己的身份。",
+   "school": "psychological",
+   "source_page": 136,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与土星呈任何相位: 小时很可能被父亲忽略(父亲时间不够用、无法扮演强而有力的至亲), 母亲常扮演土星式规范者、按强烈意见规划监督孩子性格; 无意识渴望被关注、发现、认同; 很想成名又羞于出风头(「半举着手」的典型自卑情结)。",
+   "school": "psychological",
+   "source_page": 137,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与土星呈困难相位: 小时候常对权威失望, 故难让自己成为权威(虽暗自渴望); 只有不再害怕自己的无限潜能才能居于权威, 另一面=怕自己微不足道; 最重要任务=在内心发现真正的权威性; 中老年往往只信自己(所悟皆千辛万苦换来), 倾全力或半推半就地登上负重位以肯定价值。",
+   "school": "psychological",
+   "source_page": 138,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与土星呈任何相位: 怕表现遭批评(实为自我批判), 须在世上做有意义之事、创造经得起时间考验的具体成就(土星重具体)——渴望成为真正的英雄; 纵有丰功伟业仍不自认足够好而不断努力(比太木型不易自满); 每通过一次考验即得信心与自知之明; 但若不能认清对失败的恐惧, 恐惧可能成真; 太仰仗外在赞赏会被赞赏掌控而失去完整性。",
+   "school": "psychological",
+   "source_page": 138,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与土星呈任何相位: 必须认清自己的恐惧(太阳促我们认清它所触及的部分); 不觉察则强烈不妥当感促其掌控他人或情况(最常掌控自己的孩子——「强化父亲的罪恶」), 或过度果决自立、不让人穿透内心; 自保机制过强致孤立无援。",
+   "school": "psychological",
+   "source_page": 139,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与土星呈相位: 认真严肃、易把周遭事看成与自己有关; 随年龄增长找到真实身份与扎实自信(不同于太木的脆弱浮夸, 源于对自己真实评价与局限); 自信心随时间增长, 土星的自我否定随时间消失。",
+   "school": "psychological",
+   "source_page": 139,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与土星呈合相常见于谐星/丑角星图(露西尔·鲍尔、莫克姆): 需良好节奏感, 且以小丑面具=双重防护罩自保; 欢迎「嘲笑我」带挖苦反讽(说「别太认真看我」者恰是最认真看自己的人); 怕彻底裸露真相。",
+   "school": "psychological",
+   "source_page": 140,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与土星呈相位及月亮与土星呈相位: 很难活出真实年龄——要么很小就满足父母要求, 要么晚年才展现童椎; 童年的成年「见习阶段」未完成故难真成熟; 生命随年龄增长越来越轻松舒服(内在孩童终被允许展露)。",
+   "school": "psychological",
+   "source_page": 140,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与天王星呈合相及困难相位: 强烈想与众不同+明显独立性(有时又想符合常规); 觉得自己是古怪的局外人因而最渴望被接纳; 可能完全误解别人的话(怕被嘲笑); 强烈想摆脱过往、向家族传统价值观宣战(对抗早期父权形象/国家政治氛围等集体影响力); 以坚持己见方式行事、非常难与人合作(金星强则减轻)——妥协=丧失个性、灵魂被抹杀; 与之打交道须彻底诚实(最受不了被操控)并给足空间自由, 指导他们做事必无好结果(即使意见相同也会反着做)。",
+   "school": "psychological",
+   "source_page": 141,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与天王星呈困难相位: 可能成局外人/独行侠/被异化者——或因观点太超越时代遭排斥, 或因预期被排斥而以强烈方式表达(水星金星能量可缓和); 乖僻、难以预料、顽固任性引发他人反弹; 极端者缺乏持续力(今日坚定追求, 数日后鼓吹别的理想)且难察觉自己善变; 观点最极端的表达方式; 但只有水瓶座特质强烈或困难相位时才有极端行为与革命倾向。",
+   "school": "psychological",
+   "source_page": 142,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与天王星呈相位: 从事各种改革者内心其实非常害怕变动——日常层面难向前行进(缺风象/变动星座时更明显), 于是变动以戏剧化急剧方式从外境突然降临(其内心改革求变所需之显化); 抗拒改变、怕别人试图改变他们; 须先发展坚定自我形象故花很长时间(盲人星图常见太天四分相——任何微小环境变动都意味行动不便)。",
+   "school": "psychological",
+   "source_page": 142,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与天王星呈相位: 喜欢与主流唱反调、破坏既定计划(相位使命即促成改变); 善于为已无效/被视理所当然的情境注入新气象; 电脑高科技从业者多强势太天相位; 鲜少尊崇权威故不被权威束缚, 超越传统与保守主义有才能, 但可能激进到把过往连根拔起而遭人阻抗; 最佳体现=进步的代言人和拓荒者(其缺乏伸缩性与顽固恰能促成改变)。",
+   "school": "psychological",
+   "source_page": 143,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与天王星呈相位: 父亲带权威倾向或欺凌弱小(其执意脱轨恰显父之法西斯作风), 或父亲不再扮演父亲角色/疏离冷淡(难兼顾自由与父职)、抛家弃子、举动不可预料(深埋不安全感); 为激进分子可能成孤立局外人但不担忧, 以退席显示自己更有价值; 常为被社会放逐的不幸者争取权益(最易认同被异化族群), 坚持个人自由故支持他人争取权利。",
+   "school": "psychological",
+   "source_page": 144,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与天王星呈柔和相位: 温和的反传统倾向, 自觉与众不同且对此满意, 无改变世界的潜力; 四分相者反对自己的特殊性不确定。合相与四分相皆使人紧张、须以不寻常或戏剧化方式展现自己(如琴弦上得太紧), 可能介于天才与歇斯底里之间(例: 弗洛伊德太天合相、莱恩紧密四分相、雷德格雷夫与格里尔太天四分相)。",
+   "school": "psychological",
+   "source_page": 145,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与海王星呈任何相位: 渴望活出理想人生、成为独特的人、与神性联结; 紧密相位者带伤感特质(卡特: 与平庸具体凿事物保持距离的纤细特质); 海王星提升所触元素——太海者美化提升经验随之失望失落困惑; 难接受自己与人生平凡面, 自我怀疑不满, 在自己与动机上编织幻想=以自欺著称, 最糟扭曲事实抓住幻觉不放。",
+   "school": "psychological",
+   "source_page": 146,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与海王星呈相位: 童年未发展出强壮稳定的自我, 故不断寻找灵性救赎(其实在寻找自己); 父母之一(尤其父亲)童年时消失或很少在身边(第四宫无其他元素时父亲在场但不参与自我发展); 仍把父亲理想化(困难相位者尤甚), 意识到父亲难以接触后把自己看成父亲的受害者。",
+   "school": "psychological",
+   "source_page": 146,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与海王星呈相位: 父亲难以真实描述——可能在海上工作/有一海之隔/传教士教赎者/艺术家神秘学家/商人清洁工或酒鬼; 孩子在其身上编织浪漫幻想, 视之为追求海王式生活超越平庸的典范, 或视为被现实束缚的受害者(艺术才华被重担压住), 或对精神层面/酒精药物上瘾。",
+   "school": "psychological",
+   "source_page": 147,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与海王星呈相位(尤其困难相位): 童年缺乏教育上的界线原则与权威引领(有土星则改变)——没有正确、正常、可能性的概念; 很早就对人生幻灭(不知该抱什么期待), 难决定工作家庭关系是可接受还是糟透了, 难对现实论断衡量; 缺乏准则可极有利(不需接受他人设定标准), 也可能丧失方向或标准太高而眼前情境永不好。",
+   "school": "psychological",
+   "source_page": 147,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与海王星呈困难相位: 无法如实接纳事物的状态, 但也因此产生改变改善的驱动力; 对自己和世界理想极高, 挑战=设法让理想发生而非逃避, 或误把不该接受的当可接受; 如太阳双鱼般敏感、察觉物质世界的痛苦粗糙而想逃离; 对命运不满、难定方向/合作对象/工作, 要么期望过高要么怕选一个丧失其他; 接纳现实=出卖自己; 其实须通过接纳与合作才能让梦想成真(核心是自我接纳议题); 也可能太快接纳、太被动, 表面接受内心未接受。",
+   "school": "psychological",
+   "source_page": 148,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与海王星呈相位: 身份认同与疆界模糊(海王触日)——几乎可变成任何一种人、如变色龙; 自我与他人无界线, 易自我怀疑挫败, 从小难决定将来成为什么样的人; 会变换成他人身份、借他人活出自己, 轻易渗透他人与情况; 接近崇拜对象不是出于喜爱而是想变成对方(门徒想变成上师); 渴望与人、宇宙、上主合一; 向别人敞开故易受引诱。",
+   "school": "psychological",
+   "source_page": 149,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与海王星呈相位: 无疆界感利于把理想变现实、接触神奇非凡无形次元(卡特: 对眼前障碍与事实局限视若无睹), 也致混乱失序; 关系中可悄悄贴近任何人、跨社会尺度交流(牧师/流行歌手/小提琴家皆自在); 把人理想化当父亲般崇拜或当神崇拜; 年轻寻求上师救赎、中年后扮演别人救赎者; 与公众人物为友以之为榜样, 发现其不当处后幻灭——幻灭是其需要的经验(迫其如实接纳), 但典型的太海人需要被拯救故难从幻灭清醒, 须亲自发现自己就是梦想的受害者才有能力当他人救赎者。",
+   "school": "psychological",
+   "source_page": 149,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与海王星呈相位: 既认同受害者也认同救赎者(须发现两者是一体两面, 否则难有自己的身份认同); 有「救世主情结」, 常经行业表现(尤其相位涉六宫或十宫及其宫头主星), 或与被视为救赎者的人建立关系; 爱领养小孩(涉五宫时尤甚); 深知迷失与随波逐流, 善于治疗这类创伤。",
+   "school": "psychological",
+   "source_page": 150,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与海王星呈相位: 极友善、敏感、慈悲(虽自我牺牲动机不永远利他), 以拥有慈悲心为荣(卡特: 富同情心、爱护动物、几乎都属「善类」); 命中注定活出海王法则——救世主/牺牲者/烈士角色, 或成为他人思想感觉身份认同的媒介(灵媒天分, 或以艺术创作当媒介: 投入角色的演员、描绘感觉的艺术家音乐家)。",
+   "school": "psychological",
+   "source_page": 151,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与海王星呈相位: 神秘主义倾向既是才华也是问题源头——与无形次元管道畅通、易洞察非理性面向, 不执著现实世界与自我; 既想逃离又想深入探索自己; 须通过摆脱自我的工作或献身于重要之事才能发现自己的身份; 投入艺术表现极有利(保持客观又逃离粗糙现实)——创造、戏剧、音乐、写作、美术关系密切, 戏剧写作才华罕见(例: 泰勒太水金火双鱼对分海王、贝内特三分相、奥斯汀四分相、莫扎特对分相); 卡特把太海相位与占星师相连(占星/心理学=渗透他人心灵成为媒介, 荣格为其代表; 精神分析师如演员代人受罪)。",
+   "school": "psychological",
+   "source_page": 151,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与冥王星呈合相或四分相: 竭尽所能隐藏自我(非显意识决定)——认识多年仍无法深入其内在心理动力; 自我保护之强使太土型防卫如儿戏; 给人强而有力、超凡魅力却难被看透; 察觉不到或已被自己的力量压倒; 从小难拥有力量、难直截行使; 强烈自我意识+假设别人也易意识到自己=多疑偏执; 想逃避自己。",
+   "school": "psychological",
+   "source_page": 152,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与冥王星呈相位: 极外向或防卫内向皆有可能(为自己挖洞钻进去); 外向有力者仍费心隐藏真实自我, 觉得自己无处可藏须创造藏身处; 需要私密空间、怕被侵犯、怕身份遭威胁(童年某种遭遇所致)。",
+   "school": "psychological",
+   "source_page": 153,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与冥王星呈困难相位: 可能有过反常家庭背景, 藏有禁忌议题(性侵害、家庭暴力、犯罪、精神失常)——孩子被带进冥府很小接触阴暗面; 也可能是父母掩盖阴暗事实使孩子放不掉阴影; 父亲掌控欲强、在场(不同于太土太海常缺席)、多疑如警察监管者, 无所不知使孩子无处可逃; 父亲职业可能带冥王特质(警察、殡葬、心理、清洁、铅管、污水处理等社会阴暗/禁忌/秘密行业)。",
+   "school": "psychological",
+   "source_page": 153,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与冥王星呈相位: 被父亲严密掌控; 父亲死亡影响巨大(放在神圣角落); 早期与父亲强烈对立, 正向看=真实深刻的父子关系带来真正的自我转化; 男女皆缺乏与男性的关系(父亲印象过强, 无空间容纳其他有力男人); 父亲如超人般保护孩子避开其曾犯之错/家族之伤; 沉重的「父亲的罪恶感」——被暗示那些事有多糟。",
+   "school": "psychological",
+   "source_page": 154,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与冥王星呈相位: 不被允许认识与接纳自己和父亲的阴暗面——丑陋念头要么深埋无意识要么被其淹没而认同之(自视魔鬼/反基督/充满兽性); 注定为社会负此类心理重担多年; 接触被集体排拒的事物或人即是其道途(才能彻底揭露内心深处问题产生真正转化)。",
+   "school": "psychological",
+   "source_page": 155,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与冥王星呈对分相: 努力排除冥王特质且以夸张方式面对——成为其受害者、与掌控性强甚至暴力的人建立关系、或身体残障; 太冥者(无论何相位)意志力超强, 常被迫面对情况以发展此力量。",
+   "school": "psychological",
+   "source_page": 155,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与冥王星呈困难相位: 自我形象常很差(年轻时视自己为毁灭者/畸形人), 常有自杀倾向(不应视为戏剧化表现——愤怒嫉妒暴力灭绝冲动全部内化为对自己的破坏); 除非发展出真正的力量, 须接纳光明与黑暗两面不被任何一面压倒; 挑战=接纳不完美、培养谦虚(应被消除且不断受挑战的是「自尊」); 允许自己失败一下。",
+   "school": "psychological",
+   "source_page": 155,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与冥王星呈相位: 未找到行使权力的安全地位时, 会不自觉破坏掌权者(自我太脆弱无法面对权势威胁), 或反之被权势吸引、设计揭发对方丑闻; 临近成功/成焦点/掌权时突遭打击——无法面对成功(招惹内心那个善妒的父亲, 小时被灌输不可有野心以免篡夺父权的信息, 父亲无意识想让孩子留在冥府); 篡父权的心理禁忌投射到其他权威身上。",
+   "school": "psychological",
+   "source_page": 156,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与冥王星呈相位: 不自觉破坏既定计划也可能为实现某种破纪录的成就(凡太阳与外行星成相者都期待不凡之事发生在自己身上, 与外行星成相的行星皆呈现不耐烦——渴望一夜变超人/杀光坏人/拯救全世界)。",
+   "school": "psychological",
+   "source_page": 156,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与冥王星呈相位: 自我破坏常由内化父权形象产生, 也是希尔曼所谓「急剧改变的渴望」; 大力花在_events_上, 对自己破坏可确保觉知转向内在——或许就该花一段时间待在冥府。",
+   "school": "psychological",
+   "source_page": 157,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与冥王星呈相位: 拥有强大操控力(「以机巧方式诱使他人臣服」, 不一定负向但可能不知不觉、请君入瓮难逃); 一面自我形象低一面自视甚高(以为应负全责、应有足够权力操纵一切), 须花很长时间发现自己只是集体力量的管道而非拥有者。",
+   "school": "psychological",
+   "source_page": 157,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与冥王星呈相位: 利于一切形式的探索、协助他人转化自我、帮助肉体或心智残疾者, 或成为心理学家/治疗师, 带觉知有效地行使权力助人转化; 冥王拒绝轻松——落入肤浅层次时危机会猛力把他们撞回冥府; 很小失去天真且无法恢复; 使命=认清隐藏之物、曝露于阳光下、把聚光灯照向社会禁忌议题并转化集体意识; 对心理学感兴趣, 最佳面=积极发展自知之明。",
+   "school": "psychological",
+   "source_page": 158,
+   "source_book": "顺逆皆宜的人生",
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与水星呈任何相位: 与「常识」相关(良好健全实际的辨别力); 水星的冷静抽离沟通推理被月亮的保护关怀同情转化=体恤、反应流畅、能融会贯通不同观点; 能把事实与有效解法、过往经验与目前感受结合——合相困难相位也有此才能但须下工夫。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 159,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与水星呈相位最糟表现: 感觉过多、情绪反应偏颇、总考虑自家人利益(记得莫德阿姨1923年的事), 影响观察眼前形势、无法理性解决问题; 聆听是重大议题(有人特别会听、有人完全不懂听); 倒出与话题无关的家族史琐事, 心难专注(尤其困难相位+变动星座)→学习障碍(记一大堆笔记不得要领)、无法选择性聆听、信息消化不良、说话没重点。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 160,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与水星呈相位: 对沟通极有利(不需强调观点的场合), 善谈典故轶闻、对日常琐事做机敏观察; 观察人与人之间感觉是其最大潜力, 叙事风趣、笑料源于日常(许多笑星有明显月水能量), 常联系到公开演讲能力(演讲写作能表达感觉并与观众情感交流), 聆听发展好则可能有模仿才华; 爱聊天(电话费高)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 161,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与水星呈相位: 姐妹似乎多于兄弟, 常扮演兄弟姐妹的母亲角色、付出同情心的一方, 在社区扮演照料者/代理人; 过于随和——感觉观点意见随新资讯新感受而变(见风使舵), 很少强硬粗糙刻板; 困难相位者难把内心真实感觉与理性思考协调一致, 对你的感觉随时日巨变。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 161,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与水星呈相位: 显现方式看哪颗行星强——月亮强(尤其困难相位)则难以客观理性表达自己; 水星强则过度理性地阐述感觉; 同一人不同时段可两种轮现; 表达欠缺清晰度尖锐性, 但圆融理解、和缓沟通。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 162,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与水星呈相位: 善于写日记(记录每天事情感觉反应, 例安妮·弗兰克); 月亮水星火星组合=八卦消息的原型(《加冕街》星图月与火水四分相)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 162,
+   "confidence": "中",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与金星呈任何相位: 两星本质温和顺从→乐意合作、高度适应性; 但合相与困难相位令人过于顺从他人、过度敏感易受伤、常觉被排斥, 怕伤害别人、躲开困难情境与挑战, 难接受批评或批评他人(只听到老师那一点建议而听不到一堆赞美), 有其他要素时可能不计一切取悦人。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 163,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与金星呈相位: 多坚定的和平主义者, 但可能以粗鲁外表掩饰内在敏感(火星土星卷入时尤然); 对公平过度敏感→以自我矛盾方式起冲突(与火星困难相位则采取行动); 母亲有爱心、受欢迎有魅力风度但被动屈服压力——孩子学到用外交手腕达成目的, 永远和蔼可亲、难以直说真正渴望。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 163,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与金星呈困难相位: 时常觉得自己不被爱或童年遭抛弃经验(无其他强行星时实际很少发生), 缺乏身体上的温暖感(看星座), 「惧内」或怕关系出差错; 母亲带金星式创造力艺术才华, 除非土星或外行星卷入否则很会(太会)满足孩子需求。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 164,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与金星呈相位: 对排斥批评过于敏感(或因从未面对); 母亲本身需要爱/向孩子讨爱难放手, 或为孩子放弃社交爱情性生活, 或过于重视性/创造而有罪恶感; 典型=父亲无法负滋养责任→强化「女人=母亲」概念, 家庭传统难把女人看成母亲之外的角色; 主张女人不该只扮妻母者亦常有此组合。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 164,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与金星呈相位: 无论家庭背景, 物质层面常被宠溺(尤其饮食——母亲内疚以食物弥补); 母亲想当最好的妈妈并为没做到内疚→困难相位孩子觉得给得不够、或母亲照料越周孩子越饥渴(收到母亲内疚); 童年玩具多甜食多→期待或习惯舒适物质生活; 困难相位者开销过多可陷经济困境(土星强则改变); 慷慨自我沉溺, 偶带犯罪动机(渴望生活无挑战、物质丰盛平静)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 165,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与金星呈困难相位: 以矛盾心情看待妻子与爱人角色并渴望统合; 异性恋男子易与「非常母性」或「非常妩媚」两种典型女人形成关系, 得了一种又想要另一种(功课=统合内在两面向); 女人易被自己的阴性面向淹没、难面对与异性的差异。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 166,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与金星呈任何相位: 利于滋养照料性活动行业、园艺、室内设计、宴席服务(有其他元素则成卓越大厨); 爱美食重呈现、爱吃甜食抱饼干桶寻慰藉; 可能反映过度甜美或过度热心的人格; 浪漫善感、珍惜过往、热爱历史凝视相册; 渴望被保护关爱照料, 天生温暖友善慷慨好客、有同情心外交手腕且易感; 对美敏感、渴望舒适和谐的家(重品位家庭氛围), 欣赏花艺音乐舞蹈。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 166,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与火星呈困难相位: 如太火型渴望行动做事, 家中活动频繁、家反而是消耗体力之处, 匆促吃饭冲进冲出(振奋或耗损看星图与四宫); 生命多情感活动与情绪冲突(安全感/舒适家庭vs独立/性刺激矛盾), 与伴侣摔杯砸盘式争执, 原生家庭往往同氛围且难避免重复。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 167,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "凡月亮与火星呈相位: 对冲突或任何威胁过度敏感; 行为易怒易失控却往往难以表达愤怒(困难相位尤甚)——或竭尽所能表明立场、或因怕结果而不表达; 固定星座易压抑怒气偶尔释放, 变动星座以暴躁吹毛求疵展现; 家庭「从不争论」却彼此恼火, 孩子如海绵吸收未表达的愤怒。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 168,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与火星呈相位: 必须统合自我确立与追求安全感; 是陪伴身旁的好朋友(喜照料人), 困难相位显出急于保护人的母性、行为过度极端、太快采取保护措施; 习惯活在缺乏安全感中、易嗅到危机、反应极快(有时能救命), 可成勇敢进取者——但反应出自「预期冲突」的惯性模式, 困难相位须很长时间才明白不必活在世界大战随时爆发的假设里; 太怕冲突→防卫反应使自已成为第一个开火的人。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 168,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与火星呈相位: 渴望保护家人与情感牵连者; 童年家人曾受威胁(外来的或家人间愤怒暴力); 可能来自不稳定家庭、母亲随时发脾气; 对不和谐状态极度敏感、不知如何打破负面氛围; 母亲暴躁果决(父亲被动不敢直表达愤怒)或夸张地紧跟孩子怕其遇险, 甚至与孩子竞争/潜意识渴望不幸发生在孩子身上(可幻想枪杀母亲; 母亲跟着去度蜜月)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 169,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与火星呈相位: 与母亲有强烈的性上面的联结, 母亲常与孩子竞争(一般或性竞争); 当事人自己竞争性强或很怕展现竞争性。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 170,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与火星呈相位(尤其落第五宫或五宫头由月火主宰): 与堕胎、小产、早产有关——滋养驱力太急切无法完成怀孕过程; 快速缩短的滋养经验(奶瓶随时被夺), 行为像哭奶的婴儿; 食物与喂养议题常是愤怒主因, 困难相位有消化不良胃溃疡(吃饭时心里愤怒/借吃压抑), 母亲喂奶时带怒、永远在忙、或有婚外性关系使孩子觉须与第三者竞争; 母亲可能早婚早育或性能量强, 月火女人生产快。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 170,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与火星呈相位: 对母亲恼火/视母亲为满怀愤怒者/想替母亲出气——合相较能意识到自己的愤怒与对母亲的恼火, 对分相则长期误以为是别人在生气、别人须为不和谐负责; 愤怒与性能量令人透不过气而郁闷(喷气但有同情心的火龙)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 170,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与火星呈相位: 常为家族抗争或努力脱离家族根源, 离婚后与伴侣争夺房产; 为安全保障与人抗争(外境迫其发现真正安全保障/情绪不安全感根源)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 171,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与火星呈相位: 通常早婚早育(总觉再老就没时间/找不到伴侣), 急着成家; 困难相位可饮食过量、酗酒、体重超重(落与肥胖有关星座时尤然)——童年未被妥善喂养/过早断奶/与兄弟姐妹争夺食物注意, 吃东西像竞赛, 超重=厚脂肪层保护自己; 对一切形式的滋养(对己对人)都有冲动倾向。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 171,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与火星呈相位: 最大美德=以诚实直接方式表达感觉(困难相位可能太直接), 不喜欢情绪暧昧性, 一向与勇于表达真实情感有关; 对性反应敏感、性议题直截了当; 男人可在性上显情绪化、易嫌恶、透不过气的抑郁+天真表情(白兰度日月火冥T三角), 娃娃脸、行为像婴儿充满需求(母亲把性需求投射到孩子身上)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 171,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与火星呈相位: 利于木工、室内设计、布置DIY——建议做家中体力劳动(刷油漆、敲墙)宣泄; 适合酒席/积极滋养类工作; 激进政治活动或传教活动也适合(宣泄愤怒)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 172,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与木星呈任何相位: 善良本质、夸大情绪、关怀他人; 同情心强、慷慨回应; 困难相位反应过度或轻诺(认为应该慷慨); 「超级母亲」式关怀, 但想无微不至照料所有人反连一个人都照顾不好。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 172,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与木星呈相位: 木星触及任何内行星都带来「扮演上帝」的需求——强烈教导布道(解说信念或炫耀知识), 极利教育与传教工作。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 173,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与木星呈相位: 若无土星或大王星等其他要素, 拥有与生俱来的信仰, 能在考验试炼中找到意义; 乐观有哲学倾向, 强烈需要信念体系(宗教/政治/哲学)以增加安全感并作行为依据; 与教条主义及局限性想法对立但不旗帜鲜明(关注议题内含精神而非细节), 理想教会=展现拥抱一切的母性精神; 政治信仰倾向慷慨与自由思想。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 173,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与木星呈相位: 母亲戏剧化、行为出自直觉式宏观理念; 有贪婪倾向但贪求的是滋养维生之物——可能源于母亲幼时断奶不当、渴望被滋养无法满足孩子, 家族模式设定→月火型人培养出温暖体恤同情模式以求童年缺乏的温暖, 发展敏感性回应母亲需要成第二天性、戴上笑脸迎人的面具; 情感得到足够滋养后会有超常的滋养能力。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 173,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与木星呈相位: 童年不是过度被保护就是缺少保护(生理过度、情感不足)→难真成熟; 显著呵护他人、易被悲惨故事打动(受欢迎但可能过度); 母亲过度保护、强迫进食→饮食议题放大至成年; 过度保护=让对方依赖自己、夸大自己重要性与扮演上帝的渴望(希特勒月木合相摩羯三宫, 以为其哲学信念唯一正确); 最大问题=意识不到对别人的偏见缺乏容忍; 对分相比一般人更自大、缺谦和心胸。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 174,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与木星呈相位: 不安分(变动星座尤然), 强烈冒险需求, 极怕情感与生活受束缚; 轻松自在不拘小节, 自认平易近人而人觉其糊里糊涂粗心奢侈; 有其他元素影响则太依赖运气、逃避责任; 可能一生有一段住国外(渴望自由摆脱家庭责任; 海外适合其探险本质与情绪夸大倾向)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 174,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与木星呈任何相位: 自我沉溺、感情用事、放任, 各领域难见温和适度、多极端行为——极端饮食习惯(有时太饱有时饿半死, 甘地绝食; 以绝食抗议者与素食主义者星图有明显月木相位), 饮食议题与信念结合; 做二十人份给两人吃; 凡事过度却似乎不受惩罚(有幽默感、温暖轻松、人反应友善); 重他人福祉、适合为人谋福利的工作(善用保护本能); 与太木一样易显大家长作风、高高在上。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 175,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与木星呈柔和相位: 也自我沉溺浪费爱冒险, 但较少自以为是与不安分; 仁慈友善但到处照顾人的需求不明显, 三分相反期待受他人宠爱纵容; 对宏伟华丽的古老建筑、服饰、传统有强烈感觉。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 175,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与土星呈任何相位总纲(引丽兹·格林): 把情感需求绑定家人(血缘支持)是危险预期——家庭带来的安全感虚幻, 一味绑定导致更多痛苦失望。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 176,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与土星呈相位: 「内在孩童受困」感觉(梳辫子的女人/接近女人就脸红的男人), 从小被迫当大人(如太土型), 丧失自然成长机会、情感发展拖延; 很小负责、被迫扮母亲角色(长子照料弟妹/扮演母亲的母亲), 缺乏被无条件爱的机会, 须无基础地学会展现无条件爱。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 176,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与土星呈相位: 小孩很小学会情感上自给自足, 接收到「必须符合父母要求才得到爱」的信息, 须为自己负责不妨碍大人; 母亲凡事靠自己责任沉重整天工作→孩子对母亲需求极度敏感、按母亲反应应对, 长大后难自在反应(内心一直期待被苛责); 困难相位或合相以小心谨慎与强烈防卫态度表达感觉。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 177,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与土星呈相位: 「工作重于娱乐」并延续为人生态度; 与「家庭氛围阴郁」有关(爱读狄更斯); 务农人星图常现月土(家即工作场所); 家族世代同住一栋房子或同工作→难摆脱原生家庭责任义务历史。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 177,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与土星呈相位: 行为讨人喜欢但稍嫌乏味刻板(土星相位皆然, 柔和相位更敏感); 竭尽所能讨好; 脆弱易感, 因怕受伤而以社会接受方式行事(臣服或求赞同); 土星公式化原则+月亮=过度控制反应、低调谨慎、或过度热情迎合。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 177,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与土星呈相位: 最大需求=安全保障(只有觉安全才能按真实感觉行动), 越不安全感越厚情绪藩篱成习性; 成年须发展足够安全感、在情绪反应和情感生活上冒险; 渴望滋养、最深情感联结、真实安全与具体的家(涂鸦不由自主画砖块围墙)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 178,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与土星呈相位: 最好一面=严肃看待情感、永不(现实层面)令你失望; 最大问题=过度认真对待感觉与历史、把情感国度看得恐怖、害怕暴露内在情感而无法开心门接受他人情感回馈; 执著于熟悉的老路(关系亦然)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 178,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与土星呈相位: 怕独自生活也可能怕为家庭负责; 最渴望当母亲或拥有一个母亲; 厌食症与暴食症女性星图常有强烈月土能量(控制饮食否认需要, 或以过量饮食弥补早期没被喂饱); 厌食可解读为抗拒当母亲/不想滋养/不想长大/不展现阴性; 可能无意识与父亲建立强烈情感联结; 男女皆可能为自己的阴性面向困窘(阴性=母性滋养保有表达需求)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 179,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与土星呈相位: 除独立自主信息外还收到「不要完全长大/不要成家立业搬走, 因为我需要你」——长大后仍照料兄弟姐妹父母或无法照料亲人(孩子常因此被父母掌控); 急于拥有小孩(孩子=证实滋养能力与女性特质的凭证)或无法忍受无子; 父母向孩子索取自己从未得到的照料; 正向展现=给予别人自己所渴望的——当父母时获得治疗童年创伤的机会; 家提供的是认清恒常幻象的机会, 学到自己能照料与被照料的自信; 只有面对情感需求背后的恐惧才能情绪成熟。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 179,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与天王星呈任何相位: 最需要的是日常生活的空间与自由(情绪及生活层面), 感觉随时可能改变, 痛恨被约束; 生活方式改变令其振奋→不安分期盼改变, 不习惯例行日常, 必然寻求别人眼中的反传统生活方式。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 180,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与天王星呈困难相位: 易有童年创伤与突如其来的震撼经验——情感上的「切割」(突然丧母或再也接触不到母亲), 被抛弃、排斥感; 相关例子: 月亮落三宫者其弟目睹坠楼后与情绪切割、得糖尿病、全家封闭。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 180,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与天王星呈相位: 通常过早发展情感独立性(该受抚慰时得到冷淡回应; 照料与安全感经验反复无常); 排斥切割的过往成年后变预期心态——极敏感易误解别人意思, 别人回应稍有犹豫即扩大甚至无中生有; 直觉强但不一定正确; 感觉被排斥时以唐突、抽离、不假思索掩饰受伤(对方只觉被断然拒绝); 很难求助于人(即使有人愿帮也持保留→人觉其过于独立冷淡); 只允许自己感觉逼近眼前的震撼, 一有受伤可能即与感觉切割或立即搬家; 有人以突然昏倒自保(如断电机制)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 181,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与天王星呈困难相位: 内在婴儿与成年人特质亟须整合——无法展现独立行为、太渴望被照料(不全然源于切割经验); 若潜意识里「独立=母亲离开/抛弃」, 会强化不独立习性、难靠自己脚踏实地生活。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 181,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与天王星呈相位涉第四宫: 缺乏安全感可源于童年经常搬家(月天合相落下中天、窃贼父亲躲避追捕搬四十次家者: 回忆兴奋但留下大变动不安、难安顿)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 182,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与天王星呈相位: 很少时间安顿, 不信血浓于水、对与家人紧密联结者不耐烦, 接受四海为家; 一直想摆脱过往(不只原生家庭, 也包括昨日或上星期经验), 叛逆对象多半是母亲或照料者——「让母亲震惊是一生的目标」(传统犹太家庭子女追求家庭认为震惊的生活方式); 每次搬家开始开心不久又想搬(外境也会逼迫); 困难相位难安顿且成困扰(心理上仍渴望稳定的家与安全基础), 柔和相位矛盾较轻。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 182,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与天王星呈相位: 多来自与一般家庭截然不同的背景; 若原生家庭传统, 就把家人内在的变动不安显现出来(母亲对为母角色爱恨交织→孩子表现其渴望的野性冒险); 或视母亲/家庭古怪而尴尬(柔和相位者视母亲为温和反传统者/怪人并欣赏之, 无须反叛); 母亲可能非常前卫; 看重独立性——可能不生小孩, 或借生小孩唤醒从未出现的感觉, 怀孕通常无预警; 觉传统家庭结构(尤其亲属关系)令人窒息, 恨家庭成员潜意识暗流、不想重复; 双亲给许多空间→孩子要么接受要么觉被抛弃; 典型=视家庭为虚伪造作, 但躲避家庭丧失内在安全感(安全感源于熟悉事物)→阴影层埋藏不易觉察的依赖性, 以散居各处却像家人的朋友网络解决。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 183,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与天王星呈困难相位: 自觉是家庭或所属文化的异类, 选择与背景迥异的居住环境甚至国家文化(反而自在); 反叛内在母性形象并扩大成社会反叛; 逃避父母角色, 厌恶令其联想母性的身体部位(胸部、胃部、浑圆部分); 放弃传统母性原型反使其得到情感独立、意识到自己的情绪本质。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 184,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与天王星呈相位: 因惯于与情感切割自保, 一旦意识到感觉反而对其相当诚实, 会承认别人没勇气揭露的事实, 自我揭露能立即贴近他人或自己; 是很好的朋友(快速洞悉别人感觉), 自己情绪改变更快→对人类行为有包容力洞见、能以各种方式关怀; 觉不受社会道德约束故自由回应, 直觉知道何为恰当反应, 但非可完全依赖之人——困难相位行为反复无常(前一分钟独立后一分钟乞求帮助; 前笑迎后忘你); 大体富有人道精神、待人平等, 结交各年龄背景想法的朋友, 令人兴奋; 适合改革家庭生活、住宅与社会问题(格里尔月天合相且与上升太阳四分)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 184,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与海王星呈任何相位: 极敏感易受影响, 难有清晰界线感(比太海型更模糊), 难辨自我与他人的分野——把他人情绪感觉全部吸收(如海绵)分不清是自己的还是别人的; 善于感觉但不一定能定义理解感觉(风象或水星强可改善)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 185,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与海王星呈相位: 像美人鱼——变化莫测、难以掌握、迷人如魔法; 很难把自己奉献给任何事物、极难被洞悉, 怕被套牢、不面对不愉悦情境, 永远在逃避困难议题、不想具体说出感受。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 186,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与海王星呈相位: 对一切受苦敏感(挨饿者/独行老妇/流浪狗/孤儿), 最大挑战=采取行动解决苦难; 困难相位难承受痛苦→求助于人、无法面对残酷现实, 借认同受害者来自怜(显著特质); 组合明显被动, 须把能量导向星图其他部分(如火星)学习积极运用保护照顾需求; 有慈悲同理心、会从别人角度看事情。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 186,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与海王星呈相位(卡特、阿若优): 母亲或父亲带海王特质——沉溺孩子需求、鬼火般飞快满足, 或不稳定、艺术家/神秘学家气质、对一般现实没兴趣; 更常见=母亲是受害者、亲子关系界线不明、为母亲难过并认同其痛苦; 把母性法则与女性气质理想化、极能接受母性的人、自己渴望当母亲; 易被洗脑、情感易遭背叛——对自己真正感觉不清楚→易受人影响、误以为自己有了某种感觉。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 186,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与海王星呈相位: 强烈逃避倾向(自保方式); 喜雅致生活、不接触粗糙低俗, 被迫面对不愉悦时逃进想象世界或看电视慰藉; 柔和相位者往往不承认自己白日梦幻想(已成下意识活动几乎察觉不到)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 187,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与海王星呈相位: 常见于有创意者尤其演员(但不喜聚光灯下)——能展现角色内心情感并在真实生活转换成所扮角色、不投入现实即反映真实生活(麦克雷恩月海合相处女十二宫, 又有太火合相八宫故多演妓女体现八宫性议题); 演员反映集体意识情感。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 187,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与海王星呈相位: 带寄生虫特质——渴望舒适、对照料他们的人上瘾(阿若优: 极渴望情感关怀抚慰且难满足, 没人能符合其投射的无私形象); 需把自己奉献给某个人或事物, 也不该太依赖别人的奉献; 有与宇宙/母神融合或缩回子宫的渴望; 童年无论实况皆理想化美化、戴面具编美梦; 渴望未来更好又美化过往→难善用当下。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 187,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与海王星呈相位: 最难满足的是家相关事物——渴望理想的家(情绪宁静+环境优美安全舒适的停泊港湾, 如海王与下降点合相); 害羞退缩、易被情绪淹没、极需避难所; 利于为他人建立理想的家(为儿童寻家的社会工作、室内设计与装潢)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 188,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与冥王星呈相位: 情感生活如塘鹅——潜入感觉与关系之中、需时间消化吸收的感觉; 家庭感情需要空间+深刻强烈交流, 合相及困难相位特别易觉受侵犯打扰(确曾发生过被侵犯情况故竭力避免)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 188,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与冥王星呈困难相位: 感情生活激烈, 显现方式看对情绪本质的觉察深度——想深入探究感觉或彻底铲除/连根拔起/完全埋葬(时机成熟又浮现); 连根拔起或不管=逃避破坏性感觉(痛苦、嫉妒、报复), 有些是自己的、有些出自原生家庭; 易有家族创伤或违反社会原则之事(性侵害、私生子), 或家族有无法消化的困难(残障、精神分裂、过早死亡)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 189,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与冥王星呈相位: 被无意识推选出来承担与治疗家族创伤、让大家认清真相(也可能发展出治疗创伤的专业能力); 可能成家人眼中钉(如戴徽章不断让家人意识到被深埋的过往); 如海绵吸收大气中的负面情绪并累积; 危机发生时总会卷入(即使无关)——危机令其兴奋、像秃鹰从腐肉获得养分、远处嗅到创伤气味; 涉入是因有足够力量洞见; 处变不惊愿保护人、对人性阴暗深富观察同情, 处危机者常求助于月冥型; 最佳情况=不隐藏情感反而表露、创造安全环境让人自在地揭露家庭创伤。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 189,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与冥王星呈相位: 渴望强烈的情感互动(月=喂养滋养直觉); 有人爱扮麦克白夫人或与这类人相处; 情绪与家庭生活少有平静, 如莎剧般黑暗不祥骚动、随时爆发——非不在意, 只是熟悉人性阴暗面(尤其家庭生活面向); 危机旁人不易看出来(不透露私生活细节), 困难相位尤其不信赖别人、觉得没必要让人知道秘密与真实感受(家庭背景令其觉暴露情感不安全=会被控制操纵敲诈)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 190,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与冥王星呈相位: 沉迷当母亲或对母亲执著→反过来对孩子执著; 母亲多半掌控性强、过度保护、无法让羽翼渐丰的孩子独立; 母爱带高度操控性但手段隐微; 能量强+星图极端时母亲如女巫吸血鬼吸光孩子生命之血、不断侵入空间使孩子无处可躲无秘密(源于害怕不祥之事发生在孩子身上); 柔和相位亦有类似经验; 照料者常是祖父母(尤其祖母), 否则家族由女性掌权。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 191,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与冥王星呈相位: 与非常原始的情感有关, 被强化者注定转化集体无意识底端的本能情绪(文明化过程迫使排除的感觉); 可能试图侵入别人情绪也怕自己这样做——怕被侵犯、不信赖别人动机, 潜入他人心是自保: 彻底认清一个人(含弱点)就不会被伤害、自己成掌权方→月冥型往往是情绪敲诈高手; 正向运用心理侵略性=净化与疗愈创伤(但被侵犯者觉情绪毫无遮拦); 自身丰富被侵犯经验=技术高超之因; 能觉知权力误用; 善用力量可当心理治疗师、咨询师、传记作家助人转化负面情绪。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 191,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与冥王星呈相位: 最困难的事=放下强烈感受(渴望把愤怒、怀疑、嫉妒、受伤连根拔起但困难相位难放下); 难有平静生活, 但外在多姿多彩、从日常经验榨出丰富汁液。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 192,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与金星只能成六分相、半四分相、合相(距离不超75°): 和蔼可亲、迷人风度、做人的技巧; 以美与优雅方式表现自己、能找到各种方式释放创造力; 出现在嗓音美妙者/歌者星图(能以嗓音吸引人者很可能有水星相位)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 193,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与金星呈相位: 爱思考与说话(尤其爱与关系主题); 与著名写作关联不大但至少代表喜欢阅读; 关联音乐等艺术但较代表艺术技巧(尤其运用双手的技艺); 许多舞蹈家有此相位(优美动作, 达芬奇精确水金半四分相); 艺术经纪人/美容业者强烈水金能量(为产品代言、中介角色)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 194,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与金星呈相位: 常思考谈论价值观、对金钱议题感兴趣(马克思水金合相近6°——终生思考价值与资源); 有其他元素支持则带来外交手腕——利外交公关工作, 持久快乐的关系; 知道说什么话容易被接受、表达符合理性与公平原则。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 194,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与火星呈困难相位: 「别啰唆」式说话, 越过繁文节与废话(也包括你说的话); 诚实、敏锐、清晰、简明的沟通, 不温和细腻体贴——技巧通过直言不讳的勇气展现。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 195,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与火星呈相位: 心智高度竞争性、精准、思维敏捷, 借快速思考确立和保护自己; 课堂笑料来源(反应敏捷)但易感乏味、对反应慢者不耐烦(桌下偷读别的书=确立自己+内心厌倦); 头脑是武器、须充分磨利; 需很多「肉」磨牙, 但相位本身不代表专心求知(求知需深思与毅力, 除非土星能量强), 对学术不耐烦且觉受威胁。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 195,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与火星呈困难/紧密相位: 老烟枪或习惯性咬指甲; 健康问题多半涉及神经系统(精神崩溃不罕见; 艾迪发现水火与水天相位常见于小儿麻痹患者星图——皆头脑敏捷); 沟通带不耐烦爱发火, 必须找发泄渠道(写作、讽刺文学、助人克服沟通障碍); 任务=活出「文胜于武」。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 196,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与火星呈相位: 头脑反应快过笔和嘴, 话语脱口而出来不及修饰(非不愿和缓, 只是信任直截了当); 写作演讲风格带讽刺性与正中核心; 即使内向温和者也以简明方式表达。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 196,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与火星呈相位: 多半来自争执不休的家庭——从小没机会确立意见、大人不听其说话, 长大后借沟通展现主宰权(快速强势尖锐、威胁他人的态度如随时准备对立); 或家庭争执少但竞争性明显(手足不和, 大人总强调别人家孩子表现好); 主要议题=长大后有愤怒情绪、难为社会接纳方式表达, 或发展出小偷小摸、性早熟。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 196,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与火星呈相位: 不一定爱争执但很清楚自己心智能力, 对合作与赞同别人不感兴趣(沟通事必我行我素), 与人争论只因太习惯争论、难想象其他沟通方式; 对分相尤其爱指责别人激起纷争(忘了争论须有两个人), 或热切倾向+非黑即白思考+信息不足便骤下结论。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 197,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与火星呈相位: 很怕开会(不合作不民主之因); 挑战=把想法与行动结合、理念付诸实践且不否定别人有意见; 组合易出现在罪犯(尤其小偷扒手)星图(水星无道德感+火星我行我素; 偷窃需敏捷思考行动、勇敢冲动胆大妄为); 善用=投入勇于发言的情境, 否则易变成啰唆、不满足、易怒、充满偏见; 小时候对性好奇令父母窘迫。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 197,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与火星呈困难相位最糟: 好辩、把别人意见看成人身攻击、把每次沟通都视为威胁或对立; 冲动不耐烦+紧张易怒找茬, 显现在沟通与交通上(最痛恨等公车塞车)。正向=有能力勇气诚实表达、头脑敏锐清晰言语机智; 可能成讽刺文学/侦探小说作家、评论家、发言人、辩论家、智力游戏专家、舞台灯光师; 说「国王没穿衣服」者必具水火(或水天)相位(玛格丽特公主紧密四分相)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 197,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与火星呈柔和相位: 言语相对不辛辣但仍爱用强烈辞藻、善辩、表达清晰; 六分相在心智上特别清晰精确, 格外能把想法付诸实践。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 198,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与木星呈相位: 倾向哲学思考而非事实撷取, 向内观察、外表温和有耐性; 紧张的水木能量须先思索才显机智(除非哲学辩证或面授机宜); 心不在焉的「健忘教授」——只观察感兴趣之事、心中塞满想法, 忘了别人都记得的事(问喝茶配蜂蜜还是果酱都想不起来), 举止逍遥自在。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 198,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与木星呈相位: 不一定爱说话(向内观察、表达和缓), 但可能说话像腹泻(涉双子座或冥王星=强迫性沟通欲望, 较极端); 可同时研究五十个以上主题=夸大缺点, 出现在涉猎博杂者星图(哲学、宗教、法律、旅游、政治)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 199,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与木星呈相位: 木星扩张心智活动——从宏观角度看事物、探索事物背后的意义(困难相位不一定有此倾向); 柔和相位联系到平衡的论断与全观能力(有时困难相位者被迫发展之)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 199,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与木星呈相位(尤其困难): 带木星式自信与自大——观点可能缺乏完整性、只强调小部分资讯; 最大缺点=意见上自大、自以为是、对说话能力过度自信(「卖弄学问」型老师: 庞杂知识有魅力但无深入准备, 概论式夸大表达); 也可能善于启发学生(极大热忱谈论主题); 夸大事、搪塞相左观点、粗心说话不觉知对象——但如所有木星相位, 不因说话随便出纰漏(对比水土随便小错出大纰漏)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 200,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与木星呈相位: 不像水土型成为学者(不需高等学历证实心智成就、不觉得有必要证实智力); 水土成专家、水木是杂家——除非土星卷入, 涉猎太广不够深入(合相与困难相位说的比真正知道的多); 给完整画面仍只有信息没有清晰认识(落变动星座更难找重点; 写数百页笔记凑不成论文, 火星强可改善)——须学设定目标、把信息导向目标并消化; 不喜受制约→可能发展真正折中思想, 也可能成思想上的玩家。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 201,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与木星呈相位: 倾向哲学而非科学(不像水土需要事实与定义, 太多定义=局限); 木星给心智活动带来直觉力→很能抓住主题精神, 痛恨学究型与过度精准表达, 在注重细节的工作/思想方面有困难; 学生在行进木星与水星成相位时考试成绩往往很糟(过度自信犯不该有的错/无法深入课本)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 201,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与木星呈困难相位: 与误解有关(过度热切; 心投向未来猜测别人要说什么/书本结论), 聆听与沟通有夸大倾向、听错话、夸大某元素而忽略重点。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 201,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与木星呈相位: 通常喜欢上学、什么都想知道(除非星图有相反影响); 遇困境能从哲学观点看自己情境、发现严酷现实背后的意义目的, 但可能无法直接面对现实痛苦只找意义(邻居家着火: 实际者帮忙救火, 水木型找哲学意义并夸大恐怖程度)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 202,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水木与旅行/写作: 两星皆关涉短途长途旅行——有明显水木相位(尤其困难)者可能花很多时间旅行(旅游游学是最佳运用, 相位目的=探索人生); 水+木极利写作, 常出现在预测未来的作家/科幻小说家星图; 沟通者夸大内涵以呈现社会/哲学/宗教论点→表达富戏剧性极受欢迎; 利老师、牧师、政客、哲人; 思考未来导向与青年有关的工作; 对遥远异国兴趣可发展为旅游与天文学(亦利此方面写作)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 202,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与土星呈相位: 与认真、严肃、审慎的心智有关, 也可能代表畏惧思考; 三思而后言, 未确定该说什么前不轻易表达(审慎通常与家庭背景与童年教育有关)——总觉得自己话不够好、不够正确、不吸引人; 小时话被父母忽视/大家庭太多人同时说话小声音被忽略/学校老师没听见或令其觉得自己愚蠢→成年对智力缺信心, 谨慎表达以免显愚蠢; 早期被迫以艰辛方式学习丧失乐趣, 意见聊天倾向遭打压。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 203,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与土星呈相位: 常在生命某阶段面对语言障碍(话常被曲解; 或口音造成的阶层偏见; 迁移到另一区域因语言不同受阻——因说话方式而非内容遭排斥, 水土小孩最易碰到)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 203,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与土星呈相位: 害怕智力不够高/表达不够精确是不易意识到的心理问题——表达意见或考试如遭「试炼」(困难相位尤然); 可能因此进入学术界或不断累积学历: 渴望权威颁发文凭以证实智力知识表达能力, 也认为人须有头衔才算有学识(知识须权威认可才可信=不信任自己); 另一极=害怕考试不允许自己面临考验(太怕失败)——成为学历累积者还是逃避考验者, 看星图能量基调、水星位置与相位重要性。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 204,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与土星呈相位: 可能来自没有书籍没有交流、机会少的家庭→转化为对学习沟通的恐惧(害怕面对或不敢克服); 过度相信权威之见、低估自己意见(全然相信医生诊断、觉得自己对身体的看法不足采信), 或完全反向——不接受权威之见/对其怀疑; 正面角度=对任何议题都发展自己的看法。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 204,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与土星呈相位: 经常与迟缓或乏味心智有关, 也可能与特别卓越的心智有关(爱因斯坦水土合相属后者)——看似思维迟缓和狭隘者其实是害怕表达/害怕思考而非智力问题; 水土组合使思想清晰、审慎、周密、精准、明确、能为事物仔细下定义。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 205,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与土星呈相位的学生: 无法充分理解问题时最易焦虑, 不信水到渠成, 被教科书/老师意见不一困扰(觉得只有一位老师一本书涵盖所有权威最安全); 高度精算才能、依循公式有信心; 对科学数学有把握(有正确答案), 在占星等无明确准则、须冒险并用非逻辑直觉的领域易受挫——是不敢冒险犯错, 而非缺观察力; 须对科目彻底了解才觉掌握(=水土困难相位要达成的目标)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 205,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与土星呈相位: 渴望知识、机警反应、谈话能力受重视, 但须付出努力才发展出自然纯熟的表达(安杰卢水土精确四分相却能幽默主持脱口秀——太木合相白羊助益+只谈自己经验=借经验辛苦学习正是水土目的之一; 斯托帕德亦精确四分相); 老师与演讲家常有此相位——周密逐字准备讲稿照稿宣读(无犯错空间)、严肃扎实但枯燥僵化丧失主题生命力。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 205,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与土星呈相位: 通常不多话(别人主动才回应且须觉安全、怕出丑), 最渴望意见被认真看待受尊崇; 另一型=无法停止说话——控制他人、确保话被听见的方式(反造成别人不听, 因非平等对谈), 预设对方会把自己人生/星图说得很惨; 发现话受重视时较能聆听、不再需掌控; 把情况想得很糟、易担忧负面思考(组合与听力困难有关——担忧消息负面而把听觉关上); 觉日常闲聊交换意见很困难; 长于弥补: 系统性思考、专注、按特定模式思考、记住你说的每句话、善于规划与咀嚼信息——利规划、建档、归纳工作, 揣摩结构形式, 适合建筑师雕塑家。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 206,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与天王星呈相位: 激进想法——思想超越时代、与同辈截然不同(困难相位尤然), 对传统保守者太极端, 说话吓人或为捉弄人语出惊人; 沟通=展现叛逆性的方式、确保独特性与独立性的通道; 表达动机未必叛逆只是不想被他人或传统观点约束; 勇于独立思考有独特见解, 重视真相胜于任何形式忠贞(包括衡量自己想法时)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 207,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与天王星呈相位最佳面: 穿透所有虚伪暗流如实道出最真实想法, 为别人带来解放与震撼; 从截然不同观点看情况、穿透传统暧昧与恐惧做完全另类的选择, 借言语与直接态度解放别人, 不在乎意见是否受欢迎只关切看到的真相——但「真相」永远带相对性, 水天型(尤其困难相位)容易忘掉这道理、不在意话里的暗示; 善宣扬先进解放思想但忽略现实性与他人感受; 潜意识可能只是反叛破坏(甚至为作对把黑说成白)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 208,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与天王星呈紧密困难相位: 过度坚持己见即使情况显示完全违背真相——「必须」亲自发现什么是真相、证实自己独立思考的能力; 会为坚守原则自我放逐(看原则是否值得); 不为受欢迎软化说辞→利于坚守不合时宜的信念; 极端党派观念可能正是时代所需(改革社会集体意识)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 208,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与天王星呈困难相位: 难与人沟通(观点极端+表达唐突直接, 无能力合作让步; 金星能量可改善), 擅长联合抵制、工会领袖/发言人(角色不能急于达成协议); 卡特=不擅保守秘密(太急沟通难不吐露真相, 喜揭露事实不擅保密或护卫他人感觉), 不受欢迎因爱唱反调至无人可交流(阿若优: 不擅保密); 也可能用话语激起兴趣显机智——自我坚强重诚实者看重水天型(不说闲话、不为受欢迎说某观点), 极难与含糊不清或不诚实的想法共处。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 209,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与天王星呈相位: 与良好记忆有关(阿若优: 图像式记忆)——善于记住学习自己感兴趣的事物, 对乏味的主题不易接受; 智力高、沟通才能、消化信息如闪电, 心智有发明能力、直觉强(荣格: 瞬间直觉不永远正确不必然前后一致——除非土星强烈, 水天困难相位的直觉不足信赖); 适合科技电器发明、维修电脑电器。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 209,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与天王星呈相位: 思考和说话偶尔「断电」——困难相位洞见反复无常, 交谈「破音」、电话在不恰当时间中断(继续讲会说出后悔的话/沟通管道塞爆的保险性中断); 神经系统非常紧张, 断电有时源于过度兴奋忘自己在说什么或说到一半脑子空了——沟通方式非常特别也是才华之一。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 210,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与天王星呈相位: 极重视思想言论自由——不只嘴上宣扬而是真把理想信念实现出来; 也可能认为自己理念唯一有价值(思想自由、诚实性、沟通技巧是困难相位者的试炼), 可为争取权益锒铛入狱; 对传统教育体制不耐烦(阿若优), 偏好先进教学法、反抗纪律、对教材有强烈意见, 主张教育目的=培养思想自由性开放性; 可能在家受教育或自己教小孩(反叛模式多源于童年对教育不满; 早期这类人可能是自由教育创始者)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 210,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与天王星呈相位的目标=关注社会改革; 改革是否有效看社会是否视改革为必要——极端言论与观点也许是改革的必要条件(态度温和者永远无法为世界思维模式带来革命)。例: 罗素木天合相九宫与水四分相(宗教道德教育激进、为思想自由获诺贝尔文学奖、因坚持原则入狱); 迈德尔水天对分相(震撼观众); 弗洛伊德水天合相(心理学革命); 亚当斯(《银河系漫游指南》)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 211,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与海王星呈合相或困难相位: 扭曲事实的才华——可带来高度创造力也可能误导别人; 许多媒体(尤其广告界)人(弗里曼: 「真相是可以修饰的」)——以隐微方式影响他人感受思想、启发朝新方向思考、逐渐侵蚀其意见; 与新闻报道有关(提供资讯+启发人心+夸大消息+技巧地宣扬八卦丑闻); 最忠于事实的记者也会将真相理想化而不据实报道所有面向; 把粗糙情节润饰精致甚至人工化——才华亦是诅咒。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 212,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与海王星呈相位: 海王侵蚀水星逻辑与客观性、强化非理性觉知与非语言沟通能力——多半有影像和音乐才华, 但不善于用语言或其他艺术形式传达看到的影像。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 212,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与海王星呈困难相位: 语言方面表达易挫败; 阅读障碍者星图常有水海困难相位(学习障碍亦然); 拼写、看地图、学数学、依公式思考都有困难——宜以不寻常方式教学(图像解释知识、须受启发); 高度想象力丰沛创造力(先满足想象力才有学习意愿), 背诵强记是诅咒可能根本不生效; 不欣赏纯报道资讯, 会把事实变成越来越离谱的虚构(事实与虚构对其没太大差别)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 213,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与海王星呈相位: 小孩宁愿世界住满女巫精灵; 成年后把政府、邻居或任何人看成完全美好或完全邪恶; 扭曲事实以符合自己的想法→很适合做宣传工作。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 213,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与海王星呈相位: 一般并不如想象的糊里糊涂(木星卷入才会; 太空人摩尔水星木星海王星T三角——极有学问却迷糊, 把科学事实理想化, 视占星为童话蛊惑大众=把自己的海王投射给占星团体、强烈主张受木星影响)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 213,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与海王星呈相位: 对外界影响格外敏感、似乎能渗透别人头脑(思想界线模糊)——觉知集体意识里的信息并为自己的缘故隐微改变之(故与广告宣传有关); 学习困难=太易受外界影响、心完全开、吸收所有资讯难厘清组织(像极敏锐收音机接收所有频道, 须细腻微调——确有微调能力; 不把感觉写下来/列清单则想法石沉大海); 很少忽略任何信息——孩子捕捉父母未说的秘密并在最不恰当时刻当众说出。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 214,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与海王星呈困难相位: 惯性撒谎者(至少儿童时期; 骇人故事、对八卦高度兴趣、轻易编荒诞故事转移注意, 真正目的或是不想成为别人闲聊对象)——童年的谎言带有某种心理真相, 鲜活描绘内在现实, 须以认真尊重态度看待; 成年不再说离谱谎言但仍会曲解信息、手舞足蹈绘声绘色传消息; 既谈别人八卦也可能成为八卦主角。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 214,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与海王星呈相位与音乐文学: 词曲创作者与诗人常有此类相位(莫扎特对分相、迪伦四分相[且与交点有相位]、列侬半四分相、李斯特六分相); 音乐可能是水海人最了解的语言(一般人也有哼唱能力); 柔和相位有欣赏音乐能力, 真正有才华/能具体创作出音乐的多半带困难相位; 亦见于织品设计(在布料上说故事)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 215,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与海王星呈困难相位的主要作用=为社会提供语言或非语言式的神话意象(海王=集体意识的渴望感受、社会的神话意象)——常出现在作曲家、诗人、小说创作者星图(为视野带来难以意识到的改变); 必须有表达想象力的通道与社会位置, 否则成为相位的破坏性受害者: 散播流言者、丑闻主角、八卦小报记者或下流媒体受害者、邻居间传丑闻; 最负面=自欺与扭曲事实; 不能都成莫扎特拜伦, 但可在小范围展现创意(安徒生水海八分之三相=童话; 荣格水海五分相=研究个人与集体梦境神话)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 215,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与冥王星呈相位: 强迫性交流欲望+对真相着迷——毫不退缩探究根由, 总觉得事情有隐藏的一面须搜证查询(动机多半是自我保护); 擅长挖掘别人秘密但本身很少透露; 合相沟通强迫性最明显, 柔和相位也有此倾向, 四分相却可能封闭沟通之路隐藏想法; 困难相位者在公开场合善于说话, 一对一却鲜少透露真实想法。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 216,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与冥王星呈相位: 很少从表面看事物, 对别人话语举止表象不感兴趣、不喜欢肤浅或不经思考的回答——对真相的渴望是求生机制; 「知识就是力量」, 知道正确答案如攸关生死(童年可能真如此: 知道最底层真相是唯一不丧失理智的方法); 与水土型一样有「智力上的心结」→学术上杰出表现、高度洞察力、对最深刻动机的兴趣。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 216,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与冥王星呈相位: 善于写讽刺文章、言论刻薄的作家; 擅长挖掘最深的秘密(嗅到阴暗或五味杂陈的情况时), 比别人更快嗅到肮脏下流的秘密, 别人深层动机难瞒其眼; 困难相位最大问题=把任何事想得很糟、疑心太重。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 217,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与冥王星呈相位: 高度专注、探究主题时呈无情倾向; 渴望暗中获得机密文件、甚至捏造小道消息; 侦探、核物理学家常有此相位(尼克松水冥对分相与水门事件: 秘密消息几乎害死他, 丑闻源于秘而不宣倾向)——言语可能具破坏性, 秘密可能带来杀身之祸; 水冥小孩是家里的秘密仓库(自己发现或别人告知家中秘密)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 217,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与冥王星呈相位: 可成强而有力演说家, 也可成完全无法沟通者(须有其他沟通困难要素); 早期觉得深刻洞见难以言传、畏惧自己恶毒的想法话语(发现家里禁忌议题或深埋创伤时震惊一语不发); 以无情手段挖掘真相=想了解和保护自己; 沟通障碍者无意识以为自己的语言带杀伤力(某种程度上可能真有此能力)——组合显然为揭露从未被探讨过的秘密。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 217,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与冥王星呈相位涉第十二宫: 孩子未诞生前家里很可能死过小孩或母亲流产过(家人不说但孩子隐约知道不幸到没人敢提); 手足过世后三年不能说话的个案——觉得自己的话丑陋、开口如生命受威胁, 沉默=掌握情况/操纵家人(水冥型把沉默琢磨成艺术般强有力的沟通方式); 帮助沟通受损者的治疗师常有此类相位——利语言治疗师、音乐治疗师、智障者治疗师。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 218,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与冥王星呈相位: 笑星星图常现(正中核心、笑倒观众——「他几乎快让我笑死了」; 谈性与死亡等禁忌议题、以搞笑挪揄掌权者); 利写/读侦探小说; 爱谈玄学、性、死亡、核时代等禁忌议题。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 218,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与冥王星呈相位: 以强而有力(可能恶毒)方式表达想法令对方招架不住哑口无言, 强迫别人改变原来想法(因预期别人会反抗而用强烈态度); 易成为揭露社会大众阴暗思想的通道(鲍威尔对移民的看法=未公开表达的种族歧视思想); 可能对语源学、拉丁文希腊文等「死去」古老语言感兴趣; 极利研究与侦探工作(也适合八卦专栏)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 219,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与火星呈任何相位: 常见于展示魅力的人的星图(善于突显自己性格特质); 火星给金星活力、金星软化火星——极富创造力的组合(一贯法则: 困难相位较有创造动力, 柔和相位较爱欣赏或在玩乐中展现创造性)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 221,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与火星呈相位: 才华常用于织品、衣料、色彩, 擅长设计布料与剪裁(即使无相位, 金星落白羊或火星落金牛也有此倾向); 可成歌星音乐家演员, 但与纯艺术关联不大——喜欢把美变成有用的产品; 艺术上的竞争性迫使其靠才艺赚钱。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 222,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与火星呈相位: 关系层面比艺术更有力量——缺少温暖性爱关系不可能快乐; 落有力星座宫位则性驱力强烈; 不刻意也能展现性魅力; 对异性有兴趣且善于与异性建立关系(与同性间有强烈竞争性, 困难相位尤然); 很少长期独处、易坠情网, 「来得快去得也快」代表金火困难相位的遭遇; 常很年轻就结婚(对象可能是青梅竹马玩伴), 保守年代易成「奉子成婚」。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 222,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与火星呈困难相位: 童年可能经历爱的竞争性——父母彼此竞争、孩子与父母之一竞争另一人的爱、父母有婚外情(在家的一方与第三者竞争); 或同性别年龄相仿的手足在男友女友交往上竞争; 模糊地觉「一不小心可能被打入冷宫一辈子」(最惨下场)→冲动投入爱情、想以最短时间搞定理想爱人; 常觉得别人在抢自己心爱的对象(且经常属实)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 222,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与火星呈困难相位: 作者经验——没有任何其他相位如金火这么容易涉入外遇或复杂三角关系(也可能是其伴侣涉入三角); 爱情冒险要趣味性、巨大能量投注性爱; 活得有声有色=有伴侣且在情感及性上深刻投入(早餐对面有人陪伴不够), 渴望温暖热情与表达真实感觉的关系; 关系缺活泼特质就往别人身上找, 若活泼关系意味着摔盘子争吵也愿意接受——典型「床头吵床尾和」; 爱与愤怒并存(内心深处有「性战争」脚本)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 223,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与火星呈困难相位(火星能量强时): 给人粗俗、缺乏社交优雅感、露骨的特质(看星座与相位能量); 对性极诚实(对自己对别人), 不把性议题藏台面下, 对身体态度健康不拘谨; 对关系直接, 不像其他相位容易失去对性的兴趣。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 223,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与火星呈合相及柔和相位: 良好的社交技巧(非常了解该立场); 困难相位者则在亲密关系或某些生命领域遭挑战——态度过于果断(懂妥协合作就顺利许多)或该确立自己时过度消极配合; 困难相位易混淆肉欲与爱、友情与激情。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 224,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与火星相位实例修正: 法国国家星图紧密金火三分相(浪漫国度); 赫本金火四分相(与屈塞夫妇多年三角); 韦尔奇金星落八宫与火星半四分相; 泰勒金星五宫与七宫火天合相半四分相; 希特勒金火精确合相落七宫金牛且与土星四分——金火合金牛=强烈性议题(易因性生妒)+为金钱而战, 土星四分使其无力面对、性挫败压抑投射到一整个族群(种族歧视=错置的攻击性, 犹太人被视为金钱经营成功→嫉妒)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 224,
+   "confidence": "中",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与木星呈任何相位: 十分友善、性情怡人、适应大部分社交场合; 喜交际玩乐, 即使沉默不爱笙歌型也不太可能没有朋友或伴侣; 几乎一向感情用事、滥情虚假倾向, 但心胸宽大情感丰沛(如月金型「我杯子里的爱已经溢出来」), 慈悲为怀乐于助人从布施得快乐因而备受欢迎, 各方面慷慨大方→适合照料人的工作。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 225,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与木星呈困难相位: 必须学习适可而止(花钱、浪漫爱情、享受); 有其他元素强化则人生过得非常轻松、沉溺、肤浅=标准享乐主义者。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 225,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与木星呈相位: 渴望受欢迎、被所有人爱、不想冒犯任何人→以随和应对(最简便方式); 与志趣相投/背景年龄相仿者结成小圈子, 但迟早发现这种爱与名望缺乏实质性、顶着虚假光环; 另一面=重视宗教法则、敬奉上主、热爱哲学与生命意义的思想(紧密相位则常探讨宗教、多宗教体验), 除非另有元素, 通常把上帝看成慈悲、爱和力量。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 225,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与木星呈相位: 童年物质上可能备受宠溺→对金钱放任(或缺钱也能找出哲学意义), 亲戚可能要求施舍; 困难相位成年后信条=「我若爱你就该宠你, 你若爱我就该送我许多礼物」; 热心爱享受喜奢华抗拒辛苦→为金钱结婚不足为奇(即使不为一、也易与有钱人结婚), 婚后浪费资源; 困难相位钱也似乎自动出现、不会长期缺钱——总是「觉得」自己很富有(组合与财富、爱、丰沛情感有关)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 226,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与木星呈相位: 追求享受及爱, 爱上不知足——功课=学会内在的祥和、爱及自尊无法买来; 关系上总觉别处草绿、手中鸟不及树林鸟(通过亲密关系寻找上帝); 恋爱时过度夸大对方价值与美→所爱对象势必逐渐令其失望; 可能如宙斯不断换伴侣或自命唐璜以摆脱应负的责任; 或把木星投射到伴侣身上——嫁给不愿负责、不断花钱的人; 对自己或别人大方(尤其家族以外的人)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 226,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与木星呈相位: 重视外表→个人层面虚荣自欺(或掩饰潜意识对外貌缺信心); 择偶易被有成就的人吸引; 困难相位被外境逼迫学习「会发亮的东西不一定是金子」; 易与异国人士或不同信仰背景者成婚, 或选老师/能扩大生命经验的对象(借差异接触不同宗教哲学、拓宽视野; 与不同背景者共同生活也制造困难=此相位要学习的)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 227,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与木星呈柔和相位: 不显极端倾向但仍渴望享受美好社交生活; 「渴望过轻松日子」可能是这类人做人生选择的强烈动机。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 227,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与土星呈任何相位: 被赞衣服好看会脸红答「是旧衣裳/减价买的/可惜破了个洞」=强烈自我评判倾向; 女性则与美貌议题有关——从小被教导虚荣不对、长相不重要(或外表本不出色); 可能真不在乎外表去培养其他才华, 但更常见=和人一样意识到外表重要性却痛恨被看成虚荣、不以美自居(女人尤明显)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 228,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与土星呈困难相位: 常把重点放在月亮上(金星发展受阻→在关系里呈现月亮特质或被月亮型的人吸引), 以保护、关怀、支持取代对外貌的重视。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 228,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与土星呈相位: 童年可能缺乏温暖、尤其得不到父爱(不记得坐过父亲膝头、被拥抱), 父亲也可能得不到爱或不重视自己; 母亲较有爱心但操控性强、纪律严明; 合相及困难相位在爱的施与受上相当不自在——渴望拥抱亲吻身体接触、尤其渴望受欢迎, 把展现温暖的爱看成大事, 或完全逃避关系、否定其重要性。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 228,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与土星呈相位: 带着与生俱来的「不被爱」感来到世界, 须花很多年才发现是自我价值问题(之前一直认为是别人缺乏爱与关怀的能力); 土星延迟所触行星的发展→学会施与受(特别是无条件的施与受)需要很长时间。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 229,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与土星呈相位: 几乎永远在期待被拒绝、对被拒绝相当敏感(李尔王「我观察到一丝怠慢」式情绪), 不断观察情人的爱是否有衰退征兆、要求对方证实心中的爱→给关系造成可观压力; 常脱口「我很抱歉」。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 229,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与土星呈相位(投射的相反情况): 既可能是被爱者也可能是付出爱的一方——金土男人无尽付出爱给冷淡女性; 金土女人不允许男性伴侣付出/回报其爱; 或爱上得不到的人(源自童年模式); 须花很长时间才能意识到关系是安全的、确实得到对方的爱; 其内在公式「关系里只有一方付出爱、另一方被爱」须被打破。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 229,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与土星呈相位: 控制关系的方式=心甘情愿为对方付出爱和时间; 爱和时间息息相关(花时间在你身上=关心你; 也用时间衡量你的爱); 童年典型议题=父母不给时间与持续不断的爱(例: 母亲强迫女儿待在床上直到父亲上班后、又要在父亲回家前上床, 使她难见父亲; 无兄弟→对男人陌生; 未与父亲建立真正关系+父母间缺乏爱与身体接触→忽略和害怕男人及性关系, 须学习把亲密交流视为正常)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 229,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与土星呈相位: 以低调方式打扮(喜自然而不炫耀), 或出现弥补型=浓妆艳抹认真打扮; 选美皇后星图常有此类相位(渴望一纸凭证证实美貌); 作者称之为「公式化反应」——受调控、小心掌控的反应用以掩饰某些东西(选美=调控外貌/女性气质/性魅力的反应, 为掩饰内在不恰当感而过度弥补)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 230,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与土星呈相位: 丽兹·格林把金土相位与妓女联系(作者观察亦然; 选美也是一种卖身)——但不必然代表性侵害(至少非身体侵害); 卖身=时间、性、金钱的联系, 凡此类相位(尤其困难相位)都认为爱与时间及金钱有关; 亦可能否定爱、控制爱、或认为爱与惩罚有关(案例: 父亲经常嫖妓; 父亲经由女性咨询师与自己的情感建立联结)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 230,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与土星呈相位: 对爱有恐惧——不相信自己可以得到爱、即使得到也觉得会衰退, 有人完全否决关系; 最糟=竖起心墙暗自为无人爱而哀伤(不允许别人接近自然没人爱), 或长期停留在不快乐关系里(不敢寻求更适合对象); 最佳=借对痛苦(尤其孤独)的洞察发展给予爱的能力、面对关系上的恐惧与需求; 土星带来持续力→克服万难终学会关系真谛、懂得施与受, 会发现关系其实是快乐有趣的事(他们对此太过认真)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 231,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与土星呈相位: 缺点=不懂得享受、不允许自己享受与拥有钱——薪资/酬劳索取过低→无法外出享乐→社交受阻→恶性循环; 土星要人以困难方式学习→最终体悟关系最深的面向: 在初期吸引力与幻觉消失后踏实面对现实与困难、设法长久维持; 活跃于美容业(沙宣紧密金土合相)、咨询、婚姻顾问工作——无止境付出爱关怀, 但在时间与人与人的界限上设限。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 231,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与天王星呈任何相位: 功课=整合爱与关系的需求和空间、自由、独立性的需要; 散发强烈个人魅力(电力超强, 人如飞蛾扑火); 比其他类型更拥护开放式关系, 关系中极需空间自由, 不被同性恋或反传统关系触怒; 视婚姻契约为不必要(希望结合基于真实渴望); 维持关系开放性、选择非例行公事基础的关系(飞行员/空乘是理想伴侣)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 232,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与天王星呈四分相/对分相(引阿若优): 害怕遭拒绝和受伤→行为如金星落水瓶般冷淡疏离; 在爱、情感及性上十分有实验精神且相当自我中心。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 232,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与天王星呈相位: 除自由外还需刺激——保持其对关系兴趣须时常带来惊奇(与其容易被预料不如偶尔夜不归宿); 本身也给对方各种震惊意外; 与伴侣争执几乎都环绕个人空间议题(但别假设坚持空间方永远是自己——投射使倾向出现在对方身上); 男人特别容易把金天倾向投射到女性身上、爱上无法拥有的女人(源于其他情感障碍或不愿放弃自己自由)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 233,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与天王星呈困难相位: 特别不易与人合作(坚持个人自由; 改变带来抗拒、对自己改变与妥协特别抗拒→伴侣被迫快速离开; 例: 月金天T三角男士三位太太离去、目前与空姐同居觉刺激, 缺风元素更难合作); 认为配合别人维持人缘=虚伪把戏——受人欢迎永远比不上诚实或与众不同重要; 不一定探讨自己的感觉(卡特: 「这是我自己的经验」而拒绝讨论内心理由动机)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 233,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与天王星呈相位: 如所有天王星相位般自我中心且顽固(有时确须顽固——其选择的伴侣、服装、外表打扮会遭外界排斥; 玛格丽特公主天王一宫与七宫金星对分相: 择偶令小报喧腾多年); 借选择伴侣反叛社会、坚持按自己方式择偶即使吓到所有人; 关系充满风暴变化且极富刺激性——关系乏味时其中一位会离开; 骤然坠入情网、突然失去爱的感觉。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 234,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与天王星呈相位: 诚实、反传统、令人兴奋而受欢迎; 以与众不同作风引人注目、属另类阵营但不担忧(从「合群」角度看); 表面什么都不在意, 实则不愿/无法向社会认同的高尚或正当性妥协, 最极端=完全忽视礼貌与对别人的体恤(被视为对抗社会习俗者); 紧密相位者几乎永远涉入别人认为反传统但令人兴奋的关系; 天王星促成改变、与金星结合时改变经由「与他人的关系」达成(奇特新颖的恋爱形式很快变陈旧——若无金天型人, 我们可能还停在1880年左右的关系类型)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 234,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与天王星呈相位: 重视友情、偏好人道主义式人际关系——可与任何人交朋友(背景身份不拘, 对方愈与众不同愈兴奋), 认为所有人都应拥有自由; 关系常有许多空间自由、双方各自发展→距离越来越远连关系也不见; 对遭排斥非常敏感甚至愤怒(童年或有被排斥经验; 阿若优), 如月天型隐约期待爱随时遭拒绝/伴侣与别人发生关系→「一脚跨在关系里、一脚留在外面」的态度。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 235,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与天王星呈相位: 常对伴侣离去显冷淡不关心(甚至可以说是他们造成伴侣离去; 措手不及的分手是常况, 给出的信息=「没问题, 好极了, 希望你过得很好」)——独立抽离让所爱之人觉没有被需要的理由; 对社交、情绪及性刺激的需求可致嗑药酗酒(星图有类似要素则以极端方式追求刺激); 打扮独特(风格极富个人性原创性, 或自己穿着正常而伴侣显得很不寻常——此类相位容易形成明显的投射作用); 艺术创意领域有显著原创力——脱离典雅风格、背离早期家庭训练或传统。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 235,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与海王星呈任何相位: 浪漫爱情、爱梦想、神话式浪漫史; 难把自己交给任何伴侣——不想放弃做梦的可能性(还有更浪漫完美的天作之合), 承诺议题突出(尤其对分相; 「小时候最想嫁的就是水手」); 易受美与祥和启发、不想知道丑陋不和谐之事——倾向呈现于艺术、音乐与关系。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 236,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与海王星呈相位: 对关系浪漫理想化——即使坠入情网, 也难对普通人及日常生活的缺乏浪漫与严酷性维持长久兴趣; 爱情是盲目的→逐渐发现对方掩饰不住的缺点, 极不愿发现; 意识到不再沉醉时产生巨大幻灭感(但持续不久, 很快又开始编织新的梦幻); 处理幻灭的方式: 退缩回去感受痛苦疗伤、促使伴侣去做、或假装关系没问题而暗地与别人发展浪漫亲密关系(=此相位与秘密恋情有关)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 236,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与海王星呈柔和相位: 易接受别人或自己的关系, 浪漫理想化不比困难相位低, 却无须强化辨识力——鲜少对人产生幻觉, 似乎能渗透别人内心深处看见真相; 困难相位则不实事求是: 期望过高、没有凡人能达成其理想(想与另一个人谱出和谐音乐, 却忘了排练时的音乐一点也不美妙), 难接受不符理想的人事物。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 237,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与海王星呈相位: 可能决定不与任何人形成浪漫关系, 也可能不断换伴侣(尤其初期浪漫感消逝阶段); 在伴侣辨识力上声誉不佳、因伴侣损失金钱是常事; 以「相信自己想要相信的」著称——不想看清事实(幻象比较愉悦、浪漫、富启发性); 借亲密关系寻找天堂般的神秘体验→经常出现在追求宗教生活者的星图(该生活里的关系较接近天堂体验)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 237,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与海王星呈相位: 可能选择独身或柏拉图式关系; 可能把自己保留给「对的人」(处女座能量卷入时尤然); 海王提升金星法则甚至把肉体之爱视为下流粗俗而排除——渴望灵魂的融合而非肉体的满足; 对关系不断失望→最后活在想象而非真实的关系里(想象的世界就是现实: 个案以为与某人「有关系」其实只限于温暖微笑与几句友善对话; 诉说多年前失去的爱情、为根本没建立关系的人「丧失自我」)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 238,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与海王星呈相位: 典型者很容易进入关系(虽有时选择不进入)——浪漫主义、渴望温情、对爱情开放→极容易上当和被引诱; 对别人情感穿透力强, 也善于扮演引诱者角色; 进入关系后易理想化所爱对象(发现真相后易幻灭), 即使对方在别人眼里不值得如此看重。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 238,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与海王星呈相位最大问题=难建立平等的关系: 不是把对方看得非常高(值得仰慕的神)就是比自己低许多(必须拯救的受害者——因病、贫、犯罪而需其拯救牺牲奉献); 往往把自己看成唯一懂同理与救赎的人(也可能属实——确有最仁慈无私的爱); 泪水与爱、爱与牺牲常伴随其左右, 也善于启发别人的爱与奉献精神; 有时扮演受害者以让关系持续或促使关系发生。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 239,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与海王星呈相位: 经常与有艺术才华、魅力或灵性倾向、且「无法被拥有」的人谈恋爱(无法被拥有是其爱上的理由之一; 对方的魅力似能把自己提升到更高层次)——虽避开真实性, 但给其织梦并想象为现实的机会; 与其形成关系的最大问题=你会觉得伴侣爱的不是你而是你代表的某种模糊形象(拿个模特儿代替你即可); 同样他们也会掩饰自己真相以另一种形象吸引人——常爱上带公主/王子/美人鱼形象的人, 或本身以虚幻形象诱人(借强烈伤痛、渴望、捉摸不定与迷人作风隐微诱惑别人)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 239,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与海王星呈相位: 因找不到理想爱人→发展出对全人类的慈悲与关爱(优点是缺点): 有罕见的爱每个人的能力、却常发现爱特定的人很困难; 开始如实接纳并重视自己后才能接纳另一个人、才有机会发展理想关系——须在自己身上(而非别人身上)发现宇宙大爱、慈悲心与同理心; 可把这些特质用于牺牲奉献与利他的任何行业(适合照料人的工作), 或为追求艺术、为大众带来快乐而牺牲个人小爱。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 240,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与海王星呈相位: 极富创造性——适合各类型艺术工作(特别是音乐)、美容业、媒体; 被爱和美鼓舞、能通过创造力启发别人的爱; 有音乐才华或欣赏音乐的能力; 其人生角色可能是满足人们对浪漫爱情或美的需求、成为投射对象——带着觉知体现(尤其借创造性媒介)就能减轻带给关系的压力(例: 莫扎特金海对分相、奥斯汀半四分相[极浪漫写亲密关系却选择独身]、芳达四分相[体现完美女人形象])。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 240,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与冥王星呈任何相位: 在密切个人关系与一般社交关系都怕遭拒绝→用各种方式操纵或维系对方的关注与热情(阿若优: 情感上不知足、需要大量关注); 强大魅力+懂取悦人+此需求=超凡操控技巧→此类相位特别有利于外交工作; 让每个人都觉得自己是世界上最重要的人(不久会发现别人也得到同样待遇)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 241,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与冥王星呈相位: 对自己各层面可能抱负面看法, 却无法接纳别人对他们不感兴趣(很难放下挂碍); 不见得真对另一个人感兴趣, 而是内心有驱力想征服对方——想拥有对方身体和灵魂的强烈需求、至少确保别人无法拥有对方; 强烈嫉妒与占有欲(金星或冥王落金牛、巨蟹、天蝎、狮子时尤然)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 241,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与冥王星呈相位: 很快涉入激烈感情关系或此类私密恋情, 也可能(像金海金天型)完全避开这类议题; 需要强烈的爱恋关系(「如果我们真的爱彼此, 就应该准备为对方牺牲」), 关系带强烈戏剧性——只有最深刻的关系才能满足他们; 困难相位却害怕这种前景(觉关系里的强烈情绪将会杀掉他们)——避开深承诺的痛苦, 或紧密控制与其产生关系的人(含朋友家人)同时保持一定距离; 会用魅力和专注力淹没你使你很难拒绝。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 242,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与冥王星呈困难相位: 把深埋的不被爱的感觉变成驱力——投入复杂痛苦曲折的关系(伴侣因情绪封闭或复杂情况无法与其共同生活); 常涉三角恋情, 但金火为刺激兴奋、金冥基于害怕承诺带来的痛苦; 组合与「得不到回报的爱」有关——着迷般投入却往往无法完全拥有对方; 不能拥有或三角关系让其深深渴望对方陪伴又无须设想永远相处——需要极深刻强烈的关系却不想相处太久(事实上也不可能维持太久)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 242,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与冥王星呈相位: 伴侣注意力稍微移向别处(即使短暂)即可形成强烈嫉妒(冥王以最隐秘方式运作故不一定明显); 也可能令伴侣嫉妒得发狂; 困难相位有强烈性需求=无情举动的内在驱力——不断针对性上面力量的测试、不惜打破禁忌(禁忌越严重越能证实其性魅力)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 243,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与冥王星呈相位: 不时散发性吸引力(即使与性无关的场合), 很小就学会这套技巧——可能是其小时候唯一拥有的力量; 童年遭性侵害是其可能遇见的事——在此情况下学会运用性的力量且与爱的感受毫无关系。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 243,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与冥王星呈相位最佳面: 不怕面对「真实的关系」——比其他任何相位更能面对关系危机, 还能使戏剧化情绪加速爆发(坚持探究问题产生的原因); 其关系痛苦是因为坚持关系应该真实、拒绝假装问题不存在——毫不妥协的勇气与诚实能将关系的艺术提升到截然不同的层次, 能转化自己和伴侣(从青蛙蜕变成王子和公主)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 243,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与冥王星呈紧密相位: 对外表(尤其自己的)有强烈执著——若美貌是其唯一力量就以各种方式展现(永远盛装打扮), 但品位不一定符合一般标准(只想突显独特性; 精确说=绝不想被人忽视); 擅长在拍卖找到好东西(化腐朽为神奇)、擅长拮据度日(把老衣服穿成令人惊喜的模样)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 243,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与冥王星呈相位: 常出现在化妆师星图(工作与改变外貌相关), 亦见于美发师、整形师、美容师——了解外表的力量, 借把人变美更有价值来满足自己对权力的需求; 金钱也是力量(买到美好的东西→更漂亮→受重视欢迎); 试图或成功地「买到爱」、被有钱有势者吸引→可能相当贪婪; 用钱展现力量(破产时借钱给你=表面慷慨实为操控); 很少奢侈大方(钱即力量就该储存, 不以不在乎态度对待财物), 有人最后一刻才付清欠款(维系关系的方式)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 244,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与冥王星呈困难相位最大问题=「放不下」: 必须信赖伴侣爱的是其本身(而非美貌、性魅力、权力、财力); 功课=给对方足够空间去发现是否真的在乎这份关系、在无约束情况下发现对方是否真的想留在关系里。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 244,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与木星呈任何相位: 十分重视自己的信念→很难不对抗别人的信念体系(最常见=宗教信仰或政治主张), 常找到战斗的理由如为上帝奋战(十字军/圣战士/社会运动者); 也易出现在对抗宗教组织、信仰和上主者的星图(无神论者+和平主义者布里顿)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 245,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与木星呈困难相位(含合相): 过度为自己的信念奋斗是因为面对内心怀疑非常痛苦(阴影面=怀疑; 两星能量太强则难虚心面对内在质疑); 最大问题=过度宣扬自己的理念、理想或产品。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 246,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与木星呈相位: 可能成为反暴力宣扬者或涉入战争者——对分相尤其激烈对抗暴力, 其他相位可能涉入争斗或至少推崇英雄主义与爱国主义; 代表到海外打仗或到国外冒险; 和平时期从军的女性星图多有此两星强烈能量(不一定象征男人)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 246,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与木星呈相位: 可为更高权威(国家或上帝)而战——为困难相位的过度热切能量与勇气找到抒发管道; 非常热情, 能热切确立自己、寻求成长、不断探索, 并启发别人带来信心信仰与热情。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 246,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与木星呈相位: 十分利于宣传/推广(常出现在营销人员星图), 但销售产品不需兜售信仰时会显过于执著自己想法、惹人生厌; 卡特把火木相位与意外事件中的烫伤联系; 极有冒险精神(生命各领域包括卧室)——如宙斯般的性冒险(火木型既可能扮赫拉也可能扮宙斯), 一夫一妻制不易被接受, 需要很大空间探索性与成长。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 247,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与木星呈相位: 各领域可能展现不理智倾向、容易惹是生非(过度伸张自我), 不断揽事情致负荷过重(强土星能量可减轻潜在危险), 常被阐释成「有勇无谋之人」。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 247,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与木星呈柔和相位: 危险性比合相或困难相位低许多——较以理智方式行动(困难相位显缺耐性与冲动); 利于推展大计划(需巨大能量热情与真正冒险精神)、运动、宗教或政治(例: 托雷森紧密火木四分相=吃小鱼的大鱼终至自由企业使者号惨案; 撒切尔亦有火木四分相; 拉什迪火木对分相)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 248,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与土星呈任何相位总纲: 有意无意制造情况来测试自己的力量、耐力与持久力(有时被逼到近乎崩溃; 生理/情绪/心智层面取决于星图其他要素); 代表必须整合彼此不熟悉的能量——恐惧与勇气、断言与自制、冲动与纪律。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 249,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与土星呈合相及困难相位: 一向与意志力瘫痪、无法确立自己有关, 同时也代表极端的意志力、勇气与带攻击性的操控力(作者猜测其暴力倾向是因星图中金星能量无法被当事人意识到); 选择为权威而战(加入军队)或向其他权威宣战——与权威起冲突不可避免与童年意志力受阻有关。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 249,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与土星呈相位: 经常变成某种情况的代罪羔羊或被操控的人, 也可能变成威吓别人的人; 人生功课=与自己的内在权威联结, 无须操控别人或被人操纵; 常发现自己处在必须自制的情形(如在不受管束的学校里当老师)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 249,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与土星呈相位: 无论是否权威, 通常很难生气、确立自己或追求目标; 为盛怒所苦而不知怎么办(小时被告诫不能发脾气/发脾气徒劳)——一旦激起即演变成完全无法收拾的盛怒(未表达的怒火、创伤、急躁在一瞬爆发), 且容易在比自己弱或不可能报复的人面前展现愤怒。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 249,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与土星呈四分相: 尤其害怕自己缺乏勇气、必须经常测试自己, 只有面对恐惧之后才发现内在勇气; 害怕竞争、把竞争性情况看得太严重(怕失败)——或避开竞争场面(甚至避免和自己竞争), 或不断让自己遭遇竞争情境以测试强化获胜能力; 正确用法=带着觉知投入需要测试力量的情境(被迫面对失败与无能的恐惧); 若因怕挑战失败而遏制开创力、竞争力和胆识, 很可能发生悲剧。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 250,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与土星呈相位最佳面: 审慎的胆识+行使意志与控制意志的能力→达成伟大成就; 极需纪律、勇气、持久力、控制力与组织力; 不随便浪费精力, 能把每一刻能量用在目标上。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 250,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与土星呈困难相位: 经常测试体能和耐力→易成为矿工、铁匠、登山专家、工程师、焊工或从事重金属相关工作; 运动场上显超人耐力(利于竞技运动); 土星触及火星=渴望得第一、成为并被视为最强悍最勇敢的人。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 250,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与土星呈相位与暴力(包括遭受与施展, 非罕见): 典型火土型怕被视懦夫、怕自己或别人的暴力, 确保自己不陷入易受伤情况、避开别人挑战→易消极无能, 或过度弥补想证实自保能力而完全失控显出令人惊讶的盛怒(更大可能只是心中想想仍懂自制); 年复一年的挫败累积愤怒须找释放渠道。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 250,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与土星呈相位: 盛怒反应可追溯到童年受虐经验(身体或性)——幼童受制于身高体力无法反抗→长大后决心成为最强悍的人(拳击冠军/战争英雄), 渴望力量勇气被世界认可并挑战别人测试自己力量; 或童年遭虐待/觉意志力受阻而长大后仍不愿弄清自己是否真的无能。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 251,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "女性星图火星与土星呈困难相位: 易走消极路线(社会鼓励)→害怕男人及内在阳性法则; 容易与粗暴残酷的男人建立关系或完全受其操控(柔和相位并非免疫), 剧情多半源自童年受虐; 不够自信、相信「若我善良美丽就不会被虐待=一定活该」, 觉得自己无能为力, 甚至无意识透露脆弱信息让对方施暴(未被认清的愤怒经由外面的人展现——助长暴力者就是自己, 物以类聚); 占星师常把火土相位与虐待狂/受虐狂相连(萨德侯爵金火合相与土星紧密四分相, 希特勒同; 史怀哲亦有火土紧密四分相并与天冥成大十字)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 251,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与土星呈相位: 盲目盛怒之外也可能展现极大对自己脾气的控制力; 在愤怒和性冲动上时常忽冷忽热; 有暴力倾向的父亲(自身常遭虐待, 不敢与旗鼓相当者展现力量, 无意识选最弱的受害者=女性伴侣或孩子); 更常见的父亲=体现辛勤工作特质(严酷或暴力, 或在简陋严酷环境做繁重工作/需极大耐力的行业[园艺、登山、体力劳动]/军队待过/本质温和无法表达挫败、压抑愤怒严重)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 252,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与土星呈合相及困难相位(非暴力型显现): 家庭氛围隐藏压抑的愤怒或性能量——父母往往不同床共枕, 孩子模糊接收性方面的恐惧紧张→觉得做爱是不好的事、甚至认为性行为=一方掌控另一方; 原生家庭打压否定性的好奇与经验; 性行为与自我控制并行、害怕做爱中涉及操控(被体验成深刻满足感或强烈恐惧, 看自己或伴侣情形)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 252,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与土星呈相位: 某些人被性的不妥当感驱使变成「性的运动选手」——具惊人持续力的情人却无法显现温柔面; 正向看=土星以辛苦方式教学→可成为性方面或与火星议题有关的权威(对拙火瑜伽感兴趣者显著——性能量调控, 多为困难相位; 瑜伽对火土型有利因强调身体调控而非强迫)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 253,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与土星呈相位: 害怕被操控是其容易夸大的感觉(男女皆然)=其操控别人的理由; 选择的伴侣某种程度上要比自己弱(不致威胁或竞争; 威胁的层面看两星落座落宫及其过往——智力、情绪或赚钱能力)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 253,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与土星呈相位与抑郁症: 抑郁症(心理疾病的普通感冒)与火土相位有关——未表达的愤怒与无能感是火土型抑郁症根源(愤怒通常源自童年的权威人物); 治疗=把星图中火星能量发挥出来、认清心中未表达的愤怒; 潜力=能控制火星的确立自己/战斗/得第一的冲动, 土星提供火星持续力——任何需要力量或勇气的情境皆能以正向方式应对, 别人垮下来时仍能坚持。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 253,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与天王星呈任何相位: 过动倾向(每天紧绷神经过日子), 几乎无法完全安静、精力时有时无(晚年尤然, 心智活力仍保存——尤其涉水星星座宫位); 清楚自己要什么且以最快速度达成、不耐等待(不过天桥不等红绿灯); 极果决——一旦决定没有任何事能阻挠。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 254,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与天王星呈困难相位: 特别缺耐性甚至过于决断顽强(有其他要素尤其金星明显则缓和); 柔和相位不那么戏剧化、意志力不显过强; 制造极端倾向但利于需要决断与立即行动的情形; 不但果决且对资讯特别能掌握、善于脱困、做事方式具原创性。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 254,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与天王星呈相位: 以容易发生意外伤害著称(轻率举动或不必要冒险)——行事匆忙不留意安全、不听意见警告, 事故突发且戏剧化, 涉及刀、尖锐金属、武器或电; 火特别能象征此相位(消防员星图常见; 吞火表演者火天合相且与月亮四分); 代表放烟火或突发暴力(肯尼迪火天合相在八宫、突遭枪击身亡)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 255,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与天王星呈相位: 若论工作形式则一定涉及尖锐工具——善于运用器械、修复失灵的机器(不必然懂运作原理, 对冒险毫不迟疑——可能更糟也要试; 「送店里修太花时间」); 某些困难相位者常被电器伤到(缺耐性); 会促使一个人行动并激发别人采取行动(「快点来嘛, 这件事真的很刺激!」), 但有时令别人陷入麻烦。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 255,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与天王星呈相位与性: 早泄倾向——很能激发别人性快感但难以持久; 当你跟其他人一样乏味时很快厌倦; 有此类相位的女人易与「令人兴奋」(步调快/常处剃刀边缘险境, 如每天冒生命危险工作)的男人建立亲密关系; 同金天型, 易把此能量投射(几名火天女性本身无火天行为模式而伴侣有明显火天倾向)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 255,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与天王星呈相位(正向显现例): 喜欢冒险刺激不必然是负面/暴力——加护病房修女火天四分相涉八宫(立即做生死攸关决定、最快速运病人、每天面对死亡、擅长组合最先进械具); 埃贝廷把此相位与外科手术相连(火星天王星皆带刀割意味; 手术与意外都涉及突然流出的血液)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 256,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与天王星呈相位: 与「露阴者」有关(埃尔韦尔); 渴望性方面刺激、激起别人兴奋感; 宽衣解带速度极快、天体营常见; 极利当模特儿或脱衣舞娘(以刺激性欲谋生, 脱衣舞娘以嘲弄保守作风为乐); 喜欢嘲讽传统(对社会大众性方面的表里不一相当不耐烦); 无其他元素时最纯粹表现=「我就是要这样做, 管你喜不喜欢」——痛恨并忽略任何制约(追求反传统或另类性生活者星图大多有火天相位); 最佳表现=有勇气选择自己想走的路(性生活或其他); 喜欢开快车/速度竞赛(速度不带来恐惧反而兴奋)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 256,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与天王星呈相位: 利于为人道议题、先进思想或任何形式改革奋斗(工会运动者很可能有此类相位); 极端例=自由斗士、雇佣兵、革命者(渴望「当下」立即改变现状); 适合推动性方面的改革(甚至可能变性)——火天比金天更能代表社会在性上面的进展与改变。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 257,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与海王星呈相位: 火海=童话里的王子/性感男人形象(如金海=美化或人工化的媒体女神形象), 使浪漫爱情延续、帮助族群繁衍; 阿若优将其与特别有魅力的男演员或运动员联系(戏剧与运动可释放火海困难相位的能量); 强烈海王能量者渴望成为社会大众梦想及幻想的对象。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 257,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与海王星呈相位: 往往借运动或火星的其他活动体现社会的性幻想; 与英雄崇拜有关(尤其为理想而奋斗者); 字面理解=在海上作战——加入海军或海军陆战队者星图常有此类相位(带此相位的女人与水手交往者出奇地多=投射)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 258,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与海王星呈相位: 能把运动变成艺术的竞技明星常有——运动培养力量耐力竞争力并释放愤怒, 对此型极有利; 困难相位把胜利与奋斗概念理想化(促其行动, 也可能因自我怀疑裹足不前)——格外需要把胜利、成功和征服的梦想经由种种测试证明自己(不止于运动)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 258,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与海王星呈困难相位: 按自己的梦想、愿景及理想行动并将其实现出来; 适合海王相关的工作——摄影、电影、纯艺术、舞台(呈现社会的神话面向: 戏剧化暴力场面、英雄拯救受害者剧情; 影视亦提供集体性幻想与创作者性想象力的渠道); 许多此类相位男女很喜欢健身, 能量明显者锻炼出一身肌肉(因怀疑自己力量不足或不够勇敢、想获得别人与自己的认同; 美化理想化身体力量; 怕成为暴力受害者又梦想自己能拯救他人脱离此类经历)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 258,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与海王星呈困难相位善用之道=带着觉知为不幸的人抗争(社会工作者星图常现); 其真正的力量理藏在敏感性、慈悲心和想象力之中。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 259,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与海王星呈相位: 不论男女时常提到「真正的男人」概念——男性以上健身房表现之, 女人则爱上能满足这份幻想的男人, 带回家才发现不是穿盔甲的武士而是脆弱的受害者; 有火海相位的女人扮演救赎男人的角色(帮对方从缺乏安全感、脆弱、没方向、酗酒等问题中解脱); 极端例=成为累犯, 或在监狱门口等待伴侣出狱的人(火海演员也常演这种角色; 因迷幻药入狱者符合火海); 入狱原因=常想象自己的行为不受约束(其实很难约束别人的行为)+常被牵着鼻子走。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 259,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与海王星呈相位: 火星法则=给予方向、知道自己想做什么并意识到冲动; 与海王相连时方向感反而丧失、困惑不明——什么事都想做, 难把自己承诺给特定计划(尤其可能失败的计划); 没有清楚方向时极易受引诱、为他人作嫁衣(对方计划听起来美好或承诺绚丽生活; 犯罪场面最后总是火海型黑社会成员被抓进监狱)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 260,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与海王星呈困难相位: 制造与愤怒有关的经验及愤怒的释放——无法把愤怒发在特定方向或人身上、四处乱发泄, 故火海的愤怒比火土的愤怒更危险; 更常见=愤怒自然消失(想大叫却发现自己哭了); 非常情绪化、不喜欢或没耐性面对别人的脆弱情绪、甚至不愿展现温情; 把力量理想化又不清楚力量究竟是什么(相位背后意义=发现力量实理藏于敏感性、慈悲心、同理心与想象力)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 260,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与海王星呈相位(尤其对分相): 把自已和他人视为受害者、容易把人分成好人或坏人; 四分相尤其不易确立自己(能力被自我怀疑或和平主义阻隔); 海王软化火星的攻击性→厌恶对外展现力量、难有能力自卫, 易变成受虐者或以被动方式呈现攻击性; 敏感度过高难粗暴表达愤怒→面对外界势力时易成为他人暴力/愤怒能量的受害者——其实是自己未表达出来的愤怒的受害者(火海型母亲难强硬管教→孩子学走路即显强烈攻击性、动手打妈妈, 其完全被孩子魅力吸引无法以权威姿态说不, 态度太温和故接收到孩子替她表达的愤怒); 许多竞技运动也有受虐一面(赛车可能车毁人亡、拳击=自己找揍); 面对不公会想惩罚不义一方却很难真的去做(很可能认同那个人——对方已变成其眼中的受害者)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 260,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与海王星呈困难相位: 易变成自己攻击性的受害者; 最负面显现=特别容易感染奇怪的慢性病, 或因饮酒嗑药导致身心失调(生病是其惩罚自己、确立自己、让对方负疚的方式); 某些占星师说火星法则之一是有能力摆脱疾病, 但火海困难相位(尤其合相)会发现很难办到——病菌容易渗透其生理系统、易感冒或被流行性病毒感染; 尽管如此仍能保持慈悲心与对他人的敏感觉知, 别人也易被此特质吸引。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 261,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与海王星呈相位与性: 性上极易被引诱而做出任何行为(困难相位根本不知道自己要什么、本身也善于引诱别人); 经常把性行为美化、渴望借性经验摆脱自我; 最极端=涉入毫不浪漫的恋情(完全不被对方重视、只在性上被利用一阵子); 须做许多性上面的实验才能找到适合自己的性表达方式; 困难相位使其忙着向外追求超人/超女而无法在实际拥有的关系上下工夫; 宇宙的神秘合一性必须与性行为结合(唯有通过性实验才能达到、找到最适合自己的人或方式); 柔和相位者经常在性关系中发现天堂般的经验、易接纳自己所拥有的一切或美化自己的浪漫爱情与性关系; 困难相位者常以为自己进入了天作之合的性关系(像投身世界前曾有过的经验, 故不断想重复); 强土能量或可缓和极端情况, 但也可能增强张力(例: 伯恩斯坦金海火大十字、达尔四分相[童书=儿童的梦想+拯救被压榨的受害者]、波蒂埃紧密四分相[银幕下层社会斗士、温和大男人形象]、白考尔对分相[常演爱上恶棍的女人, 极诱惑且易被诱惑])。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 262,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与冥王星呈任何相位: 极其无情与十分具竞争性(如所有冥王相位不易被观察到, 连本人也不易意识到, 有时转而针对自己); 常对自己说「我一定会战胜、无论如何我一定要存活」——「存活」是其重头议题, 展现渴望胜利的冲动(网球赛或独占专利权都必须当赢家, 否则根本不参与); 不论相位为何都显求生与战斗的强烈需求(对分相、四分相更明显), 也可能完全无法展现战斗力(冥王把火星能量「干掉」)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 263,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与冥王星呈紧密合相或困难相位: 童年曾有「强权就是公理」的家庭背景(如所有火土相位)——孩子没有权力说「我想要这个/不想要那个」→今后人生缺乏确立自己的能力或有无力感; 成年后很可能过度强调以自己的方式行事(更常见), 或完全不在乎、以妥协/外交手腕应对世界(自认没有赢的希望、不必抗争)→可能发展出以隐微方式得到想要的东西的操控能力。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 264,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与冥王星呈相位: 冥王掩盖被触行星的法则——被掩盖的往往是愤怒、精力及纯兽性的性倾向; 某些行星行进时会把它们激发出来, 一旦激发就以最强而有力的方式显现。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 264,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与冥王星呈相位: 其愤怒不是普通愤怒而是如号哭婴儿般的盛怒——小时候不敢发泄故怒气凝结未得释放; 童年环境里有许多根植于性的愤怒, 多半没有表达且意识不到。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 264,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与冥王星呈相位=「强暴」原型(真正含义=借由暴力来取得, 不限于性强暴): 其成长环境就带「以暴力取得」特质; 臣服于此行为不常见但有可能(这类孩子一直觉得无力和愤怒); 「以暴力取得」或抗拒外界压力可正可负(阿若优: 此相位带冲动的权力欲)——这股力量也可促成伟大的事情、带来真正的转化与蜕变, 或变成暴力与残酷特质。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 265,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与冥王星呈紧密困难相位(尤其合相): 可能真的经历过性侵害或被残忍对待, 也经常显现成强奸别人的行为; 有个案并未受过性侵害却有「精神被强奸」的感觉、吸收许多隐藏在底端与性有关的愤怒; 有人的母亲是因为被强暴而生下他们。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 265,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与冥王星呈相位: 不论男女都不太信任男性(把内在阳性能量投射到其他男性身上); 女性可能寻求同性恋生活方式, 男性则几乎不和男人来往; 经常涉入让自己不得不面对性或其他禁忌的生命情境(同性恋、与肤色完全不同的不同文化背景的人产生性关系; 各家庭/社会性禁忌不同且随时间改变)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 265,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与冥王星呈相位: 性常被体验成黑暗、愤怒、带兽性的行为(既可能是威胁性经验也可能带来强烈兴奋); 对性行为抱野蛮意象、把插入行为看成对自己的侵犯——一旦承认自己也有想谋杀人的冲动、并发现自己不是唯一有这种感觉的人, 上述倾向就会减轻许多; 无法和自己的愤怒联结会吸引来有暴力倾向的人和生命情境, 逼其发展超人的勇气和耐力——被迫与自己的无情倾向、愤怒及强烈求生本能联结; 因深知什么是侵犯→很能洞悉埋藏在社会底端的面向(戴人格面具的大众不承认的生命体验), 故成为被侵害者的辅导老师或治疗师不足为奇。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 266,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与冥王星呈相位: 与「誓死抵抗」及向死亡宣战有关(库伯勒-罗斯太冥合相+与火星四分相: 第一位研究与死亡有关的禁忌议题、同时教导活着的哲学; 泰戈尔诗为其《论生死与临终》引言, 反映火冥最正向特质); 强烈求生本能+强大抵抗疾病能力(小毛病尤然; 爱滋及癌症病患星图带紧密火冥相位——能从威胁生命的疾病中存活且达到前所未有的身体巅峰, 或借经验洞察心灵深处问题转化生命; 即使未遭威胁也可能以此态度面对情境)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 266,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与冥王星呈相位: 通常勇气十足、持续力超强(勇气源自情感而非身体), 能超越体能极限成为舞者、运动员、登山专家; 火冥落固定星座特别能忍受会让一般人崩溃的情况; 善用=投身需要超人般意志的活动、健身或一般运动(网球壁球提供痛快释放渠道——愤怒能促进此类行动而火冥型十分惧怕生气, 能量可借身体运动释放); 舞蹈是适合的治疗活动; 可把能量宣泄在性行为上; 擅长非洲丛林式击鼓与自发舞蹈、与动物相处或畜养动物=与内在兽性联结的方式; 对魔法、玄学和各种隐藏力量感兴趣、认同以念力操控物质的概念; 音乐上的体验或表演可释放强烈情绪能量。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 267,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "火冥相位(双重的火星能量)需要双重的金星能量来治疗: 包括音乐、爱、接纳和宽恕——爱的表达最能治愈此类相位带来的创伤。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 267,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与土星呈任何相位原理: 土星制约、下定义、设限, 并为木星相关的一切(信仰、意义、喜悦、热情)染上恐惧色彩; 木星则在土星代表的秩序、责任、纪律、谨慎方面带来扩张与伸展。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 269,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与土星呈相位: 「巨大的超我」(弗洛伊德语)——无意识底端被夸大的道德感、没有一件事足够好→无法活出高标准而易生强烈沮丧感; 正向面=耐力、毅力、坚持力+审慎的乐观心态与远见(较显现在柔和相位或合相)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 270,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与土星呈困难相位: 在乐观与悲观之间摆荡——一段时间深信什么事都能达成, 另一段时间突觉生命毫无意义、自己毫无价值只能做微不足道小事; 物质层面=时而是公司董事长时而是助理学徒下属(真实人生也可能两种情况都出现); 组合与「稳固的物质成就」有关。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 270,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与土星呈柔和相位: 特别容易在物质层面迅速获得成就、通常明智(能智慧地判断、谨慎小心、有能力运用智慧达成目的); 困难相位者须付出努力才会变得明智(仍看整张星图), 且有不懂抓时机的问题——该冒险时过度谨慎, 不该乐观/投机时不明智地冒险。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 270,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与土星呈紧密相位: 为土元素不足或已过多土元素的星图增加落实感; 常出现在经济学家星图(物质主义哲学)——对财富有责任意识、想为其下定义。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 270,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与土星呈相位最大问题=信念: 教育背景可能有严格道德意识或宗教戒律; 宗教信仰带诅咒/责难成分、宗教体验不愉悦(主要用于控制行为、带威胁性如做错事遭神惩罚); 内化的造物主形象不友善不慈悲而是喜欢惩罚、有严格正义感的神(犹太基督教式; 对神的感受通常是父权式的); 背景无宗教时则以宗教狂热态度追求哲学或政治理念、对与错有强烈信念。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 271,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与土星呈相位: 信念系统通常源自父亲或学校——父亲在心中如神般巨大, 是仿效或畏惧的对象; 与荣格「senex(老人)」原型有关: 年轻人比同辈老成(十八岁永远穿西装皮鞋、不穿牛仔裤运动鞋、不狂野不傻气)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 271,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与土星呈相位: 土星带来渴望——渴望人生真正的意义(个人与宗教层面); 困难相位或合相者以「寻找人生意义」为最主要目标; 许多困难相位者曾逃避原生家庭的信仰但最终回归、或以另一种结构严明的信仰取代(必须选择有明确形式、明文规定的教条与仪式的信仰); 难捉摸人生目的因坚持上帝/信仰应被明确定义(而存在的本质无法在实验室或法庭里下定义; 丽兹·格林: 真正的信仰必须以直观力和非理性方式体悟)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 271,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与土星呈相位: 典型者喜欢从真假角度看事情、特别不易与怀疑心共处——难面对怀疑感故或显过度热切开心信心十足、或任何人任何话都不信; 其人生就是要发现自己真正相信的是什么(不该轻易听信人言); 也可能不排拒童年信念体系、经常上教堂或成神职人员——真正的挑战=面对内心的恐惧和怀疑(尤其缺乏教会结构时如何面对人生); 上教堂入寺庙不该掩盖真正信仰或呈现土星的过度补偿(虽然一开始很可能如此); 接触真实信仰的方式可能要经由传统教会组织、经历教条仪式与不可避免的质疑。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 272,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与土星呈相位: 渴望或达成某种社会地位及影响力; 关注各层面律法, 可能从事法律、教育或神职工作; 柔和相位易在物质层面有成就, 困难相位也可能但须较多努力。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 272,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与土星呈困难相位(物质面向): 不必然带来安全地位或存款——可能选择借自我否定和各种损失来找人生意义(除非星图有其他元素否则不会自我沉溺); 若有物质成就(豪宅跑车笙歌)仍以吝啬俭朴方式对待自己; 一方面畏惧拥有过多财富一方面害怕贫穷(物质与精神层面皆然); 害怕冒险但可能出人意料变成赌徒(土星困难相位的过度补偿)——此相位既能使人永不冒险也能使人经常冒险。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 273,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与土星呈柔和相位: 财富不一定靠自己挣来; 困难相位者物质生产力不低, 但若利益不靠自己赢得会有罪恶感; 内心觉得非在上年纪前干出一番大事业——冲动可致赛马或股市赔钱(尤其未找到人生意义之前, 以为借物质财富可避开找不到意义的痛苦)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 273,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与土星呈困难相位与教育: 通常受高等教育; 或年轻时没有机会受教育而一直觉得被高学历者威胁(无文凭但有世俗智慧与灵巧头脑)——中年之后回到高等教育领域能治愈创伤、重拾信心; 最佳例: 哈马舍尔德(木双子与双鱼土星精确四分相; 童年背景、信仰、事业与自杀倾向都带木土特质; 《印记》: 早期接受的信念须经自己的选择才成真正属于自己的信仰)——此相位的挑战与目的=借个人经验、以困难和周全的方式成就某种信念; 只有面对人生意义与目的上的怀疑及恐惧才能找到真正的自信心。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 273,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "木星与三王星成相位频率高(几天或几周一次), 但不意味没有个人意义——重要性须仔细权衡; 若此类相位与个人行星或中点形成角度, 影响力更大。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 274,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与天王星呈任何相位: 两星皆象征空间与自由→渴求非常突出(影响身体、情绪、心智), 高度独立性的组合——让想法、概念和信念变得激进自由; 困难相位及合相产生原创力、人格较极端; 木星扩张天王星议题→必产生反叛需求(至少人生某个小角落); 天王星的顽强不屈服被木星触及=双倍力量。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 275,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与天王星呈相位主要目的=渴望以自己不合时宜的信念震撼整个社会(政治、宗教及其他层面)或揭露社会的双重道德标准; 重视信仰、意义和真理的整合——借不寻常和反传统方式发现生命意义(如占星学); 有时忘记「自己认为的真理不一定是别人认同的真理」。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 275,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与天王星呈相位: 必须发现属于自己的真理——对早期接触的信念系统/道德观(如犹太教天主教形式)多半不太能接受, 通常有强烈反叛需求; 关注自己目睹的伪善(教会组织拥有庞大财富而外面一贫如洗、教会道德教条的狭隘)→常出现在无神论者星图(一心想摆脱宗教束缚)与反传统/激进信仰者星图。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 275,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与天王星呈相位: 有些人停留在早先的政治或宗教信念里但在体制内展现叛逆特质; 不论抱持什么信念, 在自由与个人自由议题上有强烈观点; 支持先进的教育改革理念。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 276,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与天王星呈相位: 热衷旅行——突发的旅行计划或不寻常的地方令其异常兴奋; 身心都喜欢开阔空间、对不同人种文化背景好奇→适合当人类学者; 对其他文化的习俗信仰感兴趣(尤其木天相位涉及月亮、第四宫或四宫主星时)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 276,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与海王星呈相位: 非常具有慈善倾向——渴望牺牲自己促进人类福祉、对世界苦难敏感、很想拯救世界; 强烈人道主义与慈悲倾向, 但偶尔展现灵性的虚荣或傲慢、误以为自己是圣人。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 276,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与海王星呈相位: 渴望宗教上的神秘体验——强烈木海能量者渴望与上主合一、至少与某个可转化琐碎生活的对象合一(可借巴哈马度假三周、学佛、研究卡巴拉获得满足); 特别能理解非具体性事物、寻求无限量的境界(上主=渗透在万物众生中的无限量能量; 最佳情况能通过一粒沙子看到整个宇宙)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 277,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与海王星呈相位: 渴望朝向终极实相发展; 最糟表现=不断寻求逃避管道(神秘主义可被当成逃避现实生活的管道而非达成高层意识的途径); 尼姑、和尚、神父、修女星图常现此类相位(其生活方式既可视为超验经验也可视为逃避途径); 自由可能埋在逃避之中, 也可能存在于超验次元。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 277,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与海王星呈相位: 很容易对人生感到失望——一切梦想都可能变成巨大的泡泡等待被刺穿(例: 劳斯莱斯见习机械师木海对分相且与上升下降合相金牛天蝎, 梦想逃到热带小岛+修理的名车本身是买不起的大梦; 被裁员时泡泡被戳破=困难相位典型问题); 与上主的关系膨胀成不实际的神秘渴望→几乎必然带来失望幻灭(强土能量可减轻)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 277,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与海王星呈相位: 常出现在股票经纪人星图(哈丁; 对股市动向有预知能力、工作上带神秘直觉); 困难相位既可能在逃避物质世界者星图出现, 也可能促使人在世间寻求灵性解答——宗教体验对某些人是狂喜状态, 对另一些人=赌五百英镑在赛马并赢。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 278,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与海王星呈相位: 都容易做大梦, 很难判断其是否真受天启(听到天乐看见异象)还是(从土星观点)完全活在幻觉中; 易上当受骗、糊里糊涂(希望所有事都美好、想逃避任何丑陋事物), 难面对现实——此相位带来的挑战=把梦想变成现实; 重视旅游(幻想花三个月到印度徒步以度过乏味生活; 偶尔逃到国外是比较无害的面对方式); 借心智或身体的长途旅行真能忘掉自己、转化乏味的日常生活(德蕾莎修女木海四分相、约翰·保罗二世合相); 海王与海有关→利于海上冒险或当水手。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 278,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与冥王星呈相位: 一生主题跟「被埋藏的事物中的财富」相关——或以物质形式显现(工作涉及挖掘煤矿、石油、金矿或其他矿石), 或挖掘无意识底端的资源; 「阴影」里埋藏丰富有用的资源(荣格诸家; 如堆肥由腐败物堆成却转化为富含矿物质的肥料)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 279,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与冥王星呈相位: 特别能意识到废弃物中的财富→与回收业有关(心理治疗师与回收业者同关注废物再生与不浪费资源); 也与经济上的隐秘财富有关(银行、金融公司、保险公司里社会大众看不到却拥有最庞大势力的巨额金钱); 时常经手巨额金钱、与上流社会遗留的财富有关(本身没钱而在银行/股市/保险公司上班者也可能有此相位); 与矿业有关(石油隐藏巨大财富); 木与冥本身都不代表金钱, 结合却象征巨大势力且涉及巨额财产, 也关乎秘密、特别是大秘密。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 279,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与冥王星呈相位涉个人行星: 往往使人野心勃勃、渴望做出一番大事业(什么样的大事业看两星触及的星座和宫位); 可能有无情和残忍倾向; 渴望带来改革(政治、宗教、法律层面), 也渴望在心理层面转化自我、不断改善存在的方式。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 280,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与冥王星呈相位: 「愚公移山式的信心」(《占星玩家手册》)——相信任何事都能达成、只要把心专注在目标上; 对魔法感兴趣者星图常现此类相位(魔法=心能转物, 可用于好或坏的方向); 其无情的人生哲学有时显现为「为了集体的利益不惜严惩或处死他人」(撒切尔木冥紧密对分相落二宫八宫=其经济层面巨大权力的贴切象征)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 280,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与天王星呈合相或困难相位: 两对立法则(土星=传统、权威性、纪律、义务、责任; 天王星=个人主义、反建制、高度叛逆)碰撞制造强大张力; 1987土天合相促成苏联与其他地区重大改革(戈尔巴乔夫星图有土天冥T三角, 其掌舵期间苏联脱离传统、大量裁减军备); 土天相位时段诞生的人常在集体意识急剧变化的背景里长大——个人自由选择与社区其他人状态起冲突, 传统与制度被迫改变(工厂关闭、旧秩序被扫荡), 改变造成强大阻力(阻力来自土星: 保留传统+怕改变得太快太突然)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 281,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与天王星呈相位(社会层面): 代表为社会的新观念带来具体形式(科技进展、想法改变、掌权者决策方向变化)——几年前极端震惊的想法很快变成可接受、制度化的具体形式(汽车、电话、高空飞行、电力、女性投票权、电脑皆曾被抗拒而后成日常: 时间将新的变成旧的); 天王星促成的新观念发明态度一旦遇上土星就落实、物质化; 相位显著者本人可能「为新观念带来具体形式」; 也代表老旧事物以新方式显现。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 282,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与天王星呈相位(个人层面): 从全新角度看待老旧议题; 许多生命面向有内在冲突——何时该对抗建制坚持先进思想、何时该尊崇经得起时间考验的传统; 同时显现激进与害怕改变的两种倾向, 互动方式看哪个能量强: 土星强(尤其困难相位)=害怕改变、怀疑新事物、不接受带反传统倾向的人或事、企图打压先进想法(但先进科技想法也需要检验、人的情绪需纳入考量); 天王星强=不断对抗权威、反叛既定行事方式(此态度也可能是个人和社会需要的)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 283,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与天王星呈相位: 可能年轻时很保守、越老越叛逆(尤其行进天王与出生土星成对分相之后); 或追随当时时尚潮流但年长后仍执著原先潮流而被视为怪人; 此相位既可能出现在反对改变者的星图、也可能代表为改变而奋斗的人, 通常两种态度都存在。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 283,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与天王星呈相位(卡特: 「有民主精神, 但手段是专制的」): 与缺乏伸缩性及专制态度有关——一面握拳一面说我们应该民主/引入新系统; 引入新体制新秩序时可能与被推翻者一样专制; 坚持观点时非常极端、会遭遇意料之外的打击——其他行星行进触及这两颗行星时可能出现骨折或其他形式的破坏; 此力量有用但使人无法放下身段适应新情况, 命运似乎会确保其遭遇最戏剧化的打击或破坏。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 284,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与天王星呈相位: 确有人遭权威人物或父亲暴力对待——成年后叛逆对抗那个权威、或对抗社会上所有掌权者; 最极端的情况=越来越像自己的父亲或自己一直对抗的体制权威; 两星能量不显著时便可能代表当时政治人物的特质; 父亲偶尔显反传统、与众不同行事风格; 此类政客有时须对抗军事叛变之类活动; 利于促进重大改革、对抗不受欢迎的改变, 形成明显的毅力、意志力与果决力。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 284,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与海王星呈相位(1989春土海精确合相的世局印证): 沙门氏菌/李氏杆菌/饮水食物污染危机、雨水缺乏、生态议题受关注、社会对地球破坏污染产生罪疚感并倡导无铅汽油减海洋污染——当年出生的孩子将在这些议题中长大(集体性能的运作方式)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 285,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "埃贝廷、哈维等把土海中点与疾病联系; 土海相位可描述「中毒」情况, 广义则与净化和精微化有关; 土海相位持续时间长故本身不必然代表疾病, 但与宫位放一起看或涉及中点时确与疾病有关(作者经验)——带来心理上无计可施的封锁感, 甚至身体不能动弹。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 285,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与海王星呈相位: 典型土海人很怕失控, 但命运似乎会确保他们放弃掌控倾向、学习不执著。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 286,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与海王星呈相位与父亲: 常代表「性情温和而被动的男性」——无法或不愿承担责任、急于逃避责任, 无力处理事务致使他人必须为其打理(不执著于真实世界); 落中天/下中天轴线者表现为父亲生病(例: 紧密对分相其父患怪异神经系统失常, 卧床但对噪音干扰格外敏感, 借疾病控制全家如待珍贵瓷器、无须承担责任), 合相在第四宫者父亲行动不便成家人负担与付出慈悲的对象; 父亲要么不见了要么很虚弱——没做错什么, 只是无法或不愿意变成权威→当事人渴望在生命中寻找权威、在各种人身上寻找, 最终在自己内心发现它; 也難扮演父亲角色(不易守纪律守规矩)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 286,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "星图中还有其他元素可代表父亲(如与太阳形成相位的行星)——不该把「父亲如何」的重点完全放在土海相位上, 除非有其他强烈能量支持; 大体而言土海描述父亲的某个面向, 以及社会当时对权威人物的感受。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 286,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与海王星呈相位(行为模式): 很难积极掌控什么(可通过生病或行动不便被动控制别人——须相位能量明显); 缺少或害怕自己缺乏权威性(也许其出生时其父或当时政府缺乏权威性); 会把责任理想化或夸大、难以真实角度看责任; 意识到愈投入现实生活就愈无法追求理想(=困难相位的另一种恐惧); 其挑战=将自己的理想落实在现实世界里并在其中找到令自己着迷的成分; 也可能觉得居高位难以承受、避开所有责任义务, 或认为扮演负责公民/家庭成员=牺牲自己的梦想。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 287,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与海王星呈相位与罪恶感: 罪恶感非源自真正的失败或无法应付物质世界, 通常由被夸大的童年心理议题导致; 词源geld=「偿还」正是其行为模式关键——觉得自己必须为某个对象还债、必须一直付出(通常为父亲或社会还债, 也可能报复欠他们债的人; 「父亲」可理解为宗教上的天父或自己的父亲)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 287,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与海王星呈相位: 海王(想象力)被土星触及→把想象力导向最糟的情况, 尤其在海王星主宰的宫位产生不对劲感; 白日梦环绕痛苦或牺牲的种种可能、以各种方式扮演殉道者角色; 与弃世修行有关(温莎公爵土海三分相=放弃世俗权位; 追求宗教生活者星图常现——代表苦行者/和尚/隐士; 例: 富家出身修女视家人「有钱有闲」而内疚、把大半生花在为家人赎罪=逃避或超越辛苦生活; 西方追求佛教、倡导不执著、思考人类受苦原因者常有此类相位)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 288,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与海王星呈相位(目的): 把人生某部分牺牲掉、排除不必要的东西, 以自律方式让梦想变成具体现实; 与无私的奉献及对他人的服务有关(实事求是的慈悲); 困难相位或合相的挑战=整合世俗的一面与超凡脱俗的另一面; 最佳情况=实事求是的理想主义——意识到自己和眼前情境的局限, 仍在现实世界实现梦想; 其理想生活=木海型所渴望生活的相反面(木海要奢华光彩富足, 土海只想简单朴实); 也可能成为艺术家、音乐家、影视制作者——把梦想想象力感受变成具体形式, 提供结构与媒介表达恐惧和幻想(例: 克里斯蒂土海紧密四分相——父亲从不工作消磨于俱乐部、随和无自制力、12岁时去世未留遗产; 其做药剂师学时毒药知识成为笔下武器; 曾失踪一段时间=逃避责任[母亲过世丈夫离开后])。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 288,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与冥王星呈相位: 在个人层面有对权力的恐惧——不是害怕展现自己的权力就是害怕拥有权力, 同时怕集体势力的破坏性(引文: 当权力被强加或想控制他们时会有激烈的反应或反感); 不信赖掌权者、不喜欢主导任何事情(虽然接受权威位置可能正是其需要的经验); 相位被强化(与个人行星或四交点成相位才有明显影响力)者天生带有权威性且格外有责任心——因如此而不愿掌权。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 289,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与冥王星呈相位: 经常觉得自己被迫害(但并无十足理由); 认同遭社会排斥或因残酷命运受苦的人(因种族、肤色、性向、宗教信仰或社会禁忌被排挤), 或为社会受害者抗争/与其建立关系(须星图有活跃的海王星能量才可能); 认同受迫害者、愿为其负责, 却很难为集体需求扮演迫害者角色——无意识地为所有受压迫的人负起责任, 故有意识地远离代表压迫者的团体。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 290,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与冥王星呈相位(丽兹·格林): 这类人多在人们特别受迫害的年代里或之后诞生(如二战后; 1940-50年代出生者其父曾目击或犯下暴行→创伤带进家庭, 记忆里深埋早期受威胁的经验; 诞生于奥斯维辛期间、切尔诺贝利事件、华尔街股灾期间者——经验烙印在无意识底端)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 290,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "土星与冥王星并非恐怖事件本身的象征符号——土冥相位与「恐怖事件的余波」有关: 集体社会正从事件中走出、开始意识到其影响的阶段(集体暴行造成的延迟反应; 也代表恢复期的开端); 建议鼓励这类人去弄清自己诞生时发生了什么、带觉知认清集体事件的后果, 才不至于无意识地为过往的事承担个人责任; 土冥关联时段不一定代表暴行, 仍可能有地震、坠机等集体死亡现象; 与生存课题有关(疾病威胁如小儿麻痹、肺结核、爱滋→行为受约束或骇人谣言散布; 或对经济受损的恐惧——土冥1930对分相与经济大萧条: 人们1931年才意识到1929股灾影响、「如何存活」议题浮现); 也可能代表对核能危机恐惧提高。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 291,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与冥王星呈相位: 强烈自我防卫倾向; 紧密相位者对心理学常持怀疑态度、害怕自己无意识里的活动; 对核战威胁比一般人更恐慌(怕整个人类和自己灭亡)——其恐惧多半源自「内在的炸弹」: 对心理阴影面的畏惧+对集体潜意识里的痛苦、暴力和巨大破坏性的恐惧。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 291,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与冥王星呈相位(丽兹·格林: 与「想要秘密破坏权威者」联系): 一方面关乎个人的防卫性, 一方面跟权威人物、城墙、藩篱和疆界的瓦解有关(权威者的阴暗脸孔有时必须被消灭才会有新东西诞生; 戈尔巴乔夫土冥天T三角); 适合从事各种摧毁的工作, 但心理上的城墙必须一砖一瓦地拆掉; 适合为人类的集体力量负责(物质、心理和文字的力量); 最佳表现=关注权责问题、在权力的运用上懂得自制(显现于身体、情绪及心智各层面)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 292,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "外行星之间相位总则: 因外行星运行极缓, 其相互相位持续时间很长, 在全球性基础上显现政治、心理和物质层面的重大变化; 这些行星的周期循环构成地球的历史(个人盘上重要性需另行权衡)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 293,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "凡涉及出乎意料的危机、突发的凶死、令集体感到震惊的事件, 都与星图中天王星及冥王星的紧密相位有关, 而且太阳往往正落在这两颗行星的中点上。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 293,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "上升点与下降点是一组元素(对分性): 任何行星与其中一点形成相位, 必定与另一点形成相位; 考量任何上升点相位时必须留意对面的下降点。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 297,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "上升点阐释须观察复杂的相关要素(阿若优): 上升星座、与其合相的行星、与其形成相位的行星, 以及上升主宰星落入的星座、相位和宫位——任一细节都强烈影响上升星座的性质; 与四交点形成的相位都有明显重要性, 其中最重要的(阿若优)是与上升点形成合相的行星。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 298,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "地平线上的行星能量会被扩大(阿若优: 想象地平线上金黄色的满月看起来巨大)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 297,
+   "confidence": "中",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "上升点(及与其相位)描述诞生时刻与早期情况: 上升/下降及其行星与主宰星不但描述诞生经验, 也描绘孩子早期的情况和感受——早期经验持续影响我们面对外在世界的态度(我们期待事情以那种方式运作; 某种程度是我们选择了外在环境、把自己吸引来的)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 299,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "symbolism",
+   "rule": "上升点诸比喻: =温布尔顿球场/竞技场座位(我们观察事物有利的地点与视角=人生视角); =镜片(我们透过它看世界、世界也透过它看我们; 天蝎上升或与冥王成相=墨镜看到的世界——觉处处潜伏危险、想藏匿); =人格面具(可能整体协调也可能虚假形象; 彰显的徽章/自我宣传的广告招牌); =房子的大门(一切进出、认识自己也须从上升点角度观察); =旅程与媒介(太阳=必须进入的房间/英雄之旅, 上升点=必须走的路); =身体与皮肤(外壳既保护又透露内在: 太胖出现纹路、生病现病容「从洋芋表面看出里面」)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 299,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "上升点能量太强或缺乏伸缩性(如与土星或冥王星形成相位): 像穿了紧身衣把自己局限在某种形象里——被裹在厚保护层里, 什么都不能穿透他们、他们自己也无法获得自由。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 301,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "外貌研究: 一般人的外貌不一定像上升点或与其成相行星, 而比较是太阳、月亮、上升点及上升主宰星混合的样子(或其中一两个元素); 与上升点形成的相位(尤其合相)往往代表我们给别人的印象/面对外界的态度(阿若优: 一个人在别人眼中的形象)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 302,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "上升与下降的简单区分: 上升点=我们的行动与主动展现的特质; 下降点=我们的反应或被动的回应; 下降点落入的星座、与其合相或成相的行星往往与上升相关要素同样重要(下降点描述我与非我的关系); 我们会在两端摆荡, 难认清自己站在哪一端。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 302,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "上升白羊(下降天秤)判例: 以迎上前去的态度面对世界、抢先开创果决好竞争, 童年把世界看成充满竞争(「我必须向外证明能力」); 别人(天秤侧)以「我难下决定, 你喜欢领导我跟随」回应而强化其力量, 或以「等一等」回应; 借关系互动发现自己多么需要别人(有别人才有竞争对象)、学会合作的功课。上升天秤反之: 要求和谐友好氛围、考量合作公平(「我要的就是你们要的」), 觉得对方「不公平我抗议」, 通过互动学会直接、果决、率先发动。为达成完整性应尝试另一种行事方式。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 302,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "中天与下中天也应视为一套复杂系统(如对分性的上升/下降): 与其合相的行星重要, 其他相位也要留意, 还须注意其主宰行星落入的星座、宫位及相位。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 303,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "symbolism",
+   "rule": "中天/下中天=树的比喻: 中天是星图最高点(我们仰望如树梢、羡慕其特质但需很长时间达成), 最接近中天的行星具有重要和值得崇敬的特质; 下中天=根(最深的点), 代表个人历史/源头(原生家庭氛围、父母及家人互动)、家族历史根源种族根源、寻求私人生活不被社会看到的部分, 或象征与集体潜意识的关系(可回溯到远古)。第十宫向外发展事业, 第四宫回归根源享受成果; 下中天=个人的家, 中天=社会(其中有无数家庭); 传统认为下中天与事情的结尾或人生结局有关(第四宫能道出肉身结束时的情形: 果实落地种子再生根)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 303,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "「你是做什么的」=中天式问题(看似土星意味): 答案既代表社会地位和角色, 也道出成长背景与阶级; 与中天相关的复杂元素=我们企图给世界的好印象。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 304,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "中天/下中天与父母: 父母会给我们各式引导促使我们达成事业成就或遭失败、成为某种类型的人; 它们也代表我们未来要达成的目标, 而自己的生命召唤可能与父母的引导相左——各种相位与象征描绘这些内在对话。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 304,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "中天星座=我们想要达成社会地位的方式; 此星座、其主宰星及与中天成相的行星+十宫内行星=描绘事业的本质; 作者疑第十宫代表事业本身, 中天星座=想要培养的形象(可能与真正工作无关)、年长后的理想/渴望活出的人生方式、对未来的梦想和目标; 十宫等复杂要素=想要被记住、让我们感到荣耀的贡献成就(人生目标), 中天=人生方向。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 304,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "等宫制下中天可能不落在第十宫: 不该因此弃用等宫制——反而带来额外信息: 中天落入的宫位描绘事业或社会形象的另一面(例: 中天落九宫=事业活动或涉教育、出版、法律、旅游、异国文化; 且想给这些行业里的人留下好印象)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 305,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "planet_nature",
+   "rule": "父亲/母亲象征的伸缩性: 中天、下中天、十宫、四宫代表父还是母存在争议(丽兹·格林、丽莉、马尼·柳斯主张中天较能代表母亲、四宫较描绘父亲, 虽传统巨蟹=四宫、摩羯=十宫); 作者经验=母亲与十宫有关、父亲与四宫有关, 但不尽然——两个宫位常都能描绘双亲; 亲生父母应由太阳和月亮代表(包括内在的母亲和父亲); 孤儿院/单亲/同性伴侣抚养/社区抚养的情况都可从出生星图显示; 不同文化里父母角色差异大——中天和下中天代表最广义和最狭义的生命根基。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 306,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "technique",
+   "rule": "双胞胎判例(琼与詹妮弗·吉本斯, 出生隔十分钟): 上升不同(双子vs金牛)造成人格与命运差异——诞生的时刻决定整张星图的结构、相位及宫位(造成双胞胎异同的原因), 此即四交点重要性之证。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 307,
+   "confidence": "中",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与上升点呈合相: 很难不引人注意(在哪做什么都被注意到); 黎明诞生→性格喜欢开创、有领导潜力、能自动自发开创事业成为自己命运的主宰(通常非宿命论者); 诞生为家庭带来新气象(受重视/幽默话题——「所有鸟儿开始歌唱」)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 313,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与上升点呈合相: 童年常被大人监视或注意(从太阳的相位看其接受与否), 大人期待其展露光芒并鼓励人前表演; 父亲尤其以其为荣→可能变成有信心自给自足的人(须考量整张星图)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 314,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与上升点呈合相或落第一宫: 明显的自我意识、难跳出来看自己或从别人角度看自己; 上升与太阳同星座→星座特质强烈+有风采、性情真实不藏在人格面具后面(与面具合一); 父亲影响极大(通常在产房等待诞生), 认同父亲的长相或态度、或真会「追随父亲的脚步」。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 314,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳落第十二宫(或不在与上升点合相的容许度内): 觉得童年被忽略、没有被如实接纳, 长大后可能选择幕后工作; 但高奎林研究显示此位置太阳也常见于世界领袖星图(撒切尔; 等宫制下太阳十二宫=四分仪制十一宫)——作者: 曾被忽略的人会确保自己以后不被忽略; 身为公众人物须牺牲私生活符合太阳落双鱼宫位之义。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 314,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与下降点呈合相(或落第七宫): 把自己的太阳/权力让给别人——过度重视咨询师意见、仰仗别人做决定, 发展太极端时会操纵整个局面让咨询师成为焦点、成为操纵其生活的人(其他伙伴关系亦复如是), 认为一切命定(人只是老天手上的典当品); 如太阳天秤般喜欢与另一人共同生活做决定, 利合作与一对一咨询工作(「缺少伙伴, 我无法存在」)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 315,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与下降点呈合相: 极利于心理分析或治疗(弗洛伊德、荣格、莱恩太阳合下降/落七宫——借与另一人紧密互动找到身份认同、通过一对一咨询启发别人、像父亲一样保护个案; 也通过和个案的关系获得显赫成就); 律师星图常见此太阳位置(七宫=公开的敌人的领域)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 315,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与下降点呈合相: 很容易把父亲视为「母亲的丈夫」而非自己的父亲(可能属实——父亲也许无血缘关系); 觉得父亲对伴侣的重视胜于一切→长大后特别看重婚姻(有婚约而非同居), 借婚姻补偿和父亲的关系, 既可能扮演父亲也可能期待对方扮演父亲; 特别重视工作伙伴关系者太阳常落六宫这边或六宫头主星落七宫; 都很容易扮演父亲角色以获得自我认同; 以伴侣为荣(七八十岁仍骄傲宣称结婚五十多年——不代表关系持久或更好, 只是特别以关系为荣)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 315,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与中天呈合相: 传统认为易有显赫名望或成就(成功种类与标准很多)——不论是否成功都渴望社会重视和尊敬, 容易成名至少在事业获得成就; 易成为某领域领袖(公司/学校/医院主管), 如合上升般难不被人注意且更容易成公众人物, 通常是社团支柱、拥人尊崇的声望地位(与这个合相形成相位的行星也须仔细考量); 与获奖/荣耀有关——行进或推进刚接触及刚离开中天与太阳时特别容易得到奖励(孩子=学校运动奖项; 成人=大众认可的荣耀; 赛珍珠太阳水星合中天=诺贝尔+普利策); 童年父母鼓励其追求地位名望; 父亲可能很有名而成典范, 即使不出名, 孩子也渴望以出名荣耀父亲。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 316,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与下中天呈合相: 不希罕被社会注意到、不想被当明星(但可能成功)——更重视家庭生活、情感上有寻根需要; 有时从外在退回内在成隐士; 渴望保有私生活、以各种方式躲藏, 极端情况被送进医院或监狱; 父亲可能过着不太与社会互动的生活在。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 317,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "太阳与中天或下中天呈四分相: 须付出长时间努力才能登上事业顶峰且多障碍; 或终极目标与真实性格出入很大须花时间整合; 可能夹在私人生活与事业之间矛盾。柔和相位则无此冲突——容易成功且成功驱力很强, 但成就不会破纪录(其他元素可能另生影响)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 317,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与上升点呈合相: 渴望照料和保护世界及其中的人; 有其他元素助长则=反应迅速、适应力强、觉知敏锐、能快速满足自己和他人需求。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 317,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与上升点呈合相: 童年周围多女人(由母亲、祖母、姨母带大者), 立即满足其需求亦满足她们的; 对女性照料者的需要特别敏感、可能必须保护对方而成「母亲的母亲」; 进入社会后在情感上滋养别人或被别人滋养。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 318,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与上升点呈合相(如海王星与上升点合相): 对每件事每个人都敏感、难分自他界线; 若母亲有精神问题, 孩子从小扮演「母亲的母亲」(萨司波塔斯: 「雷达般的侦测能力」——立即觉知解读母亲信号, 发展成能解读每个人的信号); 母亲喜欢被幼小孩依赖的感觉→长大仍可能对母亲有强烈依赖需求; 此位置月亮代表早期和女性照料者的关系、透露内在孩童状态(心里有个需被保护照料的小婴儿)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 318,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与下降点呈合相(或落七宫): 情感上非常需要亲密关系(提供像家一样的安全感)——不论亲子、雇佣或恋人关系皆视其为亲子关系, 可能扮演任一角色; 发现结婚多年的对象非常像母亲/关系本质像母子(把早期照料者体验成妻子, 或照料者如此看待关系)→成年后母亲和配偶不分, 母亲议题与亲密关系混在一起; 在亲密/一对一关系中确有滋养能力但过度敏感地配合伴侣需求(萨司波塔斯); 与女性紧密联结(找心理治疗师多半选女性); 可能厨艺高超、喜备办食物餐饮或家具修复工作、提供照料安护类服务。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 318,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与中天呈合相: 亲子关系特别紧密(与下中天合相同); 扮演众人之母的角色(公司主管/凝聚力形成者), 或选择照顾自己家庭, 或从事更大范围的滋养、照料、保护工作; 落双子座→关注保护语言或以语言给予滋养; 落金牛或巨蟹→农业、农艺、餐饮; 如太阳合中天般需要社会认同、对大众想法感觉特别敏感→与满足大众需求的工作有关。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 319,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "月亮与下中天呈合相: 往往有丰富的(久远)家族史且影响极大→利史学家或族谱研究者; 需要安全感、渴望私生活与隐居处, 不想让感觉曝光; 对保护地球有强烈意识(园艺或生态保护), 可能关注房地产议题; 父母之一不喜欢社交生活(若星图有相仿元素, 从这个亲人身上获得安全感); 也常代表对父亲的感觉——父母之一可能过隐秘生活、晚年隐居或与孩子同住。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 319,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与上升点呈合相: 第一印象聪明、好奇、有活力、很喜欢说话; 有说话和写作的需求(特别是亲身经历之事); 水星与上升及下降点形成的所有相位都喜欢用自传方式写作; 很小就有手足间的心理议题或学业问题, 会立即和人谈及手足关系。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 320,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与下降点呈合相(或与上升下降成困难相位): 同样渴望与人交流但不像合上升者明显展露面具特质; 水星与上升点或下降点合相皆渴望在一对一关系里探讨自己或探讨与另一人的关系——喜欢做心理咨询(渴望有人听他们说话, 借言语沟通找到自己的定位); 合上升者渴望被视为有知识、言语精确的人, 合下降者喜欢在伴侣身上寻找这种特质继而让自己也培养出来, 渴望在伴侣身上看到兄弟姐妹的影子、形成轻松交流的关系(迪伦水星落双子合下降、四分海王: 借音乐创作接触社会大众, 妻子是老师)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 320,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与上升点或下降点形成困难相位: 早期有沟通方面的困难(涉土星或冥王星时尤然), 而这又造成十分渴望沟通交流的倾向; 水星与上升点或下降点形成45°或135°(半四分/八分之三)者: 不但有出生时的创伤经验, 四肢或呼吸器官也可能受损(水星掌管四肢与呼吸器官; 星图中同时有火星的影响)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 321,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与上升点合相或与水星与下降点成相位: 往往有两个以上的名字(反映水星「二心」特质); 诞生时可能许多人在产房进出、交谈热络。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 322,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "水星与中天或下中天形成相位: 渴望自己的沟通技巧或学识得到社会认可(终极目标或被人怀念的特质); 合中天有时=父母之一希望此人往水星方向发展; 与中天成困难相位=不管父母期待什么仍想往水星方向发展; 事业往往涉及写作和说话, 或成教育者/中介; 合下中天=家庭背景有书卷气(父母爱探讨事情、家里许多藏书), 对个人历史或家族根源有兴趣(利研究族谱); 合中天或下中天有时=兄弟姐妹之一会像父母一样照料此人; 父母之一带水星特质或像其兄长/姐姐。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 322,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与上升点呈合相: 善于运用外交手腕应对当前环境的人; 渴望创造和谐氛围甚至不惜压抑自己内在的期待; 乐于妥协合作、渴望受欢迎、找与别人的共同点; 童年父母强调善良的重要(金星接近上升或落一宫时); 不喜事情太复杂、逃避不必要的人际纷扰; 对外表和思想有分辨比较能力→非常关注品位议题(行为与外表是否恰当)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 323,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与上升点呈合相: 非常关注外表→善于包装自己、产品或观念, 不喜欢穿旧衣服、渴望外表保持吸引人; 传统认为此人通常长得好看(实际也经常如此, 至少对色彩有品位); 童年可能因美貌得到大人赞赏, 但金星落第十二宫者却觉得自己不够有吸引力; 与上升点或下降点成困难相位→穿着打扮也许不够恰当; 合上升或下降者(男女皆)显得年轻、带女性气质、脸部线条较柔和(看星座)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 323,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与四交点呈任何相位: 带来不爱与人竞争的特质(火星发挥作用时减轻); 合上升点者给人比实际上温和的感觉; 某些合上升/下降者非常重视金钱议题、可能天生懂得在物质上获利, 也重视自我价值议题; 有使人觉得被爱或被喜欢的能力并因而受欢迎。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 323,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与下降点呈合相: 十分关心他人的外表(发型设计师借修饰别人的外表解决自己外表的心理问题), 易在美容领域获得声誉; 可能把金星投射在别人身上(把对方看成美好、善良或富有的人)→借此发现自己内在的这些品质; 在关系里觉得自己比较有价值(有个案因亲密关系收入增加变得富有)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 324,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星落在上升点或下降点: 特别重视关系、对伙伴的需求非常强烈; 若金星有别的相位或七宫有别的行星→难以接受关系中的复杂面向、永远想让事情保持和谐美好(海王星与下降点合相亦渴望拥有外人看起来不错的伴侣)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 324,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与中天呈合相: 事业带金星特质——艺术、美容、外交或强调品位与和谐性的领域; 不论哪个领域都把外交技巧带入, 了解怎样迎合权威、能轻松与他们相处; 易获得社会大众的喜爱(或渴望创造这种局面); 有些人因亲密关系或浪漫史而闻名, 有人渴望成为有爱心的父母。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 324,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与中天或下中天呈合相: 父母很有爱心、受人欢迎, 也可能代表父母的事业性质或父母期待孩子发展的事业形式; 可能把父母之一看成性魅力很强的人; 经常发现合下中天者的父母之一有外遇。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 324,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "金星与下中天呈合相: 可能来自富裕家庭(让人觉得是美好的家庭); 无困难相位影响时家感觉舒服、氛围温暖; 有祖辈或家庭情况令其引以为豪; 渴望创造美好的家(和谐的色彩、令人愉悦的音乐、没有情绪纠葛)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 325,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与上升点呈合相: 把世界看成必须竞争的地方、总觉得任何时刻可能爆发冲突; 原生家庭可能许多冲突, 甚至出生和被养育的方式不和谐(母亲剖宫产或很快生下来); 渴望立即行动、甚至期待冲突发生——外表显现的力量和勇气也许只是保护自己的演出/人格面具; 善于发动事情(咨询时急于开始、提早出现、谢绝奉茶); 外表显得格外有力、可能锻炼一身肌肉如带盔甲随时应战; 非常诚实; 是否太冲动太急达目标须看其他星座影响; 正向看=领导潜力、善于竞争坚持到底; 立即令人联想到运动。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 325,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与下降点呈合相(或合/困难相位于上升下降): 可能比合上升更富竞争性——往往把别人看成带有攻击性的人, 或仰仗别人帮其发现自己的攻击性; 利于律师或为别人抗争的角色; 必须花很大精力学会合作(关键词「努力学习合作」), 也可能为正义或公平而战; 如金火相位般急着进入亲密关系、不假思索投入——利带有竞争性的亲密/伙伴关系(不显甜美; 与其形成关系觉得有活力刺激, 也可能觉三战随时爆发)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 326,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与中天呈合相: 人生方向很清楚、企图心强; 与中天或下中天合相或成困难相位=事业可能涉及一段辛苦努力的过程、维持住一份事业也颇为辛苦——见于军队、警察局、营销部门、运动场、政治等领域, 工作往往涉及有技巧地运用工具或必须采取果断行动(中天星座及其主宰星非常重要: 摩羯=建造业?原文金牛=建造业; 巨蟹=木工装潢餐饮; 处女=精细技艺; 天蝎=外科手术医疗)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 326,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "火星与下中天呈合相: 带着愤怒的情绪在运作——家庭往往许多冲突但把情绪隐藏起来(有时连自己都意识不到); 对父母之一可能有巨大愤怒(驱使其完成许多任务); 喜欢在家里工作但即使待在家也一直忙不停(火星落三宫这边则工作带水星性质); 利于体育运动或体力活(释放怒气); 容易觉得体力不足(除非积极行动提升能量); 与沉重行星成困难相位时可能发生意外或火灾(多半源自没有积极运用火星能量); 也渴望挖掘家族历史根源——毫不畏惧地探索家族、情感和性方面的根源及心理问题源头是这类人的勇敢行为。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 327,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与上升点呈合相: 非常急于进入世界、尽可能抓住各种机会; 渴望探索世界、对生命抱持极高愿景(宫头射手的宫位也显现此特质; 宫头双鱼的宫位强度减轻); 给人乐观、充满活力的感觉, 会从哲学角度看生命的试炼和苦难; 把自己快乐的一面呈现给世界(即使其他部分谨慎严肃迟疑); 总以非常直截了当的态度面对别人; 有人显自大倾向(某些星座上更明显); 把别人看成积极、有信心、对自己很确定的人, 自己也培养出这种人格面具; 外向特质者被强化此倾向, 害羞者只在陌生人面前展现。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 327,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与上升点呈合相: 表现得很老练或学养丰富, 可能云游四海累积阅历; 人生之旅=探索自己(尤其在教育领域或异国文化中), 年轻时喜欢不断旅行、大量接触各种文化和不同信念体系。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 328,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与上升点或下降点呈合相: 很好的人生顾问, 渴望被看成慷慨及有学养的人; 形成困难相位→内在的信念与外在的形象冲突矛盾。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 328,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与下降点呈合相: 伙伴/伴侣可能来自别的文化背景, 或为教师/宗教人士; 教育在其关系里占重要地位(不是教育对方就是被对方教育); 需要很大空间自由度(落七宫这边特别善于探索关系的各个维度、不喜欢被特定的人绑住); 借关系找到自己的信心(希望对方为其提供信心或让对方产生信心), 可能把伴侣当神一样看待、或希望自己被视为像神一样的人物。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 328,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与中天呈合相: 对事业目标相当有信心(目标很大很难达成), 目标多环绕木星专长——教育、出版、旅游、宗教、政治、哲学或法律; 渴望被大众视为慷慨善良的人; 渴望在事业领域扮演上帝角色、或变成别人的顾问及贵人——在模塑他人信仰上很有影响力; 总以未来为导向、对不美好的过往或眼前情境很有容忍力(深信未来会改善), 职业可能与别人的未来有关; 父母之一往往有强烈的宗教或政治主张, 且把父母看得很伟大或带戏剧性。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 329,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "木星与下中天呈合相: 家庭成员往往对教育、宗教或旅行十分重视; 可能来自大家庭或有良好家世; 与中天合相者皆渴望住宽敞的房子(大到可以宴客); 对自己很有信心(比合上升轻一些但可能更坚定、更全面性)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 329,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与上升点呈合相: 以比较谨慎的态度面对自己, 觉得世界不是很安全的地方——至少得穿上盔甲才到世上冒险、随时准备面对灾难; 人格面具非常严肃认真, 第一印象比实际年龄老成、非常有责任感, 防卫太好令人看不到里面脆弱的小孩(例: 11岁长男外出前检查全屋门窗插头; 父母离婚后扮演父亲角色=土星落一宫典型); 撒切尔亦土升合相落天蝎——永远在防卫什么、没什么自发性(漫画描绘成严格的学校老师)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 330,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与上升点呈合相: 常采取行动掌控眼前的环境和其中的人, 不想冒任何险、不想犯任何错(「不想犯错的倾向」是其最常见特质); 虽喜欢控制外在环境但不一定严肃或有责任感(更多是给人的第一印象); 喜欢扮演父亲的角色、或被看成纪律严明有责任感比实际年龄老成的人。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 330,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与上升点呈合相: 诞生通常遭到延迟, 好像婴儿不太想进入世界(某种程度觉得自己必须主导外在情况、不愿配合大人轻易地出生)——不想赤裸裸面对世界的倾向可能持续一辈子。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 330,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与下降点呈合相: 渴望别人活出纪律负责老成的特质(本身也愿意对关系负责或喜欢掌控对方); 一般感受=很怕别人会控制他们(个案出生遭拖延: 助产士要母亲忍住先顾另一产妇)——在亲密和一对一关系里制造掌控与被掌控的议题。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 331,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与上升点或下降点呈合相: 都会使人对关系产生恐惧——不是害怕进入一份关系, 就是害怕没有关系; 最佳表现=会负责面对关系之中的障碍和困难。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 331,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与中天呈合相: 觉得必须拥有某种程度的社会地位、或必须追随父母的脚步变成有责任在身的重要人物(认为别无选择); 对职业有宿命感→不一定真的喜欢自己从事的行业; 经常出现在皇室成员星图(大众前须自制、许多责任义务、不能犯错、随时注意仪容); 总觉得必须臣服于父母的期待或肩上担负沉重责任(与下中天合相同), 家庭多属保守中产阶级、父母鼓励往这方向发展; 往往觉得职业选择限制很多(渴望在主流社会获得保障及受人尊崇); 所见者父母之一事业相当成功但成就辛苦得来, 或父母未实现愿望有愧对家人的感觉→其人也背负至亲事业上的恐惧、害怕成功(怕伤害曾遭挫败的父亲或母亲)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 331,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与中天呈合相: 正当职业与人生方向是心中重要议题, 觉得很难在事业方面做决定; 多半较晚才开始发展(很怕冒险不敢做真正想做的事); 终其一生责怪父母让他们选错行业、觉得工作只是在服刑者有之(作者: 该怪的不是父母是自己的怕冒险); 有利于长时间才能发展出来的事业技巧(与年资、传统、时间、组织结构有关的事业); 与中天或下中天成合相或其他相位=与辛苦地工作或迟来的成就有关。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 332,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "土星与下中天呈合相: 因家庭责任或未解决的家庭议题而遭事业上的困扰; 必须为原生家庭或自己的家辛苦付出且感觉常不舒服; 早期家庭生活可能有许多恐惧(畏惧父或母、害怕面对家族历史、父母之一缺席); 极需要家庭带来的安全感——不会被夺走的稳固基础; 有人会害怕成家(把家庭象征的安全保障视为制约, 源于早期经验); 背后总有与童年有关的恐惧心态; 有利于建构稳定的物质基础(房屋建造业者星图常见); 人生目标之一=逐渐挖掘出自己和家族的情绪问题。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 332,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "天王星与上升点或下降点形成相位: 往往有异于常人的外貌(身材特别高大——天王星一向增加高度; 无相位但有其他重要相位亦造成此情况); 传统型者会把异于传统的性格、世界观或生活方式隐藏起来, 天王星与上升点合相者则坦白地展露这些面向。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 333,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "天王星与上升点呈合相: 似乎对世界说「我和你们有什么不同」——从小就觉得自己特别、把与众不同当成徽章、与家人不同之处被强化或夸大; 人生目标=发现自己真正独特的部分(而非仅表面上看起来与众不同); 通常没有臣服的意愿——强烈的个人主义者, 坚持拥有自己的空间和自由(特别在追求激进或反传统的生活方式上)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 333,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "天王星与上升点呈四分相: 家人不会强化其特异之处; 也觉得自己和别人不太一样/别人认为其古怪, 但感觉并不舒服, 很难把反传统的一面整合到自己的人格或生活方式之中。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 333,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "天王星与上升点或下降点呈合相: 可能突然地被诞生出来, 或诞生为周围人带来某种震撼, 或诞生时被周围环境惊吓→一直期待随时会发生突发事件或灾难(可解释其神经紧张); 最容易变成占星师(作者; 若占星学变成大众能接受的学问, 怀疑他们还会不会选这行)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 334,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "天王星与下降点呈合相: 期待别人活出他们人格里原创和反传统的面向——必须靠别人唤醒其活出更令自己振奋的生活; 与别人互动才意识到无须臣服社会潮流、可以诚实表达内心想法; 会说「我们的关系是激进的、反传统的、比别人的有趣」; 关系往往涉及某种震撼(意外的事、出人意料的伴侣、突然进入或离开关系、突然提出婚姻要求)——都为唤醒其人做出巨大改变; 也借由关系来反叛(以选择伴侣作为反叛行动/以叛逆方式追求关系, 坚持以自己的方式追求所选的人和关系)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 334,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "天王星与上升点或下降点呈合相: 都可能在关系里坚持拥有自己的自由→开放式婚姻或开放式伴侣关系、亲密关系像朋友一样; 在伴侣身上寻求刺激、个人觉醒和振奋感——关系不再充满活力时很可能到别处寻找。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 335,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "天王星与中天呈合相: 反叛社会在父母角色设定上的制约; 或违反显意识的期待去追求完全相反的事业形式; 或活出父母潜意识里的渴望、做出父母不敢做出的反传统行为(合下中天者类似但不明显); 职业涉及高科技, 可能脱离以往工作方式开创新的事业形式(几十年前选电子业, 现在选电脑行业)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 335,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "天王星与中天或下中天呈合相: 不论选择什么行业都偏好个体户形式(以自己方式做想做的事); 早年反权威需求延续到成年→在工作岗位与上司对立; 性格过于诚实难守别人的规则; 选择的行业/追求事业的方式必须符合自己真正的兴趣, 完全不会因为渴望得到尊重或保障而选择职业; 职业必须让其觉得开心有趣(失去这种感觉就会离开); 渴望得到自由也希望别人在世上获得自由→往往从事解放别人的工作(支持言论自由、解决世界饥荒、利用高科技把人从乏味的例行公事中解脱)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 335,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "天王星与下中天呈合相(或落第四宫): 早期生活有过巨大变动——父母搬到与以往环境截然不同的地方(甚至国外)、或把孩子寄养到另一个家庭、父母之一被迫离开或突然离去(此人必须靠自己建立生存基础、觉得自己被家庭或文化排除在外; 例: 精确合下中天的私生子: 未见过母亲、不知父亲、11岁被孤儿院送到澳洲——完全无根、从小到大寻根); 童年经历可能令人永远无法落实下来(不相信自己能拥有安全保障; 有其他相位影响时缺乏根基感也可能觉得很刺激, 但许多人特别想建立稳定的家); 无根也带来助益: 从小就比别人自由、可随心所欲无须考虑家庭和传统规范; 从小就得学会仰赖自己的资源→相当独立自主(行为举止、生活方式、想法意见都独立); 不像合中天者那么需要被看成与众不同——反而把不寻常的家庭背景、古怪的家庭成员、家族反传统观念全都隐藏起来, 直到中年行进天王与本命天王成对分相后才揭露(如天王落十二宫者: 在众人面前表现得很传统)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 336,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "海王星与上升点呈合相: 给人迷人、超尘出世、糊涂和混乱的感觉; 不会立即给人深刻印象(没有固定不变的人格面具, 但上升星座特质仍明显); 诞生时被催生的孩子往往有海升合相(海升合相使人不太愿意降生到物质世界; 出生后几分钟或几小时夭折的孩子, 星图中不是有木星就是有海王星与上升或下降点合相)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 337,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "海王星与上升点呈合相: 人格面具有多重面向——像水晶一样反映来到面前的任何人; 以极高敏感度面对外在世界(带无形的天线接收环境里任何微小信息; 不像月亮合上升那么情绪敏感, 而是接收任何外来的刺激或印象); 没有保护膜、几乎没有自他界线(如太海/月海相位), 像藏在镜片后面看世界/有一面反映外在环境和人的镜子→十分利于摄影或其他能映照周围现象的艺术工作; 就是要充当别人的思想与感觉的媒介(通过这种媒介才能忘却或找到自己); 与上升或下降合相都=容易受外界影响、缺乏耐力; 有人从救赎者或受害者的角度看世界(在别人眼里也往往是救赎者或受害者), 可能变成剥削者或被剥削的人。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 337,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "海王星与下降点呈合相: 关系里不是被拯救就是必须拯救对方; 在关系里寻求上主或救世主(也可能在别人身上扮演此角色); 很难清晰看待别人——不是把对方理想化就是扭曲其真实本质; 不清楚自己要什么样的关系、会把对方理想化或浪漫化; 界线薄弱如鬼魂穿墙——随时可进入别人的生命、也允许别人以同样方式进入其生命; 也可能借想象来体验别人的生命; 有利于消融自他界线、融入他人的痛苦; 有反映他人真相的才能→适合各种创造领域的工作。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 338,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "海王星与中天呈合相: 早期缺乏清晰的事业方向和目标(可能源自父母之一不清楚孩子该以何种方式被世界看到); 许多海冥?海王合中天者很希望被世界看成充满魅力的人(王子或公主、有创造力的人、符合社会理想的人物, 甚至救赎者); 自小难找到符合自己才华的发展方向——遇上写书的就想当作家、搞政治的就想追求政治事业(渴望拥有别人的事业形式); 对未来充满梦想, 最佳情形=落实梦想; 梦想通常不是个人性的而是渴望以某种方式拯救世界→适合职业: 艺术、音乐、为人谋福利的工作、慈善事业、与海洋或水相关的工作。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 338,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "海王星与中天或下中天呈合相: 可能把父母之一理想化, 或认为自己是受害者而扭曲父母之一的形象; 合下中天或落第四宫=父亲可能不见了, 或失去了家庭和家人; 某些合中天者编织各式美梦期待得到父母赞赏(认为一旦获得世界的赞赏就会得到父母的认同)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 339,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "海王星与下中天呈合相: 对早期家庭历史不太清楚(家中有令其困惑的秘密, 常与宫头双鱼的宫位有关); 有把早期家庭状况理想化的倾向、或对成长背景/祖先有误解; 心理、情绪或生理上有基础不稳的感觉(住在船屋、父母精神不稳定、在酒吧里长大; 早期家庭环境可能相当开放、别人随时造访→形成基础不稳感); 渴望有一个理想的家并努力让它成真, 有人想逃避自己的家庭背景——渴望拥有庇护所/闭关中心一样的家, 逃离不完美或乏味的外在世界。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 339,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "冥王星与任何一个交点呈合相: 都有强烈的权力欲, 同时又坚持拥有自己的隐私权。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 340,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "冥王星与上升点呈合相: 非常关注生存议题(与土星合上升类似——不把世界看成安全的地方、认为到处都有致命地雷); 强烈自我意识、对人生阴暗面及人性丑陋面特别敏感; 面对别人时总想把自己隐藏起来(尤其落狮子座: 一旦成为注目的焦点就觉得被每一个人监视——喜戴墨镜、说话时容易脸红; 早期被大人过度关注、被监视感使其难发展身份认同故渴望隐藏自己)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 340,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "冥王星与上升点呈合相: 代表有不可告人的家族秘密(与性、死亡、疯狂或盛怒有关; 连被领养也可能被看成秘密), 是孩子无法理解、消化甚至回顾的→往往培养出「遮人眼目」的人格面具, 紧紧掌控眼前各种情况以免自己或别人透露太多秘密; 出生有时涉及创伤经验(母亲或自己在童年时面临过死亡)→日后面对世界有强烈的恐惧、挥之不去「只要有一步走得不对就会造成巨大伤害」的感觉。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 340,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "冥王星与上升点呈合相或落第一宫: 早年可能受到祖母的掌控(作者长期观察十分确定)——与祖母往往有超越其他家人的紧密联结; 或祖母不在但由其他强悍女性(如保姆)扮演掌控者角色; 祖母以金钱、人格特质或生病控制全家(不一定是负面——在家族里扮演强而有力的女性至上角色), 也可能在其父母之间引起争端→孩子害怕与人亲近(好像被禁止和别人建立真正的关系); 孩子无意识撷取家人对祖母的负面情绪(家人暗自期待祖母快点死掉)而卡在中间。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 341,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "冥王星与上升点或下降点呈合相或困难相位: 经常觉得很难与另一个人亲近(冥王与土星之类行星形成困难相位时更甚)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 341,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "冥王星与上升点呈合相(较典型): 渴望掌控别人、让别人臣服于其深埋在心底的钢铁意志(上升点=人生之旅的交通工具; 合相落固定星座=驾着一辆坦克车被严密保护着)——无法被穿透、也很难臣服于人; 也可能活出社会所谓禁忌式的生活方式(「禁忌」=社会认为偏离正轨的事): 必须先接纳他们的秘密, 才能和他们有真正的联结。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 341,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "冥王星与下降点呈合相: 倾向把权力交给别人——很容易把别人看成有权力、喜欢掌控、无情或无法被穿透的人; 借由一对一的关系被赋予发现自己阴暗面的机会; 冥王与上升或下降成任何相位都很难避免权力斗争(与下降点合相更甚)——只有通过一对一的关系及权力上的挣扎, 才能转化对自己的看法和与他人的互动方式; 其关系议题类似金冥有相位者; 此位置有利于危机处理和帮助他人转化自我。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 342,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "冥王星与中天呈合相: 超强野心; 选择的事业通常涉及权力的运用、意志力的行使、往顶峰攀爬的决心(运动健将星图常有——必须有获胜的决心才有最高成就; 亦有专业训练的亚裔妇女[其文化中追求专精事业近乎禁忌]、殡葬业从业者); 也可能代表父母的掌控性很强(与中天或下中天的相位皆然)。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 342,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
+  },
+  {
+   "category": "aspect",
+   "rule": "冥王星与中天呈合相: 童年时家庭里有过违规的事情(有个案发现自己是母亲被强暴之下的产物); 也可能代表父母之一早逝、遭到放逐或经历过心理上的死亡; 或搬到完全不同的文化或家庭去生活; 也可能企图连根拔起过往的历史——像坐在定时炸弹上等着爆炸把自己建立的基础全部炸毁(合下降者也可能不断挖掘过往历史=较正向的显现); 有人适合接触人类生活黑暗面的工作。",
+   "school": "psychological",
+   "source_book": "顺逆皆宜的人生",
+   "source_page": 342,
+   "confidence": "高",
+   "_batch": "Tompkins相位学"
   }
  ]
 }
