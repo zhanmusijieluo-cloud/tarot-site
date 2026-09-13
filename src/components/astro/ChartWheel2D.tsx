@@ -26,7 +26,7 @@ const R_SIGN_IN = 348;        // 星座环内缘 (带宽52, 原68缩约1/4)
 const R_GLYPH = 376;          // 星座符号位
 const R_HOUSE_IN = 314;       // 宫位环内缘 (带宽34, 原66减半)
 const R_HOUSE_NUM = 331;      // 宫号位
-const R_TIERS = [284, 250, 216]; // 行星三档圈 (档距34=符号+度分组盒高, 跨档零重叠)
+const R_RING = 282;              // 所有星体符号同一半径 (爸爸铁令: 离中心等距); 拥挤只沿环滑角, 绝不变径
 const R_ASPECT = 196;         // 内圆 = 相位弦边界 (最内组盒底 220-12=208 仍在其外)
 
 const xy = (r: number, a: number) => [C + r * Math.cos(a), C - r * Math.sin(a)] as const;
@@ -62,43 +62,35 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect }: {
     ? { fire: '#c93a2c', earth: '#a4761f', air: '#2f8f52', water: '#2f6fc0' }
     : { fire: '#ff8d80', earth: '#e0b45f', air: '#6fdc8c', water: '#6fb2f5' };
 
-  // ---- 行星: 整组(符号+度分)按【矩形碰撞】三档摆放, 先分层后滑移; 真角存 realA ----
-  // 组盒: 符号 ±11 见方 + 度分行占下方 11..23 → 高34 = 档距, 屏幕坐标不随象限翻转
+  // ---- 行星: 同一圈半径, 整环松弛防叠 (Astro.com 法): 以真角起步, 相邻弧距不足则对半撑开,
+  // 多轮收敛 → 簇整体居中、间距均匀; 滑移>3°者画引线+真度刻度, 角度绝不造假 ----
   const glyphs = useMemo(() => {
-    const items = chart.planets.map((p) => ({ p, realA: la(p.longitude) })).sort((x, y) => x.realA - y.realA);
-    const out: { p: VChart['planets'][0]; a: number; r: number; realA: number }[] = [];
-    const boxes: { x0: number; y0: number; x1: number; y1: number }[] = [];
-    const fits = (x: number, y: number) => {
-      const b = { x0: x - 16, y0: y - 13, x1: x + 16, y1: y + 24 };
-      return !boxes.some((q) => Math.min(q.x1, b.x1) - Math.max(q.x0, b.x0) > 1 && Math.min(q.y1, b.y1) - Math.max(q.y0, b.y0) > 1);
-    };
-    const slips = [0, ...Array.from({ length: 10 }, (_, k) => [(k + 1) * 0.115, -(k + 1) * 0.115]).flat()]; // 步≈6.6°@288, ≤±66°
-    outer: for (const it of items) {
-      for (const r of R_TIERS) {                    // 先原位三层轮流 (同度数必分层)
-        if (fits(...xy(r, it.realA))) {
-          boxes.push(boxAt(...xy(r, it.realA)));
-          out.push({ p: it.p, a: it.realA, r, realA: it.realA });
-          continue outer;
+    const TAU = Math.PI * 2;
+    const n = chart.planets.length;
+    // 环形松弛: 每个点携带(realA, a)成对移动; 每轮按当前 a 重排序 — 修掉对称push导致的
+    // 顺序翻转(旧版翻转对被 d<0→+TAU 判成"隔着整圆"永不修复, 实测漏出0.5°贴脸对)
+    const arr = chart.planets.map((p) => ({ p, realA: la(p.longitude), a: la(p.longitude) }));
+    if (n > 1) {
+      const MIN_G = 48 / R_RING;   // 相邻锚点最小弦距48px (容符号+度分组盒)
+      const wrapT = (x: number) => ((x % TAU) + TAU) % TAU;
+      for (let iter = 0; iter < 400; iter++) {
+        // 先归一化 [0,TAU) 再排序 — 修"点被推出±π后sort错乱邻居, 反把两点挤叠"(koch盘实测♂⚳重叠0px)
+        arr.forEach((it) => { it.a = wrapT(it.a); });
+        arr.sort((x, y) => x.a - y.a);
+        let moved = false;
+        for (let k = 0; k < n; k++) {
+          const j = (k + 1) % n;
+          const d = j === 0 ? arr[0].a + TAU - arr[n - 1].a : arr[j].a - arr[k].a;
+          if (d < MIN_G) { const push = (MIN_G - d) / 2; arr[k].a -= push; arr[j].a += push; moved = true; }
         }
+        if (!moved) break;
       }
-      for (const slip of slips.slice(1)) {          // 再逐档滑移
-        for (const r of R_TIERS) {
-          const a = it.realA + slip;
-          if (fits(...xy(r, a))) {
-            boxes.push(boxAt(...xy(r, a)));
-            out.push({ p: it.p, a, r, realA: it.realA });
-            continue outer;
-          }
-        }
-      }
-      const a = it.realA + 0.85, pos = xy(R_TIERS[0], a);   // 极端兜底
-      boxes.push(boxAt(...pos));
-      out.push({ p: it.p, a, r: R_TIERS[0], realA: it.realA });
+      arr.sort((x, y) => x.realA - y.realA);
     }
-    return out;
+    return arr.map((it) => ({ p: it.p, a: it.a, realA: it.realA }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chart]);
-  function boxAt(x: number, y: number) { return { x0: x - 16, y0: y - 13, x1: x + 16, y1: y + 24 }; }
+
 
   const aspList = chart.aspects;
   const rel = (a: { a: string; b: string }) => !selected || a.a === selected || a.b === selected;
@@ -188,20 +180,24 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect }: {
         return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={aspectHex(a.type)} strokeWidth={selected && hot ? 1.8 : 0.9} opacity={selected ? (hot ? 0.95 : 0.06) : 0.38} style={{ transition: 'opacity 0.25s' }} />;
       })}
       {/* 行星符号: 位于宫环之外的角标度数圈, 颜色=落座星座同色系; 选中=金环+引针 */}
-      {glyphs.map(({ p, a, r, realA }) => {
-        const [gx, gy] = xy(r, a);
+      {glyphs.map(({ p, a, realA }) => {
+        const [gx, gy] = xy(R_RING, a);
         const col = SHADE[ELEMENTS[signIdx(p.longitude)] as 'fire'];
         const isSel = selected === p.name;
         const relatedSel = selected && chart.aspects.some((x) => (x.a === p.name || x.b === p.name) && (x.a === selected || x.b === selected));
         const dim = selected && !isSel && !relatedSel;
-        const slipped = Math.abs(a - realA) > 0.025;                       // 滑移>2°画细引线
-        const [tk1x, tk1y] = xy(R_ASPECT, realA), [tk2x, tk2y] = xy(R_ASPECT - 7, realA);
-        const [lx1, ly1] = xy(R_ASPECT - 6, realA), [lx2, ly2] = xy(r - 11, a);
+        const TAU = Math.PI * 2;
+        const slipAmt = ((a - realA) % TAU + TAU * 1.5) % TAU - Math.PI;
+        const slipped = Math.abs(slipAmt) > 0.052;                         // 滑移>3°画引线+刻度
+        const sa = realA - Math.sign(slipAmt) * 0.012;
+        const [tk1x, tk1y] = xy(R_ASPECT, realA), [tk2x, tk2y] = xy(R_ASPECT + 8, realA);
+        const [lx1, ly1] = xy(R_ASPECT + 8, sa), [lx2, ly2] = xy(R_RING - 13, a);
         return (
           <g key={p.name} onClick={(e) => { e.stopPropagation(); onSelect(isSel ? null : p.name); }} style={{ cursor: 'pointer', opacity: dim ? 0.55 : 1, transition: 'opacity 0.25s' }}>
             <line x1={tk1x} y1={tk1y} x2={tk2x} y2={tk2y} stroke={col} strokeWidth="1.4" opacity="0.9" />
             {slipped && <line x1={lx1} y1={ly1} x2={lx2} y2={ly2} stroke={P.houseLine} strokeWidth="0.7" opacity="0.5" />}
             {isSel && <circle cx={gx} cy={gy} r="13.5" fill="none" stroke={P.sel} strokeWidth="1.4" />}
+            {isSel && <line x1={tk1x} y1={tk1y} x2={gx} y2={gy + 14} stroke={P.sel} strokeWidth="0.8" opacity="0.5" />}
             <text x={gx} y={gy + 5} textAnchor="middle" fontSize={p.kind === 'planet' || !p.kind ? 18 : 20} fontWeight={700} fill={col} stroke={P.bg} strokeWidth="1.6" paintOrder="stroke">{p.symbol}{p.retrograde ? '℞' : ''}</text>
             <text x={gx} y={gy + 19} textAnchor="middle" fontSize="9.5" fontWeight={600} fill={P.ink} stroke={P.bg} strokeWidth="1.5" paintOrder="stroke">{fmtDeg(p.longitude)}</text>
           </g>
