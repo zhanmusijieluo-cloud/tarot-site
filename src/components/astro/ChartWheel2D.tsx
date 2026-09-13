@@ -10,6 +10,24 @@
 import { useMemo, useState } from 'react';
 import type { VChart } from '@/components/astro/ChartWheel';
 import { aspectHex } from '@/lib/astro/aspect-colors';
+import { GLYPH_PATHS, SYMBOL_TO_GLYPH, ZODIAC_GLYPH_NAMES } from '@/lib/astro/glyph-paths';
+
+// 矢量符号渲染: 统一描边粗细 + 双层(白色防粘底+彩色笔画) (爸爸: 像宫神星那样, 系统字体的Unicode符号天然粗细不一)
+const GLYPH_SIZE = 26;   // 目标视觉高度 (px)
+const GLYPH_STROKE = 1.5; // 统一笔画宽度 — 所有符号同一支"笔"
+function GlyphPath({ name, cx, cy, color, bg, size = GLYPH_SIZE }: { name: string; cx: number; cy: number; color: string; bg?: string; size?: number }) {
+  const g = GLYPH_PATHS[name];
+  if (!g) return null;
+  const s = size / Math.max(g.w, g.h);
+  const t = `translate(${cx},${cy}) scale(${s}) translate(${-g.cx},${-g.cy})`;
+  const paths = g.ds.map((d, i) => <path key={i} d={d} />);
+  return (
+    <g>
+      {bg && <g transform={t} fill="none" stroke={bg} strokeWidth={4.2 / s} strokeLinecap="round" strokeLinejoin="round">{paths}</g>}
+      <g transform={t} fill="none" stroke={color} strokeWidth={GLYPH_STROKE / s} strokeLinecap="round" strokeLinejoin="round">{paths}</g>
+    </g>
+  );
+}
 
 // 与 ChartWheel.tsx (3D盘) 完全同源的角映射 — 两视图逐位对齐
 function lonToAngle(lon: number, ascLon: number, dir: 'ccw' | 'cw' = 'ccw', ascPos: 'left' | 'top' = 'left'): number {
@@ -18,7 +36,6 @@ function lonToAngle(lon: number, ascLon: number, dir: 'ccw' | 'cw' = 'ccw', ascP
   const base = ascPos === 'top' ? 360 : 180;
   return (base + signed) * Math.PI / 180;
 }
-const SIGNS_GLYPH = ['♈︎', '♉︎', '♊︎', '♋︎', '♌︎', '♍︎', '♎︎', '♏︎', '♐︎', '♑︎', '♒︎', '♓︎'];
 const ELEMENTS = ['fire', 'earth', 'air', 'water', 'fire', 'earth', 'air', 'water', 'fire', 'earth', 'air', 'water'];
 
 const SIZE = 920, C = SIZE / 2;
@@ -129,7 +146,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect }: {
         return (
           <g key={si}>
             <line x1={bx1} y1={by1} x2={bx2} y2={by2} stroke={P.ring} strokeWidth="1" />
-            <text x={mx} y={my + 9} textAnchor="middle" fontSize="26" fill={SHADE[ELEMENTS[si] as 'fire']}>{SIGNS_GLYPH[si]}</text>
+            <GlyphPath name={ZODIAC_GLYPH_NAMES[si]} cx={mx} cy={my} color={SHADE[ELEMENTS[si] as 'fire']} size={22} />
           </g>
         );
       })}
@@ -183,18 +200,6 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect }: {
         const isSel = selected === p.name;
         const relatedSel = selected && chart.aspects.some((x) => (x.a === p.name || x.b === p.name) && (x.a === selected || x.b === selected));
         const dim = selected && !isSel && !relatedSel;
-        // 逐符号调校表(爸爸: 单独一个个调) — 基准=♂♀(w22/墨~10%), 窄符号放大字号, 胖符号减描边
-        const SYM_TUNE: Record<string, { fs: number; sw: number }> = {
-          // 墨迹面积自动拟合: 目标=♀♂基准176px², 偏差全部≤6% (♅♆⊕⚶减描边1.2)
-          '☉': { fs: 24, sw: 1.8 }, '☽': { fs: 26, sw: 1.5 }, '☿': { fs: 22, sw: 1.5 },
-          '♀': { fs: 22, sw: 1.5 }, '♂': { fs: 22, sw: 1.5 }, '♃': { fs: 22, sw: 1.5 },
-          '♄': { fs: 24, sw: 1.5 }, '♅': { fs: 20, sw: 1.2 }, '♆': { fs: 20, sw: 1.2 },
-          '♇': { fs: 24, sw: 1.5 }, '⚷': { fs: 26, sw: 1.5 }, '⚴': { fs: 26, sw: 1.5 },
-          '⚳': { fs: 30, sw: 1.5 }, '⚶': { fs: 22, sw: 1.5 }, '☊': { fs: 20, sw: 1.5 },
-          '☋': { fs: 20, sw: 1.5 }, '⚸': { fs: 30, sw: 1.5 }, '⊕': { fs: 20, sw: 1.2 },
-          '⊖': { fs: 22, sw: 1.5 }, '⚵': { fs: 22, sw: 1.5 },
-        };
-        const tune = SYM_TUNE[p.symbol] ?? { fs: 22, sw: 1.5 };
         const TAU = Math.PI * 2;
         const slipAmt = ((a - realA) % TAU + TAU * 1.5) % TAU - Math.PI;
         const slipped = Math.abs(slipAmt) > 0.052;
@@ -207,8 +212,8 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect }: {
             <line x1={tk1x} y1={tk1y} x2={tk2x} y2={tk2y} stroke={col} strokeWidth="1.4" opacity="0.9" />
             {slipped && <line x1={lx1} y1={ly1} x2={lx2} y2={ly2} stroke={P.houseLine} strokeWidth="0.7" opacity="0.5" />}
             {isSel && <circle cx={gx} cy={gy} r="13.5" fill="none" stroke={P.sel} strokeWidth="1.4" />}
-            <text x={gx} y={gy + tune.fs * 0.29} textAnchor="middle" fontSize={tune.fs} fontWeight={700} fill="none" stroke={P.bg} strokeWidth="4">{p.symbol}{p.retrograde ? '℞' : ''}</text>
-            <text x={gx} y={gy + tune.fs * 0.29} textAnchor="middle" fontSize={tune.fs} fontWeight={700} fill={col} stroke={col} strokeWidth={tune.sw} paintOrder="stroke">{p.symbol}{p.retrograde ? '℞' : ''}</text>
+            <GlyphPath name={SYMBOL_TO_GLYPH[p.symbol] ?? ''} cx={gx} cy={gy} color={col} bg={P.bg} />
+            {p.retrograde && <text x={gx + 14} y={gy + 4} textAnchor="middle" fontSize="11" fontWeight={600} fill={col} stroke={P.bg} strokeWidth="2.6" paintOrder="stroke">℞</text>}
             <text x={d1x} y={d1y + 3} textAnchor="middle" fontSize="8.8" fontWeight={600} fill={P.ink} stroke={P.bg} strokeWidth="1.4" paintOrder="stroke">{dg1}</text>
             <text x={d2x} y={d2y + 3} textAnchor="middle" fontSize="8.8" fontWeight={600} fill={P.ink} stroke={P.bg} strokeWidth="1.4" paintOrder="stroke">{dg2}</text>
           </g>
