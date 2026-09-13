@@ -59,8 +59,8 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect }: {
     ? { fire: '#f9e3df', earth: '#efe6d2', air: '#e3f1e6', water: '#e0e9f6' }
     : { fire: '#3a1f22', earth: '#332b1d', air: '#1e3325', water: '#1c2637' };
   const SHADE = paper
-    ? { fire: '#c93a2c', earth: '#a4761f', air: '#2f8f52', water: '#2f6fc0' }
-    : { fire: '#ff8d80', earth: '#e0b45f', air: '#6fdc8c', water: '#6fb2f5' };
+    ? { fire: '#a82214', earth: '#7d5a0e', air: '#1c7438', water: '#1e4fa8' }
+    : { fire: '#ff9c90', earth: '#f0c470', air: '#84e89e', water: '#8cc0ff' };
 
   // ---- 行星: 同一圈(严格等距)环形松弛 — 相近度数沿圈贴紧微开, 绝不摊大饼 ----
   const glyphs = useMemo(() => {
@@ -195,7 +195,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect }: {
             <line x1={tk1x} y1={tk1y} x2={tk2x} y2={tk2y} stroke={col} strokeWidth="1.4" opacity="0.9" />
             {slipped && <line x1={lx1} y1={ly1} x2={lx2} y2={ly2} stroke={P.houseLine} strokeWidth="0.7" opacity="0.5" />}
             {isSel && <circle cx={gx} cy={gy} r="13.5" fill="none" stroke={P.sel} strokeWidth="1.4" />}
-            <text x={gx} y={gy + 6} textAnchor="middle" fontSize={p.kind === 'planet' || !p.kind ? 18 : 20} fontWeight={700} fill={col} stroke={P.bg} strokeWidth="1.6" paintOrder="stroke">{p.symbol}{p.retrograde ? '℞' : ''}</text>
+            <text x={gx} y={gy + 6} textAnchor="middle" fontSize="20" fontWeight={700} fill={col} stroke={P.bg} strokeWidth="1.6" paintOrder="stroke">{p.symbol}{p.retrograde ? '℞' : ''}</text>
             <text x={d1x} y={d1y + 3} textAnchor="middle" fontSize="8.8" fontWeight={600} fill={P.ink} stroke={P.bg} strokeWidth="1.4" paintOrder="stroke">{dg1}</text>
             <text x={d2x} y={d2y + 3} textAnchor="middle" fontSize="8.8" fontWeight={600} fill={P.ink} stroke={P.bg} strokeWidth="1.4" paintOrder="stroke">{dg2}</text>
           </g>
