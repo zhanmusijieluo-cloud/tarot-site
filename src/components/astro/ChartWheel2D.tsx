@@ -136,8 +136,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect }: {
       {/* 环分界 */}
       <circle cx={C} cy={C} r={R_SIGN_IN} fill="none" stroke={P.ring} strokeWidth="1" />
       <circle cx={C} cy={C} r={R_HOUSE_IN} fill="none" stroke={P.ring} strokeWidth="1" />
-      <circle cx={C} cy={C} r={R_PLANET - 33} fill="none" stroke={P.ring} strokeWidth="0.7" opacity="0.5" />
-      <circle cx={C} cy={C} r={R_PLANET + 15} fill="none" stroke={P.ring} strokeWidth="0.7" opacity="0.5" />
+      {/* 符号带边界参考环已删 (爸爸: 碍事) — 符号统一后不需要这两条夹线 */}
       {/* 星座边界线 + 符号 */}
       {Array.from({ length: 12 }, (_, si) => {
         const ab = la(si * 30);
