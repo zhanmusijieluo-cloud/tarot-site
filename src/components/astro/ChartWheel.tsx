@@ -796,7 +796,7 @@ function PlanetDetail({ p, chart, zhMode, onClose }: {
                 {!rp.aspected && rp.mutual && <span className="mr-1 rounded bg-[#cdb88a]/10 px-1 py-px text-[9px] text-[#cdb88a]/90">{zhMode ? '慷慨·无相位' : 'generosity'}</span>}
                 {rp.mutual
                   ? (zhMode
-                    ? `⇄ ${zhOf(rp.other)}与它互溶: ${rp.dir!.map((d) => `${d.guest === p.name ? '此星' : zhOf(d.guest)}居${signZh(d.sign)}为${d.host === p.name ? '它' : zhOf(d.host)}之${RECEPTION_KIND_ZH[d.kind] ?? d.kind}`).join(', ')}`
+                    ? `⇄ ${zhOf(rp.other)}与它互溶·互相接纳: ${rp.dir!.map((d) => `${d.guest === p.name ? '此星' : zhOf(d.guest)}居${signZh(d.sign)}为${d.host === p.name ? '它' : zhOf(d.host)}之${RECEPTION_KIND_ZH[d.kind] ?? d.kind}`).join(', ')}`
                     : `⇄ mutual reception with ${rp.other}: ${rp.dir!.map((d) => `${d.guest} in ${d.sign} (home of ${d.host}, ${d.kind})`).join('; ')}`)
                   : rp.dir!.map((d) => d.guest === p.name
                     ? (zhMode ? `↦ ${zhOf(d.host)} 接纳此星 (此星居其${RECEPTION_KIND_ZH[d.kind] ?? d.kind}·${signZh(d.sign)})` : `↦ received by ${d.host} (in its ${d.kind} · ${d.sign})`)

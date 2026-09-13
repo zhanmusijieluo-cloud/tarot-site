@@ -100,11 +100,11 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
         const rev = chart.receptions.find((x) => x.a === r.b && x.b === r.a)
         recepFeats.push({
           tone: 'soft',
-          tip: `${pa?.zh ?? r.a} 与 ${pb?.zh ?? r.b} 互容接纳（互居对方${kind}之座 ${sz(r.bySign)}/${sz(rev?.bySign ?? '')}）`,
+          tip: `${pa?.zh ?? r.a} 与 ${pb?.zh ?? r.b} 互溶=互相接纳: ${pa?.zh ?? r.a}被${pb?.zh ?? r.b}接纳且${pb?.zh ?? r.b}被${pa?.zh ?? r.a}接纳（互居对方${kind}之座 ${sz(r.bySign)}/${sz(rev?.bySign ?? '')}）`,
           el: (
             <span>
               <b className="font-normal text-frost">{psym(r.a)}</b><span className="mx-1">与</span><b className="font-normal text-frost">{psym(r.b)}</b>
-              <span className="ml-1 text-[#cdb88a]">{r.aspected ? '互溶' : '慷慨'}</span>
+              <span className="ml-1 text-[#cdb88a]">{r.aspected ? '互溶·接纳' : '慷慨·无相位'}</span>
               <span className="ml-1 text-muted/80">(</span>
               <span className="text-frost/90">{psym(r.a)}居{sz(r.bySign)}=</span><span className="text-accent/95">{pb?.zh ?? r.b}{kind}</span>
               {rev && <>
