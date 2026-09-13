@@ -24,8 +24,10 @@ check(!!venMerc && venMerc.aspected === true, '♀被☿接纳 有合相支撑 �
 const satNept = c.receptions.find(r => r.a === 'Saturn' && r.b === 'Neptune')
 check(!!satNept && satNept.mutual && satNept.aspected, '♄♆互溶 且有六合相位 → 标准互溶')
 // 5) 展示层模拟: 弹窗太阳可显示的接纳 (filter aspected||mutual)
+// 三分接纳加入后: 太阳双子=风象昼主土星 → 被♄三分接纳, 且太阳刑土星0.67°有相位 → 成立一条
 const sunShown = c.receptions.filter(r => (r.a === 'Sun' || r.b === 'Sun') && (r.aspected || r.mutual))
-check(sunShown.length === 0, `太阳弹窗接纳区现为 ${sunShown.length} 条 (0=正确: 唯一一条无相位不成接纳)`)
+const sunTri = sunShown.find(r => r.kind === 'triplicity')
+check(sunShown.length === 1 && !!sunTri, `太阳弹窗接纳区 ${sunShown.length} 条: 三分接纳${sunTri ? ` ☉居双子被♄接纳(三分, 有刑相位)` : '缺失'} (旧值0已过时)`)
 // 6) 特征面板模拟
 const panel = c.receptions.filter(r => r.aspected || r.mutual)
 console.log('   新规则下整盘展示接纳:', panel.map(r => `${r.a}→${r.b}${r.mutual ? '★' : ''}${r.aspected ? '' : '(慷慨)'}`).join('  '))

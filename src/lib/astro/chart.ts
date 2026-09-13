@@ -241,9 +241,9 @@ const SIGN_IDX: Record<string, number> = {
   Aries: 0, Taurus: 1, Gemini: 2, Cancer: 3, Leo: 4, Virgo: 5,
   Libra: 6, Scorpio: 7, Sagittarius: 8, Capricorn: 9, Aquarius: 10, Pisces: 11,
 }
-type RulerKind = 'domicile' | 'exaltation' | 'detriment' | 'fall'
+type RulerKind = 'domicile' | 'exaltation' | 'triplicity' | 'detriment' | 'fall'
 const RULER_KIND_ZH: Record<RulerKind, string> = {
-  domicile: '庙座', exaltation: '耀升', detriment: '失势', fall: '落陷',
+  domicile: '庙座', exaltation: '耀升', triplicity: '三分', detriment: '失势', fall: '落陷',
 }
 
 export interface Reception {
@@ -261,7 +261,7 @@ export interface Reception {
  */
 export function computeReceptions(
   planets: { name: string; sign: string }[],
-  opts: { traditional?: boolean; aspectPairs?: string[] } = {},
+  opts: { traditional?: boolean; aspectPairs?: string[]; triplicityActive?: Record<string, string> } = {},
 ): Reception[] {
   const aspSet = new Set(opts.aspectPairs ?? [])
   const rulers = new Map<number, string>()      // 星座idx → 座主(庙)
@@ -285,10 +285,11 @@ export function computeReceptions(
       let kind: RulerKind | null = null
       if (ruler === b.name) kind = 'domicile'
       else if (exalt === b.name) kind = 'exaltation'
+      else if (opts.triplicityActive?.[a.sign] === b.name) kind = 'triplicity'  // 三分主星接纳 (都勒斯, 昼夜取主)
       if (!kind) continue
       // 查反向: B 是否也住在 A 的庙/耀升座 → 互容
       const rev = hostOf(b.sign)
-      const mutual = rev.ruler === a.name || rev.exalt === a.name
+      const mutual = rev.ruler === a.name || rev.exalt === a.name || opts.triplicityActive?.[b.sign] === a.name
       // 两个方向各记一条(不吞信息), 展示层按 pair 归并显示"互容"
       const pairKey = [a.name, b.name].sort().join('|')
       out.push({ a: a.name, b: b.name, kind, mutual, aspected: aspSet.has(pairKey), bySign: a.sign })
@@ -536,7 +537,11 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
   }))
 
   // 互容接纳 (全部天体, 与盘面同一守护流派)
-  const receptions = computeReceptions(allBodies.map(p => ({ name: p.name, sign: p.sign })), { aspectPairs: aspects.map(x => [x.a, x.b].sort().join('|')) })
+  const receptions = computeReceptions(allBodies.map(p => ({ name: p.name, sign: p.sign })), {
+    aspectPairs: aspects.map(x => [x.a, x.b].sort().join('|')),
+    // 三分主星接纳: A 落 B 的三分星座 → 三分级接纳 (都勒斯, 昼夜取主 — 爸爸: 三分主要用来看接纳互容)
+    triplicityActive: Object.fromEntries(allBodies.filter(p => p.triplicity).map(p => [p.sign, p.triplicity!.active])),
+  })
 
   // 接近太阳三段 (木木PPT33·宫神星口径): 日核≤17′ / 燃烧17′~8°30′ / 日光下8°30′~17°; 日月本身不适用
   const sunLon = planets.find((p) => p.name === 'Sun')?.longitude
