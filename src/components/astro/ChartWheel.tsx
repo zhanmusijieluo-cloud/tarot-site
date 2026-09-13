@@ -712,11 +712,23 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
 }
 
 // ---------- 点击标注卡(纯标注, 无AI) ----------
+// 星体重要度排序 (爸爸定标: 弹窗内容从重要星体开始 — 七大行星→三王星→4轴→其他)
+const BODY_IMP: Record<string, number> = {
+  Sun: 70, Moon: 65, Mercury: 60, Venus: 55, Mars: 50, Jupiter: 45, Saturn: 40,
+  Uranus: 30, Neptune: 25, Pluto: 20,
+  Ascendant: 15, Descendant: 13, 'Midheaven': 12, 'Imum Coeli': 10, IC: 10, MC: 12, ASC: 15, DSC: 13,
+};
+const impOf = (n: string) => BODY_IMP[n] ?? 0;
+
 function PlanetDetail({ p, chart, zhMode, onClose }: {
   p: VPlanet; chart: VChart; zhMode: boolean; onClose: () => void;
 }) {
   const { t } = useI18n();
-  const myAspects = [...chart.aspects].filter((a) => a.a === p.name || a.b === p.name).sort((x, y) => x.orb - y.orb);
+    const otherOf = (a: { a: string; b: string }) => (a.a === p.name ? a.b : a.a);
+    // 相位列表: 先按对方星体重要度倒序 (BODY_IMP 模块级), 同级再按容许度
+  const myAspects = [...chart.aspects]
+    .filter((a) => a.a === p.name || a.b === p.name)
+    .sort((x, y) => impOf(otherOf(y)) - impOf(otherOf(x)) || x.orb - y.orb);
   // 木木体系(爸爸4讲P29-30): 接纳=须成相位的单向许可; 互容=双向同住无需相位; 与古典/IbnEzra完全一致
   // 按 pair 归并: 互容时双向记录合成一条 (此前只显示单向"互容", 漏掉本星对对方的接纳方向 — 爸爸抓到)
   const myRecepRaw = chart.receptions
@@ -730,7 +742,7 @@ function PlanetDetail({ p, chart, zhMode, onClose }: {
     g.mutual = g.mutual || r.mutual; g.aspected = g.aspected || !!r.aspected
     g.dir!.push({ host: r.b, guest: r.a, kind: r.kind, sign: r.bySign })
   }
-  const myRecep = [...recepPairs.values()].sort((a, b) => Number(b.mutual) - Number(a.mutual))
+  const myRecep = [...recepPairs.values()].sort((a, b) => Number(b.mutual) - Number(a.mutual) || impOf(b.other) - impOf(a.other))
   const signZh = (s: string) => SIGNS_ZH_MINI[s] ?? s;
   const zhOf = (n: string) => chart.planets.find((x) => x.name === n)?.zh ?? PLANET_ZH_OF(n)
 
@@ -856,7 +868,7 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
         </div>
         {/* 星球快捷跳转 */}
         <div className="flex flex-wrap gap-1">
-          {chart.planets.map((p) => (
+          {[...chart.planets].sort((a, b) => impOf(b.name) - impOf(a.name)).map((p) => (
             <button
               key={p.name}
               onClick={() => setSelected(p.name === selected ? null : p.name)}
