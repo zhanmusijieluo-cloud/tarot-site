@@ -529,7 +529,7 @@ const zh: Record<string, string> = {
   'astro.view.reset': '回正',
   'astro.view.resetTip': '盘面转歪了? 点这里回到上升朝左的标准方位',
   'astro.view.clear': '取消选中',
-  'astro.view.hintTop': '拖拽旋转 · 滚轮缩放 · 点击星体查看标注',
+  'astro.view.hintTop': '拖拽旋转 · Ctrl+滚轮或 +/− 缩放 · 点击星体查看标注',
   'astro.view.hintSide': '黄道面立起：行星与环同处一平面，脚线仍指向星座带刻度',
   'astro.d.sign': '落座',
   'astro.d.house': '落宫',

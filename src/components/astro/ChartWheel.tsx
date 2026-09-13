@@ -151,14 +151,14 @@ interface SceneProps {
     aspects?: boolean; feet?: boolean; feetAlways?: boolean; nums?: boolean; ticks?: boolean;
   };
   /** 外层按钮调场景指令 (回正等) */
-  sceneApi?: React.MutableRefObject<{ reset?: () => void } | null>;
+  sceneApi?: React.MutableRefObject<{ reset?: () => void; zoom?: (f: number) => void } | null>;
   selected: string | null;
   onSelect: (name: string | null) => void;
 }
 
 function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }: SceneProps) {
   const mountRef = useRef<HTMLDivElement>(null);
-  const apiRef = useRef<{ set: (n: string | null) => void; reset?: () => void } | null>(null);
+  const apiRef = useRef<{ set: (n: string | null) => void; reset?: () => void; zoom?: (f: number) => void } | null>(null);
 
   const ascLon = chart.angles.ascendant?.longitude ?? 0;
   const DIR = disp?.dir ?? 'ccw';
@@ -486,6 +486,8 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
     root.add(sunLight); // 幂等兜底
 
     // ---------- 相位线 ----------
+    let orthoT = 1, orthoC = 1;
+    const zoomBy = (f: number) => { orthoT = Math.min(1.7, Math.max(0.5, orthoT * f)) };
     const aspectLines: { mesh: THREE.Line; a: string; b: string; baseOp: number; tOp: number }[] = [];
     const ASP_Y = 0.62 // 相位网抬到球体顶之上: 盘是平躺的, 抬高在俯视图里毫无变化, 但球体(最高太阳0.5)再也挡不住线
     for (const asp of aspects) {
@@ -555,7 +557,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       ud.cMix = ud.tMix ?? 0
       mo.color.copy(ud.baseColor).lerp(ud.litColor, ud.cMix)
     }
-    const sceneCtl = { reset: () => { yawV = 0; idleT = 99; fastReturn = true; } };
+    const sceneCtl = { reset: () => { yawV = 0; idleT = 99; fastReturn = true; }, zoom: zoomBy };
     apiRef.current = { set: applyHighlight, ...sceneCtl };
     if (sceneApi) sceneApi.current = sceneCtl;
 
@@ -594,10 +596,11 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       else onSelect(null);
     };
     const onWheel = (e: WheelEvent) => {
+      // 默认不拦截: 页面正常上下滚 (爸爸反馈: 想下滑被盘截住变缩放)
+      if (!(e.ctrlKey || e.metaKey)) return
       e.preventDefault();
-      orthoT = Math.min(1.7, Math.max(0.5, orthoT + e.deltaY * 0.0011)); // 正交缩放档
+      orthoT = Math.min(1.7, Math.max(0.5, orthoT + e.deltaY * 0.01)); // Ctrl/⌘+滚轮 = 缩放
     };
-    let orthoT = 1, orthoC = 1;
     el.addEventListener('pointerdown', onDown);
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
@@ -817,7 +820,7 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
   const selected = selProp !== undefined ? selProp : selInner;
   const setSelected = onSelect ?? setSelInner;
   const selPlanet = selected ? [...chart.planets, chart.angles.ascendant, chart.angles.midheaven].find((p) => p?.name === selected) ?? null : null;
-  const sceneApiRef = useRef<{ reset?: () => void } | null>(null);
+  const sceneApiRef = useRef<{ reset?: () => void; zoom?: (f: number) => void } | null>(null);
 
   return (
     <div className="relative rounded-2xl border border-white/[0.07] bg-black/20 p-2">
@@ -859,6 +862,8 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
         >
           ⟳ {t('astro.view.reset')}
         </button>
+        <button aria-label="zoom in" onClick={() => sceneApiRef.current?.zoom?.(1.25)} className="ml-1 size-5 rounded-full border border-white/15 text-[11px] leading-none text-muted transition-colors hover:border-white/30 hover:text-frost">+</button>
+        <button aria-label="zoom out" onClick={() => sceneApiRef.current?.zoom?.(0.8)} className="size-5 rounded-full border border-white/15 text-[11px] leading-none text-muted transition-colors hover:border-white/30 hover:text-frost">−</button>
         <button
           onClick={() => setSelected(null)}
           className={`text-[10px] tracking-[0.2em] text-muted/70 transition-opacity hover:text-frost ${selPlanet ? 'opacity-100' : 'invisible'}`}
