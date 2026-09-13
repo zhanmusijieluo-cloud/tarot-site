@@ -108,6 +108,7 @@ export function birthFromParams(sp: URLSearchParams): BirthData | null {
     longitude: cn ? num('lng', NaN) : city ? city.lng : num('lng', NaN),
     city: cn ? decodeCn(cn) : city ? city.zh : sp.get('city') ?? undefined,
     label: sp.get('n')?.slice(0, 30) || undefined,
+    cnCode: cn ?? undefined,
     houseSystem,
     timeKnown: sp.get('nt') !== '1',
   };

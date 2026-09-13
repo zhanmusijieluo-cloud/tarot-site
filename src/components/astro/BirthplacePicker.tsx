@@ -37,13 +37,13 @@ export default function BirthplacePicker({ value, onChange }: {
 }) {
   const { t, lang } = useI18n();
   const zhMode = lang !== 'en';
-  const [mode, setMode] = useState<Mode>('cn');
-
-  // ---- 中国三级 ----
+  // 外部传入 value 回填初值 (编辑弹窗打开时不假装是北京)
+  const initCn = (value.cnCode ?? '').split('~').filter(Boolean)
+  const [mode, setMode] = useState<Mode>(() => (value.cnCode || !Number.isFinite(value.lat) ? 'cn' : 'manual'));
   const [provs, setProvs] = useState<CnProvince[]>([]);
-  const [provName, setProvName] = useState('北京');
-  const [cityName, setCityName] = useState('北京');
-  const [distName, setDistName] = useState('北京');
+  const [provName, setProvName] = useState(initCn[0] ?? '北京');
+  const [cityName, setCityName] = useState(initCn[1] ?? '北京');
+  const [distName, setDistName] = useState(initCn[2] ?? '北京');
   useEffect(() => {
     let on = true;
     loadCnCities().then((list) => { if (on) setProvs(list); }).catch(() => {});
@@ -103,10 +103,10 @@ export default function BirthplacePicker({ value, onChange }: {
   };
 
   // ---- 手动 ----
-  const [mlat, setMlat] = useState('');
-  const [mlng, setMlng] = useState('');
-  const [mtz, setMtz] = useState('8');
-  const [mcity, setMcity] = useState('');
+  const [mlat, setMlat] = useState(() => (Number.isFinite(value.lat) ? String(value.lat) : ''));
+  const [mlng, setMlng] = useState(() => (Number.isFinite(value.lng) ? String(value.lng) : ''));
+  const [mtz, setMtz] = useState(() => String(value.tz ?? 8));
+  const [mcity, setMcity] = useState(() => (/^-?[\d.]+,\s*-?[\d.]+$/.test(value.label ?? '') ? '' : value.label ?? ''));
   const emitManual = () => {
     const la = Number(mlat), ln = Number(mlng), tz = Number(mtz);
     if (!Number.isFinite(la) || !Number.isFinite(ln) || !Number.isFinite(tz)) return;

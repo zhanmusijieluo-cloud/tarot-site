@@ -11,9 +11,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import PageShell from '@/components/PageShell';
 import { useI18n } from '@/i18n';
 import ChartResult from '@/components/astro/ChartResult';
+import EditBirth from '@/components/astro/EditBirth';
 import ChartSettings from '@/components/astro/ChartSettings';
 import type { VChart } from '@/components/astro/ChartWheel';
-import { birthFromParams, settingsFromParams, settingsToParams } from '@/lib/astro/chart-url';
+import { birthFromParams, paramsFromBirth, settingsFromParams, settingsToParams } from '@/lib/astro/chart-url';
 import { HOUSE_SYSTEM_ZH, type BirthData, type CastSettings, type HouseSystem } from '@/lib/astro/chart';
 
 const SYS_ZH = HOUSE_SYSTEM_ZH;
@@ -77,6 +78,18 @@ function ChartPageInner() {
   const [tabSignal, setTabSignal] = useState<{ tab: string; nonce: number } | undefined>(undefined);
   const openSettings = (tab: string) => setTabSignal({ tab, nonce: Date.now() });
 
+  // 编辑排盘资料 (输错名字/时间/地点就地改): 重写全部生辰键, 设置与宫制键原样保留
+  const [editOpen, setEditOpen] = useState(false);
+  const BIRTH_KEYS = ['y', 'mo', 'd', 'h', 'mi', 'n', 'cn', 'cid', 'lat', 'lng', 'tz', 'city', 'nt'];
+  const saveBirth = (b: BirthData) => {
+    patchParams((pp) => {
+      for (const k of BIRTH_KEYS) pp.delete(k);
+      const fresh = new URLSearchParams(paramsFromBirth({ ...b, houseSystem: b.houseSystem ?? 'placidus' }));
+      for (const k of BIRTH_KEYS.concat('sys')) { const v = fresh.get(k); if (v !== null) pp.set(k, v); }
+    });
+    setEditOpen(false);
+  };
+
   if (!birth) {
     return (
       <PageShell label={t('page.astrology.label')} title={t('astro.chart.title')} wide>
@@ -109,6 +122,13 @@ function ChartPageInner() {
             {zhMode ? (SYS_ZH[data?.houseSystemUsed ?? birth.houseSystem ?? 'placidus'] ?? data?.houseSystemUsed ?? '普拉西德') : (data?.houseSystemUsed ?? birth.houseSystem ?? 'placidus')}
             <span className="ml-1 text-[8px] text-muted/60">▾</span>
           </button>
+          <button
+            onClick={() => setEditOpen(true)}
+            className="rounded-full border border-white/[0.12] px-2.5 py-0.5 text-[10.5px] text-frost/75 transition-colors hover:border-accent/40 hover:text-accent"
+            title={t('astro.edit.hint')}
+          >
+            ✎ {t('astro.edit.btn')}
+          </button>
           <ChartSettings
             value={settings}
             onChange={applySettings}
@@ -126,6 +146,7 @@ function ChartPageInner() {
         {loading && !data && (
           <p className="py-20 text-center text-[12px] tracking-[0.3em] text-muted">{t('astro.form.casting')}</p>
         )}
+        <EditBirth birth={birth} open={editOpen} onClose={() => setEditOpen(false)} onSave={saveBirth} />
         {data && <ChartResult chart={data} zhMode={zhMode} aspectMode={aspectMode} onAspectMode={(m) => patchParams((p) => { if (m === 'list') p.set('ag', 'list'); else p.delete('ag'); })} />}
       </section>
     </PageShell>
