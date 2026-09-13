@@ -69,7 +69,14 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
   const dz = (n: string) => DIGN_ZH[n] ?? n[0]
 
   // ---- 右侧特征面板 (宫神星格式: 判词全保留, 行星/星座用符号) ----
-  type Feat = { el: React.ReactNode; tone: 'gold' | 'soft' | 'warn' | 'hot'; tip?: string }
+  type Feat = { el: React.ReactNode; tone: 'gold' | 'soft' | 'warn' | 'hot'; tip?: string; main?: number }
+  // 星体重要度 (爸爸定标同弹窗: 七大行星→三王星→4轴→其他) — 与 ChartWheel 的 BODY_IMP 同口径
+  const IMP: Record<string, number> = {
+    Sun: 70, Moon: 65, Mercury: 60, Venus: 55, Mars: 50, Jupiter: 45, Saturn: 40,
+    Uranus: 30, Neptune: 25, Pluto: 20,
+    Ascendant: 15, Descendant: 13, Midheaven: 12, IC: 10, ASC: 15, DSC: 13, MC: 12,
+  }
+  const impOf = (n: string) => IMP[n] ?? 0
   const features: Feat[] = []
   const psym = (name: string) => chart.planets.find((x) => x.name === name)?.symbol ?? name
   // 落座行: ☉ 双子 23°42′ · 9宫 (判词汉字在, 行星星座用符号)
@@ -97,12 +104,14 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
       const key = [r.a, r.b].sort().join('|');
       if (seen.has(key)) continue;
       seen.add(key);
+      const impMax = Math.max(impOf(r.a), impOf(r.b));
       const kind = RECEPTION_KIND_ZH[r.kind] ?? r.kind
       const pa = chart.planets.find((x) => x.name === r.a), pb = chart.planets.find((x) => x.name === r.b)
       if (r.mutual) {
         const rev = chart.receptions.find((x) => x.a === r.b && x.b === r.a)
         recepFeats.push({
           tone: 'soft',
+          main: impMax,
           tip: `${pa?.zh ?? r.a} 与 ${pb?.zh ?? r.b} 互容${r.aspected ? '+接纳（有相位，能量互通）' : '（无相位仍成立，能量共享）'}: 互居对方${kind}之座 ${sz(r.bySign)}/${sz(rev?.bySign ?? '')}`,
           el: (
             <span>
@@ -121,6 +130,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
       } else {
         recepFeats.push({
           tone: 'soft',
+          main: impMax,
           tip: `${pa?.zh ?? r.a} 被 ${pb?.zh ?? r.b} 接纳（居其${kind}·${sz(r.bySign)}）`,
           el: (
             <span>
@@ -134,6 +144,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
       }
     }
   }
+  recepFeats.sort((a, b) => (b.main ?? 0) - (a.main ?? 0))
   features.push(...recepFeats)
   // 接近太阳三段 (木木PPT33): 日核Cazimi反强 / 燃烧·焦身难发挥 / 日光下轻+近贵
   {
