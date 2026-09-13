@@ -28,7 +28,7 @@ export interface VAspect {
   orb: number; applying: boolean | null;
 }
 export interface VReception {
-  a: string; b: string; kind: string; mutual: boolean; bySign: string;
+  a: string; b: string; kind: string; mutual: boolean; aspected?: boolean; bySign: string;
 }
 export interface VChart {
   houseSystemUsed: string; timeKnown: boolean;
@@ -715,9 +715,9 @@ function PlanetDetail({ p, chart, zhMode, onClose }: {
 }) {
   const { t } = useI18n();
   const myAspects = [...chart.aspects].filter((a) => a.a === p.name || a.b === p.name).sort((x, y) => x.orb - y.orb);
-  const hasAsp = (r: VReception) => chart.aspects.some((x) => (x.a === r.a && x.b === r.b) || (x.a === r.b && x.b === r.a));
+  // 古典规则(查证的): 单向接纳必须两星成相位才成立; 互溶无相位 = "慷慨"(Ibn Ezra), 成立但降格标注
   const myRecep = chart.receptions
-    .filter((r) => r.a === p.name || r.b === p.name)
+    .filter((r) => (r.a === p.name || r.b === p.name) && (r.aspected || r.mutual))
     .sort((a, b) => Number(b.mutual) - Number(a.mutual)); // 互溶优先, 不被条数上限截掉
   const signZh = (s: string) => SIGNS_ZH_MINI[s] ?? s;
 
@@ -784,7 +784,7 @@ function PlanetDetail({ p, chart, zhMode, onClose }: {
               const self = chart.planets.find((x) => x.name === r.a);
               return (
                 <p key={i} className="text-[12.5px] text-muted">
-                  {!hasAsp(r) && <span className="mr-1 rounded bg-white/[0.06] px-1 py-px text-[9px] text-muted/70">{zhMode ? '无相位' : 'no aspect'}</span>}
+                  {!r.aspected && r.mutual && <span className="mr-1 rounded bg-[#cdb88a]/10 px-1 py-px text-[9px] text-[#cdb88a]/90">{zhMode ? '慷慨·无相位' : 'generosity'}</span>}
                   {r.mutual
                     ? (zhMode
                       ? `⇄ 互溶: ${self?.zh ?? r.a} 居${signZh(r.bySign)}为${host?.zh ?? r.b}之${RECEPTION_KIND_ZH[r.kind] ?? r.kind}, 双向为客`

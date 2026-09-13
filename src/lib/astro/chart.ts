@@ -209,6 +209,7 @@ export interface Reception {
   b: string          // 行星B (座主)
   kind: RulerKind    // A 住在 B 的什么宫里
   mutual: boolean    // 互溶: 双向同住
+  aspected: boolean  // 两星是否成相位 (古典规则: 单向接纳必须有相位; 互溶无相位=慷慨Ibn Ezra, 仍成立)
   bySign: string     // 发生在哪个星座(展示用)
 }
 
@@ -218,8 +219,9 @@ export interface Reception {
  */
 export function computeReceptions(
   planets: { name: string; sign: string }[],
-  opts: { traditional?: boolean } = {},
+  opts: { traditional?: boolean; aspectPairs?: string[] } = {},
 ): Reception[] {
+  const aspSet = new Set(opts.aspectPairs ?? [])
   const rulers = new Map<number, string>()      // 星座idx → 座主(庙)
   const exalted = new Map<number, string>()     // 星座idx → 耀升星
   for (let i = 0; i < 12; i++) {
@@ -246,7 +248,8 @@ export function computeReceptions(
       const rev = hostOf(b.sign)
       const mutual = rev.ruler === a.name || rev.exalt === a.name
       // 两个方向各记一条(不吞信息), 展示层按 pair 归并显示"互溶"
-      out.push({ a: a.name, b: b.name, kind, mutual, bySign: a.sign })
+      const pairKey = [a.name, b.name].sort().join('|')
+      out.push({ a: a.name, b: b.name, kind, mutual, aspected: aspSet.has(pairKey), bySign: a.sign })
     }
   }
   return out
@@ -455,7 +458,7 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
   }))
 
   // 互溶接纳 (全部天体, 与盘面同一守护流派)
-  const receptions = computeReceptions(allBodies.map(p => ({ name: p.name, sign: p.sign })))
+  const receptions = computeReceptions(allBodies.map(p => ({ name: p.name, sign: p.sign })), { aspectPairs: aspects.map(x => [x.a, x.b].sort().join('|')) })
 
   // 焦身 ( combust: 距日 0~8.5°, 古典常用; 日月本身不适用)
   const sunLon = planets.find((p) => p.name === 'Sun')?.longitude
@@ -526,10 +529,11 @@ export function chartEvidence(ch: NatalChart): string {
     const app = a.applying === true ? ', 入相(作用增强)' : a.applying === false ? ', 出相(作用减弱)' : ''
     lines.push(`- ${PLANET_ZH[a.a]}${a.typeZh}${PLANET_ZH[a.b]} (误差${a.orb}°${app})`)
   }
-  if (ch.receptions.length) {
-    lines.push(`【互溶接纳】(星体做客/房东关系, 互溶=双向互客)` )
+  const realRecep = ch.receptions.filter(r => r.aspected || r.mutual) // 古典规则: 单向接纳须成相位; 互溶无相位=慷慨(降格)
+  if (realRecep.length) {
+    lines.push(`【互溶接纳】(须两星成相位方成立; 互溶无相位记"慷慨", 力度弱)` )
     const seen = new Set<string>()
-    for (const r of ch.receptions) {
+    for (const r of realRecep) {
       const key = [r.a, r.b].sort().join('|')
       if (seen.has(key)) continue
       const kindZh = RULER_KIND_ZH[r.kind]
@@ -537,7 +541,7 @@ export function chartEvidence(ch: NatalChart): string {
         const rev = ch.receptions.find(x => x.a === r.b && x.b === r.a)
         seen.add(key)
         // r: A住r.bySign=B之家(kind); rev: B住rev.bySign=A之家(rev.kind)
-        lines.push(`- 互溶: ${PLANET_ZH[r.a]} ↔ ${PLANET_ZH[r.b]} (${PLANET_ZH[r.a]}居${SIGNS_ZH[r.bySign] ?? r.bySign}=${PLANET_ZH[r.b]}之${kindZh}, ${PLANET_ZH[r.b]}居${rev ? SIGNS_ZH[rev.bySign] ?? rev.bySign : '?'}=${PLANET_ZH[r.a]}之${rev ? RULER_KIND_ZH[rev.kind] : ''})`)
+        lines.push(`- ${r.aspected ? '互溶' : '慷慨(互溶无相位)'}: ${PLANET_ZH[r.a]} ↔ ${PLANET_ZH[r.b]} (${PLANET_ZH[r.a]}居${SIGNS_ZH[r.bySign] ?? r.bySign}=${PLANET_ZH[r.b]}之${kindZh}, ${PLANET_ZH[r.b]}居${rev ? SIGNS_ZH[rev.bySign] ?? rev.bySign : '?'}=${PLANET_ZH[r.a]}之${rev ? RULER_KIND_ZH[rev.kind] : ''})`)
       } else {
         seen.add(key)
         lines.push(`- ${PLANET_ZH[r.b]}接纳${PLANET_ZH[r.a]} (${PLANET_ZH[r.a]}居${SIGNS_ZH[r.bySign] ?? r.bySign}=${PLANET_ZH[r.b]}之${kindZh})`)

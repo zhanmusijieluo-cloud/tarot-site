@@ -89,6 +89,8 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
   {
     const seen = new Set<string>();
     for (const r of chart.receptions) {
+      // 古典规则(爸爸定标): 单向接纳须成相位; 互溶无相位降为"慷慨"仍展示但标注
+      if (!r.aspected && !r.mutual) continue;
       const key = [r.a, r.b].sort().join('|');
       if (seen.has(key)) continue;
       seen.add(key);
@@ -102,7 +104,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
           el: (
             <span>
               <b className="font-normal text-frost">{psym(r.a)}</b><span className="mx-1.5">与</span><b className="font-normal text-frost">{psym(r.b)}</b>
-              <span className="ml-1.5 text-[#cdb88a]">互溶</span>
+              <span className="ml-1.5 text-[#cdb88a]">{r.aspected ? '互溶' : '慷慨'}</span>
               <span className="ml-1 text-accent/95">{sz(r.bySign)}{rev ? '/' + sz(rev.bySign) : ''}</span>
             </span>
           ),
