@@ -859,6 +859,12 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
       <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
         <div className="flex gap-1.5">
           <button
+            onClick={() => setView('classic')}
+            className={`rounded-full px-3.5 py-1.5 text-[11px] tracking-[0.15em] transition-colors ${view === 'classic' ? 'border border-accent/50 bg-accent/[0.08] text-accent' : 'border border-white/[0.1] text-muted hover:border-white/25'}`}
+          >
+            {t('astro.view.classic')}
+          </button>
+          <button
             onClick={() => setView('top')}
             className={`rounded-full px-3.5 py-1.5 text-[11px] tracking-[0.15em] transition-colors ${view === 'top' ? 'border border-accent/50 bg-accent/[0.08] text-accent' : 'border border-white/[0.1] text-muted hover:border-white/25'}`}
           >
@@ -869,12 +875,6 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
             className={`rounded-full px-3.5 py-1.5 text-[11px] tracking-[0.15em] transition-colors ${view === 'side' ? 'border border-accent/50 bg-accent/[0.08] text-accent' : 'border border-white/[0.1] text-muted hover:border-white/25'}`}
           >
             {t('astro.view.side')}
-          </button>
-          <button
-            onClick={() => setView('classic')}
-            className={`rounded-full px-3.5 py-1.5 text-[11px] tracking-[0.15em] transition-colors ${view === 'classic' ? 'border border-accent/50 bg-accent/[0.08] text-accent' : 'border border-white/[0.1] text-muted hover:border-white/25'}`}
-          >
-            {t('astro.view.classic')}
           </button>
         </div>
         {/* 星球快捷跳转 */}
