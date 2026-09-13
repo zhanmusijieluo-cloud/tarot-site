@@ -706,7 +706,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
 
   // 俯视: 满高正方形(3D盘为透明层, 与背后相位网格同层 → 方圆相融, 网格四角可见); 侧视: 扁面板
   // 固定大小: 弹窗不再挤压盘面 (A方案定稿)
-  return <div ref={mountRef} className={`w-full cursor-grab active:cursor-grabbing ${view === 'side' ? 'h-[min(46vh,460px)]' : 'h-[min(84vh,880px)]'}`} />;
+  return <div ref={mountRef} className="w-full cursor-grab active:cursor-grabbing h-[min(84vh,880px)]" />;
 }
 
 // ---------- 点击标注卡(纯标注, 无AI) ----------
