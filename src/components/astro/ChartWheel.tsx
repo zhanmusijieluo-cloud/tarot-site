@@ -715,7 +715,10 @@ function PlanetDetail({ p, chart, zhMode, onClose }: {
 }) {
   const { t } = useI18n();
   const myAspects = [...chart.aspects].filter((a) => a.a === p.name || a.b === p.name).sort((x, y) => x.orb - y.orb);
-  const myRecep = chart.receptions.filter((r) => r.a === p.name || r.b === p.name);
+  const hasAsp = (r: VReception) => chart.aspects.some((x) => (x.a === r.a && x.b === r.b) || (x.a === r.b && x.b === r.a));
+  const myRecep = chart.receptions
+    .filter((r) => r.a === p.name || r.b === p.name)
+    .sort((a, b) => Number(b.mutual) - Number(a.mutual)); // 互溶优先, 不被条数上限截掉
   const signZh = (s: string) => SIGNS_ZH_MINI[s] ?? s;
 
   return (
@@ -776,11 +779,12 @@ function PlanetDetail({ p, chart, zhMode, onClose }: {
         <div className="mt-4">
           <p className="text-[10px] tracking-[0.25em] text-muted uppercase">{t('astro.d.reception')}</p>
           <div className="mt-2 space-y-1.5">
-            {myRecep.slice(0, 6).map((r, i) => {
+            {myRecep.slice(0, 8).map((r, i) => {
               const host = chart.planets.find((x) => x.name === r.b);
               const self = chart.planets.find((x) => x.name === r.a);
               return (
                 <p key={i} className="text-[12.5px] text-muted">
+                  {!hasAsp(r) && <span className="mr-1 rounded bg-white/[0.06] px-1 py-px text-[9px] text-muted/70">{zhMode ? '无相位' : 'no aspect'}</span>}
                   {r.mutual
                     ? (zhMode
                       ? `⇄ 互溶: ${self?.zh ?? r.a} 居${signZh(r.bySign)}为${host?.zh ?? r.b}之${RECEPTION_KIND_ZH[r.kind] ?? r.kind}, 双向为客`
