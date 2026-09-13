@@ -801,7 +801,7 @@ function PlanetDetail({ p, chart, zhMode, onClose }: {
               return (
                 <p key={i} className="text-[12.5px] text-muted">
                   <span className="mr-1 text-accent/80">{a.symbol}</span>
-                  {zhMode ? `${p.zh}${a.typeZh}${oP?.zh ?? other}` : `${p.name} ${a.type} ${other}`}
+                  {zhMode ? `${p.zh}${a.typeZh}${zhOf(other)}` : `${p.name} ${a.type} ${other}`}
                   <span className="ml-1.5 text-accent/70">{a.orb.toFixed(1)}°</span>
                   {app && <span className="ml-1.5 text-[10px] text-muted/70">{app}</span>}
                 </p>
