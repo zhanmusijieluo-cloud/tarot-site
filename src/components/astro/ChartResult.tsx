@@ -103,9 +103,15 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
           tip: `${pa?.zh ?? r.a} 与 ${pb?.zh ?? r.b} 互容接纳（互居对方${kind}之座 ${sz(r.bySign)}/${sz(rev?.bySign ?? '')}）`,
           el: (
             <span>
-              <b className="font-normal text-frost">{psym(r.a)}</b><span className="mx-1.5">与</span><b className="font-normal text-frost">{psym(r.b)}</b>
-              <span className="ml-1.5 text-[#cdb88a]">{r.aspected ? '互溶' : '慷慨'}</span>
-              <span className="ml-1 text-accent/95">{sz(r.bySign)}{rev ? '/' + sz(rev.bySign) : ''}</span>
+              <b className="font-normal text-frost">{psym(r.a)}</b><span className="mx-1">与</span><b className="font-normal text-frost">{psym(r.b)}</b>
+              <span className="ml-1 text-[#cdb88a]">{r.aspected ? '互溶' : '慷慨'}</span>
+              <span className="ml-1 text-muted/80">(</span>
+              <span className="text-frost/90">{psym(r.a)}居{sz(r.bySign)}=</span><span className="text-accent/95">{pb?.zh ?? r.b}{kind}</span>
+              {rev && <>
+                <span className="mx-1 text-muted/60">·</span>
+                <span className="text-frost/90">{psym(r.b)}居{sz(rev.bySign)}=</span><span className="text-accent/95">{pa?.zh ?? r.a}{RECEPTION_KIND_ZH[rev.kind] ?? rev.kind}</span>
+              </>}
+              <span className="text-muted/80">)</span>
             </span>
           ),
         })

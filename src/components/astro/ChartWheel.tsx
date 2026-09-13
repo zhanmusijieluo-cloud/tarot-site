@@ -13,6 +13,7 @@ import * as THREE from 'three';
 import { useI18n } from '@/i18n';
 import { AspectLegend } from '@/components/astro/AspectGrid';
 import { aspectNum } from '@/lib/astro/aspect-colors';
+import { PLANET_ZH_OF } from '@/lib/astro/chart';
 
 // ---------- 与 API 返回对齐的数据类型 ----------
 export interface VPlanet {
@@ -716,10 +717,21 @@ function PlanetDetail({ p, chart, zhMode, onClose }: {
   const { t } = useI18n();
   const myAspects = [...chart.aspects].filter((a) => a.a === p.name || a.b === p.name).sort((x, y) => x.orb - y.orb);
   // 古典规则(查证的): 单向接纳必须两星成相位才成立; 互溶无相位 = "慷慨"(Ibn Ezra), 成立但降格标注
-  const myRecep = chart.receptions
+  // 按 pair 归并: 互溶时双向记录合成一条 (此前只显示单向"互溶", 漏掉本星对对方的接纳方向 — 爸爸抓到)
+  const myRecepRaw = chart.receptions
     .filter((r) => (r.a === p.name || r.b === p.name) && (r.aspected || r.mutual))
-    .sort((a, b) => Number(b.mutual) - Number(a.mutual)); // 互溶优先, 不被条数上限截掉
+  const recepPairs = new Map<string, { other: string; mutual: boolean; aspected: boolean; dir?: { host: string; guest: string; kind: string; sign: string }[] }>()
+  for (const r of myRecepRaw) {
+    const other = r.a === p.name ? r.b : r.a
+    const key = [r.a, r.b].sort().join('|')
+    let g = recepPairs.get(key)
+    if (!g) { g = { other, mutual: r.mutual, aspected: !!r.aspected, dir: [] }; recepPairs.set(key, g) }
+    g.mutual = g.mutual || r.mutual; g.aspected = g.aspected || !!r.aspected
+    g.dir!.push({ host: r.b, guest: r.a, kind: r.kind, sign: r.bySign })
+  }
+  const myRecep = [...recepPairs.values()].sort((a, b) => Number(b.mutual) - Number(a.mutual))
   const signZh = (s: string) => SIGNS_ZH_MINI[s] ?? s;
+  const zhOf = (n: string) => chart.planets.find((x) => x.name === n)?.zh ?? PLANET_ZH_OF(n)
 
   return (
     <div className="mt-3 rounded-2xl border border-white/[0.12] bg-[#0c101c]/[0.97] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.55)] backdrop-blur-md" style={{ animation: 'rise-in 0.35s cubic-bezier(0.16,1,0.3,1)' }}>
@@ -779,26 +791,18 @@ function PlanetDetail({ p, chart, zhMode, onClose }: {
         <div className="mt-4">
           <p className="text-[10px] tracking-[0.25em] text-muted uppercase">{t('astro.d.reception')}</p>
           <div className="mt-2 space-y-1.5">
-            {myRecep.slice(0, 8).map((r, i) => {
-              const host = chart.planets.find((x) => x.name === r.b);
-              const self = chart.planets.find((x) => x.name === r.a);
-              return (
-                <p key={i} className="text-[12.5px] text-muted">
-                  {!r.aspected && r.mutual && <span className="mr-1 rounded bg-[#cdb88a]/10 px-1 py-px text-[9px] text-[#cdb88a]/90">{zhMode ? '慷慨·无相位' : 'generosity'}</span>}
-                  {r.mutual
-                    ? (zhMode
-                      ? `⇄ 互溶: ${self?.zh ?? r.a} 居${signZh(r.bySign)}为${host?.zh ?? r.b}之${RECEPTION_KIND_ZH[r.kind] ?? r.kind}, 双向为客`
-                      : `⇄ Mutual reception: ${r.a} in ${r.bySign} (home of ${r.b})`)
-                    : (r.a === p.name
-                      ? (zhMode
-                        ? `↦ ${host?.zh ?? r.b} 接纳此星 (此星居其${RECEPTION_KIND_ZH[r.kind] ?? r.kind}·${signZh(r.bySign)})`
-                        : `↦ received by ${r.b} (in its ${r.kind} · ${r.bySign})`)
-                      : (zhMode
-                        ? `⊤ 此星接纳 ${self?.zh ?? r.a} (${self?.zh ?? r.a}居${signZh(r.bySign)}为此星${RECEPTION_KIND_ZH[r.kind] ?? r.kind})`
-                        : `⊤ receives ${r.a} (in own ${r.kind} · ${r.bySign})`))}
-                </p>
-              );
-            })}
+            {myRecep.slice(0, 8).map((rp, i) => (
+              <p key={i} className="text-[12.5px] text-muted">
+                {!rp.aspected && rp.mutual && <span className="mr-1 rounded bg-[#cdb88a]/10 px-1 py-px text-[9px] text-[#cdb88a]/90">{zhMode ? '慷慨·无相位' : 'generosity'}</span>}
+                {rp.mutual
+                  ? (zhMode
+                    ? `⇄ ${zhOf(rp.other)}与它互溶: ${rp.dir!.map((d) => `${d.guest === p.name ? '此星' : zhOf(d.guest)}居${signZh(d.sign)}为${d.host === p.name ? '它' : zhOf(d.host)}之${RECEPTION_KIND_ZH[d.kind] ?? d.kind}`).join(', ')}`
+                    : `⇄ mutual reception with ${rp.other}: ${rp.dir!.map((d) => `${d.guest} in ${d.sign} (home of ${d.host}, ${d.kind})`).join('; ')}`)
+                  : rp.dir!.map((d) => d.guest === p.name
+                    ? (zhMode ? `↦ ${zhOf(d.host)} 接纳此星 (此星居其${RECEPTION_KIND_ZH[d.kind] ?? d.kind}·${signZh(d.sign)})` : `↦ received by ${d.host} (in its ${d.kind} · ${d.sign})`)
+                    : (zhMode ? `⊤ 此星接纳 ${zhOf(d.guest)} (${zhOf(d.guest)}居${signZh(d.sign)}为此星${RECEPTION_KIND_ZH[d.kind] ?? d.kind})` : `⊤ receives ${d.guest} (in own ${d.kind} · ${d.sign})`)).join(zhMode ? '；' : '; ')}
+              </p>
+            ))}
           </div>
         </div>
       )}
