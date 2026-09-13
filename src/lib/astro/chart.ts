@@ -63,6 +63,11 @@ export interface ChartPlanet {
   retrograde: boolean
   speed: number      // °/日
   dignity: { state: string; strength: number } | null
+  /** 古典五级尊贵明细 (爸爸定标: 三分/界/面/岐度 与庙旺并列) */
+  triplicity?: { day: string; night: string; coop: string; active: string }
+  term?: string            // 界主 (埃及界)
+  face?: string            // 面主 (十分度)
+  critical?: boolean       // 岐度 (紧要度数±1°)
 }
 
 export interface ChartAspect {
@@ -73,6 +78,41 @@ export interface ChartAspect {
   orb: number       // 偏离整相位的度数(越小越紧)
   applying: boolean | null
 }
+
+// ---------- 古典五级尊贵规则表 (公开公版知识) ----------
+// 三分主星 (都勒斯 Dorothean triplicities): 火=日/木/土 土=金/月/火 风=土/水/木 水=金/火/月 (宫神星同源)
+const TRIPLICITY: Record<string, { day: string; night: string; coop: string }> = {
+  fire: { day: 'Sun', night: 'Jupiter', coop: 'Saturn' },
+  earth: { day: 'Venus', night: 'Moon', coop: 'Mars' },
+  air: { day: 'Saturn', night: 'Mercury', coop: 'Jupiter' },
+  water: { day: 'Venus', night: 'Mars', coop: 'Moon' },
+}
+const ELEM_OF_SIGN = ['fire', 'earth', 'air', 'water', 'fire', 'earth', 'air', 'water', 'fire', 'earth', 'air', 'water']
+// 埃及界 (Egyptian Terms): 每星座5段 [行星, 截止度数)
+const EGYPTIAN_TERMS: [string, number][][] = [
+  [['Jupiter',6],['Venus',14],['Mercury',21],['Mars',26],['Saturn',30]],
+  [['Venus',8],['Mercury',14],['Jupiter',22],['Saturn',27],['Mars',30]],
+  [['Mercury',6],['Venus',12],['Jupiter',17],['Mars',24],['Saturn',30]],
+  [['Mars',7],['Venus',13],['Mercury',19],['Jupiter',26],['Saturn',30]],
+  [['Jupiter',6],['Venus',11],['Saturn',18],['Mercury',24],['Mars',30]],
+  [['Mercury',7],['Venus',17],['Mars',21],['Jupiter',28],['Saturn',30]],
+  [['Saturn',6],['Mercury',14],['Venus',21],['Mars',28],['Jupiter',30]],
+  [['Mars',7],['Venus',11],['Mercury',19],['Jupiter',24],['Saturn',30]],
+  [['Jupiter',12],['Venus',17],['Mercury',21],['Saturn',26],['Mars',30]],
+  [['Mars',7],['Venus',14],['Mercury',22],['Jupiter',26],['Saturn',30]],
+  [['Saturn',6],['Mercury',13],['Venus',20],['Mars',25],['Jupiter',30]],
+  [['Venus',12],['Jupiter',16],['Mercury',19],['Mars',28],['Saturn',30]],
+]
+// 面 (Chaldean decan faces): 每星座3个十分度
+const FACES: string[][] = [
+  ['Mars','Sun','Venus'],  ['Mercury','Moon','Saturn'],  ['Jupiter','Mars','Sun'],
+  ['Venus','Mercury','Moon'],  ['Saturn','Jupiter','Mars'],  ['Sun','Venus','Mercury'],
+  ['Moon','Saturn','Jupiter'],  ['Mars','Sun','Venus'],  ['Mercury','Moon','Saturn'],
+  ['Jupiter','Mars','Sun'],  ['Venus','Mercury','Moon'],  ['Saturn','Jupiter','Mars'],
+]
+// 岐度/紧要度数 (Critical Degrees, 容许±1°): 基本宫1/13/26, 固定宫9/21, 变动宫4/17 — 爸爸PPT32+宫神星同款
+const CRITICAL_DEG = [1, 13, 26, 9, 21, 4, 17]
+const CRITICAL_SIGN = [0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3] // 0=基本 1=固定 2=变动
 
 // ---------- 排盘设置 (设置面板 → URL → API → 引擎) ----------
 export type BodyGroup = 'asteroids' | 'chiron' | 'nodes' | 'lots' | 'lilith'
@@ -405,7 +445,28 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
   for (const lot of (c.lots ?? []) as { name: string; longitude: number; signName: string; degree: number; minute: number; formatted: string; house?: number }[]) {
     extra.push(bodyToPlanet({ ...lot, name: lot.name }, timeKnown))
   }
+
   const allBodies = [...planets, ...extra]
+
+  // 古典五级尊贵: 三分主星(都勒斯, 日/夜盘取主)/埃及界/面(十分度)/岐度(紧要度数±1°) — 爸爸定标补全
+  // 日/夜盘: 太阳在地平线上方 = 第7~12宫 = 昼盘 (上午09:50太阳第11宫 → 昼盘 ✓)
+  const dayChart = (() => {
+    const sunp = planets.find((x) => x.name === 'Sun')
+    return !!sunp && !!sunp.house && sunp.house >= 7 && sunp.house <= 12
+  })()
+  for (const p of allBodies) {
+    const lon = norm(p.longitude)
+    const si = Math.floor(lon / 30)
+    const el = ELEM_OF_SIGN[si]
+    const tri = TRIPLICITY[el]
+    p.triplicity = tri ? { ...tri, active: dayChart ? tri.day : tri.night } : undefined
+    const deg = lon % 30
+    for (const [pl, end] of EGYPTIAN_TERMS[si]) if (deg < end) { p.term = pl; break }
+    p.face = FACES[si][Math.min(2, Math.floor(deg / 10))]
+    const mode = CRITICAL_SIGN[si]
+    const cand = mode === 0 ? [1, 13, 26] : mode === 1 ? [9, 21] : [4, 17]
+    p.critical = cand.some((c) => Math.abs(deg - c) <= 1)
+  }
 
   const angles = timeKnown ? {
     ascendant: bodyToPlanet({ ...c.angles.ascendant, name: 'Ascendant' }, true),

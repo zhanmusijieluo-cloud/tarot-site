@@ -24,6 +24,8 @@ export interface VPlanet {
   sign: string; signZh: string; degInSign: number; formatted: string;
   house: number | null; retrograde: boolean; speed?: number;
   dignity: { state: string; strength: number } | null;
+  triplicity?: { day: string; night: string; coop: string; active: string };
+  term?: string; face?: string; critical?: boolean;
 }
 export interface VAspect {
   a: string; b: string; type: string; typeZh: string; symbol: string;
@@ -82,7 +84,7 @@ const ELEMENT_HEX: Record<string, string> = {
 };
 const SIGN_GLYPH = ['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
 const SIGN_ORDER = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
-const DIGNITY_ZH: Record<string, string> = {
+export const DIGNITY_ZH: Record<string, string> = {
   Domicile: '入庙', Exalted: '耀升', Detriment: '失势', Fall: '落陷', Peregrine: '游走',
 };
 const RECEPTION_KIND_ZH: Record<string, string> = {

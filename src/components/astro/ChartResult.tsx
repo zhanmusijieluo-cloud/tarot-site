@@ -84,6 +84,35 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
   if (moon) features.push({ el: placeLine(moon, ''), tone: 'gold' })
   if (asc) features.push({ el: placeLine(asc, '上升'), tone: 'gold' })
   if (mc) features.push({ el: placeLine(mc, '中天'), tone: 'gold' })
+  // 先天尊贵五级 (爸爸定标: 三分/界/面/岐度 与庙旺并列; 宫神星同款逐星一行)
+  const DIGN_ZH: Record<string, string> = { Sun: '日', Moon: '月', Mercury: '水', Venus: '金', Mars: '火', Jupiter: '木', Saturn: '土', Uranus: '天', Neptune: '海', Pluto: '冥' }
+  const dz = (n: string) => DIGN_ZH[n] ?? n[0]
+  for (const p of chart.planets.slice(0, 14)) {
+    if (!p.triplicity && !p.term && !p.face && !p.critical) continue
+    const dg = p.dignity && p.dignity.state !== 'Peregrine' ? `庙旺:${DIGNITY_ZH[p.dignity.state] ?? p.dignity.state}${p.dignity.strength > 0 ? '+' : ''}${p.dignity.strength}` : null
+    const tr = p.triplicity ? (zhMode ? `三分·${dz(p.triplicity.active)}` : `Tri·${p.triplicity.active}`) : null
+    const tm = p.term ? (zhMode ? `界·${dz(p.term)}` : `Term·${p.term}`) : null
+    const fc = p.face ? (zhMode ? `面·${dz(p.face)}` : `Face·${p.face}`) : null
+    features.push({
+      tone: 'soft',
+      tip: zhMode
+        ? `${p.zh}先天尊贵: ${dg ?? '无庙旺'}${tr ? ', ' + tr : ''}${tm ? ', ' + tm : ''}${fc ? ', ' + fc : ''}${p.critical ? ', 在紧要岐度(±1°)' : ''} — 三分主星按昼夜盘取主(都勒斯表)`
+        : `${p.name} essential dignities: ${dg ?? 'none'}${tr ? ', ' + tr : ''}${tm ? ', ' + tm : ''}${fc ? ', ' + fc : ''}${p.critical ? ', critical degree (±1°)' : ''}`,
+      el: (
+        <span>
+          <b className="font-normal text-frost">{p.symbol}</b>
+          <span className="ml-1.5 text-[10.5px] tracking-[0.06em] text-muted/70 uppercase">{zhMode ? '先天尊贵' : 'Dignities'}</span>
+          <span className="mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5">
+            {dg && <i className="rounded bg-white/[0.04] px-1 py-px text-[10.5px] not-italic text-[#cdb88a]">{dg}</i>}
+            {tr && <i className="rounded bg-white/[0.04] px-1 py-px text-[10.5px] not-italic text-frost/85">{tr}</i>}
+            {tm && <i className="rounded bg-white/[0.04] px-1 py-px text-[10.5px] not-italic text-frost/70">{tm}</i>}
+            {fc && <i className="rounded bg-white/[0.04] px-1 py-px text-[10.5px] not-italic text-frost/70">{fc}</i>}
+            {p.critical && <i className="rounded bg-[#a86fd8]/15 px-1 py-px text-[10.5px] not-italic text-[#c9a2e8]">{zhMode ? '岐度' : 'Critical'}</i>}
+          </span>
+        </span>
+      ),
+    })
+  }
   // 互容 · 接纳 (宫神星判词句式): ☉ 被 ♀ 接纳 (本垣♉) / ♀ 与 ♂ 互容 (♎/♈ 本垣)
   const recepFeats: Feat[] = []
   {
