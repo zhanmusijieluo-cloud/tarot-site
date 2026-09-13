@@ -526,6 +526,8 @@ const ja: Record<string, string> = {
   'astro.res.nextHint': 'AIリーディングは近日公開 · 今回は星のデータの表示のみ',
   'astro.view.top': '俯瞰 · ホロスコープ',
   'astro.view.side': '側面 · 黄道面',
+  'astro.view.classic': 'クラシック',
+  'astro.view.hintClassic': 'プロ仕様ラインホロスコープ：シンボルは正確な度数、混雑時はリーダー線でずらして表示',
   'astro.view.reset': '位置に戻す',
   'astro.view.resetTip': '盤面が回転したら、ASC左基準の向きに戻します',
   'astro.view.clear': '選択を解除',

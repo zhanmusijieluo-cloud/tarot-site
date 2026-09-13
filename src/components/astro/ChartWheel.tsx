@@ -12,6 +12,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useI18n } from '@/i18n';
 import { AspectLegend } from '@/components/astro/AspectGrid';
+import ChartWheel2D from '@/components/astro/ChartWheel2D';
 import { aspectNum } from '@/lib/astro/aspect-colors';
 import { PLANET_ZH_OF } from '@/lib/astro/chart';
 
@@ -823,7 +824,7 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
   actions?: React.ReactNode;
 }) {
   const { t } = useI18n();
-  const [view, setView] = useState<'top' | 'side'>('top');
+  const [view, setView] = useState<'top' | 'side' | 'classic'>('top');
   const [selInner, setSelInner] = useState<string | null>(null);
   const selected = selProp !== undefined ? selProp : selInner;
   const setSelected = onSelect ?? setSelInner;
@@ -846,6 +847,12 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
           >
             {t('astro.view.side')}
           </button>
+          <button
+            onClick={() => setView('classic')}
+            className={`rounded-full px-3.5 py-1.5 text-[11px] tracking-[0.15em] transition-colors ${view === 'classic' ? 'border border-accent/50 bg-accent/[0.08] text-accent' : 'border border-white/[0.1] text-muted hover:border-white/25'}`}
+          >
+            {t('astro.view.classic')}
+          </button>
         </div>
         {/* 星球快捷跳转 */}
         <div className="flex flex-wrap gap-1">
@@ -863,15 +870,17 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
           ))}
         </div>
         {actions}
-        <button
-          onClick={() => sceneApiRef.current?.reset?.()}
-          className="text-[10px] tracking-[0.2em] text-muted/70 transition-colors hover:text-accent"
-          title={t('astro.view.resetTip')}
-        >
-          ⟳ {t('astro.view.reset')}
-        </button>
-        <button aria-label="zoom in" onClick={() => sceneApiRef.current?.zoom?.(1.25)} className="ml-1 size-5 rounded-full border border-white/15 text-[11px] leading-none text-muted transition-colors hover:border-white/30 hover:text-frost">+</button>
-        <button aria-label="zoom out" onClick={() => sceneApiRef.current?.zoom?.(0.8)} className="size-5 rounded-full border border-white/15 text-[11px] leading-none text-muted transition-colors hover:border-white/30 hover:text-frost">−</button>
+        {view !== 'classic' && <>
+          <button
+            onClick={() => sceneApiRef.current?.reset?.()}
+            className="text-[10px] tracking-[0.2em] text-muted/70 transition-colors hover:text-accent"
+            title={t('astro.view.resetTip')}
+          >
+            ⟳ {t('astro.view.reset')}
+          </button>
+          <button aria-label="zoom in" onClick={() => sceneApiRef.current?.zoom?.(1.25)} className="ml-1 size-5 rounded-full border border-white/15 text-[11px] leading-none text-muted transition-colors hover:border-white/30 hover:text-frost">+</button>
+          <button aria-label="zoom out" onClick={() => sceneApiRef.current?.zoom?.(0.8)} className="size-5 rounded-full border border-white/15 text-[11px] leading-none text-muted transition-colors hover:border-white/30 hover:text-frost">−</button>
+        </>}
         <button
           onClick={() => setSelected(null)}
           className={`text-[10px] tracking-[0.2em] text-muted/70 transition-opacity hover:text-frost ${selPlanet ? 'opacity-100' : 'invisible'}`}
@@ -897,13 +906,17 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
             <ChartScene chart={chart} zhMode={zhMode} view={view} disp={chart.settings?.display} sceneApi={sceneApiRef} selected={selected} onSelect={setSelected} />
           </div>
         </div>
+      ) : view === 'classic' ? (
+        <div className="mx-auto aspect-square w-full max-w-[min(84vh,880px)]">
+          <ChartWheel2D chart={chart} zhMode={zhMode} selected={selected} onSelect={setSelected} />
+        </div>
       ) : (
         <ChartScene chart={chart} zhMode={zhMode} view={view} disp={chart.settings?.display} sceneApi={sceneApiRef} selected={selected} onSelect={setSelected} />
       )}
 
       <p className="flex flex-wrap items-center justify-center gap-x-3 pb-2 pt-1 text-center text-[10px] tracking-[0.18em] text-muted/55">
         {gridSlot && view === 'top' ? <AspectLegend zhMode={zhMode} /> : null}
-        <span>{view === 'top' ? t('astro.view.hintTop') : t('astro.view.hintSide')}</span>
+        <span>{view === 'top' ? t('astro.view.hintTop') : view === 'classic' ? t('astro.view.hintClassic') : t('astro.view.hintSide')}</span>
       </p>
 
       {/* 点击标注: 宽屏浮动在盘旁小窗, 窄屏退回盘下 */}

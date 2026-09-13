@@ -535,6 +535,8 @@ const en: Record<string, string> = {
   'astro.res.nextHint': 'AI interpretation coming soon · this chart shows raw data only',
   'astro.view.top': 'Top · Chart',
   'astro.view.side': 'Side · Ecliptic',
+  'astro.view.classic': 'Classic wheel',
+  'astro.view.hintClassic': 'Professional line wheel — glyphs mark exact degrees, crowded ones offset with leader lines · tap a symbol for details',
   'astro.view.reset': 'Recenter',
   'astro.view.resetTip': 'Wheel tilted? Return to the standard ASC-left orientation',
   'astro.view.clear': 'Clear selection',
