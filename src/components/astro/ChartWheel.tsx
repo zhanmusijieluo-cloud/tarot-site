@@ -858,7 +858,7 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
 
   return (
     <div className="relative rounded-2xl border border-white/[0.07] bg-black/20 p-2">
-      <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+      <div className="flex flex-wrap items-center gap-2 px-3 py-2">
         <div className="flex gap-1.5">
           <button
             onClick={() => setView('classic')}
@@ -894,6 +894,7 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
             </button>
           ))}
         </div>
+        <div className="ml-auto flex items-center gap-2">
         {actions}
         {view !== 'classic' && <>
           <button
@@ -912,6 +913,7 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
         >
           {t('astro.view.clear')}
         </button>
+        </div>
       </div>
 
       {/* 左上角内嵌: 盘框圆外空隙放资料卡 (与右侧弹窗对称) */}
