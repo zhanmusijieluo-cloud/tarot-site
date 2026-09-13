@@ -3,7 +3,7 @@
 // ============================================================
 // 本命盘结果展示 — 严格照宫神星信息分布 (暗金皮肤)
 // 左上资料卡 · 左列行星竖列 · 左下相位网格(可切列表)
-// 中央=星盘(绝对主角) · 右侧=特征面板(格局/尊贵/互溶接纳)
+// 中央=星盘(绝对主角) · 右侧=特征面板(格局/尊贵/互容接纳)
 // 底部=黄道状态大表
 // ============================================================
 import { useState } from 'react';
@@ -84,12 +84,12 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
   if (moon) features.push({ el: placeLine(moon, ''), tone: 'gold' })
   if (asc) features.push({ el: placeLine(asc, '上升'), tone: 'gold' })
   if (mc) features.push({ el: placeLine(mc, '中天'), tone: 'gold' })
-  // 互溶 · 接纳 (宫神星判词句式): ☉ 被 ♀ 接纳 (本垣♉) / ♀ 与 ♂ 互溶 (♎/♈ 本垣)
+  // 互容 · 接纳 (宫神星判词句式): ☉ 被 ♀ 接纳 (本垣♉) / ♀ 与 ♂ 互容 (♎/♈ 本垣)
   const recepFeats: Feat[] = []
   {
     const seen = new Set<string>();
     for (const r of chart.receptions) {
-      // 古典规则(爸爸定标): 单向接纳须成相位; 互溶无相位降为"慷慨"仍展示但标注
+      // 木木体系定标(4讲P29-30): 接纳须成相位(单向,房东给房客); 互容=双向同住, 无论有无相位都成立
       if (!r.aspected && !r.mutual) continue;
       const key = [r.a, r.b].sort().join('|');
       if (seen.has(key)) continue;
@@ -100,11 +100,11 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
         const rev = chart.receptions.find((x) => x.a === r.b && x.b === r.a)
         recepFeats.push({
           tone: 'soft',
-          tip: `${pa?.zh ?? r.a} 与 ${pb?.zh ?? r.b} 互溶=互相接纳: ${pa?.zh ?? r.a}被${pb?.zh ?? r.b}接纳且${pb?.zh ?? r.b}被${pa?.zh ?? r.a}接纳（互居对方${kind}之座 ${sz(r.bySign)}/${sz(rev?.bySign ?? '')}）`,
+          tip: `${pa?.zh ?? r.a} 与 ${pb?.zh ?? r.b} 互容${r.aspected ? '+接纳（有相位，能量互通）' : '（无相位仍成立，能量共享）'}: 互居对方${kind}之座 ${sz(r.bySign)}/${sz(rev?.bySign ?? '')}`,
           el: (
             <span>
               <b className="font-normal text-frost">{psym(r.a)}</b><span className="mx-1">与</span><b className="font-normal text-frost">{psym(r.b)}</b>
-              <span className="ml-1 text-[#cdb88a]">{r.aspected ? '互溶·接纳' : '慷慨·无相位'}</span>
+              <span className="ml-1 text-[#cdb88a]">{r.aspected ? '互容·接纳' : '互容'}</span>
               <span className="ml-1 text-muted/80">(</span>
               <span className="text-frost/90">{psym(r.a)}居{sz(r.bySign)}=</span><span className="text-accent/95">{pb?.zh ?? r.b}{kind}</span>
               {rev && <>
