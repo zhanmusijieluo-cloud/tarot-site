@@ -54,8 +54,14 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
   const { t } = useI18n();
   const [selected, setSelected] = useState<string | null>(null);
   void modeProp; void onAspectMode; // 矩阵与清单同屏后不再需要切换 (URL ag 参数保留兼容旧链接)
-  const zhOf = (name: string) => chart.planets.find((p) => p.name === name)?.zh ?? name;
-  const sSym = (name: string) => chart.planets.find((x) => x.name === name)?.symbol ?? name[0]
+  const zhOf = (name: string) =>
+    chart.planets.find((p) => p.name === name)?.zh
+    ?? ({ Ascendant: '上升', Descendant: '下降', Midheaven: '中天', IC: '天底' } as Record<string, string>)[name]
+    ?? name;
+  const sSym = (name: string) =>
+    chart.planets.find((x) => x.name === name)?.symbol
+    ?? ({ Ascendant: 'ASC', Descendant: 'DSC', Midheaven: 'MC', IC: 'IC' } as Record<string, string>)[name]
+    ?? name[0]
   const sz = (s: string) => SIGNS_ZH_MINI[s] ?? s;
 
   const sun = chart.planets.find((p) => p.name === 'Sun');
