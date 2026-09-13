@@ -68,7 +68,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect }: {
     const n = chart.planets.length;
     const arr = chart.planets.map((p) => ({ p, realA: la(p.longitude), a: la(p.longitude) }));
     if (n > 1) {
-      const MIN_G = 44 / R_PLANET;   // 弦距44px≈8.9°: 符号18+竖排度分列全不碰 (34实测邻星度分擦边3-5px)
+      const MIN_G = 46 / R_PLANET;   // 弦距46px≈9.3°: 22px符号+1.5描边(净宽~26, ℞~33)不碰
       for (let iter = 0; iter < 400; iter++) {
         arr.forEach((it) => { it.a = ((it.a % TAU) + TAU) % TAU; });   // ±π归一化防排序错邻 (koch盘实测bug)
         arr.sort((x, y) => x.a - y.a);
@@ -195,7 +195,8 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect }: {
             <line x1={tk1x} y1={tk1y} x2={tk2x} y2={tk2y} stroke={col} strokeWidth="1.4" opacity="0.9" />
             {slipped && <line x1={lx1} y1={ly1} x2={lx2} y2={ly2} stroke={P.houseLine} strokeWidth="0.7" opacity="0.5" />}
             {isSel && <circle cx={gx} cy={gy} r="13.5" fill="none" stroke={P.sel} strokeWidth="1.4" />}
-            <text x={gx} y={gy + 6} textAnchor="middle" fontSize="20" fontWeight={700} fill={col} stroke={P.bg} strokeWidth="1.6" paintOrder="stroke">{p.symbol}{p.retrograde ? '℞' : ''}</text>
+            <text x={gx} y={gy + 6.5} textAnchor="middle" fontSize="22" fontWeight={700} fill="none" stroke={P.bg} strokeWidth="4">{p.symbol}{p.retrograde ? '℞' : ''}</text>
+            <text x={gx} y={gy + 6.5} textAnchor="middle" fontSize="22" fontWeight={700} fill={col} stroke={col} strokeWidth="1.5" paintOrder="stroke">{p.symbol}{p.retrograde ? '℞' : ''}</text>
             <text x={d1x} y={d1y + 3} textAnchor="middle" fontSize="8.8" fontWeight={600} fill={P.ink} stroke={P.bg} strokeWidth="1.4" paintOrder="stroke">{dg1}</text>
             <text x={d2x} y={d2y + 3} textAnchor="middle" fontSize="8.8" fontWeight={600} fill={P.ink} stroke={P.bg} strokeWidth="1.4" paintOrder="stroke">{dg2}</text>
           </g>
