@@ -847,7 +847,7 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
   actions?: React.ReactNode;
 }) {
   const { t } = useI18n();
-  const [view, setView] = useState<'top' | 'side' | 'classic'>('top');
+  const [view, setView] = useState<'top' | 'side' | 'classic'>('classic');   // 爸爸: 排完盘进来就是线条盘
   const [selInner, setSelInner] = useState<string | null>(null);
   const selected = selProp !== undefined ? selProp : selInner;
   const setSelected = onSelect ?? setSelInner;

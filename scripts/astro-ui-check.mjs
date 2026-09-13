@@ -52,6 +52,9 @@ await page.reload({ waitUntil: 'networkidle0' })
 await sleep(900)
 
 // T5 网格零滚动 + 弹窗固定大小实色底 (硬性反馈回归锁)
+// 默认视图已是线条盘(classic) — 这三条断言锚定3D画布, 先切回俯视再测
+await page.evaluate(() => { [...document.querySelectorAll('button')].find((x) => ['俯视', 'Top'].some((k) => x.textContent.trim().startsWith(k)))?.click() })
+await sleep(900)
 const gridFit = await page.evaluate(() => {
   const g = document.querySelector('table.border-separate')
   const wrap = g?.parentElement
