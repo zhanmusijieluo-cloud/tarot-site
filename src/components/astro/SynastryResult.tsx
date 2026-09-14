@@ -15,6 +15,8 @@ export interface SynData {
   a: VChart;
   b: VChart;
   crossAspects: ChartAspect[];
+  composite: VChart;
+  davisonChart: VChart;
   warnings: string[];
 }
 
@@ -37,10 +39,8 @@ const TABS: [string, string, string][] = [
   ['natalB', '本命盘B', 'Natal B'],
 ];
 const TODO_NOTE: Record<string, string> = {
-  composite: '组合盘 (Composite): 双方对应天体黄经取中点; 下批开发',
   marksA: '马盘A (Marks): A 对 B 的心理盘; 算法核对后开发',
   marksB: '马盘B (Marks): B 对 A 的心理盘; 算法核对后开发',
-  davison: '时空盘 (Davison): 时间中点 + 地点中点重排真实星空; 下批开发',
   compT: '组合三限 (组合盘套三限推运); 随组合盘开发',
   compS: '组合次限 (组合盘套次限推运); 随组合盘开发',
   marksAT: '马盘A三限; 随马盘开发',
@@ -182,15 +182,25 @@ export default function SynastryResult({ syn, zhMode, tab, onTab, aLabel, bLabel
         );
       })()}
 
-      {(cur === 'natalA' || cur === 'natalB') && (() => {
-        const c = cur === 'natalA' ? a : b;
-        const label = cur === 'natalA' ? aLabel : bLabel;
+      {(cur === 'natalA' || cur === 'natalB' || cur === 'composite' || cur === 'davison') && (() => {
+        const c = (cur === 'natalA' ? a : cur === 'natalB' ? b : cur === 'composite' ? syn.composite : syn.davisonChart) as VChart;
+        const title = cur === 'natalA' ? `${zhMode ? '本命盘' : 'Natal'} A`
+          : cur === 'natalB' ? `${zhMode ? '本命盘' : 'Natal'} B`
+          : cur === 'composite' ? (zhMode ? '组合盘' : 'Composite')
+          : (zhMode ? '时空盘' : 'Davison');
+        const sub = cur === 'natalA' ? aLabel
+          : cur === 'natalB' ? bLabel
+          : cur === 'composite' ? (zhMode ? `${aLabel} × ${bLabel} · 对应天体中点` : 'Midpoints of both')
+          : (zhMode ? `${aLabel} × ${bLabel} · 时间地点中点` : 'Time & place midpoint');
+        const aspTitle = cur === 'composite' ? (zhMode ? '组合盘相位' : 'Composite aspects')
+          : cur === 'davison' ? (zhMode ? '时空盘相位' : 'Davison aspects')
+          : (zhMode ? '本命相位' : 'Natal aspects');
         const asp = [...(c.aspects ?? [])].sort((x, y) => (IMP[nmS(y.a)] ?? 0) - (IMP[nmS(x.a)] ?? 0) || (ASPECT_ORDER[x.type] ?? 9) - (ASPECT_ORDER[y.type] ?? 9) || x.orb - y.orb);
         const card = (
           <div className="pointer-events-auto flex w-[248px] flex-col gap-1.5">
             <div className="w-full rounded-2xl border border-white/[0.1] bg-[#0a0e19]/90 px-3 py-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.45)] backdrop-blur-sm">
-              <p className="mb-1.5 font-display text-[13px] tracking-[0.1em] text-accent">{zhMode ? '本命盘' : 'Natal'} {cur === 'natalA' ? 'A' : 'B'}</p>
-              <p className="truncate text-[11.5px] text-frost/85">{label}</p>
+              <p className="mb-1.5 font-display text-[13px] tracking-[0.1em] text-accent">{title}</p>
+              <p className="truncate text-[11.5px] text-frost/85">{sub}</p>
               <p className="truncate text-[11.5px] text-muted">{fmtDate(c)} · {c.input.city}</p>
             </div>
             {cornerActions}
@@ -199,7 +209,7 @@ export default function SynastryResult({ syn, zhMode, tab, onTab, aLabel, bLabel
         return (
           <>
             <ChartWheel chart={c} zhMode={zhMode} cornerSlot={card} />
-            <Panel title={`${zhMode ? '本命相位' : 'Natal aspects'} — ${asp.length}`}>
+            <Panel title={`${aspTitle} — ${asp.length}`}>
               <ul className="grid grid-cols-1 gap-x-5 md:grid-cols-2 xl:grid-cols-3">
                 {asp.map((x, i) => (
                   <li key={i} className="flex items-center gap-1.5 border-b border-white/[0.04] px-3 py-[5.5px] text-[12px] last:border-0">
@@ -215,7 +225,7 @@ export default function SynastryResult({ syn, zhMode, tab, onTab, aLabel, bLabel
         );
       })()}
 
-      {!['compA', 'compB', 'natalA', 'natalB'].includes(cur) && (
+      {!['compA', 'compB', 'natalA', 'natalB', 'composite', 'davison'].includes(cur) && (
         <Panel title={TABS.find((x) => x[0] === cur)![zhMode ? 1 : 2]}>
           <div className="px-3 py-16 text-center">
             <p className="text-[13px] text-muted/80">{zhMode ? TODO_NOTE[cur] ?? '开发中' : 'In development'}</p>

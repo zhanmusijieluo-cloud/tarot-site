@@ -235,6 +235,13 @@ function ChartPageInner() {
   const cornerActions = (
     <>
       <button
+        onClick={() => setSynOpen(true)}
+        title={zhMode ? '选择档案与当下本命盘合盘' : 'Synastry with an archive'}
+        className="flex w-full items-center gap-2 rounded-xl border border-white/[0.1] bg-[#0a0e19]/90 px-3.5 py-[9px] text-left text-[11.5px] text-frost/75 shadow-[0_6px_18px_rgba(0,0,0,0.35)] backdrop-blur-sm transition-colors hover:border-accent/40 hover:text-accent"
+      >
+        <span className="text-[12px]">☍</span> {zhMode ? '合盘' : 'Synastry'}
+      </button>
+      <button
         onClick={stashBirth}
         disabled={arcBusy}
         title={zhMode ? '把当前盘存入「我的档案」' : 'Save this chart into My archives'}
@@ -271,19 +278,6 @@ function ChartPageInner() {
     </>
   );
 
-  // 天象盘左卡: 合盘入口 + 全局三按钮
-  const skyCornerActions = (
-    <>
-      <button
-        onClick={() => setSynOpen(true)}
-        title={zhMode ? '选择档案与当下本命盘合盘' : 'Pick an archive for synastry'}
-        className="flex w-full items-center gap-2 rounded-xl border border-white/[0.1] bg-[#0a0e19]/90 px-3.5 py-[9px] text-left text-[11.5px] text-frost/75 shadow-[0_6px_18px_rgba(0,0,0,0.35)] backdrop-blur-sm transition-colors hover:border-accent/40 hover:text-accent"
-      >
-        <span className="text-[12px]">☍</span> {zhMode ? '合盘' : 'Synastry'}
-      </button>
-      {cornerActions}
-    </>
-  );
 
   return (
     <PageShell
@@ -318,6 +312,7 @@ function ChartPageInner() {
                 onClick={() => {
                   if (disabled) return;
                   patchParams((p) => {
+                    p.delete('sync'); p.delete('stab');   // 点盘种=退出合盘视图
                     if (key) p.set('dp', key);
                     else { p.delete('dp'); p.delete('dpy'); p.delete('dpm'); p.delete('dpd'); }
                   });
@@ -328,6 +323,13 @@ function ChartPageInner() {
               </button>
             );
           })}
+          <button
+            onClick={() => setSynOpen(true)}
+            title={zhMode ? '选择档案与当下本命盘合盘' : 'Synastry with an archive'}
+            className={`rounded-full border px-3 py-1.5 text-[11px] tracking-[0.12em] transition-colors ${syncId ? 'border-accent/50 bg-accent/[0.08] text-accent' : 'border-white/[0.1] text-muted hover:border-white/25'}`}
+          >
+            ☍ {zhMode ? '合盘' : 'Synastry'}
+          </button>
         </div>
 
         {/* 控制行(仅小屏): 大屏时三按钮已嵌入盘内资料卡下方竖排 (爸爸: 嵌入卡下) */}
@@ -420,7 +422,7 @@ function ChartPageInner() {
               />
             </div>
             {sky ? (
-              <ChartResult chart={sky} zhMode={zhMode} hideStatus cornerActions={skyCornerActions} />
+              <ChartResult chart={sky} zhMode={zhMode} hideStatus cornerActions={cornerActions} />
             ) : (
               <p className="py-20 text-center text-[12px] tracking-[0.3em] text-muted">{t('astro.form.casting')}</p>
             )}

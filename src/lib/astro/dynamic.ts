@@ -310,8 +310,96 @@ export interface SynastryChart {
   a: NatalChart
   b: NatalChart
   crossAspects: ChartAspect[]
+  composite: NatalChart
+  davisonChart: NatalChart
+  davisonInput: BirthData
   warnings: string[]
 }
+// ---------- 组合盘 / 时空盘 (合盘体系: 组合=对应中点, 时空=时地中点真实星空) ----------
+
+function midArc(x: number, y: number): number {
+  let d = norm360(y - x)
+  if (d > 180) d -= 360
+  return norm360(x + d / 2)   // 短弧中点
+}
+
+/** 组合盘 (Composite): 双方对应天体黄经短弧中点, ASC/MC 取中点, 宫头四轴三等分重挂 */
+export function castComposite(a: NatalChart, b: NatalChart, settings: CastSettings): NatalChart {
+  const bp = new Map(b.planets.map((p) => [p.name, p.longitude]))
+  const ascA = a.angles.ascendant?.longitude, ascB = b.angles.ascendant?.longitude
+  const mcA = a.angles.midheaven?.longitude, mcB = b.angles.midheaven?.longitude
+  const asc = ascA !== undefined && ascB !== undefined ? midArc(ascA, ascB) : undefined
+  const mc = mcA !== undefined && mcB !== undefined ? midArc(mcA, mcB) : undefined
+  let cusps: number[] | null = null
+  if (asc !== undefined) {
+    if (mc !== undefined) {
+      const ic = norm360(mc + 180), dsc = norm360(asc + 180)
+      const rel = [0, norm360(ic - asc), norm360(dsc - asc), norm360(mc - asc)].sort((x, y) => x - y)
+      const out: number[] = []
+      for (let i = 0; i < 4; i++) {
+        const a0 = asc + rel[i], a1 = i < 3 ? asc + rel[i + 1] : asc + 360
+        const span = a1 - a0
+        out.push(norm360(a0), norm360(a0 + span / 3), norm360(a0 + (2 * span) / 3))
+      }
+      cusps = out.slice(0, 12)
+    } else {
+      cusps = Array.from({ length: 12 }, (_, i) => norm360(asc + i * 30))
+    }
+  }
+  const planets = a.planets.map((p) => {
+    const y = bp.get(p.name)
+    const lon = y === undefined ? p.longitude : midArc(p.longitude, y)
+    return posToPlanet({ name: p.name, longitude: lon, latitude: 0, longitudeSpeed: 0, isRetrograde: false }, cusps)
+  })
+  const pts = [
+    ...planets.map((p) => ({ name: p.name, longitude: p.longitude, longitudeSpeed: 0 })),
+    ...(asc !== undefined ? [
+      { name: 'ASC', longitude: asc, longitudeSpeed: 0 },
+      { name: 'DSC', longitude: norm360(asc + 180), longitudeSpeed: 0 },
+    ] : []),
+    ...(mc !== undefined ? [
+      { name: 'MC', longitude: mc, longitudeSpeed: 0 },
+      { name: 'IC', longitude: norm360(mc + 180), longitudeSpeed: 0 },
+    ] : []),
+  ]
+  const { aspects } = calculateAspects(pts, {
+    aspectTypes: atFrom(settings),
+    orbs: settings.orbs as Partial<Record<AspectType, number>> | undefined,
+    includeOutOfSign: settings.outOfSign !== false,
+    outOfSignPenalty: settings.oosPenalty ?? 0,
+    minimumStrength: settings.minStrength ?? 0,
+  })
+  const aspectsOut: ChartAspect[] = (aspects as Array<{ body1: string; body2: string; type: string; symbol: string; deviation: number }>).map((x) => ({
+    a: x.body1, b: x.body2,
+    type: x.type as ChartAspect['type'], typeZh: ASPECT_ZH_OF(x.type),
+    symbol: x.symbol, orb: toPct(x.deviation), applying: null,
+  }))
+  const mkAng = (name: string, lon: number | undefined): ChartPlanet | null =>
+    lon === undefined ? null : posToPlanet({ name, longitude: lon, latitude: 0, longitudeSpeed: 0, isRetrograde: false }, null)
+  return {
+    input: a.input, settings, houseSystemUsed: 'porphyry', timeKnown: a.timeKnown,
+    jd: a.jd, planets, cusps,
+    angles: { ascendant: mkAng('ASC', asc), midheaven: mkAng('MC', mc) },
+    aspects: aspectsOut, receptions: [], hourRuler: null, combust: [], viaCombusta: [], warnings: [],
+  }
+}
+
+/** 时空盘 (Davison): 时间中点(UTC 均值) + 地点中点(经纬均值), 时区取中点经度整数带 */
+export function davisonBirth(birthA: BirthData, birthB: BirthData): BirthData {
+  const msA = Date.UTC(birthA.year, birthA.month - 1, birthA.day, birthA.hour - birthA.timezone, birthA.minute)
+  const msB = Date.UTC(birthB.year, birthB.month - 1, birthB.day, birthB.hour - birthB.timezone, birthB.minute)
+  const latMid = (birthA.latitude + birthB.latitude) / 2
+  const lngMid = (birthA.longitude + birthB.longitude) / 2
+  const tzMid = Math.round(lngMid / 15)
+  const d = new Date(Math.round((msA + msB) / 2) + tzMid * 3600000)
+  return {
+    year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate(),
+    hour: d.getUTCHours(), minute: d.getUTCMinutes(),
+    timezone: tzMid, latitude: latMid, longitude: lngMid,
+    city: '时空中点', label: '时空盘', timeKnown: true, houseSystem: birthA.houseSystem ?? 'placidus',
+  }
+}
+
 export function castSynastry(birthA: BirthData, birthB: BirthData, settings: CastSettings): SynastryChart {
   const a = castNatalChart(birthA, settings)
   const b = castNatalChart(birthB, settings)
@@ -368,5 +456,8 @@ export function castSynastry(birthA: BirthData, birthB: BirthData, settings: Cas
       }
       return r
     })
-  return { a, b, crossAspects: cross, warnings }
+  const composite = castComposite(a, b, settings)
+  const davisonIn = davisonBirth(birthA, birthB)
+  const davisonChart = castNatalChart(davisonIn, settings)
+  return { a, b, crossAspects: cross, composite, davisonChart, davisonInput: davisonIn, warnings }
 }
