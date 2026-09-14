@@ -122,13 +122,14 @@ export default function SynastryResult({ syn, zhMode, tab, onTab, aLabel, bLabel
   const a = syn.a, b = syn.b;
   const cur = TABS.some((x) => x[0] === tab) ? tab : 'compA';
 
-  // 双方卡 (合盘页左上; 不放本命资料卡)
+  // 双方卡 (合盘页左上; 不放本命资料卡) — 内/外标注随比较盘A/B切换 (爸爸: 对齐行业惯例, A=档案在内)
+  const aIn = cur === 'compB';
   const duoCard = (
     <div className="pointer-events-auto flex w-[248px] flex-col gap-1.5">
       <div className="w-full rounded-2xl border border-white/[0.1] bg-[#0a0e19]/90 px-3 py-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.45)] backdrop-blur-sm">
         <p className="mb-1.5 font-display text-[13px] tracking-[0.1em] text-accent">{zhMode ? '合盘' : 'Synastry'}</p>
-        <p className="truncate text-[11.5px] text-frost/85"><span className="mr-1 text-[9.5px] text-muted/60">A·内</span>{aLabel} — {fmtDate(a)}</p>
-        <p className="truncate text-[11.5px] text-frost/85"><span className="mr-1 text-[9.5px] text-muted/60">B·外</span>{bLabel} — {fmtDate(b)}</p>
+        <p className="truncate text-[11.5px] text-frost/85"><span className="mr-1 text-[9.5px] text-muted/60">A·{aIn ? '内' : '外'}</span>{aLabel} — {fmtDate(a)}</p>
+        <p className="truncate text-[11.5px] text-frost/85"><span className="mr-1 text-[9.5px] text-muted/60">B·{aIn ? '外' : '内'}</span>{bLabel} — {fmtDate(b)}</p>
       </div>
       {cornerActions}
     </div>
@@ -168,12 +169,13 @@ export default function SynastryResult({ syn, zhMode, tab, onTab, aLabel, bLabel
 
       {(cur === 'compA' || cur === 'compB') && (() => {
         // 双环: 内=主视角方行星, 外=另一方; 弦端名映射为环名 ·in/·out (爸爸: 点外环不连带内环)
-        const innerC = cur === 'compB' ? b : a;
-        const outerC = cur === 'compB' ? a : b;
+        // 行业惯例对齐 (爸爸): 比较盘A = 档案方在内环, 主盘在外环; 比较盘B 反之
+        const innerC = cur === 'compA' ? b : a;
+        const outerC = cur === 'compA' ? a : b;
         const mapEnd = (e: string) => {
           const isA = e.endsWith('·A');
           const bare = e.replace(/·[AB]$/, '');
-          const isInner = isA ? cur === 'compA' : cur === 'compB';
+          const isInner = isA ? cur === 'compB' : cur === 'compA';
           return bare + (isInner ? '·in' : '·out');
         };
         const crossMapped = syn.crossAspects.map((x) => ({ ...x, a: mapEnd(x.a), b: mapEnd(x.b) }));
