@@ -741,8 +741,10 @@ const BODY_IMP: Record<string, number> = {
 };
 const impOf = (n: string) => BODY_IMP[n] ?? 0;
 
-function PlanetDetail({ p, chart, zhMode, onClose }: {
+function PlanetDetail({ p, chart, zhMode, onClose, dual }: {
   p: VPlanet; chart: VChart; zhMode: boolean; onClose: () => void;
+  /** 双环态 (爸爸: 相位解释要明确 内环X与外环Y) — 内环=本命, 外环=推运 */
+  dual?: boolean;
 }) {
   const { t } = useI18n();
   // 推运盘: 盘上行星名不带后缀, cross 条目一端带 '·P'/·T'/·R' — 匹配与显示都要剥后缀 (爸爸: 弹窗又见 Jupiter·P 英文)
@@ -816,8 +818,12 @@ function PlanetDetail({ p, chart, zhMode, onClose }: {
                 <p key={i} className="text-[12.5px] text-muted">
                   <span className="mr-1 text-accent/80">{a.symbol}</span>
                   {zhMode
-                    ? `${p.zh}${isProgName(pEnd) ? '·推' : ''}${a.typeZh}${zhOf(other)}${isProgName(otherRaw) ? '·推' : ''}`
-                    : `${p.name}${isProgName(pEnd) ? ' (P)' : ''} ${a.type} ${other}${isProgName(otherRaw) ? ' (P)' : ''}`}
+                    ? dual
+                      ? `${isProgName(pEnd) ? '外环' : '内环'}${p.zh}${a.typeZh}${isProgName(otherRaw) ? '外环' : '内环'}${zhOf(other)}`
+                      : `${p.zh}${isProgName(pEnd) ? '·推' : ''}${a.typeZh}${zhOf(other)}${isProgName(otherRaw) ? '·推' : ''}`
+                    : dual
+                      ? `${isProgName(pEnd) ? 'Outer' : 'Inner'} ${p.name} ${a.type} ${isProgName(otherRaw) ? 'Outer' : 'Inner'} ${other}`
+                      : `${p.name}${isProgName(pEnd) ? ' (P)' : ''} ${a.type} ${other}${isProgName(otherRaw) ? ' (P)' : ''}`}
                   <span className="ml-1.5 text-accent/70">{a.orb.toFixed(1)}°</span>
                   {app && <span className="ml-1.5 text-[10px] text-muted/70">{app}</span>}
                 </p>
@@ -971,7 +977,7 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
       {/* 点击标注: 宽屏浮动在盘旁小窗, 窄屏退回盘下 */}
       {selPlanet && (
         <div className="mt-3 lg:absolute lg:right-3 lg:top-14 lg:z-30 lg:mt-0 lg:max-h-[calc(100%-5rem)] lg:w-[280px] lg:overflow-y-auto">
-          <PlanetDetail p={selPlanet} chart={chart} zhMode={zhMode} onClose={() => setSelected(null)} />
+          <PlanetDetail p={selPlanet} chart={chart} zhMode={zhMode} dual={!!dualRing} onClose={() => setSelected(null)} />
         </div>
       )}
     </div>
