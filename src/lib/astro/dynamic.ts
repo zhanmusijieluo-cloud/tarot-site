@@ -412,16 +412,10 @@ export function davisonBirth(birthA: BirthData, birthB: BirthData): BirthData {
   }
 }
 
-/** 马盘 (马克思盘): 一方的时间 + 对方的出生地点 (主流算法; 爸爸拿宫神星核) */
-export function marksBirth(birthSelf: BirthData, birthOther: BirthData): BirthData {
-  return {
-    ...birthSelf,
-    latitude: birthOther.latitude,
-    longitude: birthOther.longitude,
-    timezone: birthOther.timezone,
-    city: birthOther.city,
-    label: '马盘',
-  }
+/** 马盘 (马克思盘) — Marks 原文定义: 本命盘与戴维森(时空)盘的中点 (日期/时间/地点全部取中点)
+ *  爸爸对照测测/爱占星核准: 马盘A = A ♂ 时空盘 的中点; 马盘B = B ♂ 时空盘 的中点 */
+export function marksBirth(birthSelf: BirthData, davisonIn: BirthData): BirthData {
+  return davisonBirth(birthSelf, davisonIn)
 }
 
 /** 用一组行星替换盘面行星 (推运衍生盘: 保留 base 的宫位/四轴, 重算相位与宫位号) */
@@ -528,8 +522,8 @@ export function castSynastry(birthA: BirthData, birthB: BirthData, settings: Cas
   const todayTarget: DynDate = { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() }
   const progOf = (birth: BirthData, mode: 'secondary' | 'tertiary') =>
     castProgressionChart(birth, settings, todayTarget, mode).outer?.planets ?? []
-  const marksAIn = marksBirth(birthA, birthB)
-  const marksBIn = marksBirth(birthB, birthA)
+  const marksAIn = marksBirth(birthA, davisonIn)
+  const marksBIn = marksBirth(birthB, davisonIn)
   const marksA = castNatalChart(marksAIn, settings)
   const marksB = castNatalChart(marksBIn, settings)
   const davS = chartFromPlanets(davisonChart, progOf(davisonIn, 'secondary'), settings)
