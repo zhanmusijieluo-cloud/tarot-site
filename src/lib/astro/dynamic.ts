@@ -194,6 +194,21 @@ export function castTransitChart(birth: BirthData, settings: CastSettings, targe
 export function castProgressionChart(birth: BirthData, settings: CastSettings, target: DynDate, mode: 'secondary' | 'tertiary' | 'solar-arc' = 'secondary'): DynamicChart {
   const natal = castNatalChart(birth, settings)
   const warnings = [...natal.warnings]
+  // 三限: 行业口径 = 1天=1恒星月(27.321582天), 每年推进 365.25/27.321582=13.368天
+  // (celestine 内置 tertiary 是每年 12 天, 偏小 11% → 爸爸对照测测/爱占星核出对不上; 此地自算对齐行业)
+  if (mode === 'tertiary') {
+    const birthJD = toJD({ year: birth.year, month: birth.month, day: birth.day, hour: birth.hour, minute: birth.minute }, birth.timezone)
+    const targetJD = toJD({ year: target.year, month: target.month, day: target.day, hour: target.hour, minute: target.minute }, birth.timezone)
+    const ageYears = (targetJD - birthJD) / 365.25
+    const progJD = birthJD + ageYears * (365.25 / 27.321582)
+    const names = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn']
+    const outer = names.map((n) => {
+      const gp = getPosition(n as never, progJD)
+      return posToPlanet({ name: n, longitude: gp.longitude, latitude: 0, longitudeSpeed: 0, isRetrograde: false }, natal.cusps)
+    })
+    const crossT = selfCrossAspects(natal, outer, settings, '·P')
+    return { type: 'tertiary', natal, outer: { planets: outer, jd: progJD, date: target, label: '' }, crossAspects: crossT, warnings }
+  }
   const pr = calculateProgression(
     { year: birth.year, month: birth.month, day: birth.day, hour: birth.hour, minute: birth.minute, timezone: birth.timezone, latitude: birth.latitude, longitude: birth.longitude },
     { year: target.year, month: target.month, day: target.day },
@@ -205,11 +220,11 @@ export function castProgressionChart(birth: BirthData, settings: CastSettings, t
   const cross = selfCrossAspects(natal, outerPlanets, settings, '·P')
 
   return {
-    type: mode === 'tertiary' ? 'tertiary' : mode === 'solar-arc' ? 'solar-arc' : 'progression',
+    type: mode === 'solar-arc' ? 'solar-arc' : 'progression',   // tertiary 走上方自算分支
     natal, crossAspects: cross, warnings,
     outer: {
       planets: outerPlanets, jd: pr.dates.targetJD, date: fromJD(pr.dates.targetJD, birth.timezone),
-      label: `${target.year}-${target.month}-${target.day} ${mode === 'tertiary' ? '三限' : mode === 'solar-arc' ? '太阳弧' : '次限'}盘`,
+      label: `${target.year}-${target.month}-${target.day} ${mode === 'solar-arc' ? '太阳弧' : '次限'}盘`,
       solarArc: toPct(pr.solarArc),
     },
   }
