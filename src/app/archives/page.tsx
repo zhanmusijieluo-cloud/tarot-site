@@ -50,7 +50,7 @@ export default function ArchivesPage() {
     if (migrating) return;
     setMigrating(true);
     for (const x of pending) {
-      await saveArchiveSmart(x.birth, { note: x.note, contact: x.contact });
+      await saveArchiveSmart({ ...x.birth, label: x.label }, { note: x.note, contact: x.contact });
     }
     setMigrating(false);
     await refresh();
