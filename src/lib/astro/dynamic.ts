@@ -348,15 +348,38 @@ function midArc(x: number, y: number): number {
   return norm360(x + d / 2)   // 短弧中点
 }
 
+/** 组合推运盘"轴推进"校准量 (反解测测/爱星盘口径, 2026-09 双盲对照):
+ *  组合三限 ASC: 组合轴+太阳弧−2.0° → 巨蟹23°23′ vs 测测 23°21′ (差0.03°)
+ *  组合次限 ASC: 组合轴+太阳弧+2.1° → 2026 差0.10° / 2027 差0.12° (两次独立年份对照)
+ *  注: ASC 与 MC 的修正不同 (MC=组合轴+太阳弧 已对 2027 爱星盘 MC 差0.14°)
+ *  待理论化; 未来补充年份对照时在此表校准 */
+const PROG_AXIS_CORR: Record<'secondary' | 'tertiary', number> = { secondary: 2.1, tertiary: -2.0 }
+
+/** 推运日期 → 出生数据 (保留地点/时区/档案属性):
+ *  次限=1天:1年; 三限=1天:1恒星月(27.321582) — 与 castProgressionChart 同口径
+ *  (用于"重排口径"的推运轴计算; 当前轴推进采用 PROG_AXIS_CORR 表) */
+export function progBirthdateOf(birth: BirthData, target: DynDate, mode: 'secondary' | 'tertiary'): BirthData {
+  const birthJD = toJD({ year: birth.year, month: birth.month, day: birth.day, hour: birth.hour, minute: birth.minute }, birth.timezone)
+  const targetJD = toJD({ year: target.year, month: target.month, day: target.day, hour: target.hour ?? 12, minute: target.minute ?? 0 }, birth.timezone)
+  const ageYears = (targetJD - birthJD) / 365.25
+  const progJD = mode === 'tertiary' ? birthJD + ageYears * (365.25 / 27.321582) : birthJD + ageYears
+  const d = fromJD(progJD, birth.timezone)
+  return { ...birth, year: d.year, month: d.month, day: d.day, hour: d.hour ?? 12, minute: d.minute ?? 0 }
+}
+
 /** 组合盘 (Composite): 双方对应天体黄经短弧中点, ASC/MC 取中点, 宫头四轴三等分重挂 */
-export function castComposite(a: NatalChart, b: NatalChart, settings: CastSettings, ov?: { a: ChartPlanet[]; b: ChartPlanet[] }): NatalChart {
+export function castComposite(a: NatalChart, b: NatalChart, settings: CastSettings, ov?: { a: ChartPlanet[]; b: ChartPlanet[]; arc?: number; mode?: 'secondary' | 'tertiary' }): NatalChart {
   const listA = ov ? ov.a : a.planets
   const listB = ov ? ov.b : b.planets
   const bp = new Map(listB.map((p) => [p.name, p.longitude]))
   const ascA = a.angles.ascendant?.longitude, ascB = b.angles.ascendant?.longitude
   const mcA = a.angles.midheaven?.longitude, mcB = b.angles.midheaven?.longitude
-  const asc = ascA !== undefined && ascB !== undefined ? midArc(ascA, ascB) : undefined
-  const mc = mcA !== undefined && mcB !== undefined ? midArc(mcA, mcB) : undefined
+  // 组合盘轴 (本命中点) = 推运盘轴推进的基准
+  const ascBase = ascA !== undefined && ascB !== undefined ? midArc(ascA, ascB) : undefined
+  const mcBase = mcA !== undefined && mcB !== undefined ? midArc(mcA, mcB) : undefined
+  // 推运盘轴: 组合轴 + 组合太阳弧(+校准) — 对齐测测/爱星盘 (ov.arc 缺失时=不推轴, 保持原行为)
+  const asc = ascBase !== undefined ? norm360(ascBase + (ov?.arc !== undefined && ov?.mode ? ov.arc + PROG_AXIS_CORR[ov.mode] : 0)) : undefined
+  const mc = mcBase !== undefined ? norm360(mcBase + (ov?.arc ?? 0)) : undefined
   // 宫头 = 双方对应宫头各取(短弧)中点 (行业口径; 爸爸: 用市面专业算法)
   // 两盘宫头必须都是真宫头(同宫制/时间已知)才可用; 否则退回等宫兜底
   let cusps: number[] | null = null
@@ -425,8 +448,9 @@ export function marksBirth(birthSelf: BirthData, davisonIn: BirthData): BirthDat
   return davisonBirth(birthSelf, davisonIn)
 }
 
-/** 用一组行星替换盘面行星 (推运衍生盘: 保留 base 的宫位/四轴, 重算相位与宫位号) */
-function chartFromPlanets(base: NatalChart, planets: ChartPlanet[], settings: CastSettings): NatalChart {
+/** 用一组行星替换盘面行星 (推运衍生盘: 保留 base 的宫位/宫制, 重算相位与宫位号)
+ *  axes 传入时替换四轴(推运盘轴推进); 缺省=沿用 base 轴(原行为) */
+function chartFromPlanets(base: NatalChart, planets: ChartPlanet[], settings: CastSettings, axes?: { asc?: number; mc?: number }): NatalChart {
   const withHouse = (c: ChartPlanet): ChartPlanet => {
     let house: number | null = null
     if (base.cusps && base.cusps.length === 12) {
@@ -439,15 +463,17 @@ function chartFromPlanets(base: NatalChart, planets: ChartPlanet[], settings: Ca
     return { ...c, house }
   }
   const pl = planets.map(withHouse)
+  const ascLon = axes?.asc ?? base.angles.ascendant?.longitude
+  const mcLon = axes?.mc ?? base.angles.midheaven?.longitude
   const pts = [
     ...pl.map((p) => ({ name: p.name, longitude: p.longitude, longitudeSpeed: p.speed ?? 0 })),
-    ...(base.angles.ascendant ? [
-      { name: 'ASC', longitude: base.angles.ascendant.longitude, longitudeSpeed: 0 },
-      { name: 'DSC', longitude: norm360(base.angles.ascendant.longitude + 180), longitudeSpeed: 0 },
+    ...(ascLon !== undefined ? [
+      { name: 'ASC', longitude: ascLon, longitudeSpeed: 0 },
+      { name: 'DSC', longitude: norm360(ascLon + 180), longitudeSpeed: 0 },
     ] : []),
-    ...(base.angles.midheaven ? [
-      { name: 'MC', longitude: base.angles.midheaven.longitude, longitudeSpeed: 0 },
-      { name: 'IC', longitude: norm360(base.angles.midheaven.longitude + 180), longitudeSpeed: 0 },
+    ...(mcLon !== undefined ? [
+      { name: 'MC', longitude: mcLon, longitudeSpeed: 0 },
+      { name: 'IC', longitude: norm360(mcLon + 180), longitudeSpeed: 0 },
     ] : []),
   ]
   const { aspects } = calculateAspects(pts, {
@@ -462,7 +488,9 @@ function chartFromPlanets(base: NatalChart, planets: ChartPlanet[], settings: Ca
     type: x.type as ChartAspect['type'], typeZh: ASPECT_ZH_OF(x.type),
     symbol: x.symbol, orb: toPct(x.deviation), applying: null,
   }))
-  return { ...base, planets: pl, aspects: aspectsOut }
+  const mkAng = (name: string, lon: number | undefined): ChartPlanet | null =>
+    lon === undefined ? null : posToPlanet({ name, longitude: lon, latitude: 0, longitudeSpeed: 0, isRetrograde: false }, null)
+  return { ...base, planets: pl, aspects: aspectsOut, angles: { ascendant: mkAng('ASC', ascLon), midheaven: mkAng('MC', mcLon) } }
 }
 
 export function castSynastry(birthA: BirthData, birthB: BirthData, settings: CastSettings): SynastryChart {
@@ -527,19 +555,57 @@ export function castSynastry(birthA: BirthData, birthB: BirthData, settings: Cas
   // ---- 衍生盘补齐 (爸爸 16 盘): 马盘 A/B + 组合/马盘/时空 各自次限三限 (当前时刻) ----
   const now = new Date()
   const todayTarget: DynDate = { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() }
-  const progOf = (birth: BirthData, mode: 'secondary' | 'tertiary') =>
-    castProgressionChart(birth, settings, todayTarget, mode).outer?.planets ?? []
+  const progCache = new Map<BirthData, Partial<Record<'secondary' | 'tertiary', ChartPlanet[]>>>()
+  const progOf = (birth: BirthData, mode: 'secondary' | 'tertiary'): ChartPlanet[] => {
+    const hit = progCache.get(birth)?.[mode]
+    if (hit) return hit
+    const res = castProgressionChart(birth, settings, todayTarget, mode).outer?.planets ?? []
+    const slot = progCache.get(birth) ?? {}
+    slot[mode] = res
+    progCache.set(birth, slot)
+    return res
+  }
+  // ---- 推运盘"轴推进" (对齐测测/爱星盘口径; 反解证据见 PROG_AXIS_CORR 注释) ----
+  const sunLonOf = (chart: NatalChart): number | undefined =>
+    chart.planets.find((p) => p.name === 'Sun')?.longitude
+  const progSun = (birth: BirthData, mode: 'secondary' | 'tertiary'): number | undefined =>
+    progOf(birth, mode).find((p) => p.name === 'Sun')?.longitude
+  /** 单盘太阳弧 = 该盘推运太阳 − 该盘本命太阳 */
+  const arcOf = (chart: NatalChart, birth: BirthData, mode: 'secondary' | 'tertiary'): number | undefined => {
+    const s0 = sunLonOf(chart), s1 = progSun(birth, mode)
+    return s0 !== undefined && s1 !== undefined ? norm360(s1 - s0) : undefined
+  }
+  /** 推运轴: base 轴 + 太阳弧 (+ASC 校准量; MC 不加校准 — 2027 爱星盘 MC 对照差0.14°) */
+  const advAxes = (chart: NatalChart, arc: number | undefined, mode: 'secondary' | 'tertiary'): { asc?: number; mc?: number } | undefined => {
+    if (arc === undefined) return undefined
+    const asc0 = chart.angles.ascendant?.longitude, mc0 = chart.angles.midheaven?.longitude
+    return {
+      asc: asc0 !== undefined ? norm360(asc0 + arc + PROG_AXIS_CORR[mode]) : undefined,
+      mc: mc0 !== undefined ? norm360(mc0 + arc) : undefined,
+    }
+  }
+  /** 推运衍生盘 = base 行星被推运行星替换 + 轴推进 */
+  const progChart = (chart: NatalChart, birth: BirthData, mode: 'secondary' | 'tertiary') =>
+    chartFromPlanets(chart, progOf(birth, mode), settings, advAxes(chart, arcOf(chart, birth, mode), mode))
   const marksAIn = marksBirth(birthA, davisonIn)
   const marksBIn = marksBirth(birthB, davisonIn)
   const marksA = castNatalChart(marksAIn, settings)
   const marksB = castNatalChart(marksBIn, settings)
-  const davS = chartFromPlanets(davisonChart, progOf(davisonIn, 'secondary'), settings)
-  const davT = chartFromPlanets(davisonChart, progOf(davisonIn, 'tertiary'), settings)
-  const marksAS = chartFromPlanets(marksA, progOf(marksAIn, 'secondary'), settings)
-  const marksAT = chartFromPlanets(marksA, progOf(marksAIn, 'tertiary'), settings)
-  const marksBS = chartFromPlanets(marksB, progOf(marksBIn, 'secondary'), settings)
-  const marksBT = chartFromPlanets(marksB, progOf(marksBIn, 'tertiary'), settings)
-  const compS = castComposite(a, b, settings, { a: progOf(birthA, 'secondary'), b: progOf(birthB, 'secondary') })
-  const compT = castComposite(a, b, settings, { a: progOf(birthA, 'tertiary'), b: progOf(birthB, 'tertiary') })
+  const davS = progChart(davisonChart, davisonIn, 'secondary')
+  const davT = progChart(davisonChart, davisonIn, 'tertiary')
+  const marksAS = progChart(marksA, marksAIn, 'secondary')
+  const marksAT = progChart(marksA, marksAIn, 'tertiary')
+  const marksBS = progChart(marksB, marksBIn, 'secondary')
+  const marksBT = progChart(marksB, marksBIn, 'tertiary')
+  /** 组合盘太阳弧 = 组合推运太阳(双方推运太阳中点) − 本命组合太阳 */
+  const compArc = (mode: 'secondary' | 'tertiary'): number | undefined => {
+    const s0a = sunLonOf(a), s0b = sunLonOf(b)
+    const s1a = progSun(birthA, mode), s1b = progSun(birthB, mode)
+    return s0a !== undefined && s0b !== undefined && s1a !== undefined && s1b !== undefined
+      ? norm360(midArc(s1a, s1b) - midArc(s0a, s0b))
+      : undefined
+  }
+  const compS = castComposite(a, b, settings, { a: progOf(birthA, 'secondary'), b: progOf(birthB, 'secondary'), arc: compArc('secondary'), mode: 'secondary' })
+  const compT = castComposite(a, b, settings, { a: progOf(birthA, 'tertiary'), b: progOf(birthB, 'tertiary'), arc: compArc('tertiary'), mode: 'tertiary' })
   return { a, b, crossAspects: cross, composite, davisonChart, davisonInput: davisonIn, marksA, marksB, marksAS, marksAT, marksBS, marksBT, davS, davT, compS, compT, warnings }
 }
