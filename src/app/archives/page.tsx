@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import PageShell from '@/components/PageShell';
 import EditBirth from '@/components/astro/EditBirth';
-import { loadArchivesSmart, saveArchiveSmart, deleteArchiveSmart, type Archive } from '@/lib/astro/archives';
+import { loadArchivesSmart, saveArchiveSmart, deleteArchiveSmart, listArchives, type Archive } from '@/lib/astro/archives';
 import { supabaseBrowser } from '@/lib/supabase';
 import { useI18n } from '@/i18n';
 import type { BirthData } from '@/lib/astro/chart';
@@ -27,6 +27,8 @@ export default function ArchivesPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Archive | null>(null);
   const [saving, setSaving] = useState(false);
+  const [pending, setPending] = useState<Archive[]>([]);   // 本机有、云端没有的 (待搬)
+  const [migrating, setMigrating] = useState(false);
 
   const refresh = useCallback(async () => {
     const r = await loadArchivesSmart();
@@ -34,7 +36,25 @@ export default function ArchivesPage() {
     setMode(r.mode);
     setCloudErr(r.error ?? '');
     setLoading(false);
+    if (r.mode === 'cloud') {
+      const cloud = r.list;
+      setPending(
+        listArchives().filter((x) => !cloud.some((c) => c.label === x.label && c.birth.year === x.birth.year && c.birth.month === x.birth.month && c.birth.day === x.birth.day && c.birth.hour === x.birth.hour))
+      );
+    } else {
+      setPending([]);
+    }
   }, []);
+
+  const migrateAll = async () => {
+    if (migrating) return;
+    setMigrating(true);
+    for (const x of pending) {
+      await saveArchiveSmart(x.birth, { note: x.note, contact: x.contact });
+    }
+    setMigrating(false);
+    await refresh();
+  };
 
   useEffect(() => {
     const sb = supabaseBrowser();
@@ -87,6 +107,21 @@ export default function ArchivesPage() {
             </>
           )}
         </div>
+
+        {mode === 'cloud' && pending.length > 0 && (
+          <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-[#f0c470]/30 bg-[#f0c470]/[0.05] px-4 py-3">
+            <p className="text-[12px] text-[#f0c470]">
+              {zhMode ? `本机还有 ${pending.length} 份档案没上云 (换设备看不到)` : `${pending.length} local archives not in cloud`}
+            </p>
+            <button
+              onClick={migrateAll}
+              disabled={migrating}
+              className="ml-auto rounded-full border border-[#f0c470]/50 px-4 py-1 text-[11px] text-[#f0c470] transition-colors hover:bg-[#f0c470]/10 disabled:opacity-50"
+            >
+              {migrating ? '…' : (zhMode ? '一键搬上云' : 'Upload all')}
+            </button>
+          </div>
+        )}
 
         {cloudErr && (
           <p className="mb-4 rounded-xl border border-[#e8a08a]/25 bg-[#e8a08a]/[0.05] px-4 py-2.5 text-[11.5px] leading-relaxed text-[#e8a08a]">
