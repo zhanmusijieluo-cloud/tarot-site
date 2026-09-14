@@ -396,6 +396,13 @@ function recastAxes(chart: NatalChart, arcDeg: number): { asc?: number; mc?: num
   const ramc = norm360(raOf(mc0) + arcDeg)
   const mc = eclOfRa(ramc)
   const asc = norm360(Math.atan2(-Math.cos(ramc * rad), Math.sin(ramc * rad) * Math.cos(EP * rad) + Math.tan(lat * rad) * Math.sin(EP * rad)) / rad + 180)
+  // 非 Placidus 宫制兜底: 本算法按 Placidus 半弧重排; 其他宫制退回"宫头随MC黄经弧整体推进"(保持该宫制形状)
+  const sys = chart.houseSystemUsed ?? 'placidus'
+  if (sys !== 'placidus') {
+    const shift = ((mc - mc0 + 540) % 360) - 180
+    const asc0 = chart.angles.ascendant?.longitude
+    return { asc: norm360((asc0 ?? asc) + shift), mc, cusps: chart.cusps ? chart.cusps.map((c) => norm360(c + shift)) : undefined }
+  }
   const sdOf = (lam: number) => {
     const dec = Math.asin(Math.sin(EP * rad) * Math.sin(lam * rad)) / rad
     const c = Math.max(-1, Math.min(1, -Math.tan(lat * rad) * Math.tan(dec * rad)))
