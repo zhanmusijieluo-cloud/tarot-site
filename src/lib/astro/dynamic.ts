@@ -304,3 +304,69 @@ export function castLunarReturnChart(birth: BirthData, settings: CastSettings, f
     },
   }
 }
+
+// ---------- 合盘 (比较盘): A/B 双盘 + 跨盘相位 (端名带 ·A/·B; 爸爸合盘体系第一批) ----------
+export interface SynastryChart {
+  a: NatalChart
+  b: NatalChart
+  crossAspects: ChartAspect[]
+  warnings: string[]
+}
+export function castSynastry(birthA: BirthData, birthB: BirthData, settings: CastSettings): SynastryChart {
+  const a = castNatalChart(birthA, settings)
+  const b = castNatalChart(birthB, settings)
+  const warnings = [...new Set([...a.warnings, ...b.warnings])]
+  const ptsOf = (c: NatalChart, sfx: string) => {
+    const out: { name: string; longitude: number; longitudeSpeed: number }[] = c.planets.map((p) => ({ name: p.name + sfx, longitude: p.longitude, longitudeSpeed: p.speed ?? 0 }))
+    if (c.angles.ascendant) {
+      out.push({ name: 'ASC' + sfx, longitude: c.angles.ascendant.longitude, longitudeSpeed: 0 })
+      out.push({ name: 'DSC' + sfx, longitude: norm360(c.angles.ascendant.longitude + 180), longitudeSpeed: 0 })
+    }
+    if (c.angles.midheaven) {
+      out.push({ name: 'MC' + sfx, longitude: c.angles.midheaven.longitude, longitudeSpeed: 0 })
+      out.push({ name: 'IC' + sfx, longitude: norm360(c.angles.midheaven.longitude + 180), longitudeSpeed: 0 })
+    }
+    return out
+  }
+  const A = ptsOf(a, '·A'), B = ptsOf(b, '·B')
+  const lonMap = new Map<string, number>([...A, ...B].map((x) => [x.name, x.longitude]))
+  const spdMap = new Map<string, number>([...A, ...B].map((x) => [x.name, x.longitudeSpeed]))
+  const TARGET_DEG: Record<string, number> = { conjunction: 0, sextile: 60, square: 90, trine: 120, opposition: 180, quincunx: 150, 'semi-sextile': 30, 'semi-square': 45, sesquiquadrate: 135, quintile: 72, biquintile: 144, septile: 51.43, novile: 40, decile: 36 }
+  const { aspects: rawAll } = calculateAspects([...A, ...B], {
+    aspectTypes: atFrom(settings),
+    orbs: settings.orbs as Partial<Record<AspectType, number>> | undefined,
+    includeOutOfSign: settings.outOfSign !== false,
+    outOfSignPenalty: settings.oosPenalty ?? 0,
+    minimumStrength: settings.minStrength ?? 0,
+  })
+  const cross = (rawAll as Array<{ body1: string; body2: string; type: string; symbol: string; deviation: number }>)
+    .filter((x) => {
+      const s1 = x.body1.endsWith('·A'), s2 = x.body2.endsWith('·A')
+      return s1 !== s2   // 一端 A 一端 B
+    })
+    .map((x) => {
+      const l1 = lonMap.get(x.body1), l2 = lonMap.get(x.body2)
+      let actualAngle: number | undefined
+      let applying: boolean | null = null
+      if (l1 !== undefined && l2 !== undefined) {
+        let d = Math.abs(l1 - l2) % 360
+        if (d > 180) d = 360 - d
+        actualAngle = toPct(d)
+        const T = TARGET_DEG[x.type]
+        if (T !== undefined) {
+          const s1 = spdMap.get(x.body1) ?? 0, s2 = spdMap.get(x.body2) ?? 0
+          const sdiff = ((((l2 - l1) % 360) + 540) % 360) - 180
+          const rate = sdiff >= 0 ? (s2 - s1) : -(s2 - s1)
+          const devNow = d - T
+          if (Math.abs(devNow) > 1e-6) applying = ((devNow >= 0 ? 1 : -1) * rate) < 0
+        }
+      }
+      const r: ChartAspect = {
+        a: x.body1, b: x.body2,
+        type: x.type as ChartAspect['type'], typeZh: ASPECT_ZH_OF(x.type),
+        symbol: x.symbol, orb: toPct(x.deviation), applying, actualAngle,
+      }
+      return r
+    })
+  return { a, b, crossAspects: cross, warnings }
+}

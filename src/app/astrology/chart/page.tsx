@@ -17,6 +17,8 @@ import DynResult from '@/components/astro/DynResult';
 import type { DynamicChart } from '@/lib/astro/dynamic';
 import BandResult from '@/components/astro/BandResult';
 import TimeStepper from '@/components/astro/TimeStepper';
+import SynastryResult, { type SynData } from '@/components/astro/SynastryResult';
+import { listArchives, saveArchive, deleteArchive, getArchive, type Archive } from '@/lib/astro/archives';
 import type { VChart } from '@/components/astro/ChartWheel';
 import { birthFromParams, paramsFromBirth, settingsFromParams, settingsToParams } from '@/lib/astro/chart-url';
 import { HOUSE_SYSTEM_ZH, type BirthData, type CastSettings, type HouseSystem } from '@/lib/astro/chart';
@@ -155,6 +157,36 @@ function ChartPageInner() {
     return () => { alive = false; };
   }, [skyBirth, settings]);
 
+  // ---- 合盘 (爸爸: 天象盘左边合盘窗口 — sync=档案id, stab=盘种Tab) ----
+  const syncId = sp.get('sync') ?? '';
+  const stab = sp.get('stab') ?? 'compA';
+  const [arc, setArc] = useState<Archive | null>(null);
+  const [syn, setSyn] = useState<SynData | null>(null);
+  const [synErr, setSynErr] = useState('');
+  const [synOpen, setSynOpen] = useState(false);
+  const [newArcOpen, setNewArcOpen] = useState(false);
+  const [arcList, setArcList] = useState<Archive[]>([]);
+  useEffect(() => { setArc(syncId ? getArchive(syncId) : null); }, [syncId]);
+  useEffect(() => {
+    if (synOpen || newArcOpen) setArcList(listArchives());
+  }, [synOpen, newArcOpen]);
+  useEffect(() => {
+    if (!birth || !arc) { setSyn(null); setSynErr(''); return; }
+    let alive = true;
+    setSynErr('');
+    fetch('/api/astro/chart/synastry', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ birthA: { ...birth, houseSystem: birth.houseSystem ?? 'placidus' }, birthB: arc.birth, settings }),
+    })
+      .then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.error || 'failed'); if (alive) setSyn(j.chart as SynData); })
+      .catch((e) => { if (alive) setSynErr(e instanceof Error ? e.message : t('astro.form.failed')); });
+    return () => { alive = false; };
+  }, [birth, arc, settings, t]);
+  // 新增档案的默认出生资料 (EditBirth 初始值)
+  const emptyB: BirthData = { year: 1995, month: 1, day: 1, hour: 12, minute: 0, timezone: 8, latitude: 39.9, longitude: 116.41, city: '北京', timeKnown: true, houseSystem: 'placidus' };
+
+
 
   if (!birth) {
     return (
@@ -195,6 +227,20 @@ function ChartPageInner() {
         onSysChange={(s) => switchSystem(s as HouseSystem)}
         tabSignal={tabSignal}
       />
+    </>
+  );
+
+  // 天象盘左卡: 合盘入口 + 全局三按钮
+  const skyCornerActions = (
+    <>
+      <button
+        onClick={() => setSynOpen(true)}
+        title={zhMode ? '选择档案与当下本命盘合盘' : 'Pick an archive for synastry'}
+        className="flex w-full items-center gap-2 rounded-xl border border-white/[0.1] bg-[#0a0e19]/90 px-3.5 py-[9px] text-left text-[11.5px] text-frost/75 shadow-[0_6px_18px_rgba(0,0,0,0.35)] backdrop-blur-sm transition-colors hover:border-accent/40 hover:text-accent"
+      >
+        <span className="text-[12px]">☍</span> {zhMode ? '合盘' : 'Synastry'}
+      </button>
+      {cornerActions}
     </>
   );
 
@@ -278,7 +324,26 @@ function ChartPageInner() {
           <p className="py-20 text-center text-[12px] tracking-[0.3em] text-muted">{t('astro.form.casting')}</p>
         )}
         <EditBirth birth={birth} open={editOpen} onClose={() => setEditOpen(false)} onSave={saveBirth} />
-        {skyMode ? (
+        {syncId ? (
+          !arc ? (
+            <p className="py-20 text-center text-[12px] text-muted">{zhMode ? '档案不存在 (可能已删除) — 请重新选择' : 'Archive not found'}</p>
+          ) : syn ? (
+            <SynastryResult
+              syn={syn}
+              zhMode={zhMode}
+              tab={stab}
+              onTab={(tt) => patchParams((p) => p.set('stab', tt))}
+              aLabel={birth?.label ?? (zhMode ? '主盘' : 'Main')}
+              bLabel={arc.label}
+              onExit={() => patchParams((p) => { p.delete('sync'); p.delete('stab'); })}
+              cornerActions={cornerActions}
+            />
+          ) : synErr ? (
+            <p className="mb-5 rounded-xl border border-[#e8a08a]/25 bg-[#e8a08a]/[0.05] px-4 py-3 text-center text-[12px] text-[#e8a08a]">{synErr}</p>
+          ) : (
+            <p className="py-20 text-center text-[12px] tracking-[0.3em] text-muted">{t('astro.form.casting')}</p>
+          )
+        ) : skyMode ? (
           <div className="space-y-3">
             <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-[11.5px] text-muted">
               <span>{zhMode ? '天象时刻' : 'Sky time'}</span>
@@ -314,7 +379,7 @@ function ChartPageInner() {
               />
             </div>
             {sky ? (
-              <ChartResult chart={sky} zhMode={zhMode} hideStatus cornerActions={cornerActions} />
+              <ChartResult chart={sky} zhMode={zhMode} hideStatus cornerActions={skyCornerActions} />
             ) : (
               <p className="py-20 text-center text-[12px] tracking-[0.3em] text-muted">{t('astro.form.casting')}</p>
             )}
@@ -339,6 +404,48 @@ function ChartPageInner() {
         ) : (
           data && <ChartResult chart={data} zhMode={zhMode} aspectMode={aspectMode} onAspectMode={(m) => patchParams((p) => { if (m === 'list') p.set('ag', 'list'); else p.delete('ag'); })} cornerActions={cornerActions} />
         )}
+        {synOpen && (
+          <div className="fixed inset-0 z-[80] flex items-center justify-center p-4" onClick={() => setSynOpen(false)}>
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <div className="relative max-h-[80vh] w-full max-w-md overflow-y-auto rounded-2xl border border-white/[0.1] bg-[#0b0e17]/[0.97] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.6)]" onClick={(e) => e.stopPropagation()}>
+              <p className="mb-1 font-display text-[15px] tracking-[0.15em] text-accent">{zhMode ? '合盘 · 选择档案' : 'Synastry · archives'}</p>
+              <p className="mb-3 text-[11px] leading-relaxed text-muted/70">{zhMode ? '选择一份档案与当下本命盘合盘 (档案保存在本机浏览器)' : 'Pick an archive; stored in this browser'}</p>
+              <div className="space-y-1.5">
+                {arcList.map((x) => (
+                  <div
+                    key={x.id}
+                    className="flex cursor-pointer items-center justify-between rounded-xl border border-white/[0.08] px-3 py-2 transition-colors hover:border-accent/40"
+                    onClick={() => { patchParams((p) => { p.set('sync', x.id); }); setSynOpen(false); }}
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-[13px] text-frost/90">{x.label}</p>
+                      <p className="text-[10.5px] text-muted/70">{x.birth.year}-{String(x.birth.month).padStart(2, '0')}-{String(x.birth.day).padStart(2, '0')} {String(x.birth.hour).padStart(2, '0')}:{String(x.birth.minute).padStart(2, '0')} · {x.birth.city ?? ''}</p>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); deleteArchive(x.id); setArcList(listArchives()); }}
+                      className="ml-2 shrink-0 text-[10.5px] text-muted/50 transition-colors hover:text-[#e8a08a]"
+                    >
+                      {zhMode ? '删除' : 'Del'}
+                    </button>
+                  </div>
+                ))}
+                {arcList.length === 0 && <p className="py-5 text-center text-[11.5px] text-muted/60">{zhMode ? '暂无档案 — 点下方「新增档案」' : 'No archives yet'}</p>}
+              </div>
+              <button
+                onClick={() => { setSynOpen(false); setNewArcOpen(true); }}
+                className="mt-4 w-full rounded-xl border border-accent/40 py-2 text-[12px] tracking-[0.1em] text-accent transition-colors hover:bg-accent/[0.08]"
+              >
+                {zhMode ? '+ 新增档案' : '+ New archive'}
+              </button>
+            </div>
+          </div>
+        )}
+        <EditBirth
+          birth={emptyB}
+          open={newArcOpen}
+          onClose={() => setNewArcOpen(false)}
+          onSave={(b) => { saveArchive(b); setArcList(listArchives()); setNewArcOpen(false); setSynOpen(true); }}
+        />
       </section>
     </PageShell>
   );

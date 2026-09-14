@@ -126,7 +126,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
     [dualRing?.inner, dualRing?.outer]);
 
   const aspList = chart.aspects;
-  const rel = (a: { a: string; b: string }) => !selected || a.a.replace('·P', '').replace('·T', '').replace('·R', '') === selected || a.b.replace('·P', '').replace('·T', '').replace('·R', '') === selected;
+  const rel = (a: { a: string; b: string }) => !selected || a.a.replace(/·[APTR]$/, '') === selected || a.b.replace(/·[APTR]$/, '') === selected;
 
   // 扇区环带 path
   const sector = (rOut: number, rIn: number, a0: number, a1: number) => {
@@ -257,14 +257,19 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
           Descendant: chart.angles.ascendant ? wrap(chart.angles.ascendant.longitude + 180) : NaN,
           IC: chart.angles.midheaven ? wrap(chart.angles.midheaven.longitude + 180) : NaN,
         };
-        const nmStrip = (x: string) => x.replace('·P', '').replace('·T', '').replace('·R', '');
+        const nmStrip = (x: string) => x.replace(/·[APTR]$/, '');   // ·P推运/·T行运/·R返照/·A··B合盘
         const angOf = (n: string) => {
+          // 合盘 ·A 端: A 盘的点表 (extraPoints)
+          if (n.endsWith('·A')) {
+            const bareA = nmStrip(n);
+            return extraPoints && extraPoints[bareA] !== undefined ? la(extraPoints[bareA]) : null;
+          }
           const hasSfx = n !== nmStrip(n);
           if (!hasSfx && extraPoints && extraPoints[n] !== undefined) return la(extraPoints[n]);   // 原名 → 本命点优先
           const bare = nmStrip(n);
           const g = glyphs.find((x) => x.p.name === bare);
           if (g) return g.realA;                       // 盘上符号 (后缀名剥后也查: 推运星)
-          const ax = AX_ANGLE[n] ?? (n === 'ASC' && chart.angles.ascendant ? chart.angles.ascendant.longitude : undefined) ?? (n === 'MC' && chart.angles.midheaven ? chart.angles.midheaven.longitude : undefined) ?? (n === 'DSC' && chart.angles.ascendant ? wrap(chart.angles.ascendant.longitude + 180) : undefined) ?? (n === 'IC' && chart.angles.midheaven ? wrap(chart.angles.midheaven.longitude + 180) : undefined);
+          const ax = AX_ANGLE[bare] ?? (bare === 'ASC' && chart.angles.ascendant ? chart.angles.ascendant.longitude : undefined) ?? (bare === 'MC' && chart.angles.midheaven ? chart.angles.midheaven.longitude : undefined) ?? (bare === 'DSC' && chart.angles.ascendant ? wrap(chart.angles.ascendant.longitude + 180) : undefined) ?? (bare === 'IC' && chart.angles.midheaven ? wrap(chart.angles.midheaven.longitude + 180) : undefined);
           return ax === undefined || Number.isNaN(ax) ? null : la(ax);
         };
         const ra = angOf(a.a), rb = angOf(a.b);
