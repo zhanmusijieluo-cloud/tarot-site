@@ -11,6 +11,7 @@ import { useI18n } from '@/i18n';
 import ChartWheel, { type VChart, type VPlanet } from '@/components/astro/ChartWheel';
 import { HOUSE_SYSTEM_ZH } from '@/lib/astro/chart';
 import AspectGrid, { AspectLegend, ASPECT_COLOR } from '@/components/astro/AspectGrid';
+import StatusTabs from '@/components/astro/StatusTabs';
 
 const DIGNITY_ZH: Record<string, string> = {
   Domicile: '入庙', Exalted: '耀升', Detriment: '失势', Fall: '落陷', Peregrine: '游走',
@@ -375,62 +376,10 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
         </div>
       </Panel>
 
-      {/* ---- 底部: 黄道状态大表 (宫神星同款横向铺开) ---- */}
+      {/* ---- 底部: 状态区 Tab (宫神星同款: 黄道状态/法达星限/小限法/福点·精神点 Aphesis) ---- */}
       <Panel title={zhMode ? '黄道状态' : 'Ecliptic Status'}>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-[12px]">
-            <thead>
-              <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.18em] text-muted uppercase">
-                <th className="px-3 py-2 font-normal">{zhMode ? '星体' : 'Body'}</th>
-                <th className="px-3 py-2 font-normal">{zhMode ? '黄经度数' : 'Longitude'}</th>
-                <th className="px-3 py-2 font-normal">{zhMode ? '元素' : 'Elem'}</th>
-                <th className="px-3 py-2 font-normal">{zhMode ? '落宫' : 'House'}</th>
-                <th className="px-3 py-2 font-normal">{zhMode ? '先天尊贵 (庙·旺·三分·界·面)' : 'Dignities'}</th>
-                <th className="px-3 py-2 font-normal">{zhMode ? '运动' : 'Motion'}</th>
-                <th className="px-3 py-2 font-normal">{zhMode ? '成相数' : 'Aspects'}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((p) => {
-                const cnt = chart.aspects.filter((a) => a.a === p.name || a.b === p.name).length;
-                return (
-                  <tr
-                    key={p.name}
-                    onClick={() => setSelected(selected === p.name ? null : p.name)}
-                    className={`cursor-pointer border-b border-white/[0.04] transition-colors last:border-0 ${
-                      selected === p.name ? 'bg-accent/[0.07]' : 'hover:bg-white/[0.03]'
-                    }`}
-                  >
-                    <td className="px-3 py-1.5 whitespace-nowrap text-frost/90">
-                      <span className="mr-1.5 text-accent/80">{p.symbol}</span>{p.zh}
-                    </td>
-                    <td className="px-3 py-1.5 whitespace-nowrap text-muted">{sz(p.sign)} {dms(p.degInSign)} <span className="text-muted/50">({p.longitude.toFixed(2)}°)</span></td>
-                    <td className="px-3 py-1.5 text-muted/80">{ELEMENT_ZH[signElement(p.sign)] ?? ''}</td>
-                    <td className="px-3 py-1.5 text-muted">{p.house ?? '—'}</td>
-                    <td className="px-3 py-1.5 whitespace-nowrap">
-                      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                        {p.dignity && p.dignity.state !== 'Peregrine' ? (
-                          <span className={p.dignity.strength > 0 ? 'text-[#cdb88a]' : 'text-[#e8a08a]'}>
-                            {DIGNITY_ZH[p.dignity.state] ?? p.dignity.state}
-                            <span className="ml-0.5 text-[10px] opacity-60">{p.dignity.strength > 0 ? `+${p.dignity.strength}` : p.dignity.strength}</span>
-                          </span>
-                        ) : <span className="text-muted/40">{zhMode ? '游走' : '—'}</span>}
-                        {p.triplicity && <span className="rounded bg-white/[0.05] px-1 text-[10.5px] text-frost/85">{zhMode ? '三分·' : 'T·'}{dz(p.triplicity.active)}</span>}
-                        {p.term && <span className="rounded bg-white/[0.05] px-1 text-[10.5px] text-frost/70">{zhMode ? '界·' : 'B·'}{dz(p.term)}</span>}
-                        {p.face && <span className="rounded bg-white/[0.05] px-1 text-[10.5px] text-frost/70">{zhMode ? '面·' : 'F·'}{dz(p.face)}</span>}
-                        {p.critical && <span className="rounded bg-[#a86fd8]/15 px-1 text-[10.5px] text-[#c9a2e8]">{zhMode ? '岐度' : 'Crit'}</span>}
-                      </div>
-                    </td>
-                    <td className="px-3 py-1.5 whitespace-nowrap text-muted">
-                      {p.retrograde ? <span className="text-[#e8a08a]">{zhMode ? '逆行' : 'R'} </span> : ''}
-                      <span className="text-muted/70">{Math.abs(p.speed ?? 0).toFixed(3)}°/日</span>
-                    </td>
-                    <td className="px-3 py-1.5 text-muted">{cnt || '—'}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="p-3">
+          <StatusTabs chart={chart} zhMode={zhMode} selected={selected} onSelect={setSelected} />
         </div>
       </Panel>
 

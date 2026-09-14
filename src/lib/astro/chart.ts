@@ -473,6 +473,17 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
     ascendant: bodyToPlanet({ ...c.angles.ascendant, name: 'Ascendant' }, true),
     midheaven: bodyToPlanet({ ...c.angles.midheaven, name: 'Midheaven' }, true),
   } : { ascendant: null, midheaven: null }
+  // 四轴也补先天尊贵位主 (黄道状态表 AC/MC 行同宫神星: 三分/界/十度)
+  for (const ax of [angles.ascendant, angles.midheaven]) {
+    if (!ax) continue
+    const lon = norm(ax.longitude)
+    const si = Math.floor(lon / 30)
+    const tri = TRIPLICITY[ELEM_OF_SIGN[si]]
+    ax.triplicity = tri ? { ...tri, active: dayChart ? tri.day : tri.night } : undefined
+    const deg = lon % 30
+    for (const [pl, end] of EGYPTIAN_TERMS[si]) if (deg < end) { ax.term = pl; break }
+    ax.face = FACES[si][Math.min(2, Math.floor(deg / 10))]
+  }
 
   // Morinus/Vettius: 用四轴自算宫头 (celestine 的宫头仅对 placidus 系有效)
   let cuspsOut: number[] | null = null
