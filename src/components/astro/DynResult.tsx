@@ -10,7 +10,6 @@
 import React, { useState } from 'react';
 import { useI18n } from '@/i18n';
 import ChartWheel, { type VChart, type VPlanet } from '@/components/astro/ChartWheel';
-import NatalCard from '@/components/astro/NatalCard';
 import { ASPECT_COLOR } from '@/components/astro/AspectGrid';
 import type { DynamicChart } from '@/lib/astro/dynamic';
 import TimeStepper from '@/components/astro/TimeStepper';
@@ -117,49 +116,42 @@ export default function DynResult({ dyn, zhMode, target, onDate, cornerActions }
         </div>
       )}
 
-      {/* 盘区: 盘(内嵌资料卡+按钮) | 右侧次限信息 */}
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_236px]">
-        <div className="min-w-0">
-          <ChartWheel
-            chart={viewChart}
-            zhMode={zhMode}
-            dualRing={dual && outer ? { inner: natal.planets, outer: outer.planets as unknown as VPlanet[] } : undefined}
-            onDualToggle={() => setDual((v) => !v)}
-            actions={
-              <div className="flex gap-1.5">
-                <button
-                  onClick={() => setDual(false)}
-                  className={`rounded-full border px-3 py-1 text-[10.5px] tracking-[0.12em] transition-colors ${!dual ? 'border-accent/50 bg-accent/[0.08] text-accent' : 'border-white/[0.1] text-muted hover:border-white/25'}`}
-                >
-                  {zhMode ? '单环' : 'Single'}
-                </button>
-                <button
-                  onClick={() => setDual(true)}
-                  title={zhMode ? '本命(内圈) + 次限(外圈); 双击盘面也可切换' : 'Natal inner + progressed outer; double-click to toggle'}
-                  className={`rounded-full border px-3 py-1 text-[10.5px] tracking-[0.12em] transition-colors ${dual ? 'border-accent/50 bg-accent/[0.08] text-accent' : 'border-white/[0.1] text-muted hover:border-white/25'}`}
-                >
-                  {zhMode ? '双环' : 'Dual'}
-                </button>
-              </div>
-            }
-            cornerSlot={
-              <div className="pointer-events-auto flex w-[248px] flex-col gap-1.5">
-                <NatalCard chart={natal} zhMode={zhMode} />
-                {cornerActions}
-              </div>
-            }
-          />
-        </div>
-        <div className="space-y-4">
-          <Panel title={zhMode ? `${kind.zh}设置` : kind.en}>
-            <div className="space-y-2.5 p-3">
+      {/* 盘区: 盘(内嵌"时间设置卡"+按钮; 爸爸: 非本命盘不挂本命资料卡, 时间条嵌左上) */}
+      <ChartWheel
+        chart={viewChart}
+        zhMode={zhMode}
+        dualRing={dual && outer ? { inner: natal.planets, outer: outer.planets as unknown as VPlanet[] } : undefined}
+        onDualToggle={() => setDual((v) => !v)}
+        actions={
+          <div className="flex gap-1.5">
+            <button
+              onClick={() => setDual(false)}
+              className={`rounded-full border px-3 py-1 text-[10.5px] tracking-[0.12em] transition-colors ${!dual ? 'border-accent/50 bg-accent/[0.08] text-accent' : 'border-white/[0.1] text-muted hover:border-white/25'}`}
+            >
+              {zhMode ? '单环' : 'Single'}
+            </button>
+            <button
+              onClick={() => setDual(true)}
+              title={zhMode ? '本命(内圈) + 推运(外圈); 双击盘面也可切换' : 'Natal inner + progressed outer; double-click to toggle'}
+              className={`rounded-full border px-3 py-1 text-[10.5px] tracking-[0.12em] transition-colors ${dual ? 'border-accent/50 bg-accent/[0.08] text-accent' : 'border-white/[0.1] text-muted hover:border-white/25'}`}
+            >
+              {zhMode ? '双环' : 'Dual'}
+            </button>
+          </div>
+        }
+        cornerSlot={
+          <div className="pointer-events-auto flex w-[248px] flex-col gap-1.5">
+            <div className="w-full rounded-2xl border border-white/[0.1] bg-[#0a0e19]/90 px-3 py-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.45)] backdrop-blur-sm">
+              <p className="mb-2 flex items-baseline gap-2">
+                <span className="font-display text-[13.5px] tracking-[0.1em] text-accent">{zhMode ? `${kind.zh}设置` : kind.en}</span>
+              </p>
               <TimeStepper
                 value={{ y: target.year, m: target.month, d: target.day, h: target.hour ?? 12, mi: target.minute ?? 0 }}
                 units={dyn.type === 'transit' ? ['y', 'mo', 'd', 'h', 'mi'] : ['y', 'mo', 'd']}
                 zhMode={zhMode}
                 onChange={(t) => onDate(t.y, t.m, t.d, t.h, t.mi)}
               />
-              <label className="flex items-center justify-between gap-2 text-[11px] text-muted/80">
+              <label className="mt-2 flex items-center justify-between gap-2 text-[11px] text-muted/80">
                 {zhMode ? '跳转' : 'Jump'}
                 <input
                   type="date"
@@ -173,23 +165,24 @@ export default function DynResult({ dyn, zhMode, target, onDate, cornerActions }
                   className="rounded-lg border border-white/[0.1] bg-white/[0.03] px-2 py-0.5 text-[11px] text-frost/85 [color-scheme:dark]"
                 />
               </label>
-              <p className="text-[10.5px] leading-relaxed text-muted/70">
+              <p className="mt-2 text-[10px] leading-relaxed text-muted/70">
                 {zhMode ? kind.note : kind.noteEn}
               </p>
               {outer.solarArc !== undefined && (
-                <p className="flex items-center justify-between text-[11.5px] text-frost/85">
+                <p className="mt-1.5 flex items-center justify-between text-[11px] text-frost/85">
                   {zhMode ? '太阳弧' : 'Solar arc'}
                   <span className="tabular-nums text-muted">+{outer.solarArc}°</span>
                 </p>
               )}
-              <p className="flex items-center justify-between text-[11.5px] text-frost/85">
+              <p className="mt-1 flex items-center justify-between text-[11px] text-frost/85">
                 {zhMode ? '盘面时间' : 'Chart date'}
                 <span className="tabular-nums text-muted">{outer.label}</span>
               </p>
             </div>
-          </Panel>
-        </div>
-      </div>
+            {cornerActions}
+          </div>
+        }
+      />
 
       {/* 下方: 推运 × 本命 相位表 */}
       <Panel title={`${zhMode ? kind.zh + '相位' : kind.en + ' aspects'} (→ ${zhMode ? '本命' : 'natal'}) — ${rows.length}`}>
