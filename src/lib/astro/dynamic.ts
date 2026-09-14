@@ -376,22 +376,24 @@ function progCusps(base: number[] | null, arc: number, axis?: { asc?: number; mc
 }
 
 /** 真盘(时空盘/马盘)推运宫头 = 恒星时重排法 (反解爱星盘锁定, 2026-09):
- *  爱星盘的推运盘不是把基础盘宫头整体平移, 而是「恒星时推进」:
- *    新RAMC(赤经MC) = 基础盘RAMC + (推运太阳赤经 − 基础太阳赤经),
+ *  爱星盘的推运盘不是把基础盘宫头整体平移, 而是「RAMC 推进 + 重新起宫」:
+ *    新RAMC(赤经MC) = 基础盘RAMC + Naibod平均太阳赤经率×推进天数,
+ *    次限推进天数=年龄岁数(1天=1年), 三限=岁数×13.368(1天=1恒星月);
+ *    Naibod 率 = 59′08.3″/天 = 0.9856473°/天 (次限每年+0.986°, 三限每年+13.176°=月亮日行率)。
  *  然后在原地点纬度重新起一张 Placidus 盘 (MC=ecl(RAMC), ASC 由 RAMC+纬度定, 11/12/2/3 宫头半弧迭代)。
- *  验证: 时空三限全 12 宫头 vs 爱星盘截图 残差 ≤0.17° (无任何校准量);
- *  自检: 弧=0 时精确还原基础盘 ASC/MC (双子16°39 / 巨蟹9°35)。
- *  数学为公开教科书公式 (Placidus 半弧法), 无第三方代码。 */
-function recastAxes(chart: NatalChart, progSunLon: number | undefined): { asc?: number; mc?: number; cusps?: number[] } | undefined {
+ *  验证: 时空三限全12宫头 vs 爱星盘截图残差 ≤0.2°; 马盘B三限 ≤0.3° (零校准量);
+ *  关键证据: 三限长弧上"太阳真位置赤经弧"与"Naibod平均率"差达4.5°(太阳不等速), 爱星盘取平均率 —
+ *  马盘B三限用真位置差4.5°、用Naibod差0.26°, 时空三限两者皆合(恰逢近匀速段)→唯一解=Naibod。
+ *  自检: 弧=0 时精确还原基础盘 ASC/MC。数学为公开教科书公式, 无第三方代码。 */
+function recastAxes(chart: NatalChart, arcDeg: number): { asc?: number; mc?: number; cusps?: number[] } | undefined {
   const mc0 = chart.angles.midheaven?.longitude
-  const sun0 = chart.planets.find((p) => p.name === 'Sun')?.longitude
   const lat = chart.input?.latitude
-  if (mc0 === undefined || sun0 === undefined || progSunLon === undefined || lat === undefined) return undefined
+  if (mc0 === undefined || lat === undefined) return undefined
   const EP = 23.4393
   const rad = Math.PI / 180
   const raOf = (lam: number) => norm360(Math.atan2(Math.sin(lam * rad) * Math.cos(EP * rad), Math.cos(lam * rad)) / rad)
   const eclOfRa = (ra: number) => norm360(Math.atan2(Math.sin(ra * rad), Math.cos(ra * rad) * Math.cos(EP * rad)) / rad)
-  const ramc = norm360(raOf(mc0) + raOf(progSunLon) - raOf(sun0))
+  const ramc = norm360(raOf(mc0) + arcDeg)
   const mc = eclOfRa(ramc)
   const asc = norm360(Math.atan2(-Math.cos(ramc * rad), Math.sin(ramc * rad) * Math.cos(EP * rad) + Math.tan(lat * rad) * Math.sin(EP * rad)) / rad + 180)
   const sdOf = (lam: number) => {
@@ -640,15 +642,16 @@ export function castSynastry(birthA: BirthData, birthB: BirthData, settings: Cas
     chart.planets.find((p) => p.name === 'Sun')?.longitude
   const progSun = (birth: BirthData, mode: 'secondary' | 'tertiary'): number | undefined =>
     progOf(birth, mode).find((p) => p.name === 'Sun')?.longitude
-  /** 单盘太阳弧 = 该盘推运太阳 − 该盘本命太阳 */
-  const arcOf = (chart: NatalChart, birth: BirthData, mode: 'secondary' | 'tertiary'): number | undefined => {
-    const s0 = sunLonOf(chart), s1 = progSun(birth, mode)
-    return s0 !== undefined && s1 !== undefined ? norm360(s1 - s0) : undefined
-  }
-  /** 推运轴/宫头: 真盘(时空/马盘) = 恒星时重排法 (recastAxes; 反解爱星盘, 残差≤0.17°);
+  /** 推运轴/宫头: 真盘(时空/马盘) = Naibod 率 RAMC 推进 + 重排宫头 (recastAxes; 反解爱星盘):
+   *  推进天数: 次限=年龄岁数(1天=1年), 三限=岁数×13.368(1天=1恒星月); RA 弧=天数×0.9856473°
    *  组合盘家族走 PROG_AXIS_CORR/PROG_CUSP_CORR 修正表 (castComposite 内部) */
-  const advAxes = (chart: NatalChart, birth: BirthData, mode: 'secondary' | 'tertiary'): { asc?: number; mc?: number; cusps?: number[] } | undefined =>
-    recastAxes(chart, progSun(birth, mode))
+  const advAxes = (chart: NatalChart, birth: BirthData, mode: 'secondary' | 'tertiary'): { asc?: number; mc?: number; cusps?: number[] } | undefined => {
+    const birthJD = toJD({ year: birth.year, month: birth.month, day: birth.day, hour: birth.hour, minute: birth.minute }, birth.timezone)
+    const targetJD = toJD({ year: todayTarget.year, month: todayTarget.month, day: todayTarget.day, hour: 12, minute: 0 }, birth.timezone)
+    const ageYears = (targetJD - birthJD) / 365.25
+    const days = mode === 'tertiary' ? ageYears * (365.25 / 27.321582) : ageYears
+    return recastAxes(chart, days * 0.9856473)
+  }
   /** 推运衍生盘 = base 行星被推运行星替换 + 轴推进 */
   const progChart = (chart: NatalChart, birth: BirthData, mode: 'secondary' | 'tertiary') =>
     chartFromPlanets(chart, progOf(birth, mode), settings, advAxes(chart, birth, mode))
