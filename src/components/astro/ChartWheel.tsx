@@ -843,7 +843,7 @@ function PlanetDetail({ p, chart, zhMode, onClose }: {
 }
 
 // ---------- 对外入口 ----------
-export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect, gridSlot, cornerSlot, actions }: {
+export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect, gridSlot, cornerSlot, actions, dualRing, onDualToggle }: {
   chart: VChart; zhMode: boolean;
   /** 受控选中 (相位网格行头共用): 不传则内部自管 */
   selected?: string | null; onSelect?: (name: string | null) => void;
@@ -853,6 +853,10 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
   cornerSlot?: React.ReactNode;
   /** 头部右侧附加按钮区 (列表/网格切换) */
   actions?: React.ReactNode;
+  /** 双环 (次限盘): 内=本命行星, 外=次限行星; 经典线条盘专属 */
+  dualRing?: { inner: VPlanet[]; outer: VPlanet[] } | null;
+  /** 双击经典盘面切换单/双环 */
+  onDualToggle?: () => void;
 }) {
   const { t } = useI18n();
   const [view, setView] = useState<'top' | 'side' | 'classic'>('classic');   // 爸爸: 排完盘进来就是线条盘
@@ -940,8 +944,8 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
           </div>
         </div>
       ) : view === 'classic' ? (
-        <div className="mx-auto aspect-square w-full max-w-[min(84vh,880px)]">
-          <ChartWheel2D chart={chart} zhMode={zhMode} selected={selected} onSelect={setSelected} />
+        <div className="mx-auto aspect-square w-full max-w-[min(84vh,880px)]" onDoubleClick={onDualToggle ? () => onDualToggle() : undefined}>
+          <ChartWheel2D chart={chart} zhMode={zhMode} selected={selected} onSelect={setSelected} dualRing={dualRing} />
         </div>
       ) : (
         <ChartScene chart={chart} zhMode={zhMode} view={view} disp={chart.settings?.display} sceneApi={sceneApiRef} selected={selected} onSelect={setSelected} />

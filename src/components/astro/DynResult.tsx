@@ -7,7 +7,7 @@
 // 数据: POST /api/astro/chart/dynamic { type:'progression' }
 // 注意: 单环次限盘 = 次限行星位置 + 本命宫位圈/四轴 (推运盘标准画法)
 // ============================================================
-import React from 'react';
+import React, { useState } from 'react';
 import { useI18n } from '@/i18n';
 import ChartWheel, { type VChart, type VPlanet } from '@/components/astro/ChartWheel';
 import NatalCard from '@/components/astro/NatalCard';
@@ -47,6 +47,8 @@ export default function DynResult({ dyn, zhMode, target, onDate, cornerActions }
   const { t } = useI18n();
   const natal = dyn.natal as unknown as VChart;
   const outer = dyn.outer;
+  // 单环/双环 (爸爸: 双击盘面或按钮切换; 双环=内本命+外次限)
+  const [dual, setDual] = useState(false);
 
   const nameOf = (raw: string) => raw.replace('·P', '').replace('·T', '');
   const symOf = (raw: string) => {
@@ -99,6 +101,25 @@ export default function DynResult({ dyn, zhMode, target, onDate, cornerActions }
           <ChartWheel
             chart={viewChart}
             zhMode={zhMode}
+            dualRing={dual && outer ? { inner: natal.planets, outer: outer.planets as unknown as VPlanet[] } : undefined}
+            onDualToggle={() => setDual((v) => !v)}
+            actions={
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => setDual(false)}
+                  className={`rounded-full border px-3 py-1 text-[10.5px] tracking-[0.12em] transition-colors ${!dual ? 'border-accent/50 bg-accent/[0.08] text-accent' : 'border-white/[0.1] text-muted hover:border-white/25'}`}
+                >
+                  {zhMode ? '单环' : 'Single'}
+                </button>
+                <button
+                  onClick={() => setDual(true)}
+                  title={zhMode ? '本命(内圈) + 次限(外圈); 双击盘面也可切换' : 'Natal inner + progressed outer; double-click to toggle'}
+                  className={`rounded-full border px-3 py-1 text-[10.5px] tracking-[0.12em] transition-colors ${dual ? 'border-accent/50 bg-accent/[0.08] text-accent' : 'border-white/[0.1] text-muted hover:border-white/25'}`}
+                >
+                  {zhMode ? '双环' : 'Dual'}
+                </button>
+              </div>
+            }
             cornerSlot={
               <div className="pointer-events-auto flex w-[248px] flex-col gap-1.5">
                 <NatalCard chart={natal} zhMode={zhMode} />

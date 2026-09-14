@@ -8,7 +8,7 @@
 // ============================================================
 
 import { useMemo, useState } from 'react';
-import type { VChart } from '@/components/astro/ChartWheel';
+import type { VChart, VPlanet } from '@/components/astro/ChartWheel';
 import { aspectHex } from '@/lib/astro/aspect-colors';
 import { GLYPH_PATHS, SYMBOL_TO_GLYPH, ZODIAC_GLYPH_NAMES } from '@/lib/astro/glyph-paths';
 
@@ -45,6 +45,8 @@ const R_GLYPH = 376;          // 星座符号位
 const R_HOUSE_IN = 314;       // 宫位环内缘
 const R_HOUSE_NUM = 331;      // 宫号位
 const R_PLANET = 284;         // 行星圈: 所有符号严格同一半径 (爸爸铁令)
+const R_DUAL_IN = 256;        // 双环: 内圈(本命) — 本命+次限对比 (爸爸: 双击/按钮切双环)
+const R_DUAL_OUT = 300;       // 双环: 外圈(次限)
 const R_ASPECT = 228;         // 内圆 = 相位弦边界
 
 const xy = (r: number, a: number) => [C + r * Math.cos(a), C - r * Math.sin(a)] as const;
@@ -56,8 +58,33 @@ const fmtDeg = (lon: number) => {
   return [`${d}°`, `${String(m).padStart(2, '0')}′`];
 };
 
-export default function ChartWheel2D({ chart, zhMode, selected, onSelect }: {
+// ---- 行星排布: 环形松弛 (相近度数沿圈贴紧微开, 绝不摊大饼) — 单环/双环共用, 环半径入参 ----
+function layoutRing(planets: VPlanet[], R: number, la: (lon: number) => number) {
+  const TAU = Math.PI * 2;
+  const n = planets.length;
+  const arr = planets.map((p) => ({ p, realA: la(p.longitude), a: la(p.longitude) }));
+  if (n > 1) {
+    const MIN_G = 50 / R;   // 弦距50px: 逐符号调校后最大⚸28px+℞~40px宽, 留10px余量
+    for (let iter = 0; iter < 400; iter++) {
+      arr.forEach((it) => { it.a = ((it.a % TAU) + TAU) % TAU; });   // ±π归一化防排序错邻 (koch盘实测bug)
+      arr.sort((x, y) => x.a - y.a);
+      let moved = false;
+      for (let k = 0; k < n; k++) {
+        const j = (k + 1) % n;
+        const d = j === 0 ? arr[0].a + TAU - arr[n - 1].a : arr[j].a - arr[k].a;
+        if (d < MIN_G) { const push = (MIN_G - d) / 2; arr[k].a -= push; arr[j].a += push; moved = true; }
+      }
+      if (!moved) break;
+    }
+    arr.sort((x, y) => x.realA - y.realA);
+  }
+  return arr.map((it) => ({ p: it.p, a: it.a, realA: it.realA }));
+}
+
+export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRing }: {
   chart: VChart; zhMode: boolean; selected: string | null; onSelect: (n: string | null) => void;
+  /** 双环 (次限盘专属): 内=本命行星@256, 外=次限行星@300; 不传=单环现状 */
+  dualRing?: { inner: VPlanet[]; outer: VPlanet[] } | null;
 }) {
   const [paper, setPaper] = useState(true);
   const ascLon = chart.angles.ascendant?.longitude ?? 0;
@@ -79,29 +106,16 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect }: {
     ? { fire: '#a82214', earth: '#7d5a0e', air: '#1c7438', water: '#1e4fa8' }
     : { fire: '#ff9c90', earth: '#f0c470', air: '#84e89e', water: '#8cc0ff' };
 
-  // ---- 行星: 同一圈(严格等距)环形松弛 — 相近度数沿圈贴紧微开, 绝不摊大饼 ----
-  const glyphs = useMemo(() => {
-    const TAU = Math.PI * 2;
-    const n = chart.planets.length;
-    const arr = chart.planets.map((p) => ({ p, realA: la(p.longitude), a: la(p.longitude) }));
-    if (n > 1) {
-      const MIN_G = 50 / R_PLANET;   // 弦距50px≈10.1°: 逐符号调校后最大⚸28px+℞~40px宽, 留10px余量
-      for (let iter = 0; iter < 400; iter++) {
-        arr.forEach((it) => { it.a = ((it.a % TAU) + TAU) % TAU; });   // ±π归一化防排序错邻 (koch盘实测bug)
-        arr.sort((x, y) => x.a - y.a);
-        let moved = false;
-        for (let k = 0; k < n; k++) {
-          const j = (k + 1) % n;
-          const d = j === 0 ? arr[0].a + TAU - arr[n - 1].a : arr[j].a - arr[k].a;
-          if (d < MIN_G) { const push = (MIN_G - d) / 2; arr[k].a -= push; arr[j].a += push; moved = true; }
-        }
-        if (!moved) break;
-      }
-      arr.sort((x, y) => x.realA - y.realA);
-    }
-    return arr.map((it) => ({ p: it.p, a: it.a, realA: it.realA }));
+  // ---- 行星: 同一圈(严格等距)环形松弛 — 单环(次限)/双环(内本命+外次限) ----
+  const glyphs = useMemo(() => layoutRing(chart.planets, R_PLANET, la),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chart]);
+    [chart]);
+  const dualGlyphs = useMemo(() => (dualRing ? {
+    inner: layoutRing(dualRing.inner, R_DUAL_IN, la),
+    outer: layoutRing(dualRing.outer, R_DUAL_OUT, la),
+  } : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [dualRing?.inner, dualRing?.outer]);
 
   const aspList = chart.aspects;
   const rel = (a: { a: string; b: string }) => !selected || a.a === selected || a.b === selected;
@@ -114,6 +128,44 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect }: {
     return `M ${p1x} ${p1y} A ${rOut} ${rOut} 0 0 ${fArc} ${p2x} ${p2y} L ${p3x} ${p3y} A ${rIn} ${rIn} 0 0 ${1 - fArc} ${p4x} ${p4y} Z`;
   };
   const selSign = selected ? signIdx(chart.planets.find((x) => x.name === selected)?.longitude ?? 0) : -1;
+
+  // ---- 行星环渲染: kind=single(单环@284) / in(双环内圈本命@256) / out(双环外圈次限@300) ----
+  // 双环时外环不画引线/刻度 (会穿过内环); 度分仍朝心竖排两行
+  const renderRing = (gs: { p: VPlanet; a: number; realA: number }[], R: number, kind: 'single' | 'in' | 'out') => {
+    const compact = kind !== 'single';
+    const gSize = compact ? 21 : GLYPH_SIZE;
+    const dOff1 = compact ? 18 : 21;
+    const dOff2 = compact ? 28 : 32;
+    const dFont = compact ? 8.2 : 8.8;
+    const withLead = kind !== 'out';
+    return gs.map(({ p, a, realA }) => {
+      const [gx, gy] = xy(R, a);
+      const [d1x, d1y] = xy(R - dOff1, a);
+      const [d2x, d2y] = xy(R - dOff2, a);
+      const col = SHADE[ELEMENTS[signIdx(p.longitude)] as 'fire'];
+      const isSel = selected === p.name;
+      const relatedSel = selected && chart.aspects.some((x) => (x.a === p.name || x.b === p.name) && (x.a === selected || x.b === selected));
+      const dim = selected && !isSel && !relatedSel;
+      const TAU = Math.PI * 2;
+      const slipAmt = ((a - realA) % TAU + TAU * 1.5) % TAU - Math.PI;
+      const slipped = Math.abs(slipAmt) > 0.052;
+      const sa = realA - Math.sign(slipAmt) * 0.012;
+      const [tk1x, tk1y] = xy(R_ASPECT, realA), [tk2x, tk2y] = xy(R_ASPECT + 4.5, realA);
+      const [lx1, ly1] = xy(R_ASPECT + 3, sa), [lx2, ly2] = xy(R + 13, a);
+      const [dg1, dg2] = fmtDeg(p.longitude);
+      return (
+        <g key={`${kind}-${p.name}`} onClick={(e) => { e.stopPropagation(); onSelect(isSel ? null : p.name); }} style={{ cursor: 'pointer', opacity: dim ? 0.55 : 1, transition: 'opacity 0.25s' }}>
+          {withLead && <line x1={tk1x} y1={tk1y} x2={tk2x} y2={tk2y} stroke={col} strokeWidth="1.4" opacity="0.9" />}
+          {withLead && slipped && <line x1={lx1} y1={ly1} x2={lx2} y2={ly2} stroke={P.houseLine} strokeWidth="0.7" opacity="0.5" />}
+          {isSel && <circle cx={gx} cy={gy} r={compact ? 12 : 13.5} fill="none" stroke={P.sel} strokeWidth="1.4" />}
+          <GlyphPath name={SYMBOL_TO_GLYPH[p.symbol] ?? ''} cx={gx} cy={gy} color={col} bg={P.bg} size={gSize} />
+          {p.retrograde && <text x={gx + (compact ? 12 : 14)} y={gy + 4} textAnchor="middle" fontSize={compact ? 10 : 11} fontWeight={600} fill={col} stroke={P.bg} strokeWidth="2.6" paintOrder="stroke">℞</text>}
+          <text x={d1x} y={d1y + 3} textAnchor="middle" fontSize={dFont} fontWeight={600} fill={P.ink} stroke={P.bg} strokeWidth="1.4" paintOrder="stroke">{dg1}</text>
+          <text x={d2x} y={d2y + 3} textAnchor="middle" fontSize={dFont} fontWeight={600} fill={P.ink} stroke={P.bg} strokeWidth="1.4" paintOrder="stroke">{dg2}</text>
+        </g>
+      );
+    });
+  };
 
   return (
     <div className="relative h-full w-full">
@@ -203,34 +255,15 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect }: {
         const hot = rel(a);
         return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={aspectHex(a.type)} strokeWidth={selected && hot ? 1.8 : 0.9} opacity={selected ? (hot ? 0.95 : 0.06) : 0.38} style={{ transition: 'opacity 0.25s' }} />;
       })}
-      {/* 行星符号圈 (严格等距): 度分在朝心侧竖排两行; 滑移>3°画引线+内圆真度刻度 */}
-      {glyphs.map(({ p, a, realA }) => {
-        const [gx, gy] = xy(R_PLANET, a);
-        const [d1x, d1y] = xy(R_PLANET - 21, a);
-        const [d2x, d2y] = xy(R_PLANET - 32, a);
-        const col = SHADE[ELEMENTS[signIdx(p.longitude)] as 'fire'];
-        const isSel = selected === p.name;
-        const relatedSel = selected && chart.aspects.some((x) => (x.a === p.name || x.b === p.name) && (x.a === selected || x.b === selected));
-        const dim = selected && !isSel && !relatedSel;
-        const TAU = Math.PI * 2;
-        const slipAmt = ((a - realA) % TAU + TAU * 1.5) % TAU - Math.PI;
-        const slipped = Math.abs(slipAmt) > 0.052;
-        const sa = realA - Math.sign(slipAmt) * 0.012;
-        const [tk1x, tk1y] = xy(R_ASPECT, realA), [tk2x, tk2y] = xy(R_ASPECT + 4.5, realA);
-        const [lx1, ly1] = xy(R_ASPECT + 3, sa), [lx2, ly2] = xy(R_PLANET + 13, a);
-        const [dg1, dg2] = fmtDeg(p.longitude);
-        return (
-          <g key={p.name} onClick={(e) => { e.stopPropagation(); onSelect(isSel ? null : p.name); }} style={{ cursor: 'pointer', opacity: dim ? 0.55 : 1, transition: 'opacity 0.25s' }}>
-            <line x1={tk1x} y1={tk1y} x2={tk2x} y2={tk2y} stroke={col} strokeWidth="1.4" opacity="0.9" />
-            {slipped && <line x1={lx1} y1={ly1} x2={lx2} y2={ly2} stroke={P.houseLine} strokeWidth="0.7" opacity="0.5" />}
-            {isSel && <circle cx={gx} cy={gy} r="13.5" fill="none" stroke={P.sel} strokeWidth="1.4" />}
-            <GlyphPath name={SYMBOL_TO_GLYPH[p.symbol] ?? ''} cx={gx} cy={gy} color={col} bg={P.bg} />
-            {p.retrograde && <text x={gx + 14} y={gy + 4} textAnchor="middle" fontSize="11" fontWeight={600} fill={col} stroke={P.bg} strokeWidth="2.6" paintOrder="stroke">℞</text>}
-            <text x={d1x} y={d1y + 3} textAnchor="middle" fontSize="8.8" fontWeight={600} fill={P.ink} stroke={P.bg} strokeWidth="1.4" paintOrder="stroke">{dg1}</text>
-            <text x={d2x} y={d2y + 3} textAnchor="middle" fontSize="8.8" fontWeight={600} fill={P.ink} stroke={P.bg} strokeWidth="1.4" paintOrder="stroke">{dg2}</text>
-          </g>
-        );
-      })}
+      {/* 行星符号环: 单环(次限)/双环(内=本命@256, 外=次限@300); 严格等距; 滑移>3°画引线+内圆真度刻度 */}
+      {dualRing && dualGlyphs ? (
+        <>
+          {renderRing(dualGlyphs.inner, R_DUAL_IN, 'in')}
+          {renderRing(dualGlyphs.outer, R_DUAL_OUT, 'out')}
+        </>
+      ) : (
+        renderRing(glyphs, R_PLANET, 'single')
+      )}
       </svg>
     </div>
   );
