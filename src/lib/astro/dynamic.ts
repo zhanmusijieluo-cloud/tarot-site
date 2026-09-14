@@ -4,7 +4,7 @@
 // 全部确定性计算, 与本命盘同一引擎栈 (celestine)
 // ============================================================
 import {
-  calculateProgression, calculateAspects, getPosition, ephemeris,
+  calculateProgression, calculateAspects, getPosition, ephemeris, getPlanetaryDignity,
   AspectType,
 } from 'celestine'
 import {
@@ -91,7 +91,12 @@ function posToPlanet(raw: RawPos, natalCusps?: number[] | null): ChartPlanet {
     sign: SIGNS[si], signZh: SIGNS_ZH[si], degInSign: toPct(deg),
     formatted: `${d}°${String(m).padStart(2, '0')}' ${SIGNS[si]}`,
     house, retrograde: raw.isRetrograde, speed: toPct(raw.longitudeSpeed),
-    dignity: null,
+    dignity: (() => {
+      try {
+        const dg = getPlanetaryDignity(raw.name as never, si as never, deg)   // Sign 枚举=数字索引 (Cancer=3)
+        return { state: dg.state, strength: dg.strength }
+      } catch { return null }
+    })(),
   }
 }
 

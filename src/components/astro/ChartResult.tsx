@@ -15,7 +15,7 @@ import NatalCard from '@/components/astro/NatalCard';
 import StatusTabs from '@/components/astro/StatusTabs';
 
 const DIGNITY_ZH: Record<string, string> = {
-  Domicile: '入庙', Exalted: '耀升', Detriment: '失势', Fall: '落陷', Peregrine: '游走',
+  Domicile: '入庙', Exalted: '耀升', Exaltation: '耀升', Detriment: '失势', Fall: '落陷', Peregrine: '游走',
 };
 const RECEPTION_KIND_ZH: Record<string, string> = {
   domicile: '本垣', exaltation: '曜升', triplicity: '三分', detriment: '失势', fall: '落陷',

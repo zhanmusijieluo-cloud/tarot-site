@@ -93,7 +93,7 @@ const ELEMENT_HEX: Record<string, string> = {
 const SIGN_GLYPH = ['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
 const SIGN_ORDER = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
 export const DIGNITY_ZH: Record<string, string> = {
-  Domicile: '入庙', Exalted: '耀升', Detriment: '失势', Fall: '落陷', Peregrine: '游走',
+  Domicile: '入庙', Exalted: '耀升', Exaltation: '耀升', Detriment: '失势', Fall: '落陷', Peregrine: '游走',
 };
 const RECEPTION_KIND_ZH: Record<string, string> = {
   domicile: '庙座', exaltation: '耀升', detriment: '失势', triplicity: '三分', fall: '落陷',
@@ -745,11 +745,14 @@ function PlanetDetail({ p, chart, zhMode, onClose }: {
   p: VPlanet; chart: VChart; zhMode: boolean; onClose: () => void;
 }) {
   const { t } = useI18n();
-    const otherOf = (a: { a: string; b: string }) => (a.a === p.name ? a.b : a.a);
+  // 推运盘: 盘上行星名不带后缀, cross 条目一端带 '·P'/·T'/·R' — 匹配与显示都要剥后缀 (爸爸: 弹窗又见 Jupiter·P 英文)
+  const nmS = (x: string) => x.replace('·P', '').replace('·T', '').replace('·R', '');
+  const isProgName = (x: string) => x !== nmS(x);
+  const otherOf = (a: { a: string; b: string }) => (nmS(a.a) === p.name ? a.b : a.a);
     // 相位列表: 先按对方星体重要度倒序 (BODY_IMP 模块级), 同级再按容许度
   const myAspects = [...chart.aspects]
-    .filter((a) => a.a === p.name || a.b === p.name)
-    .sort((x, y) => impOf(otherOf(y)) - impOf(otherOf(x)) || x.orb - y.orb);
+    .filter((a) => nmS(a.a) === p.name || nmS(a.b) === p.name)
+    .sort((x, y) => impOf(nmS(otherOf(y))) - impOf(nmS(otherOf(x))) || x.orb - y.orb);
   // 木木体系(爸爸4讲P29-30): 接纳=须成相位的单向许可; 互容=双向同住无需相位; 与古典/IbnEzra完全一致
   // 按 pair 归并: 互容时双向记录合成一条 (此前只显示单向"互容", 漏掉本星对对方的接纳方向 — 爸爸抓到)
   const myRecepRaw = chart.receptions
@@ -805,13 +808,16 @@ function PlanetDetail({ p, chart, zhMode, onClose }: {
           <p className="text-[10px] tracking-[0.25em] text-muted uppercase">{t('astro.d.aspects')}</p>
           <div className="mt-2 space-y-1.5">
             {myAspects.map((a, i) => {
-              const other = a.a === p.name ? a.b : a.a;
-              const oP = chart.planets.find((x) => x.name === other);
+              const pEnd = nmS(a.a) === p.name ? a.a : a.b;   // 此星所在端 (含后缀信息)
+              const otherRaw = pEnd === a.a ? a.b : a.a;      // 对方端
+              const other = nmS(otherRaw);
               const app = a.applying === true ? (zhMode ? '入相' : 'applying') : a.applying === false ? (zhMode ? '出相' : 'separating') : '';
               return (
                 <p key={i} className="text-[12.5px] text-muted">
                   <span className="mr-1 text-accent/80">{a.symbol}</span>
-                  {zhMode ? `${p.zh}${a.typeZh}${zhOf(other)}` : `${p.name} ${a.type} ${other}`}
+                  {zhMode
+                    ? `${p.zh}${isProgName(pEnd) ? '·推' : ''}${a.typeZh}${zhOf(other)}${isProgName(otherRaw) ? '·推' : ''}`
+                    : `${p.name}${isProgName(pEnd) ? ' (P)' : ''} ${a.type} ${other}${isProgName(otherRaw) ? ' (P)' : ''}`}
                   <span className="ml-1.5 text-accent/70">{a.orb.toFixed(1)}°</span>
                   {app && <span className="ml-1.5 text-[10px] text-muted/70">{app}</span>}
                 </p>
