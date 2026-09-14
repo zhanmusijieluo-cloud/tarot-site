@@ -77,6 +77,7 @@ export interface ChartAspect {
   symbol: string
   orb: number       // 偏离整相位的度数(越小越紧)
   applying: boolean | null
+  actualAngle?: number  // 两星实际角距 0-180° (爸爸: 弹窗要显示实际度数, 不是只给理论相位)
 }
 
 // ---------- 古典五级尊贵规则表 (公开公版知识) ----------
@@ -546,11 +547,21 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
   const axisSet = new Set<string>(AXIS_NAMES)
   const axisAspects = rawAspects.filter((a: { body1: string; body2: string }) =>
     !(axisSet.has(a.body1) && axisSet.has(a.body2)))
+  // 两星实际角距 0-180° (爸爸: 弹窗显示实际度数)
+  const lonMap = new Map<string, number>([...scopeBodies, ...axisBodies].map((b) => [b.name, b.longitude]))
+  const angleBetween = (n1: string, n2: string): number | undefined => {
+    const l1 = lonMap.get(n1), l2 = lonMap.get(n2)
+    if (l1 === undefined || l2 === undefined) return undefined
+    let d = Math.abs(l1 - l2) % 360
+    if (d > 180) d = 360 - d
+    return toPct(d)
+  }
   const aspects: ChartAspect[] = axisAspects.map((a: {
     body1: string; body2: string; type: string; deviation: number; isApplying: boolean | null; symbol: string
   }) => ({
     a: a.body1, b: a.body2, type: a.type, typeZh: ASPECT_ZH[a.type] ?? a.type,
     symbol: a.symbol, orb: toPct(a.deviation), applying: a.isApplying,
+    actualAngle: angleBetween(a.body1, a.body2),
   }))
 
   // 互容接纳 (全部天体, 与盘面同一守护流派)

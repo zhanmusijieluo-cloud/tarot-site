@@ -30,6 +30,7 @@ export interface VPlanet {
 export interface VAspect {
   a: string; b: string; type: string; typeZh: string; symbol: string;
   orb: number; applying: boolean | null;
+  actualAngle?: number;  // 两星实际角距 (弹窗显示)
 }
 export interface VReception {
   a: string; b: string; kind: string; mutual: boolean; aspected?: boolean; bySign: string;
@@ -813,19 +814,24 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual }: {
               const pEnd = nmS(a.a) === p.name ? a.a : a.b;   // 此星所在端 (含后缀信息)
               const otherRaw = pEnd === a.a ? a.b : a.a;      // 对方端
               const other = nmS(otherRaw);
+              const AX_SYM: Record<string, string> = { Ascendant: 'ASC', Midheaven: 'MC', Descendant: 'DSC', IC: 'IC', ASC: 'ASC', DSC: 'DSC', MC: 'MC' };
+              const otherSym = chart.planets.find((x) => x.name === other)?.symbol ?? AX_SYM[other] ?? other;
               const app = a.applying === true ? (zhMode ? '入相' : 'applying') : a.applying === false ? (zhMode ? '出相' : 'separating') : '';
               return (
-                <p key={i} className="text-[12.5px] text-muted">
-                  <span className="mr-1 text-accent/80">{a.symbol}</span>
-                  {zhMode
-                    ? dual
-                      ? `${isProgName(pEnd) ? '外环' : '内环'}${p.zh}${a.typeZh}${isProgName(otherRaw) ? '外环' : '内环'}${zhOf(other)}`
-                      : `${p.zh}${isProgName(pEnd) ? '·推' : ''}${a.typeZh}${zhOf(other)}${isProgName(otherRaw) ? '·推' : ''}`
-                    : dual
-                      ? `${isProgName(pEnd) ? 'Outer' : 'Inner'} ${p.name} ${a.type} ${isProgName(otherRaw) ? 'Outer' : 'Inner'} ${other}`
-                      : `${p.name}${isProgName(pEnd) ? ' (P)' : ''} ${a.type} ${other}${isProgName(otherRaw) ? ' (P)' : ''}`}
-                  <span className="ml-1.5 text-accent/70">{a.orb.toFixed(1)}°</span>
-                  {app && <span className="ml-1.5 text-[10px] text-muted/70">{app}</span>}
+                <p key={i} className="flex flex-wrap items-baseline gap-x-1.5 text-[12.5px] text-muted">
+                  <span className="text-accent/80">{a.symbol}</span>
+                  <span className="text-[15px] leading-none text-frost/90" title={zhMode ? p.zh : p.name}>{p.symbol}</span>
+                  {dual
+                    ? <span className="text-[9px] text-muted/60">{isProgName(pEnd) ? (zhMode ? '外环' : 'Outer') : (zhMode ? '内环' : 'Inner')}</span>
+                    : isProgName(pEnd) && <span className="text-[9px] text-muted/60">{zhMode ? '推' : 'P'}</span>}
+                  <span>{zhMode ? a.typeZh : a.type}</span>
+                  <span className="text-[15px] leading-none text-frost/90" title={zhMode ? zhOf(other) : other}>{otherSym}</span>
+                  {dual
+                    ? <span className="text-[9px] text-muted/60">{isProgName(otherRaw) ? (zhMode ? '外环' : 'Outer') : (zhMode ? '内环' : 'Inner')}</span>
+                    : isProgName(otherRaw) && <span className="text-[9px] text-muted/60">{zhMode ? '推' : 'P'}</span>}
+                  <span className="text-accent/70">{a.orb.toFixed(1)}°</span>
+                  {a.actualAngle !== undefined && <span className="text-[10px] text-muted/60">{zhMode ? '实际' : 'actual'} {a.actualAngle.toFixed(1)}°</span>}
+                  {app && <span className="text-[10px] text-muted/70">{app}</span>}
                 </p>
               );
             })}

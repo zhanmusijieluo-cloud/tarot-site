@@ -142,15 +142,35 @@ function selfCrossAspects(natal: NatalChart, outerPlanets: ChartPlanet[], settin
     outOfSignPenalty: settings.oosPenalty ?? 0,
     minimumStrength: settings.minStrength ?? 0,
   })
+  // 实际角距 + 入相/出相 (爸爸: 弹窗要实际数据; 速度近似=两星相对速度方向)
+  const lonMap = new Map<string, number>([...natalBodies, ...outerBodies].map((b) => [b.name, b.longitude]))
+  const spdMap = new Map<string, number>([...natalBodies, ...outerBodies].map((b) => [b.name, b.longitudeSpeed]))
+  const TARGET_DEG: Record<string, number> = { conjunction: 0, sextile: 60, square: 90, trine: 120, opposition: 180, quincunx: 150, 'semi-sextile': 30, 'semi-square': 45, sesquiquadrate: 135, quintile: 72, biquintile: 144, septile: 51.43, novile: 40, decile: 36 }
   return (rawAll as Array<{ body1: string; body2: string; type: string; symbol: string; deviation: number }>)
     .filter((a) => outerNames.has(a.body1) !== outerNames.has(a.body2))
     .map((a) => {
       const outerFirst = outerNames.has(a.body1)
+      const l1 = lonMap.get(a.body1), l2 = lonMap.get(a.body2)
+      let actualAngle: number | undefined
+      let applying: boolean | null = null
+      if (l1 !== undefined && l2 !== undefined) {
+        let d = Math.abs(l1 - l2) % 360
+        if (d > 180) d = 360 - d
+        actualAngle = toPct(d)
+        const T = TARGET_DEG[a.type]
+        if (T !== undefined) {
+          const s1 = spdMap.get(a.body1) ?? 0, s2 = spdMap.get(a.body2) ?? 0
+          const sdiff = ((((l2 - l1) % 360) + 540) % 360) - 180   // (-180,180]
+          const rate = sdiff >= 0 ? (s2 - s1) : -(s2 - s1)          // d(角距)/dt 近似
+          const devNow = d - T
+          if (Math.abs(devNow) > 1e-6) applying = ((devNow >= 0 ? 1 : -1) * rate) < 0
+        }
+      }
       const r: ChartAspect = {
         a: outerFirst ? a.body1 : a.body2,
         b: outerFirst ? a.body2 : a.body1,
         type: a.type as ChartAspect['type'], typeZh: ASPECT_ZH_OF(a.type),
-        symbol: a.symbol, orb: toPct(a.deviation), applying: null,
+        symbol: a.symbol, orb: toPct(a.deviation), applying, actualAngle,
       }
       return r
     })
