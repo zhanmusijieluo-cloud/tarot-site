@@ -136,9 +136,11 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
   const firdRows = firdariaTable(dayChart, chart.input.year, chart.input.month, chart.input.day, 2);
   const FIRD_COLS = 6;
   const firdPerCol = Math.ceil(firdRows.length / FIRD_COLS);
-  // ---- 小限法 ----
+  // ---- 小限法 (宫神星同款: 6栏 年|宫|主星, 自出生年起 101 年) ----
   const ascSignIdx = chart.angles.ascendant ? signIdxOf(chart.angles.ascendant.longitude) : 0;
-  const profs = profections(ascSignIdx, 75);
+  const profs = profections(ascSignIdx, 100);
+  const PROF_COLS = 6;
+  const profPerCol = Math.ceil(profs.length / PROF_COLS);
   // ---- Aphesis ----
   // 福点/精神点在 chart.planets 中 (引擎将 lots 并入天体列表, 开启「点位」后有)
   const lotF = chart.planets.find((l) => l.name === 'Part of Fortune');
@@ -383,34 +385,46 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
         </div>
       )}
 
-      {/* ============ 小限法 ============ */}
+      {/* ============ 小限法 (宫神星同款: 6栏 年|宫|主星) ============ */}
       {tab === 'profection' && (
         <div>
           <p className="mb-2 text-[11px] text-muted/70">
-            {T('小限法 — 出生 ASC 所在宫为起点, 每岁推进一宫 (0 岁=1 宫)', 'Profections — annual house from ASC, advancing one house per year')}
+            {T('小限法（该年生日起限）— 出生年为 1 宫, 每年生日推进一宫, 12 年一循环; 「主星」=该宫宫头星座的庙主星', 'Annual profections — 1st house at birth, advancing one house each birthday; Lord = domicile ruler of the profected sign')}
           </p>
-          <div className="max-h-[420px] overflow-y-auto rounded border border-white/[0.06]">
-            <table className="w-full max-w-[560px] text-left text-[13px]">
-              <thead className="sticky top-0 bg-[#0c101c]">
-                <tr className="border-b border-white/[0.06] text-[10px] tracking-[0.15em] text-muted uppercase">
-                  <th className={thCls}>{T('年龄', 'Age')}</th>
-                  <th className={thCls}>{T('宫位', 'House')}</th>
-                  <th className={thCls}>{T('星座', 'Sign')}</th>
-                  <th className={thCls}>{T('年主星', 'Lord of Year')}</th>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1180px] text-left text-[13px]">
+              <thead>
+                <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
+                  {Array.from({ length: PROF_COLS }, (_, c) => (
+                    <React.Fragment key={c}>
+                      <th className={`${thCls} ${c > 0 ? 'border-l border-dashed border-white/[0.12]' : ''}`}>{T('年', 'Year')}</th>
+                      <th className={`${thCls} text-center`}>{T('宫', 'House')}</th>
+                      <th className={`${thCls} text-center`}>{T('主星', 'Lord')}</th>
+                    </React.Fragment>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {profs.map((x) => {
-                  const cur = x.age === curAge;
-                  return (
-                    <tr key={x.age} className={`border-b border-white/[0.04] last:border-0 ${cur ? 'bg-accent/[0.07]' : ''}`}>
-                      <td className={`${tdCls} text-muted tabular-nums`}>{x.age}</td>
-                      <td className={`${tdCls} text-muted tabular-nums`}>{T(`${x.house} 宫`, `H${x.house}`)}</td>
-                      <td className={`${tdCls} text-frost/80`}><SignGlyph si={x.signIdx} color={signColor(x.signIdx)} className="mr-1" />{SIGN_ZH_BY_IDX[x.signIdx]}</td>
-                      <td className={`${tdCls} text-frost/80`}><span className="mr-1.5 text-accent/80">{symOf(x.lord)}</span>{zhOf(x.lord)}{cur ? <span className="ml-2 text-[10px] text-accent">{T('当前', 'now')}</span> : null}</td>
-                    </tr>
-                  );
-                })}
+                {Array.from({ length: profPerCol }, (_, r) => (
+                  <tr key={r} className="border-b border-white/[0.04] last:border-0">
+                    {Array.from({ length: PROF_COLS }, (_, c) => {
+                      const item = profs[c * profPerCol + r];
+                      if (!item) return <td key={c} colSpan={3} />;
+                      const isNow = item.age === curAge;
+                      const bg = isNow ? { background: 'rgba(217,168,184,0.13)' } : undefined;
+                      const yearStr = chart.input.year + item.age;
+                      return (
+                        <React.Fragment key={c}>
+                          <td style={bg} className={`${tdCls} tabular-nums ${isNow ? 'text-accent' : 'text-muted'} ${c > 0 ? 'border-l border-dashed border-white/[0.12]' : ''}`}>
+                            {yearStr}{isNow ? <span className="ml-1.5 text-[10px] text-accent">{T('当前', 'now')}</span> : null}
+                          </td>
+                          <td style={bg} className={`${tdCls} text-center tabular-nums ${isNow ? 'text-accent' : 'text-frost/85'}`}>{item.house}</td>
+                          <td style={bg} className={`${tdCls} text-center text-[15px] ${isNow ? 'text-accent' : 'text-frost/90'}`}>{symOf(item.lord)}</td>
+                        </React.Fragment>
+                      );
+                    })}
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
