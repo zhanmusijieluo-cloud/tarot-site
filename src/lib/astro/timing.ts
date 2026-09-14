@@ -96,6 +96,48 @@ export function profections(ascSignIdx: number, maxAge = 75): ProfectionSeg[] {
   return out
 }
 
+// ---- 黄道释放 Zodiacal Releasing (福点/精神点 Aphesis 二级表; 宫神星同款) ----
+// 校准自宫神星截图: 年=360天 月=30天; L1=主星小年×360d 精确截断;
+// L2=从L1星座起黄道序, 每段=主星小年×30d; 走满12星座后跳对宫(解链LB), 从对宫继续; L2在L1末端截断
+// 小年表(黄道序 白羊..双鱼): 火15 金8 水20 月25 日19 水20 金8 火15 木12 土27 土30 木12
+const ZR_VALUE = [15, 8, 20, 25, 19, 20, 8, 15, 12, 27, 30, 12]
+export interface ZRSeg { lordSign: number; subSign: number; y: number; m: number; d: number; lb?: boolean; startDays: number }
+export function zodiacalReleasing(lotSignIdx: number, by: number, bm: number, bd: number, spanYears = 100): ZRSeg[] {
+  const base = Date.UTC(by, bm - 1, bd)
+  const rows: ZRSeg[] = []
+  const spanDays = spanYears * 360
+  let l1Start = 0
+  let l1Sign = ((lotSignIdx % 12) + 12) % 12
+  let guard = 0
+  while (l1Start < spanDays && guard++ < 60) {
+    const l1End = l1Start + ZR_VALUE[l1Sign] * 360
+    let d = l1Start
+    let subSign = l1Sign
+    let count = 0
+    let loosed = false
+    while (d < l1End - 1e-6) {
+      const dt = new Date(base + Math.round(d) * 86400000)
+      rows.push({
+        lordSign: l1Sign, subSign,
+        y: dt.getUTCFullYear(), m: dt.getUTCMonth() + 1, d: dt.getUTCDate(),
+        lb: loosed && count === 12 ? true : undefined,
+        startDays: d,
+      })
+      d += ZR_VALUE[subSign] * 30
+      count++
+      if (!loosed && count === 12) {
+        subSign = (l1Sign + 6) % 12 // 解链: 跳到L1星座的对宫, 从对宫继续黄道序
+        loosed = true
+      } else {
+        subSign = (subSign + 1) % 12
+      }
+    }
+    l1Start = l1End
+    l1Sign = (l1Sign + 1) % 12
+  }
+  return rows
+}
+
 // ---- Aphesis / 黄道释放 (L1): 从福点(或精神点)所在星座起, 按黄道序推进 ----
 export interface AphesisSeg { signIdx: number; lord: string; years: number; startAge: number; endAge: number }
 export function aphesisL1(lotSignIdx: number, maxAge = 95): AphesisSeg[] {

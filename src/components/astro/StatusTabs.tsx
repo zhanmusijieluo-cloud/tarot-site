@@ -6,7 +6,7 @@
 // ============================================================
 import React, { useState } from 'react';
 import type { VChart, VPlanet } from '@/components/astro/ChartWheel';
-import { SIGN_RULER, SIGN_EXALT, firdariaTable, profections, aphesisL1 } from '@/lib/astro/timing';
+import { SIGN_RULER, SIGN_EXALT, firdariaTable, profections, zodiacalReleasing } from '@/lib/astro/timing';
 import { FIXED_STARS, starConjunctions, starLonAt } from '@/lib/astro/fixed-stars';
 import SignGlyph, { signColor } from '@/components/astro/SignGlyph';
 // 法达大运主星色 (段首行上色, 区分大运阶段; 爸爸:「可以上点色」)
@@ -145,8 +145,11 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
   // 福点/精神点在 chart.planets 中 (引擎将 lots 并入天体列表, 开启「点位」后有)
   const lotF = chart.planets.find((l) => l.name === 'Part of Fortune');
   const lotS = chart.planets.find((l) => l.name === 'Part of Spirit');
-  const aphF = lotF ? aphesisL1(signIdxOf(lotF.longitude)) : null;
-  const aphS = lotS ? aphesisL1(signIdxOf(lotS.longitude)) : null;
+  // ---- Aphesis / 黄道释放 (宫神星同款二级表: 360天年 30天月, 走满12座解链跳对宫) ----
+  const zrF = lotF ? zodiacalReleasing(signIdxOf(lotF.longitude), chart.input.year, chart.input.month, chart.input.day, 100) : null;
+  const zrS = lotS ? zodiacalReleasing(signIdxOf(lotS.longitude), chart.input.year, chart.input.month, chart.input.day, 100) : null;
+  const ZR_COLS = 6;
+  const curDays = (Date.now() - Date.UTC(chart.input.year, chart.input.month - 1, chart.input.day)) / 86400000;
 
   const tabBtn = (id: typeof tab, label: string) => (
     <button
@@ -431,49 +434,73 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
         </div>
       )}
 
-      {/* ============ 福点 / 精神点 Aphesis ============ */}
+      {/* ============ 福点 / 精神点 Aphesis (宫神星同款: 6栏 主|次|起始日期) ============ */}
       {(tab === 'aphesisF' || tab === 'aphesisS') && (() => {
         const lot = tab === 'aphesisF' ? lotF : lotS;
-        const segs = tab === 'aphesisF' ? aphF : aphS;
+        const segs = tab === 'aphesisF' ? zrF : zrS;
         const lotName = tab === 'aphesisF' ? T('福点', 'Fortune') : T('精神点', 'Spirit');
         if (!lot || !segs) {
           return <p className="py-4 text-center text-[12px] text-muted/70">{T('此盘未包含点位 — 请在排盘设置「天体」中开启「点位」后重排', 'Lots not included in this chart — enable "Lots" in settings to cast')}</p>;
         }
+        const perCol = Math.ceil(segs.length / ZR_COLS);
         return (
           <div>
             <p className="mb-2 text-[11px] text-muted/70">
-              {T(`${lotName} Aphesis (黄道释放) — 从${lotName}所在星座起按黄道推进, 每座年数=其主星小年 (日19/月25/水20/金8/火15/木12/土27-30)`, `${lotName} Aphesis (zodiacal releasing) — periods by sign rulership minor years`)}
-              <span className="ml-2 text-muted/50">
+              {T(`${lotName} Aphesis（黄道释放）— 主段自${lotName}星座起按黄道推进, 每段=主星小年(360天年); 子段按「月」推进(30天), 走满12星座后解链 LB 跳对宫`, `${lotName} Aphesis (zodiacal releasing) — L1 by minor years (360-day), L2 in months; LB after 12 signs`)}
+              <span className="ml-2 text-muted/60">
                 {T('起点', 'Start')}: <SignGlyph si={signIdxOf(lot.longitude)} color={signColor(signIdxOf(lot.longitude))} /> {SIGN_ZH_BY_IDX[signIdxOf(lot.longitude)]}
               </span>
             </p>
-            <table className="w-full max-w-[620px] text-left text-[13px]">
-              <thead>
-                <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
-                  <th className={thCls}>{T('序', 'No.')}</th>
-                  <th className={thCls}>{T('星座', 'Sign')}</th>
-                  <th className={thCls}>{T('主星', 'Lord')}</th>
-                  <th className={thCls}>{T('年数', 'Years')}</th>
-                  <th className={thCls}>{T('年龄', 'Age')}</th>
-                  <th className={thCls}>{T('起止年份', 'Years')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {segs.map((sg, i) => {
-                  const cur = curAgeExact >= sg.startAge && curAgeExact < sg.endAge;
-                  return (
-                    <tr key={i} className={`border-b border-white/[0.04] last:border-0 ${cur ? 'bg-accent/[0.07]' : ''}`}>
-                      <td className={`${tdCls} text-muted/60`}>{i + 1}</td>
-                      <td className={`${tdCls} text-frost/85`}><SignGlyph si={sg.signIdx} color={signColor(sg.signIdx)} className="mr-1" />{SIGN_ZH_BY_IDX[sg.signIdx]}</td>
-                      <td className={`${tdCls} text-frost/85`}><span className="mr-1.5 text-accent/80">{symOf(sg.lord)}</span>{zhOf(sg.lord)}</td>
-                      <td className={`${tdCls} text-muted tabular-nums`}>{sg.years}</td>
-                      <td className={`${tdCls} text-muted tabular-nums`}>{sg.startAge}–{sg.endAge} {T('岁', 'y')}</td>
-                      <td className={`${tdCls} text-muted/80 tabular-nums`}>{chart.input.year + sg.startAge}–{chart.input.year + sg.endAge}{cur ? <span className="ml-2 text-[10px] text-accent">{T('当前', 'now')}</span> : null}</td>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[1180px] text-left text-[13px]">
+                <thead>
+                  <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
+                    {Array.from({ length: ZR_COLS }, (_, c) => (
+                      <React.Fragment key={c}>
+                        <th className={`${thCls} text-center ${c > 0 ? 'border-l border-dashed border-white/[0.12]' : ''}`}>{T('主', 'L1')}</th>
+                        <th className={`${thCls} text-center`}>{T('次', 'L2')}</th>
+                        <th className={thCls}>{T('起始日期', 'Date')}</th>
+                      </React.Fragment>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {Array.from({ length: perCol }, (_, r) => (
+                    <tr key={r} className="border-b border-white/[0.04] last:border-0">
+                      {Array.from({ length: ZR_COLS }, (_, c) => {
+                        const idx = c * perCol + r;
+                        const item = segs[idx];
+                        if (!item) return <td key={c} colSpan={3} />;
+                        const next = segs[idx + 1];
+                        const endDays = next ? next.startDays : item.startDays + 1e5;
+                        const isNow = curDays >= item.startDays && curDays < endDays;
+                        const isStart = item.subSign === item.lordSign;
+                        const lordC = signColor(item.lordSign);
+                        const bg = isNow ? { background: 'rgba(217,168,184,0.13)' } : isStart ? { background: lordC + '14' } : undefined;
+                        const dateStr = `${item.y}-${String(item.m).padStart(2, '0')}-${String(item.d).padStart(2, '0')}`;
+                        return (
+                          <React.Fragment key={c}>
+                            <td style={bg} colSpan={isStart ? 2 : undefined} className={`${tdCls} text-center ${c > 0 ? 'border-l border-dashed border-white/[0.12]' : ''}`}>
+                              <SignGlyph si={item.lordSign} color={lordC} size={15} />
+                            </td>
+                            {!isStart && (
+                              <td style={bg} className={`${tdCls} text-center`}>
+                                <SignGlyph si={item.subSign} color={signColor(item.subSign)} size={15} />
+                              </td>
+                            )}
+                            <td style={isNow ? { background: 'rgba(217,168,184,0.13)', color: '#d9a8b8' } : isStart ? { background: lordC + '14', color: lordC } : undefined} className={`${tdCls} tabular-nums ${isNow ? 'text-accent' : isStart ? '' : 'text-muted'}`}>
+                              {dateStr}
+                              {item.lb ? <span className="ml-1.5 text-[10px] text-[#cdb88a]">LB</span> : null}
+                              {isNow ? <span className="ml-1.5 text-[10px] text-accent">{T('当前', 'now')}</span> : null}
+                            </td>
+                          </React.Fragment>
+                        );
+                      })}
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         );
       })()}
