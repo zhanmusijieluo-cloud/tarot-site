@@ -166,6 +166,8 @@ function ChartPageInner() {
   const [synOpen, setSynOpen] = useState(false);
   const [newArcOpen, setNewArcOpen] = useState(false);
   const [arcList, setArcList] = useState<Archive[]>([]);
+  const [arcToast, setArcToast] = useState('');
+  const [arcBusy, setArcBusy] = useState(false);
   useEffect(() => {
     if (!syncId) { setArc(null); return; }
     let alive = true;
@@ -188,6 +190,29 @@ function ChartPageInner() {
       .catch((e) => { if (alive) setSynErr(e instanceof Error ? e.message : t('astro.form.failed')); });
     return () => { alive = false; };
   }, [birth, arc, settings, t]);
+  // 一键存入我的档案 (爸爸: 星盘页直接存档, 不用绕到档案页)
+  const stashBirth = async () => {
+    if (!birth || arcBusy) return;
+    setArcBusy(true);
+    try {
+      const cur = await loadArchivesSmart();
+      const dup = cur.list.find((x) => x.label === (birth.label || '未命名') && x.birth.year === birth.year && x.birth.month === birth.month && x.birth.day === birth.day && x.birth.hour === birth.hour && x.birth.minute === birth.minute);
+      if (dup) {
+        setArcToast(zhMode ? '这份资料已在您的档案里了' : 'Already in your archives');
+      } else {
+        const r = await saveArchiveSmart(birth);
+        setArcToast(r.mode === 'cloud'
+          ? (zhMode ? '✓ 已存入云端档案' : '✓ Saved to cloud')
+          : (zhMode ? '✓ 已存入本机档案 (登录并建表后自动上云)' : '✓ Saved locally'));
+      }
+    } catch {
+      setArcToast(zhMode ? '存入失败, 稍后再试' : 'Failed, retry later');
+    } finally {
+      setArcBusy(false);
+      setTimeout(() => setArcToast(''), 3500);
+    }
+  };
+
   // 新增档案的默认出生资料 (EditBirth 初始值)
   const emptyB: BirthData = { year: 1995, month: 1, day: 1, hour: 12, minute: 0, timezone: 8, latitude: 39.9, longitude: 116.41, city: '北京', timeKnown: true, houseSystem: 'placidus' };
 
@@ -209,6 +234,17 @@ function ChartPageInner() {
   // 资料卡下方竖排操作 (编辑资料/宫位设置/排盘设置)
   const cornerActions = (
     <>
+      <button
+        onClick={stashBirth}
+        disabled={arcBusy}
+        title={zhMode ? '把当前盘存入「我的档案」' : 'Save this chart into My archives'}
+        className="flex w-full items-center gap-2 rounded-xl border border-white/[0.1] bg-[#0a0e19]/90 px-3.5 py-[9px] text-left text-[11.5px] text-frost/75 shadow-[0_6px_18px_rgba(0,0,0,0.35)] backdrop-blur-sm transition-colors hover:border-accent/40 hover:text-accent disabled:opacity-50"
+      >
+        <span className="text-[12px]">☆</span> {arcBusy ? (zhMode ? '存入中…' : 'Saving…') : (zhMode ? '存入我的档案' : 'Save to archives')}
+      </button>
+      {arcToast && (
+        <p className="rounded-xl border border-accent/30 bg-accent/[0.06] px-3.5 py-2 text-[10.5px] leading-relaxed text-accent">{arcToast}</p>
+      )}
       <button
         onClick={() => setEditOpen(true)}
         title={t('astro.edit.hint')}
