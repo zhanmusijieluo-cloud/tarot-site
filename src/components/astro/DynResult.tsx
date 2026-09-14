@@ -47,11 +47,13 @@ const dmsOrb = (deg: number) => {
   return `${d}°${String(m).padStart(2, '0')}′`;
 };
 
-export default function DynResult({ dyn, zhMode, target, onDate, cornerActions }: {
+export default function DynResult({ dyn, zhMode, target, onDate, onNow, cornerActions }: {
   dyn: DynamicChart;
   zhMode: boolean;
   target: { year: number; month: number; day: number; hour?: number; minute?: number };
   onDate: (y: number, m: number, d: number, hour?: number, minute?: number) => void;
+  /** 回到当下 (访客本地此刻) */
+  onNow?: () => void;
   cornerActions?: React.ReactNode;
 }) {
   const { t } = useI18n();
@@ -150,6 +152,7 @@ export default function DynResult({ dyn, zhMode, target, onDate, cornerActions }
                 units={dyn.type === 'transit' ? ['y', 'mo', 'd', 'h', 'mi'] : ['y', 'mo', 'd']}
                 zhMode={zhMode}
                 onChange={(t) => onDate(t.y, t.m, t.d, t.h, t.mi)}
+                onNow={onNow}
               />
               <label className="mt-2 flex items-center justify-between gap-2 text-[11px] text-muted/80">
                 {zhMode ? '跳转' : 'Jump'}

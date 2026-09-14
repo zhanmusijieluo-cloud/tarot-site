@@ -39,11 +39,13 @@ export function stepTime(t: TimeParts, dir: 1 | -1, unit: StepUnit): TimeParts {
   return { y, m, d, h, mi };
 }
 
-export default function TimeStepper({ value, units, zhMode, onChange }: {
+export default function TimeStepper({ value, units, zhMode, onChange, onNow }: {
   value: TimeParts;
   units: StepUnit[];
   zhMode: boolean;
   onChange: (t: TimeParts) => void;
+  /** "今": 回到访客当下 (爸爸: 别人进来=当下时间) */
+  onNow?: () => void;
 }) {
   const [unit, setUnit] = useState<StepUnit>(units[0] ?? 'd');
   const active = units.includes(unit) ? unit : units[0];
@@ -73,6 +75,15 @@ export default function TimeStepper({ value, units, zhMode, onChange }: {
             {zhMode ? UNIT_ZH[u] : UNIT_EN[u]}
           </button>
         ))}
+        {onNow && (
+          <button
+            onClick={onNow}
+            title={zhMode ? '回到现在' : 'Back to now'}
+            className="rounded-full border border-white/[0.08] px-2.5 py-0.5 text-[10.5px] text-muted/70 transition-colors hover:border-accent/40 hover:text-accent"
+          >
+            {zhMode ? '今' : 'Now'}
+          </button>
+        )}
       </div>
     </div>
   );

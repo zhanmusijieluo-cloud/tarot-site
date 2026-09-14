@@ -90,12 +90,14 @@ export async function POST(req: NextRequest) {
       if (!Number.isInteger(ty) || ty < 1900 || ty > 2100) return bad('目标年份需在 1900-2100')
       if (!Number.isInteger(tm) || tm < 1 || tm > 12) return bad('目标月份无效')
       if (!Number.isInteger(td) || td < 1 || td > 31) return bad('目标日期无效')
-      // 时分 (行运/天象用; 推运类忽略)
+      // 时分 (行运/天象用; 推运类忽略) + 访客时区 (行运瞬时换算用)
       const th = Number(t.hour), tmi = Number(t.minute)
+      const tz = Number(t.tzOffset)
       target = {
         year: ty, month: tm, day: td,
         ...(Number.isInteger(th) && th >= 0 && th <= 23 ? { hour: th } : {}),
         ...(Number.isInteger(tmi) && tmi >= 0 && tmi <= 59 ? { minute: tmi } : {}),
+        ...(Number.isFinite(tz) && tz >= -12 && tz <= 14 ? { tzOffset: tz } : {}),
       }
     }
 

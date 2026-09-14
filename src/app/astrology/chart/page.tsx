@@ -44,6 +44,9 @@ function ChartPageInner() {
   // 目标时分 (天象/行运用; 推运类忽略时分但 URL 可带)
   const dpHour = sp.get('dph') !== null ? Math.min(23, Math.max(0, Number(sp.get('dph')) || 0)) : nowD.getHours();
   const dpMin = sp.get('dpmi') !== null ? Math.min(59, Math.max(0, Number(sp.get('dpmi')) || 0)) : nowD.getMinutes();
+  // 访客本地时区 (爸爸: 同步当地时间, 别人进来=各自当下; 行运/天象瞬时按此换算)
+  const tzLocal = -nowD.getTimezoneOffset() / 60;
+  const backToNow = () => patchParams((p) => { p.delete('dpy'); p.delete('dpm'); p.delete('dpd'); p.delete('dph'); p.delete('dpmi'); });
   const [dyn, setDyn] = useState<DynamicChart | null>(null);
   const [dynErr, setDynErr] = useState('');
 
@@ -116,22 +119,29 @@ function ChartPageInner() {
     fetch('/api/astro/chart/dynamic', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ birth: { ...birth, houseSystem: birth.houseSystem ?? 'placidus' }, settings, type: dynType, target: { year: dpy, month: dpm, day: dpd, hour: dpHour, minute: dpMin } }),
+      body: JSON.stringify({ birth: { ...birth, houseSystem: birth.houseSystem ?? 'placidus' }, settings, type: dynType, target: { year: dpy, month: dpm, day: dpd, hour: dpHour, minute: dpMin, tzOffset: tzLocal } }),
     })
       .then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.error || 'failed'); if (alive) setDyn(j.chart as DynamicChart); })
       .catch((e) => { if (alive) setDynErr(e instanceof Error ? e.message : t('astro.form.failed')); });
     return () => { alive = false; };
-  }, [birth, settings, dynType, dpy, dpm, dpd, dpHour, dpMin, t]);
+  }, [birth, settings, dynType, dpy, dpm, dpd, dpHour, dpMin, tzLocal, t]);
 
   // ---- 法达盘 / 小限盘 (纯前端: 盘+外环, 用本命数据) / 天象盘 (纯天象) ----
   const bandKind: 'firdaria' | 'profection' | null = dpKey === 'fir' ? 'firdaria' : dpKey === 'prof' ? 'profection' : null;
   const skyMode = dpKey === 'sky';
   const [sky, setSky] = useState<VChart | null>(null);
-  const skyBirth = useMemo(() => (birth && skyMode ? {
-    ...birth,
-    year: dpy, month: dpm, day: dpd, hour: dpHour, minute: dpMin, timeKnown: true,
-    label: zhMode ? '天象盘' : 'Sky chart',
-  } : null), [birth, skyMode, dpy, dpm, dpd, dpHour, dpMin, zhMode]);
+  const skyBirth = useMemo(() => {
+    if (!birth || !skyMode) return null;
+    // 访客本地钟表 y/m/d h:mi + 本地时区 → 瞬时 → 出生地时区钟表时间 (天象=访客此刻, 跨时区看也准)
+    const utcMs = Date.UTC(dpy, dpm - 1, dpd, dpHour, dpMin) - tzLocal * 3600e3;
+    const dtB = new Date(utcMs + (birth.timezone ?? 0) * 3600e3);
+    return {
+      ...birth,
+      year: dtB.getUTCFullYear(), month: dtB.getUTCMonth() + 1, day: dtB.getUTCDate(),
+      hour: dtB.getUTCHours(), minute: dtB.getUTCMinutes(), timeKnown: true,
+      label: zhMode ? '天象盘' : 'Sky chart',
+    };
+  }, [birth, skyMode, dpy, dpm, dpd, dpHour, dpMin, tzLocal, zhMode]);
   useEffect(() => {
     if (!skyBirth) { setSky(null); return; }
     let alive = true;
@@ -300,6 +310,7 @@ function ChartPageInner() {
                 units={['y', 'mo', 'd', 'h', 'mi']}
                 zhMode={zhMode}
                 onChange={(t) => patchParams((p) => { p.set('dpy', String(t.y)); p.set('dpm', String(t.m)); p.set('dpd', String(t.d)); p.set('dph', String(t.h)); p.set('dpmi', String(t.mi)); })}
+                onNow={backToNow}
               />
             </div>
             {sky ? (
@@ -315,6 +326,7 @@ function ChartPageInner() {
               zhMode={zhMode}
               target={{ year: dpy, month: dpm, day: dpd, hour: dpHour, minute: dpMin }}
               onDate={(y, m, d, h, mi) => patchParams((p) => { p.set('dpy', String(y)); p.set('dpm', String(m)); p.set('dpd', String(d)); if (h !== undefined) p.set('dph', String(h)); if (mi !== undefined) p.set('dpmi', String(mi)); })}
+              onNow={backToNow}
               cornerActions={cornerActions}
             />
           ) : dynErr ? (

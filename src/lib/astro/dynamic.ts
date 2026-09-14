@@ -14,7 +14,7 @@ import {
 
 export type DynamicType = 'natal' | 'transit' | 'solar-return' | 'lunar-return' | 'progression' | 'tertiary' | 'solar-arc'
 
-export interface DynDate { year: number; month: number; day: number; hour?: number; minute?: number }
+export interface DynDate { year: number; month: number; day: number; hour?: number; minute?: number; /** 访客本地时区偏移 (行运用; 缺省=出生地) */ tzOffset?: number }
 
 // ---------- 日期 ↔ 儒略日 ----------
 export function toJD(d: DynDate, timezone = 0): number {
@@ -180,7 +180,8 @@ function selfCrossAspects(natal: NatalChart, outerPlanets: ChartPlanet[], settin
 export function castTransitChart(birth: BirthData, settings: CastSettings, target: DynDate): DynamicChart {
   const natal = castNatalChart(birth, settings)
   const warnings = [...natal.warnings]
-  const jd = toJD({ ...target, hour: target.hour ?? 12, minute: target.minute ?? 0 }, birth.timezone)
+  // 行运时刻: 访客本地时分+本地时区 → 瞬时 (爸爸: 同步访客当地, 跨时区看也准); 缺省回退出生地时区
+  const jd = toJD({ ...target, hour: target.hour ?? 12, minute: target.minute ?? 0 }, target.tzOffset ?? birth.timezone)
   const outerPlanets = transitPositions(jd, settings).map((r) => posToPlanet(r, natal.cusps))
   const cross = selfCrossAspects(natal, outerPlanets, settings, '·T')
   return {
