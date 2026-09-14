@@ -76,7 +76,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
   const dz = (n: string) => DIGN_ZH[n] ?? n[0]
 
   // ---- 右侧特征面板 (宫神星格式: 判词全保留, 行星/星座用符号) ----
-  type Feat = { el: React.ReactNode; tone: 'gold' | 'soft' | 'warn' | 'hot'; tip?: string; main?: number }
+  type Feat = { el: React.ReactNode; tone: 'gold' | 'soft' | 'warn' | 'hot'; tip?: string; main?: number; rank?: number }
   // 星体重要度 (爸爸定标同弹窗: 七大行星→三王星→4轴→其他) — 与 ChartWheel 的 BODY_IMP 同口径
   const IMP: Record<string, number> = {
     Sun: 70, Moon: 65, Mercury: 60, Venus: 55, Mars: 50, Jupiter: 45, Saturn: 40,
@@ -103,6 +103,8 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
   if (mc) features.push({ el: placeLine(mc, '中天'), tone: 'gold' })
   // 互容 · 接纳 (宫神星判词句式): ☉ 被 ♀ 接纳 (本垣♉) / ♀ 与 ♂ 互容 (♎/♈ 本垣)
   const recepFeats: Feat[] = []
+  // 爸爸定标: 尊贵档 — 本垣/曜升对技法权重最高, 三分/界/面次之 (特征面板判词排序用)
+  const DIGNITY_RANK: Record<string, number> = { domicile: 0, exaltation: 0, triplicity: 1, term: 1, face: 1 }
   {
     const seen = new Set<string>();
     for (const r of chart.receptions) {
@@ -119,6 +121,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
         recepFeats.push({
           tone: 'soft',
           main: impMax,
+          rank: Math.min(DIGNITY_RANK[r.kind] ?? 2, rev ? DIGNITY_RANK[rev.kind] ?? 2 : 2),
           tip: `${pa?.zh ?? r.a} 与 ${pb?.zh ?? r.b} 互容${r.aspected ? '+接纳（有相位，能量互通）' : '（无相位仍成立，能量共享）'}: 互居对方${kind}之座 ${sz(r.bySign)}/${sz(rev?.bySign ?? '')}`,
           el: (
             <span>
@@ -138,6 +141,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
         recepFeats.push({
           tone: 'soft',
           main: impMax,
+          rank: DIGNITY_RANK[r.kind] ?? 2,
           tip: `${pa?.zh ?? r.a} 被 ${pb?.zh ?? r.b} 接纳（居其${kind}·${sz(r.bySign)}）`,
           el: (
             <span>
@@ -151,7 +155,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
       }
     }
   }
-  recepFeats.sort((a, b) => (b.main ?? 0) - (a.main ?? 0))
+  recepFeats.sort((a, b) => (a.rank ?? 2) - (b.rank ?? 2) || (b.main ?? 0) - (a.main ?? 0))
   features.push(...recepFeats)
   // 接近太阳三段 (木木PPT33): 日核Cazimi反强 / 燃烧·焦身难发挥 / 日光下轻+近贵
   {
