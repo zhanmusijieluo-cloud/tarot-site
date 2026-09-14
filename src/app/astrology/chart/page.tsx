@@ -225,15 +225,8 @@ function ChartPageInner() {
   }
 
   // 资料卡下方竖排操作 (编辑资料/宫位设置/排盘设置)
-  const cornerActions = (
+  const housesSettingsBlock = (
     <>
-      <button
-        onClick={() => setEditOpen(true)}
-        title={t('astro.edit.hint')}
-        className="flex w-full items-center gap-2 rounded-xl border border-white/[0.1] bg-[#0a0e19]/90 px-3.5 py-[9px] text-left text-[11.5px] text-frost/75 shadow-[0_6px_18px_rgba(0,0,0,0.35)] backdrop-blur-sm transition-colors hover:border-accent/40 hover:text-accent"
-      >
-        <span className="text-[12px]">✎</span> {t('astro.edit.btn')}
-      </button>
       <button
         onClick={() => openSettings('houses')}
         title={t('astro.set.houseHint')}
@@ -252,6 +245,20 @@ function ChartPageInner() {
       />
     </>
   );
+  const cornerActions = (
+    <>
+      <button
+        onClick={() => setEditOpen(true)}
+        title={t('astro.edit.hint')}
+        className="flex w-full items-center gap-2 rounded-xl border border-white/[0.1] bg-[#0a0e19]/90 px-3.5 py-[9px] text-left text-[11.5px] text-frost/75 shadow-[0_6px_18px_rgba(0,0,0,0.35)] backdrop-blur-sm transition-colors hover:border-accent/40 hover:text-accent"
+      >
+        <span className="text-[12px]">✎</span> {t('astro.edit.btn')}
+      </button>
+      {housesSettingsBlock}
+    </>
+  );
+  // 合盘模式: 不能修改盘资料 → 去掉「编辑资料」按钮版 (爸爸)
+  const cornerActionsNoEdit = housesSettingsBlock;
 
 
   return (
@@ -355,7 +362,7 @@ function ChartPageInner() {
               aLabel={birth?.label ?? (zhMode ? '主盘' : 'Main')}
               bLabel={arc.label}
               onExit={() => patchParams((p) => { p.delete('sync'); p.delete('stab'); })}
-              cornerActions={cornerActions}
+              cornerActions={cornerActionsNoEdit}
             />
           ) : synErr ? (
             <p className="mb-5 rounded-xl border border-[#e8a08a]/25 bg-[#e8a08a]/[0.05] px-4 py-3 text-center text-[12px] text-[#e8a08a]">{synErr}</p>

@@ -143,7 +143,7 @@ export default function SynastryResult({ syn, zhMode, tab, onTab, aLabel, bLabel
       <div className="flex flex-wrap items-center gap-1">
         <button
           onClick={onExit}
-          className="mr-1 rounded-full border border-white/[0.14] px-3 py-1 text-[10.5px] text-muted transition-colors hover:border-accent/40 hover:text-accent"
+          className="mr-1 rounded-full border border-white/[0.14] px-3.5 py-1.5 text-[12px] text-muted transition-colors hover:border-accent/40 hover:text-accent"
         >
           ← {zhMode ? '退出合盘' : 'Exit'}
         </button>
@@ -151,7 +151,7 @@ export default function SynastryResult({ syn, zhMode, tab, onTab, aLabel, bLabel
           <button
             key={k}
             onClick={() => onTab(k)}
-            className={`rounded-full border px-2.5 py-1 text-[10.5px] tracking-[0.04em] transition-colors ${cur === k ? 'border-accent/50 bg-accent/[0.08] text-accent' : 'border-white/[0.1] text-muted hover:border-white/25'}`}
+            className={`rounded-full border px-3.5 py-1.5 text-[12px] tracking-[0.05em] transition-colors ${cur === k ? 'border-accent/50 bg-accent/[0.08] text-accent' : 'border-white/[0.1] text-muted hover:border-white/25'}`}
           >
             {zhMode ? zh : en}
           </button>
