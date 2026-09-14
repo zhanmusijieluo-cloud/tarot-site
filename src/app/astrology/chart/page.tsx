@@ -13,6 +13,8 @@ import { useI18n } from '@/i18n';
 import ChartResult from '@/components/astro/ChartResult';
 import EditBirth from '@/components/astro/EditBirth';
 import ChartSettings from '@/components/astro/ChartSettings';
+import DynResult from '@/components/astro/DynResult';
+import type { DynamicChart } from '@/lib/astro/dynamic';
 import type { VChart } from '@/components/astro/ChartWheel';
 import { birthFromParams, paramsFromBirth, settingsFromParams, settingsToParams } from '@/lib/astro/chart-url';
 import { HOUSE_SYSTEM_ZH, type BirthData, type CastSettings, type HouseSystem } from '@/lib/astro/chart';
@@ -28,6 +30,14 @@ function ChartPageInner() {
   const birth = useMemo(() => birthFromParams(new URLSearchParams(sp.toString())), [sp]);
   const settings = useMemo(() => settingsFromParams(new URLSearchParams(sp.toString())) ?? {}, [sp]);
   const aspectMode = (sp.get('ag') === 'list' ? 'list' : 'grid') as 'list' | 'grid';
+  // ---- 动态盘: 次限 (dp=s), 目标日期 dpy/dpm/dpd (缺省=今天) ----
+  const dpMode = sp.get('dp') === 's';
+  const nowD = new Date();
+  const dpy = Number(sp.get('dpy')) || nowD.getFullYear();
+  const dpm = Number(sp.get('dpm')) || nowD.getMonth() + 1;
+  const dpd = Number(sp.get('dpd')) || nowD.getDate();
+  const [dyn, setDyn] = useState<DynamicChart | null>(null);
+  const [dynErr, setDynErr] = useState('');
 
   const [data, setData] = useState<VChart | null>(null);
   const [error, setError] = useState('');
@@ -90,6 +100,22 @@ function ChartPageInner() {
     setEditOpen(false);
   };
 
+  // 次限盘数据 (dp=s 时请求; 换日期/设置自动重算)
+  useEffect(() => {
+    if (!birth || !dpMode) { setDyn(null); setDynErr(''); return; }
+    let alive = true;
+    setDynErr('');
+    fetch('/api/astro/chart/dynamic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ birth: { ...birth, houseSystem: birth.houseSystem ?? 'placidus' }, settings, type: 'progression', target: { year: dpy, month: dpm, day: dpd } }),
+    })
+      .then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.error || 'failed'); if (alive) setDyn(j.chart as DynamicChart); })
+      .catch((e) => { if (alive) setDynErr(e instanceof Error ? e.message : t('astro.form.failed')); });
+    return () => { alive = false; };
+  }, [birth, settings, dpMode, dpy, dpm, dpd, t]);
+
+
   if (!birth) {
     return (
       <PageShell label={t('page.astrology.label')} title={t('astro.chart.title')} wide>
@@ -103,6 +129,35 @@ function ChartPageInner() {
     );
   }
 
+  // 资料卡下方竖排操作 (编辑资料/宫位设置/排盘设置)
+  const cornerActions = (
+    <>
+      <button
+        onClick={() => setEditOpen(true)}
+        title={t('astro.edit.hint')}
+        className="flex w-full items-center gap-2 rounded-xl border border-white/[0.1] bg-[#0a0e19]/90 px-3.5 py-[9px] text-left text-[11.5px] text-frost/75 shadow-[0_6px_18px_rgba(0,0,0,0.35)] backdrop-blur-sm transition-colors hover:border-accent/40 hover:text-accent"
+      >
+        <span className="text-[12px]">✎</span> {t('astro.edit.btn')}
+      </button>
+      <button
+        onClick={() => openSettings('houses')}
+        title={t('astro.set.houseHint')}
+        className="flex w-full items-center gap-2 rounded-xl border border-white/[0.1] bg-[#0a0e19]/90 px-3.5 py-[9px] text-left text-[11.5px] text-frost/75 shadow-[0_6px_18px_rgba(0,0,0,0.35)] backdrop-blur-sm transition-colors hover:border-accent/40 hover:text-accent"
+      >
+        <span className="text-[12px]">⬡</span> {zhMode ? '宫位设置' : 'Houses'}
+        <span className="ml-auto text-[10px] text-muted/70">{zhMode ? (SYS_ZH[data?.houseSystemUsed ?? birth.houseSystem ?? 'placidus'] ?? data?.houseSystemUsed ?? '普拉西德') : (data?.houseSystemUsed ?? birth.houseSystem ?? 'placidus')} ▾</span>
+      </button>
+      <ChartSettings
+        variant="block"
+        value={settings}
+        onChange={applySettings}
+        sys={data?.houseSystemUsed ?? birth.houseSystem ?? 'placidus'}
+        onSysChange={(s) => switchSystem(s as HouseSystem)}
+        tabSignal={tabSignal}
+      />
+    </>
+  );
+
   return (
     <PageShell
       label={t('page.astrology.label')}
@@ -115,7 +170,8 @@ function ChartPageInner() {
         {/* 盘种切换条 (爸爸: 上面用来切换 本命/三限/次限…等盘; 现阶段仅本命可看, 其余置灰待接) */}
         <div className="mb-3 flex flex-wrap items-center justify-center gap-1.5">
           <button
-            className="rounded-full border border-accent/50 bg-accent/[0.08] px-3.5 py-1.5 text-[11px] tracking-[0.15em] text-accent"
+            onClick={() => patchParams((p) => { p.delete('dp'); p.delete('dpy'); p.delete('dpm'); p.delete('dpd'); })}
+            className={`rounded-full border px-3.5 py-1.5 text-[11px] tracking-[0.15em] transition-colors ${!dpMode ? 'border-accent/50 bg-accent/[0.08] text-accent' : 'border-white/[0.1] text-muted hover:border-white/25'}`}
           >
             {zhMode ? '本命盘' : 'Natal'}
           </button>
@@ -127,9 +183,8 @@ function ChartPageInner() {
             {zhMode ? '三限盘' : 'Tertiary'}
           </button>
           <button
-            aria-disabled="true"
-            title={zhMode ? '次限盘 · 开发中' : 'Secondary progression · in development'}
-            className="cursor-not-allowed rounded-full border border-white/[0.06] px-3.5 py-1.5 text-[11px] tracking-[0.15em] text-muted/40"
+            onClick={() => patchParams((p) => { p.set('dp', 's'); })}
+            className={`rounded-full border px-3.5 py-1.5 text-[11px] tracking-[0.15em] transition-colors ${dpMode ? 'border-accent/50 bg-accent/[0.08] text-accent' : 'border-white/[0.1] text-muted hover:border-white/25'}`}
           >
             {zhMode ? '次限盘' : 'Secondary'}
           </button>
@@ -170,33 +225,23 @@ function ChartPageInner() {
           <p className="py-20 text-center text-[12px] tracking-[0.3em] text-muted">{t('astro.form.casting')}</p>
         )}
         <EditBirth birth={birth} open={editOpen} onClose={() => setEditOpen(false)} onSave={saveBirth} />
-        {data && <ChartResult chart={data} zhMode={zhMode} aspectMode={aspectMode} onAspectMode={(m) => patchParams((p) => { if (m === 'list') p.set('ag', 'list'); else p.delete('ag'); })} cornerActions={
-          <>
-            <button
-              onClick={() => setEditOpen(true)}
-              title={t('astro.edit.hint')}
-              className="flex w-full items-center gap-2 rounded-xl border border-white/[0.1] bg-[#0a0e19]/90 px-3.5 py-[9px] text-left text-[11.5px] text-frost/75 shadow-[0_6px_18px_rgba(0,0,0,0.35)] backdrop-blur-sm transition-colors hover:border-accent/40 hover:text-accent"
-            >
-              <span className="text-[12px]">✎</span> {t('astro.edit.btn')}
-            </button>
-            <button
-              onClick={() => openSettings('houses')}
-              title={t('astro.set.houseHint')}
-              className="flex w-full items-center gap-2 rounded-xl border border-white/[0.1] bg-[#0a0e19]/90 px-3.5 py-[9px] text-left text-[11.5px] text-frost/75 shadow-[0_6px_18px_rgba(0,0,0,0.35)] backdrop-blur-sm transition-colors hover:border-accent/40 hover:text-accent"
-            >
-              <span className="text-[12px]">⬡</span> {zhMode ? '宫位设置' : 'Houses'}
-              <span className="ml-auto text-[10px] text-muted/70">{zhMode ? (SYS_ZH[data.houseSystemUsed ?? birth.houseSystem ?? 'placidus'] ?? data.houseSystemUsed ?? '普拉西德') : (data.houseSystemUsed ?? birth.houseSystem ?? 'placidus')} ▾</span>
-            </button>
-            <ChartSettings
-              variant="block"
-              value={settings}
-              onChange={applySettings}
-              sys={data.houseSystemUsed ?? birth.houseSystem ?? 'placidus'}
-              onSysChange={(s) => switchSystem(s as HouseSystem)}
-              tabSignal={tabSignal}
+        {dpMode ? (
+          dyn ? (
+            <DynResult
+              dyn={dyn}
+              zhMode={zhMode}
+              target={{ year: dpy, month: dpm, day: dpd }}
+              onDate={(y, m, d) => patchParams((p) => { p.set('dpy', String(y)); p.set('dpm', String(m)); p.set('dpd', String(d)); })}
+              cornerActions={cornerActions}
             />
-          </>
-        } />}
+          ) : dynErr ? (
+            <p className="mb-5 rounded-xl border border-[#e8a08a]/25 bg-[#e8a08a]/[0.05] px-4 py-3 text-center text-[12px] text-[#e8a08a]">{dynErr}</p>
+          ) : (
+            <p className="py-20 text-center text-[12px] tracking-[0.3em] text-muted">{t('astro.form.casting')}</p>
+          )
+        ) : (
+          data && <ChartResult chart={data} zhMode={zhMode} aspectMode={aspectMode} onAspectMode={(m) => patchParams((p) => { if (m === 'list') p.set('ag', 'list'); else p.delete('ag'); })} cornerActions={cornerActions} />
+        )}
       </section>
     </PageShell>
   );

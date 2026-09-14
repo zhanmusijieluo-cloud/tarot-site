@@ -4,7 +4,7 @@
 // 全部确定性计算, 与本命盘同一引擎栈 (celestine)
 // ============================================================
 import {
-  calculateTransits, calculateProgression, getPosition, ephemeris,
+  calculateTransits, calculateProgression, calculateAspects, getPosition, ephemeris,
   AspectType, type NatalPoint,
 } from 'celestine'
 import {
@@ -161,13 +161,36 @@ export function castProgressionChart(birth: BirthData, settings: CastSettings, t
   const src = (arc ? pr.solarArcPositions : pr.planets) as Array<{ name: string; longitude: number; longitudeSpeed?: number; isRetrograde?: boolean }>
   const outerPlanets = (src?.length ? src : pr.planets).map((p) =>
     posToPlanet({ name: p.name, longitude: p.longitude, latitude: 0, longitudeSpeed: p.longitudeSpeed ?? 0, isRetrograde: !!p.isRetrograde }, natal.cusps))
-  const outerNames = new Set(outerPlanets.map((p) => p.name))
-  const cross = pr.aspectsToNatal
-    .filter((a) => outerNames.has(a.progressedBody))
+  // ---- 次限 × 本命 相位: 自算 (库的 aspectsToNatal 口径偏窄出条数不全;
+  //      合并两组喂同一 calculateAspects, 与本命盘同 orb 同口径, 再筛跨组) ----
+  const progBodies = outerPlanets.map((p) => ({ name: p.name + '·P', longitude: p.longitude, longitudeSpeed: p.speed ?? 0 }))
+  const natalBodies: { name: string; longitude: number; longitudeSpeed: number }[] = [
+    ...natal.planets.map((p) => ({ name: p.name, longitude: p.longitude, longitudeSpeed: p.speed ?? 0 })),
+  ]
+  if (natal.angles.ascendant) {
+    natalBodies.push({ name: 'ASC', longitude: natal.angles.ascendant.longitude, longitudeSpeed: 0 })
+    natalBodies.push({ name: 'DSC', longitude: norm360(natal.angles.ascendant.longitude + 180), longitudeSpeed: 0 })
+  }
+  if (natal.angles.midheaven) {
+    natalBodies.push({ name: 'MC', longitude: natal.angles.midheaven.longitude, longitudeSpeed: 0 })
+    natalBodies.push({ name: 'IC', longitude: norm360(natal.angles.midheaven.longitude + 180), longitudeSpeed: 0 })
+  }
+  const { aspects: rawAll } = calculateAspects([...natalBodies, ...progBodies], {
+    aspectTypes: atFrom(settings),
+    orbs: settings.orbs as Partial<Record<AspectType, number>> | undefined,
+    includeOutOfSign: settings.outOfSign !== false,
+    outOfSignPenalty: settings.oosPenalty ?? 0,
+    minimumStrength: settings.minStrength ?? 0,
+  })
+  const cross: ChartAspect[] = (rawAll as Array<{ body1: string; body2: string; type: string; symbol: string; deviation: number }>)
+    .filter((a) => a.body1.endsWith('·P') !== a.body2.endsWith('·P'))
     .map((a) => {
+      const progFirst = a.body1.endsWith('·P')
       const r: ChartAspect = {
-        a: a.progressedBody + '·P', b: a.natalBody, type: a.aspectType as ChartAspect['type'],
-        typeZh: ASPECT_ZH_OF(a.aspectType), symbol: a.symbol, orb: toPct(a.deviation), applying: null,
+        a: progFirst ? a.body1 : a.body2,
+        b: progFirst ? a.body2 : a.body1,
+        type: a.type as ChartAspect['type'], typeZh: ASPECT_ZH_OF(a.type),
+        symbol: a.symbol, orb: toPct(a.deviation), applying: null,
       }
       return r
     })
