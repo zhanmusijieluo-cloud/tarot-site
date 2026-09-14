@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useI18n, type Lang } from '@/i18n';
+import { supabaseBrowser } from '@/lib/supabase';
 
 const LANGS: { code: Lang; label: string; flag: string }[] = [
   { code: 'en', label: 'English', flag: 'EN' },
@@ -16,6 +17,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const [mail, setMail] = useState<string | null>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -23,6 +25,17 @@ export default function Navbar() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  // 登录态 (Supabase Auth)
+  useEffect(() => {
+    const sb = supabaseBrowser();
+    if (!sb) return;
+    let alive = true;
+    sb.auth.getSession().then(({ data }) => { if (alive) setMail(data.session?.user.email ?? null); });
+    const { data: sub } = sb.auth.onAuthStateChange((_e, sess) => { setMail(sess?.user.email ?? null); });
+    return () => { alive = false; sub.subscription.unsubscribe(); };
+  }, []);
+  const signOut = async () => { await supabaseBrowser()?.auth.signOut(); setMail(null); };
 
   const go = (route: string) => {
     setMenuOpen(false);
@@ -170,18 +183,26 @@ export default function Navbar() {
             )}
           </div>
 
-          <button
-            onClick={() => go('/login')}
-            className="btn-text px-4 py-2 text-sm"
-          >
-            {t('nav.login')}
-          </button>
-          <button
-            onClick={() => go('/register')}
-            className="btn-rose btn-rose--sm"
-          >
-            {t('nav.register')}
-          </button>
+          {mail ? (
+            <button onClick={signOut} title={mail} className="btn-text px-4 py-2 text-sm">
+              {mail.split('@')[0]} · {lang === 'en' ? 'Sign out' : '退出'}
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={() => go('/login')}
+                className="btn-text px-4 py-2 text-sm"
+              >
+                {t('nav.login')}
+              </button>
+              <button
+                onClick={() => go('/register')}
+                className="btn-rose btn-rose--sm"
+              >
+                {t('nav.register')}
+              </button>
+            </>
+          )}
         </div>
 
         {/* 移动端菜单按钮 */}
@@ -220,12 +241,20 @@ export default function Navbar() {
               <button onClick={() => go('/')} className="btn-ghost flex-1 py-2.5 text-sm">
                 {t('nav.home')}
               </button>
-              <button onClick={() => go('/login')} className="btn-ghost flex-1 py-2.5 text-sm">
-                {t('nav.login')}
-              </button>
-              <button onClick={() => go('/register')} className="btn-rose btn-rose--sm flex-1">
-                {t('nav.register')}
-              </button>
+              {mail ? (
+                <button onClick={signOut} className="btn-ghost flex-1 py-2.5 text-sm">
+                  {mail.split('@')[0]} · {lang === 'en' ? 'Sign out' : '退出'}
+                </button>
+              ) : (
+                <>
+                  <button onClick={() => go('/login')} className="btn-ghost flex-1 py-2.5 text-sm">
+                    {t('nav.login')}
+                  </button>
+                  <button onClick={() => go('/register')} className="btn-rose btn-rose--sm flex-1">
+                    {t('nav.register')}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
