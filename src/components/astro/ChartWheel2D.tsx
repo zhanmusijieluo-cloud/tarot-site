@@ -126,7 +126,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
     [dualRing?.inner, dualRing?.outer]);
 
   const aspList = chart.aspects;
-  const rel = (a: { a: string; b: string }) => !selected || a.a.replace(/·[APTR]$/, '') === selected || a.b.replace(/·[APTR]$/, '') === selected;
+  const rel = (a: { a: string; b: string }) => !selected || a.a.replace(/·[APTRB]$/, '') === selected || a.b.replace(/·[APTRB]$/, '') === selected;
 
   // 扇区环带 path
   const sector = (rOut: number, rIn: number, a0: number, a1: number) => {
@@ -257,7 +257,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
           Descendant: chart.angles.ascendant ? wrap(chart.angles.ascendant.longitude + 180) : NaN,
           IC: chart.angles.midheaven ? wrap(chart.angles.midheaven.longitude + 180) : NaN,
         };
-        const nmStrip = (x: string) => x.replace(/·[APTR]$/, '');   // ·P推运/·T行运/·R返照/·A··B合盘
+        const nmStrip = (x: string) => x.replace(/·[APTRB]$/, '');   // ·P推运/·T行运/·R返照/·A··B合盘
         const angOf = (n: string) => {
           // 合盘 ·A 端: A 盘的点表 (extraPoints)
           if (n.endsWith('·A')) {

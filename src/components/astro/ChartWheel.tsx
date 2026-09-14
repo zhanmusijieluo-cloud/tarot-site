@@ -749,7 +749,7 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual }: {
 }) {
   const { t } = useI18n();
   // 推运盘: 盘上行星名不带后缀, cross 条目一端带 '·P'/·T'/·R' — 匹配与显示都要剥后缀 (爸爸: 弹窗又见 Jupiter·P 英文)
-  const nmS = (x: string) => x.replace(/·[APTR]$/, '');   // 推运·P/行运·T/返照·R/合盘·A·B
+  const nmS = (x: string) => x.replace(/·[APTRB]$/, '');   // 推运·P/行运·T/返照·R/合盘·A·B
   const isProgName = (x: string) => x !== nmS(x);
   const otherOf = (a: { a: string; b: string }) => (nmS(a.a) === p.name ? a.b : a.a);
     // 相位列表: 先按对方星体重要度倒序 (BODY_IMP 模块级), 同级再按容许度
