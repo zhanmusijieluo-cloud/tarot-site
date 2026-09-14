@@ -9,6 +9,12 @@ import type { VChart, VPlanet } from '@/components/astro/ChartWheel';
 import { SIGN_RULER, SIGN_EXALT, firdariaTable, profections, aphesisL1 } from '@/lib/astro/timing';
 import { FIXED_STARS, starConjunctions, starLonAt } from '@/lib/astro/fixed-stars';
 import SignGlyph, { signColor } from '@/components/astro/SignGlyph';
+// 法达大运主星色 (段首行上色, 区分大运阶段; 爸爸:「可以上点色」)
+const LORD_HEX: Record<string, string> = {
+  Sun: '#f0c470', Moon: '#c8d8f0', Mercury: '#8fd8c0', Venus: '#e8a0b8',
+  Mars: '#ff9c90', Jupiter: '#8cc0ff', Saturn: '#b8a8d0',
+  NorthNode: '#d8c090', SouthNode: '#8898a8',
+};
 
 const SIGNS_ZH: Record<string, string> = {
   Aries: '白羊', Taurus: '金牛', Gemini: '双子', Cancer: '巨蟹', Leo: '狮子', Virgo: '处女',
@@ -346,12 +352,21 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                       const item = firdRows[c * firdPerCol + r];
                       if (!item) return <td key={c} colSpan={3} />;
                       const isNow = curAgeExact >= item.startAge && curAgeExact < item.endAge;
+                      // 大运起点 (主=次, 或交点整段): 次列不再重复符号, 行按大运主星上色 — 爸爸: 同大运同小运用一个符号, 上点色区分大运阶段
+                      const isStart = !item.sub || item.sub === item.lord;
+                      const lordColor = LORD_HEX[item.lord] ?? '#9aa3b5';
+                      const cellStyle = isNow
+                        ? { background: 'rgba(217,168,184,0.13)' }
+                        : isStart ? { background: lordColor + '14' } : undefined;
+                      const dateStyle = isNow
+                        ? { background: 'rgba(217,168,184,0.13)', color: '#d9a8b8' }
+                        : isStart ? { background: lordColor + '14', color: lordColor } : undefined;
                       const dateStr = `${item.y}-${String(item.m).padStart(2, '0')}-${String(item.d).padStart(2, '0')}`;
                       return (
                         <React.Fragment key={c}>
-                          <td className={`${tdCls} text-center text-[15px] text-frost/90 ${isNow ? 'bg-accent/[0.10]' : ''} ${c > 0 ? 'border-l border-dashed border-white/[0.12]' : ''}`}>{symOf(item.lord)}</td>
-                          <td className={`${tdCls} text-center text-[15px] text-frost/75 ${isNow ? 'bg-accent/[0.10]' : ''}`}>{item.sub ? symOf(item.sub) : <span className="text-[11px] text-muted/40">—</span>}</td>
-                          <td className={`${tdCls} text-muted tabular-nums ${isNow ? 'bg-accent/[0.10] text-accent' : ''}`}>
+                          <td style={cellStyle} className={`${tdCls} text-center text-[15px] ${isNow ? 'text-accent' : isStart ? 'font-semibold text-frost' : 'text-frost/90'} ${c > 0 ? 'border-l border-dashed border-white/[0.12]' : ''}`}>{symOf(item.lord)}</td>
+                          <td style={cellStyle} className={`${tdCls} text-center text-[15px] ${isStart ? 'font-semibold text-frost' : 'text-frost/75'}`}>{isStart ? null : symOf(item.sub!)}</td>
+                          <td style={dateStyle} className={`${tdCls} tabular-nums ${isNow ? 'text-accent' : isStart ? '' : 'text-muted'}`}>
                             {dateStr}{isNow ? <span className="ml-1.5 text-[10px] text-accent">{T('当前', 'now')}</span> : null}
                           </td>
                         </React.Fragment>
