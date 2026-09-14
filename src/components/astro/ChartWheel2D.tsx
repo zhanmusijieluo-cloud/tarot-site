@@ -85,12 +85,14 @@ function layoutRing(planets: VPlanet[], R: number, la: (lon: number) => number) 
   return arr.map((it) => ({ p: it.p, a: it.a, realA: it.realA }));
 }
 
-export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRing, outerBand }: {
+export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRing, outerBand, extraPoints }: {
   chart: VChart; zhMode: boolean; selected: string | null; onSelect: (n: string | null) => void;
   /** 双环 (次限盘专属): 内=本命行星@256, 外=次限行星@300; 不传=单环现状 */
   dualRing?: { inner: VPlanet[]; outer: VPlanet[] } | null;
   /** 外圈信息带 (爸爸: 法达盘/小限盘 = 盘外圈挂环) */
   outerBand?: 'firdaria' | 'profection' | null;
+  /** 本命点黄经表 (推运/行运盘: cross 相位线的本命端; 原名字优先于盘上符号) */
+  extraPoints?: Record<string, number> | null;
 }) {
   const [paper, setPaper] = useState(true);
   const ascLon = chart.angles.ascendant?.longitude ?? 0;
@@ -124,7 +126,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
     [dualRing?.inner, dualRing?.outer]);
 
   const aspList = chart.aspects;
-  const rel = (a: { a: string; b: string }) => !selected || a.a === selected || a.b === selected;
+  const rel = (a: { a: string; b: string }) => !selected || a.a.replace('·P', '').replace('·T', '').replace('·R', '') === selected || a.b.replace('·P', '').replace('·T', '').replace('·R', '') === selected;
 
   // 扇区环带 path
   const sector = (rOut: number, rIn: number, a0: number, a1: number) => {
@@ -220,11 +222,17 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
         const [nx, ny] = xy(R_HOUSE_NUM, la(c0 + span / 2));
         return <text key={h} x={nx} y={ny + 5} textAnchor="middle" fontSize="13" fill={P.ink} fontWeight={h % 3 === 0 ? 700 : 400}>{h + 1}</text>;
       })}
-      {/* 四轴贯穿直径 */}
+      {/* 四轴: 两段轴辐条 (爸爸: 删中心部分 — 不穿相位区, 内圆里不画) */}
       {hasHouses && [cusps![0], cusps![9]].map((lon, i) => {
         const a = la(lon);
-        const [x1, y1] = xy(R_OUT - 1, a);
-        return <line key={i} x1={x1} y1={y1} x2={SIZE - x1} y2={SIZE - y1} stroke={P.axis} strokeWidth={i === 0 ? 1.6 : 1.2} />;
+        const [ox, oy] = xy(R_OUT - 1, a);
+        const [ix, iy] = xy(R_ASPECT, a);
+        return (
+          <g key={i}>
+            <line x1={ox} y1={oy} x2={ix} y2={iy} stroke={P.axis} strokeWidth={i === 0 ? 1.6 : 1.2} />
+            <line x1={SIZE - ox} y1={SIZE - oy} x2={SIZE - ix} y2={SIZE - iy} stroke={P.axis} strokeWidth={i === 0 ? 1.6 : 1.2} />
+          </g>
+        );
       })}
       {/* 角标 (盘沿外, 带轴点度分) */}
       {hasHouses && [cusps![0], cusps![3], cusps![6], cusps![9]].map((lon, i) => {
@@ -249,11 +257,15 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
           Descendant: chart.angles.ascendant ? wrap(chart.angles.ascendant.longitude + 180) : NaN,
           IC: chart.angles.midheaven ? wrap(chart.angles.midheaven.longitude + 180) : NaN,
         };
+        const nmStrip = (x: string) => x.replace('·P', '').replace('·T', '').replace('·R', '');
         const angOf = (n: string) => {
-          const g = glyphs.find((x) => x.p.name === n);
-          if (g) return g.realA;
-          const ax = AX_ANGLE[n];
-          return Number.isNaN(ax) ? null : la(ax);
+          const hasSfx = n !== nmStrip(n);
+          if (!hasSfx && extraPoints && extraPoints[n] !== undefined) return la(extraPoints[n]);   // 原名 → 本命点优先
+          const bare = nmStrip(n);
+          const g = glyphs.find((x) => x.p.name === bare);
+          if (g) return g.realA;                       // 盘上符号 (后缀名剥后也查: 推运星)
+          const ax = AX_ANGLE[n] ?? (n === 'ASC' && chart.angles.ascendant ? chart.angles.ascendant.longitude : undefined) ?? (n === 'MC' && chart.angles.midheaven ? chart.angles.midheaven.longitude : undefined) ?? (n === 'DSC' && chart.angles.ascendant ? wrap(chart.angles.ascendant.longitude + 180) : undefined) ?? (n === 'IC' && chart.angles.midheaven ? wrap(chart.angles.midheaven.longitude + 180) : undefined);
+          return ax === undefined || Number.isNaN(ax) ? null : la(ax);
         };
         const ra = angOf(a.a), rb = angOf(a.b);
         if (ra === null || rb === null) return null;

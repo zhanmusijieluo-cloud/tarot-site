@@ -48,6 +48,8 @@ export interface VChart {
   receptions: VReception[];
   /** 阿拉伯点 (福/精/物质/婚姻男女/子女) */
   arabicLots?: { key: string; zh: string; en: string; longitude: number }[];
+  /** 本命点黄经表 (推运盘 cross 相位线用) */
+  extraPoints?: Record<string, number>;
   /** 每宫宫头宫神星 (almuten) */
   cuspAlmuten?: string[];
   /** 月亮空亡 */
@@ -860,6 +862,8 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
   /** 外圈信息带 (法达环/小限环; 爸爸: 盘外圈挂环) */
   outerBand?: 'firdaria' | 'profection' | null;
 }) {
+  // VChart.extraPoints 由 chart 自带 (推运盘: 本命端黄经)
+
   const { t } = useI18n();
   const [view, setView] = useState<'top' | 'side' | 'classic'>('classic');   // 爸爸: 排完盘进来就是线条盘
   const [selInner, setSelInner] = useState<string | null>(null);
@@ -947,7 +951,7 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
         </div>
       ) : view === 'classic' ? (
         <div className="mx-auto aspect-square w-full max-w-[min(84vh,880px)]" onDoubleClick={onDualToggle ? () => onDualToggle() : undefined}>
-          <ChartWheel2D chart={chart} zhMode={zhMode} selected={selected} onSelect={setSelected} dualRing={dualRing} outerBand={outerBand} />
+          <ChartWheel2D chart={chart} zhMode={zhMode} selected={selected} onSelect={setSelected} dualRing={dualRing} outerBand={outerBand} extraPoints={chart.extraPoints} />
         </div>
       ) : (
         <ChartScene chart={chart} zhMode={zhMode} view={view} disp={chart.settings?.display} sceneApi={sceneApiRef} selected={selected} onSelect={setSelected} />

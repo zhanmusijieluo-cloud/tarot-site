@@ -73,11 +73,21 @@ export default function DynResult({ dyn, zhMode, target, onDate, cornerActions }
     return natal.planets.find((p) => p.name === n)?.zh ?? n;
   };
 
+  // 本命点黄经表 (爸爸: 推运盘中心要有相位线 — 画 推运星→本命位置 的 cross 弦)
+  const extraPoints = React.useMemo(() => {
+    const m: Record<string, number> = {};
+    natal.planets.forEach((p) => { m[p.name] = p.longitude; });
+    if (natal.angles.ascendant) { m.ASC = natal.angles.ascendant.longitude; m.DSC = (natal.angles.ascendant.longitude + 180) % 360; }
+    if (natal.angles.midheaven) { m.MC = natal.angles.midheaven.longitude; m.IC = (natal.angles.midheaven.longitude + 180) % 360; }
+    return m;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dyn]);
   const viewChart: VChart = outer ? {
     ...natal,
     planets: outer.planets as unknown as VPlanet[],
-    aspects: [],
+    aspects: dyn.crossAspects as unknown as VChart['aspects'],
     receptions: [],
+    extraPoints,
   } : natal;
 
   const rows = [...dyn.crossAspects].sort((a, b) =>
