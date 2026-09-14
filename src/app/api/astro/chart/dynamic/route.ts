@@ -90,7 +90,13 @@ export async function POST(req: NextRequest) {
       if (!Number.isInteger(ty) || ty < 1900 || ty > 2100) return bad('目标年份需在 1900-2100')
       if (!Number.isInteger(tm) || tm < 1 || tm > 12) return bad('目标月份无效')
       if (!Number.isInteger(td) || td < 1 || td > 31) return bad('目标日期无效')
-      target = { year: ty, month: tm, day: td }
+      // 时分 (行运/天象用; 推运类忽略)
+      const th = Number(t.hour), tmi = Number(t.minute)
+      target = {
+        year: ty, month: tm, day: td,
+        ...(Number.isInteger(th) && th >= 0 && th <= 23 ? { hour: th } : {}),
+        ...(Number.isInteger(tmi) && tmi >= 0 && tmi <= 59 ? { minute: tmi } : {}),
+      }
     }
 
     const houseSystem: HouseSystem = HOUSE_SYSTEMS.includes(b.houseSystem) ? b.houseSystem : 'placidus'

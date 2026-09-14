@@ -180,7 +180,7 @@ function selfCrossAspects(natal: NatalChart, outerPlanets: ChartPlanet[], settin
 export function castTransitChart(birth: BirthData, settings: CastSettings, target: DynDate): DynamicChart {
   const natal = castNatalChart(birth, settings)
   const warnings = [...natal.warnings]
-  const jd = toJD({ ...target, hour: 12 }, birth.timezone)
+  const jd = toJD({ ...target, hour: target.hour ?? 12, minute: target.minute ?? 0 }, birth.timezone)
   const outerPlanets = transitPositions(jd, settings).map((r) => posToPlanet(r, natal.cusps))
   const cross = selfCrossAspects(natal, outerPlanets, settings, '·T')
   return {

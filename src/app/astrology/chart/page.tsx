@@ -16,6 +16,7 @@ import ChartSettings from '@/components/astro/ChartSettings';
 import DynResult from '@/components/astro/DynResult';
 import type { DynamicChart } from '@/lib/astro/dynamic';
 import BandResult from '@/components/astro/BandResult';
+import TimeStepper from '@/components/astro/TimeStepper';
 import type { VChart } from '@/components/astro/ChartWheel';
 import { birthFromParams, paramsFromBirth, settingsFromParams, settingsToParams } from '@/lib/astro/chart-url';
 import { HOUSE_SYSTEM_ZH, type BirthData, type CastSettings, type HouseSystem } from '@/lib/astro/chart';
@@ -40,6 +41,9 @@ function ChartPageInner() {
   const dpy = Number(sp.get('dpy')) || nowD.getFullYear();
   const dpm = Number(sp.get('dpm')) || nowD.getMonth() + 1;
   const dpd = Number(sp.get('dpd')) || nowD.getDate();
+  // 目标时分 (天象/行运用; 推运类忽略时分但 URL 可带)
+  const dpHour = sp.get('dph') !== null ? Math.min(23, Math.max(0, Number(sp.get('dph')) || 0)) : nowD.getHours();
+  const dpMin = sp.get('dpmi') !== null ? Math.min(59, Math.max(0, Number(sp.get('dpmi')) || 0)) : nowD.getMinutes();
   const [dyn, setDyn] = useState<DynamicChart | null>(null);
   const [dynErr, setDynErr] = useState('');
 
@@ -112,24 +116,22 @@ function ChartPageInner() {
     fetch('/api/astro/chart/dynamic', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ birth: { ...birth, houseSystem: birth.houseSystem ?? 'placidus' }, settings, type: dynType, target: { year: dpy, month: dpm, day: dpd } }),
+      body: JSON.stringify({ birth: { ...birth, houseSystem: birth.houseSystem ?? 'placidus' }, settings, type: dynType, target: { year: dpy, month: dpm, day: dpd, hour: dpHour, minute: dpMin } }),
     })
       .then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.error || 'failed'); if (alive) setDyn(j.chart as DynamicChart); })
       .catch((e) => { if (alive) setDynErr(e instanceof Error ? e.message : t('astro.form.failed')); });
     return () => { alive = false; };
-  }, [birth, settings, dynType, dpy, dpm, dpd, t]);
+  }, [birth, settings, dynType, dpy, dpm, dpd, dpHour, dpMin, t]);
 
   // ---- 法达盘 / 小限盘 (纯前端: 盘+外环, 用本命数据) / 天象盘 (纯天象) ----
   const bandKind: 'firdaria' | 'profection' | null = dpKey === 'fir' ? 'firdaria' : dpKey === 'prof' ? 'profection' : null;
   const skyMode = dpKey === 'sky';
-  const skyHour = sp.get('dph') !== null ? Math.min(23, Math.max(0, Number(sp.get('dph')) || 0)) : nowD.getHours();
-  const skyMin = sp.get('dpmi') !== null ? Math.min(59, Math.max(0, Number(sp.get('dpmi')) || 0)) : nowD.getMinutes();
   const [sky, setSky] = useState<VChart | null>(null);
   const skyBirth = useMemo(() => (birth && skyMode ? {
     ...birth,
-    year: dpy, month: dpm, day: dpd, hour: skyHour, minute: skyMin, timeKnown: true,
+    year: dpy, month: dpm, day: dpd, hour: dpHour, minute: dpMin, timeKnown: true,
     label: zhMode ? '天象盘' : 'Sky chart',
-  } : null), [birth, skyMode, dpy, dpm, dpd, skyHour, skyMin, zhMode]);
+  } : null), [birth, skyMode, dpy, dpm, dpd, dpHour, dpMin, zhMode]);
   useEffect(() => {
     if (!skyBirth) { setSky(null); return; }
     let alive = true;
@@ -283,7 +285,7 @@ function ChartPageInner() {
               />
               <input
                 type="time"
-                value={`${String(skyHour).padStart(2, '0')}:${String(skyMin).padStart(2, '0')}`}
+                value={`${String(dpHour).padStart(2, '0')}:${String(dpMin).padStart(2, '0')}`}
                 onChange={(e) => {
                   const m = /^(\d{2}):(\d{2})$/.exec(e.target.value);
                   if (m) patchParams((p) => { p.set('dph', String(Number(m[1]))); p.set('dpmi', String(Number(m[2]))); });
@@ -291,6 +293,14 @@ function ChartPageInner() {
                 className="rounded-lg border border-white/[0.12] bg-white/[0.04] px-2 py-1 text-[11.5px] text-frost [color-scheme:dark]"
               />
               <span className="text-muted/60">{zhMode ? '纯天象盘 (地点沿用本命; 不含本命对照)' : 'Pure sky chart (birth location; no natal overlay)'}</span>
+            </div>
+            <div className="mx-auto w-full max-w-[340px]">
+              <TimeStepper
+                value={{ y: dpy, m: dpm, d: dpd, h: dpHour, mi: dpMin }}
+                units={['y', 'mo', 'd', 'h', 'mi']}
+                zhMode={zhMode}
+                onChange={(t) => patchParams((p) => { p.set('dpy', String(t.y)); p.set('dpm', String(t.m)); p.set('dpd', String(t.d)); p.set('dph', String(t.h)); p.set('dpmi', String(t.mi)); })}
+              />
             </div>
             {sky ? (
               <ChartResult chart={sky} zhMode={zhMode} hideStatus cornerActions={cornerActions} />
@@ -303,8 +313,8 @@ function ChartPageInner() {
             <DynResult
               dyn={dyn}
               zhMode={zhMode}
-              target={{ year: dpy, month: dpm, day: dpd }}
-              onDate={(y, m, d) => patchParams((p) => { p.set('dpy', String(y)); p.set('dpm', String(m)); p.set('dpd', String(d)); })}
+              target={{ year: dpy, month: dpm, day: dpd, hour: dpHour, minute: dpMin }}
+              onDate={(y, m, d, h, mi) => patchParams((p) => { p.set('dpy', String(y)); p.set('dpm', String(m)); p.set('dpd', String(d)); if (h !== undefined) p.set('dph', String(h)); if (mi !== undefined) p.set('dpmi', String(mi)); })}
               cornerActions={cornerActions}
             />
           ) : dynErr ? (

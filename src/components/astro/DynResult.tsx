@@ -13,6 +13,7 @@ import ChartWheel, { type VChart, type VPlanet } from '@/components/astro/ChartW
 import NatalCard from '@/components/astro/NatalCard';
 import { ASPECT_COLOR } from '@/components/astro/AspectGrid';
 import type { DynamicChart } from '@/lib/astro/dynamic';
+import TimeStepper from '@/components/astro/TimeStepper';
 
 const IMP: Record<string, number> = {
   Sun: 70, Moon: 68, Mercury: 66, Venus: 64, Mars: 62, Jupiter: 60, Saturn: 58,
@@ -50,8 +51,8 @@ const dmsOrb = (deg: number) => {
 export default function DynResult({ dyn, zhMode, target, onDate, cornerActions }: {
   dyn: DynamicChart;
   zhMode: boolean;
-  target: { year: number; month: number; day: number };
-  onDate: (y: number, m: number, d: number) => void;
+  target: { year: number; month: number; day: number; hour?: number; minute?: number };
+  onDate: (y: number, m: number, d: number, hour?: number, minute?: number) => void;
   cornerActions?: React.ReactNode;
 }) {
   const { t } = useI18n();
@@ -152,8 +153,14 @@ export default function DynResult({ dyn, zhMode, target, onDate, cornerActions }
         <div className="space-y-4">
           <Panel title={zhMode ? `${kind.zh}设置` : kind.en}>
             <div className="space-y-2.5 p-3">
-              <label className="flex items-center justify-between gap-2 text-[12px] text-frost/85">
-                {zhMode ? '目标日期' : 'Date'}
+              <TimeStepper
+                value={{ y: target.year, m: target.month, d: target.day, h: target.hour ?? 12, mi: target.minute ?? 0 }}
+                units={dyn.type === 'transit' ? ['y', 'mo', 'd', 'h', 'mi'] : ['y', 'mo', 'd']}
+                zhMode={zhMode}
+                onChange={(t) => onDate(t.y, t.m, t.d, t.h, t.mi)}
+              />
+              <label className="flex items-center justify-between gap-2 text-[11px] text-muted/80">
+                {zhMode ? '跳转' : 'Jump'}
                 <input
                   type="date"
                   value={dateVal}
@@ -161,9 +168,9 @@ export default function DynResult({ dyn, zhMode, target, onDate, cornerActions }
                   max="2100-12-31"
                   onChange={(e) => {
                     const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(e.target.value);
-                    if (m) onDate(Number(m[1]), Number(m[2]), Number(m[3]));
+                    if (m) onDate(Number(m[1]), Number(m[2]), Number(m[3]), target.hour, target.minute);
                   }}
-                  className="rounded-lg border border-white/[0.12] bg-white/[0.04] px-2 py-1 text-[11.5px] text-frost [color-scheme:dark]"
+                  className="rounded-lg border border-white/[0.1] bg-white/[0.03] px-2 py-0.5 text-[11px] text-frost/85 [color-scheme:dark]"
                 />
               </label>
               <p className="text-[10.5px] leading-relaxed text-muted/70">
