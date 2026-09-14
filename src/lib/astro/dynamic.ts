@@ -4,15 +4,15 @@
 // 全部确定性计算, 与本命盘同一引擎栈 (celestine)
 // ============================================================
 import {
-  calculateTransits, calculateProgression, calculateAspects, getPosition, ephemeris,
-  AspectType, type NatalPoint,
+  calculateProgression, calculateAspects, getPosition, ephemeris,
+  AspectType,
 } from 'celestine'
 import {
   castNatalChart, PLANET_ZH_OF, ASPECT_SYMBOL_OF, ASPECT_ZH_OF,
   type BirthData, type CastSettings, type ChartPlanet, type ChartAspect, type NatalChart,
 } from '@/lib/astro/chart'
 
-export type DynamicType = 'natal' | 'transit' | 'solar-return' | 'progression' | 'solar-arc'
+export type DynamicType = 'natal' | 'transit' | 'solar-return' | 'lunar-return' | 'progression' | 'tertiary' | 'solar-arc'
 
 export interface DynDate { year: number; month: number; day: number; hour?: number; minute?: number }
 
@@ -110,60 +110,15 @@ export interface DynamicChart {
   warnings: string[]
 }
 
-const natalPointsOf = (natal: NatalChart): NatalPoint[] => {
-  const pts: NatalPoint[] = natal.planets.map((p) => ({
-    name: p.name, longitude: p.longitude,
-    type: p.name === 'Moon' ? 'luminary' : p.name.includes('Node') ? 'node' : p.name.includes('Part of') ? 'lot' : p.kind === 'asteroid' ? 'asteroid' : 'planet',
-    house: p.house ?? undefined,
-  } as NatalPoint))
-  if (natal.angles.ascendant) pts.push({ name: 'ASC', longitude: natal.angles.ascendant.longitude, type: 'angle' })
-  if (natal.angles.midheaven) pts.push({ name: 'MC', longitude: natal.angles.midheaven.longitude, type: 'angle' })
-  return pts
-}
 
 const atFrom = (s: CastSettings): AspectType[] =>
   (s.aspectTypes?.length ? s.aspectTypes : ['conjunction', 'sextile', 'square', 'trine', 'opposition']) as AspectType[]
 
-function crossAspect(a: string, b: string, t: string, symbol: string, orb: number, applying: boolean | null): ChartAspect {
-  return { a: a + '·T', b, type: t as ChartAspect['type'], typeZh: ASPECT_ZH_OF(t), symbol, orb: toPct(orb), applying }
-}
-
-// ---------- 行运盘 ----------
-export function castTransitChart(birth: BirthData, settings: CastSettings, target: DynDate): DynamicChart {
-  const natal = castNatalChart(birth, settings)
-  const warnings = [...natal.warnings]
-  const jd = toJD({ ...target, hour: 12 }, birth.timezone)
-  const outerPlanets = transitPositions(jd, settings).map((r) => posToPlanet(r, natal.cusps))
-  const tr = calculateTransits(natalPointsOf(natal), jd, {
-    aspectTypes: atFrom(settings), orbs: settings.orbs as Partial<Record<AspectType, number>> | undefined,
-    includeOutOfSign: settings.outOfSign !== false, minimumStrength: settings.minStrength ?? 0,
-  })
-  const outerNames = new Set(outerPlanets.map((p) => p.name))
-  const cross = tr.transits
-    .filter((t) => outerNames.has(t.transitingBody))
-    .map((t) => crossAspect(t.transitingBody, t.natalPoint, t.aspectType, t.symbol, t.deviation,
-      t.phase === 'applying' ? true : t.phase === 'separating' ? false : null))
-  return {
-    type: 'transit', natal, crossAspects: cross, warnings,
-    outer: { planets: outerPlanets, jd, date: { ...target, hour: 12 }, label: `${target.year}-${target.month}-${target.day} 天象` },
-  }
-}
-
-// ---------- 次限推运 / 太阳弧 ----------
-export function castProgressionChart(birth: BirthData, settings: CastSettings, target: DynDate, arc = false): DynamicChart {
-  const natal = castNatalChart(birth, settings)
-  const warnings = [...natal.warnings]
-  const pr = calculateProgression(
-    { year: birth.year, month: birth.month, day: birth.day, hour: birth.hour, minute: birth.minute, timezone: birth.timezone, latitude: birth.latitude, longitude: birth.longitude },
-    { year: target.year, month: target.month, day: target.day },
-    { type: arc ? 'solar-arc' : 'secondary', includeSolarArc: true, aspectTypes: atFrom(settings), orbs: settings.orbs as Partial<Record<AspectType, number>> | undefined },
-  )
-  const src = (arc ? pr.solarArcPositions : pr.planets) as Array<{ name: string; longitude: number; longitudeSpeed?: number; isRetrograde?: boolean }>
-  const outerPlanets = (src?.length ? src : pr.planets).map((p) =>
-    posToPlanet({ name: p.name, longitude: p.longitude, latitude: 0, longitudeSpeed: p.longitudeSpeed ?? 0, isRetrograde: !!p.isRetrograde }, natal.cusps))
-  // ---- 次限 × 本命 相位: 自算 (库的 aspectsToNatal 口径偏窄出条数不全;
-  //      合并两组喂同一 calculateAspects, 与本命盘同 orb 同口径, 再筛跨组) ----
-  const progBodies = outerPlanets.map((p) => ({ name: p.name + '·P', longitude: p.longitude, longitudeSpeed: p.speed ?? 0 }))
+// ---------- 跨盘相位 (自算): 两组合并喂 calculateAspects 再筛跨组 ----------
+// 库的 calculateTransits / aspectsToNatal 口径偏窄会漏相位; 此路与本命盘同 orb 同引擎
+function selfCrossAspects(natal: NatalChart, outerPlanets: ChartPlanet[], settings: CastSettings, sfx: '·P' | '·T' | '·R'): ChartAspect[] {
+  const outerNames = new Set(outerPlanets.map((p) => p.name + sfx))
+  const outerBodies = outerPlanets.map((p) => ({ name: p.name + sfx, longitude: p.longitude, longitudeSpeed: p.speed ?? 0 }))
   const natalBodies: { name: string; longitude: number; longitudeSpeed: number }[] = [
     ...natal.planets.map((p) => ({ name: p.name, longitude: p.longitude, longitudeSpeed: p.speed ?? 0 })),
   ]
@@ -175,30 +130,60 @@ export function castProgressionChart(birth: BirthData, settings: CastSettings, t
     natalBodies.push({ name: 'MC', longitude: natal.angles.midheaven.longitude, longitudeSpeed: 0 })
     natalBodies.push({ name: 'IC', longitude: norm360(natal.angles.midheaven.longitude + 180), longitudeSpeed: 0 })
   }
-  const { aspects: rawAll } = calculateAspects([...natalBodies, ...progBodies], {
+  const { aspects: rawAll } = calculateAspects([...natalBodies, ...outerBodies], {
     aspectTypes: atFrom(settings),
     orbs: settings.orbs as Partial<Record<AspectType, number>> | undefined,
     includeOutOfSign: settings.outOfSign !== false,
     outOfSignPenalty: settings.oosPenalty ?? 0,
     minimumStrength: settings.minStrength ?? 0,
   })
-  const cross: ChartAspect[] = (rawAll as Array<{ body1: string; body2: string; type: string; symbol: string; deviation: number }>)
-    .filter((a) => a.body1.endsWith('·P') !== a.body2.endsWith('·P'))
+  return (rawAll as Array<{ body1: string; body2: string; type: string; symbol: string; deviation: number }>)
+    .filter((a) => outerNames.has(a.body1) !== outerNames.has(a.body2))
     .map((a) => {
-      const progFirst = a.body1.endsWith('·P')
+      const outerFirst = outerNames.has(a.body1)
       const r: ChartAspect = {
-        a: progFirst ? a.body1 : a.body2,
-        b: progFirst ? a.body2 : a.body1,
+        a: outerFirst ? a.body1 : a.body2,
+        b: outerFirst ? a.body2 : a.body1,
         type: a.type as ChartAspect['type'], typeZh: ASPECT_ZH_OF(a.type),
         symbol: a.symbol, orb: toPct(a.deviation), applying: null,
       }
       return r
     })
+}
+
+// ---------- 行运盘 ----------
+export function castTransitChart(birth: BirthData, settings: CastSettings, target: DynDate): DynamicChart {
+  const natal = castNatalChart(birth, settings)
+  const warnings = [...natal.warnings]
+  const jd = toJD({ ...target, hour: 12 }, birth.timezone)
+  const outerPlanets = transitPositions(jd, settings).map((r) => posToPlanet(r, natal.cusps))
+  const cross = selfCrossAspects(natal, outerPlanets, settings, '·T')
   return {
-    type: arc ? 'solar-arc' : 'progression', natal, crossAspects: cross, warnings,
+    type: 'transit', natal, crossAspects: cross, warnings,
+    outer: { planets: outerPlanets, jd, date: { ...target, hour: 12 }, label: `${target.year}-${target.month}-${target.day} 天象` },
+  }
+}
+
+// ---------- 推运盘 (次限/三限/太阳弧) ----------
+export function castProgressionChart(birth: BirthData, settings: CastSettings, target: DynDate, mode: 'secondary' | 'tertiary' | 'solar-arc' = 'secondary'): DynamicChart {
+  const natal = castNatalChart(birth, settings)
+  const warnings = [...natal.warnings]
+  const pr = calculateProgression(
+    { year: birth.year, month: birth.month, day: birth.day, hour: birth.hour, minute: birth.minute, timezone: birth.timezone, latitude: birth.latitude, longitude: birth.longitude },
+    { year: target.year, month: target.month, day: target.day },
+    { type: mode, includeSolarArc: true, aspectTypes: atFrom(settings), orbs: settings.orbs as Partial<Record<AspectType, number>> | undefined },
+  )
+  const src = (mode === 'solar-arc' ? pr.solarArcPositions : pr.planets) as Array<{ name: string; longitude: number; longitudeSpeed?: number; isRetrograde?: boolean }>
+  const outerPlanets = (src?.length ? src : pr.planets).map((p) =>
+    posToPlanet({ name: p.name, longitude: p.longitude, latitude: 0, longitudeSpeed: p.longitudeSpeed ?? 0, isRetrograde: !!p.isRetrograde }, natal.cusps))
+  const cross = selfCrossAspects(natal, outerPlanets, settings, '·P')
+
+  return {
+    type: mode === 'tertiary' ? 'tertiary' : mode === 'solar-arc' ? 'solar-arc' : 'progression',
+    natal, crossAspects: cross, warnings,
     outer: {
       planets: outerPlanets, jd: pr.dates.targetJD, date: fromJD(pr.dates.targetJD, birth.timezone),
-      label: `${target.year}-${target.month}-${target.day} ${arc ? '太阳弧' : '次限'}盘`,
+      label: `${target.year}-${target.month}-${target.day} ${mode === 'tertiary' ? '三限' : mode === 'solar-arc' ? '太阳弧' : '次限'}盘`,
       solarArc: toPct(pr.solarArc),
     },
   }
@@ -241,17 +226,55 @@ export function castSolarReturnChart(birth: BirthData, settings: CastSettings, r
     ...(location ? { latitude: location.latitude, longitude: location.longitude, timezone: location.timezone } : {}),
   }
   const sr = castNatalChart(srBirth, settings)
-  const cross = calculateTransits(natalPointsOf(natal), jdSR, {
-    aspectTypes: atFrom(settings), orbs: settings.orbs as Partial<Record<AspectType, number>> | undefined,
-    includeOutOfSign: settings.outOfSign !== false, minimumStrength: settings.minStrength ?? 0,
-  }).transits
-    .filter((t) => sr.planets.some((p) => p.name === t.transitingBody))
-    .map((t) => {
-      const r: ChartAspect = { a: t.transitingBody + '·R', b: t.natalPoint, type: t.aspectType as ChartAspect['type'], typeZh: ASPECT_ZH_OF(t.aspectType), symbol: t.symbol, orb: toPct(t.deviation), applying: t.phase === 'applying' ? true : t.phase === 'separating' ? false : null }
-      return r
-    })
+  const cross = selfCrossAspects(natal, sr.planets, settings, '·R')
   return {
     type: 'solar-return', natal, crossAspects: cross, warnings: [...warnings, ...sr.warnings.filter((w) => !warnings.includes(w))],
     outer: { planets: sr.planets, jd: jdSR, date: srDate, label: `${returnYear} 年日返 ${srDate.month}-${srDate.day} ${String(srDate.hour).padStart(2, '0')}:${String(srDate.minute).padStart(2, '0')}` },
+  }
+}
+
+// ---------- 月亮返照盘 (月返): 月亮回到本命黄经的时刻起盘 (周期约 27.3 天) ----------
+export function castLunarReturnChart(birth: BirthData, settings: CastSettings, from: DynDate, location?: { latitude: number; longitude: number; timezone: number }): DynamicChart {
+  const natal = castNatalChart(birth, settings)
+  const warnings = [...natal.warnings]
+  const targetLon = natal.planets.find((p) => p.name === 'Moon')?.longitude
+  if (targetLon === undefined) return { type: 'lunar-return', natal, crossAspects: [], warnings: [...warnings, '本命月亮位置缺失'], outer: null }
+  // from 起 35 天内粗扫 (0.5 天步长, 月亮日均 ~13°) → 二分精修
+  const jdStart = toJD({ ...from, hour: 0 }, 0)
+  let bracket: [number, number] | null = null
+  let prev = getPosition('Moon' as never, jdStart).longitude
+  for (let d = 0.5; d <= 35; d += 0.5) {
+    const cur = getPosition('Moon' as never, jdStart + d).longitude
+    let a = prev, b = cur
+    if (b < a) b += 360
+    const t = targetLon < a ? targetLon + 360 : targetLon
+    if (t >= a && t < b) { bracket = [jdStart + d - 0.5, jdStart + d]; break }
+    prev = cur
+  }
+  if (!bracket) return { type: 'lunar-return', natal, crossAspects: [], warnings: [...warnings, '未在 35 天内找到月亮返照时刻'], outer: null }
+  let [lo, hi] = bracket
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2
+    let lm = getPosition('Moon' as never, mid).longitude, la = getPosition('Moon' as never, lo).longitude
+    if (lm < la) lm += 360
+    const t = targetLon < la ? targetLon + 360 : targetLon
+    if (t >= la && t < lm) hi = mid; else lo = mid
+  }
+  const jdLR = (lo + hi) / 2
+  const tz = location?.timezone ?? birth.timezone
+  const lrDate = fromJD(jdLR, tz)
+  const lrBirth: BirthData = {
+    ...birth,
+    year: lrDate.year, month: lrDate.month, day: lrDate.day, hour: lrDate.hour!, minute: lrDate.minute!,
+    ...(location ? { latitude: location.latitude, longitude: location.longitude, timezone: location.timezone } : {}),
+  }
+  const lr = castNatalChart(lrBirth, settings)
+  const cross = selfCrossAspects(natal, lr.planets, settings, '·R')
+  return {
+    type: 'lunar-return', natal, crossAspects: cross, warnings: [...warnings, ...lr.warnings.filter((w) => !warnings.includes(w))],
+    outer: {
+      planets: lr.planets, jd: jdLR, date: lrDate,
+      label: `月返 ${lrDate.year}-${lrDate.month}-${lrDate.day} ${String(lrDate.hour).padStart(2, '0')}:${String(lrDate.minute).padStart(2, '0')}`,
+    },
   }
 }

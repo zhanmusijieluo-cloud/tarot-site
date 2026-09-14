@@ -30,8 +30,11 @@ function ChartPageInner() {
   const birth = useMemo(() => birthFromParams(new URLSearchParams(sp.toString())), [sp]);
   const settings = useMemo(() => settingsFromParams(new URLSearchParams(sp.toString())) ?? {}, [sp]);
   const aspectMode = (sp.get('ag') === 'list' ? 'list' : 'grid') as 'list' | 'grid';
-  // ---- 动态盘: 次限 (dp=s), 目标日期 dpy/dpm/dpd (缺省=今天) ----
-  const dpMode = sp.get('dp') === 's';
+  // ---- 动态盘: 盘种 dp=t三限/s次限/tr行运/sr日返/lr月返/arc日弧 (天象/法达占位); 目标日期 dpy/dpm/dpd ----
+  const dpKey = sp.get('dp') ?? '';
+  const DYN_TYPE: Record<string, string> = { t: 'tertiary', s: 'progression', tr: 'transit', sr: 'solar-return', lr: 'lunar-return', arc: 'solar-arc' };
+  const dynType = DYN_TYPE[dpKey] ?? '';
+  const dpMode = dynType !== '';
   const nowD = new Date();
   const dpy = Number(sp.get('dpy')) || nowD.getFullYear();
   const dpm = Number(sp.get('dpm')) || nowD.getMonth() + 1;
@@ -102,18 +105,18 @@ function ChartPageInner() {
 
   // 次限盘数据 (dp=s 时请求; 换日期/设置自动重算)
   useEffect(() => {
-    if (!birth || !dpMode) { setDyn(null); setDynErr(''); return; }
+    if (!birth || !dynType) { setDyn(null); setDynErr(''); return; }
     let alive = true;
     setDynErr('');
     fetch('/api/astro/chart/dynamic', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ birth: { ...birth, houseSystem: birth.houseSystem ?? 'placidus' }, settings, type: 'progression', target: { year: dpy, month: dpm, day: dpd } }),
+      body: JSON.stringify({ birth: { ...birth, houseSystem: birth.houseSystem ?? 'placidus' }, settings, type: dynType, target: { year: dpy, month: dpm, day: dpd } }),
     })
       .then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.error || 'failed'); if (alive) setDyn(j.chart as DynamicChart); })
       .catch((e) => { if (alive) setDynErr(e instanceof Error ? e.message : t('astro.form.failed')); });
     return () => { alive = false; };
-  }, [birth, settings, dpMode, dpy, dpm, dpd, t]);
+  }, [birth, settings, dynType, dpy, dpm, dpd, t]);
 
 
   if (!birth) {
@@ -167,27 +170,39 @@ function ChartPageInner() {
       compact
     >
       <section className="mb-10 mt-4">
-        {/* 盘种切换条 (爸爸: 上面用来切换 本命/三限/次限…等盘; 现阶段仅本命可看, 其余置灰待接) */}
+        {/* 盘种切换条 (爸爸: 本命/三限/次限/行运/日返/月返/日弧/天象/法达) */}
         <div className="mb-3 flex flex-wrap items-center justify-center gap-1.5">
-          <button
-            onClick={() => patchParams((p) => { p.delete('dp'); p.delete('dpy'); p.delete('dpm'); p.delete('dpd'); })}
-            className={`rounded-full border px-3.5 py-1.5 text-[11px] tracking-[0.15em] transition-colors ${!dpMode ? 'border-accent/50 bg-accent/[0.08] text-accent' : 'border-white/[0.1] text-muted hover:border-white/25'}`}
-          >
-            {zhMode ? '本命盘' : 'Natal'}
-          </button>
-          <button
-            aria-disabled="true"
-            title={zhMode ? '三限盘 · 开发中' : 'Tertiary progression · in development'}
-            className="cursor-not-allowed rounded-full border border-white/[0.06] px-3.5 py-1.5 text-[11px] tracking-[0.15em] text-muted/40"
-          >
-            {zhMode ? '三限盘' : 'Tertiary'}
-          </button>
-          <button
-            onClick={() => patchParams((p) => { p.set('dp', 's'); })}
-            className={`rounded-full border px-3.5 py-1.5 text-[11px] tracking-[0.15em] transition-colors ${dpMode ? 'border-accent/50 bg-accent/[0.08] text-accent' : 'border-white/[0.1] text-muted hover:border-white/25'}`}
-          >
-            {zhMode ? '次限盘' : 'Secondary'}
-          </button>
+          {([
+            ['', zhMode ? '本命盘' : 'Natal'],
+            ['t', zhMode ? '三限盘' : 'Tertiary'],
+            ['s', zhMode ? '次限盘' : 'Secondary'],
+            ['tr', zhMode ? '行运盘' : 'Transit'],
+            ['sr', zhMode ? '日返盘' : 'Solar Return'],
+            ['lr', zhMode ? '月返盘' : 'Lunar Return'],
+            ['arc', zhMode ? '日弧' : 'Solar Arc'],
+            ['sky', zhMode ? '天象盘' : 'Sky'],
+            ['fir', zhMode ? '法达' : 'Firdaria'],
+          ] as [string, string][]).map(([key, label]) => {
+            const disabled = key === 'sky' || key === 'fir';
+            const active = dpKey === key;
+            return (
+              <button
+                key={key || 'natal'}
+                aria-disabled={disabled || undefined}
+                title={disabled ? `${label} · ${zhMode ? '开发中, 敬请期待' : 'in development'}` : undefined}
+                onClick={() => {
+                  if (disabled) return;
+                  patchParams((p) => {
+                    if (key) p.set('dp', key);
+                    else { p.delete('dp'); p.delete('dpy'); p.delete('dpm'); p.delete('dpd'); }
+                  });
+                }}
+                className={`rounded-full border px-3 py-1.5 text-[11px] tracking-[0.12em] transition-colors ${active ? 'border-accent/50 bg-accent/[0.08] text-accent' : disabled ? 'cursor-not-allowed border-white/[0.06] text-muted/35' : 'border-white/[0.1] text-muted hover:border-white/25'}`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
 
         {/* 控制行(仅小屏): 大屏时三按钮已嵌入盘内资料卡下方竖排 (爸爸: 嵌入卡下) */}

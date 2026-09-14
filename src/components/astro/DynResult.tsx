@@ -21,6 +21,16 @@ const IMP: Record<string, number> = {
 const ASPECT_ORDER: Record<string, number> = { conjunction: 0, sextile: 1, square: 2, trine: 3, opposition: 4, quincunx: 5 };
 const AX_ZH: Record<string, string> = { ASC: '上升', DSC: '下降', MC: '天顶', IC: '天底' };
 
+// 盘种文案 (按 dyn.type 切换; 爸爸盘种条: 本命/三限/次限/行运/日返/月返/日弧)
+const KIND: Record<string, { zh: string; en: string; note: string; noteEn: string }> = {
+  progression: { zh: '次限盘', en: 'Secondary', note: '次限盘: 出生后 1 天 = 1 年 (标准推运法)。行星按本命宫位排布, 四轴/宫位不变。', noteEn: 'Secondary progression: 1 day after birth = 1 year. Planets in natal houses.' },
+  tertiary: { zh: '三限盘', en: 'Tertiary', note: '三限盘: 出生后 1 天 = 1 个月 (每年推进 12 天)。行星按本命宫位排布, 四轴/宫位不变。', noteEn: 'Tertiary progression: 1 day after birth = 1 month (12 days per year). Planets in natal houses.' },
+  transit: { zh: '行运盘', en: 'Transit', note: '行运盘: 目标日期的实时天象行星, 对照本命宫位与四轴。', noteEn: 'Transit: real-sky planets of the target date against the natal chart.' },
+  'solar-return': { zh: '日返盘', en: 'Solar Return', note: '太阳返照盘: 太阳回到本命黄经的时刻重排全盘 (外盘=返照时刻行星)。', noteEn: 'Solar return: chart cast for the moment the Sun returns to its natal longitude.' },
+  'lunar-return': { zh: '月返盘', en: 'Lunar Return', note: '月亮返照盘: 月亮回到本命黄经的时刻重排全盘 (约每月一次)。', noteEn: 'Lunar return: chart cast for the moment the Moon returns to its natal longitude.' },
+  'solar-arc': { zh: '日弧盘', en: 'Solar Arc', note: '太阳弧盘: 全盘按太阳推运弧统一前移的推运法。', noteEn: 'Solar arc: every point advanced by the Sun\'s progressed arc.' },
+};
+
 function Panel({ title, children, className = '' }: { title: string; children: React.ReactNode; className?: string }) {
   return (
     <section className={`overflow-hidden rounded-2xl border border-white/[0.07] bg-black/20 ${className}`}>
@@ -49,8 +59,9 @@ export default function DynResult({ dyn, zhMode, target, onDate, cornerActions }
   const outer = dyn.outer;
   // 单环/双环 (爸爸: 双击盘面或按钮切换; 双环=内本命+外次限)
   const [dual, setDual] = useState(false);
+  const kind = KIND[dyn.type] ?? KIND.progression;
 
-  const nameOf = (raw: string) => raw.replace('·P', '').replace('·T', '');
+  const nameOf = (raw: string) => raw.replace('·P', '').replace('·T', '').replace('·R', '');
   const symOf = (raw: string) => {
     const n = nameOf(raw);
     if (AX_ZH[n]) return n;
@@ -129,7 +140,7 @@ export default function DynResult({ dyn, zhMode, target, onDate, cornerActions }
           />
         </div>
         <div className="space-y-4">
-          <Panel title={zhMode ? '次限设置' : 'Progression'}>
+          <Panel title={zhMode ? `${kind.zh}设置` : kind.en}>
             <div className="space-y-2.5 p-3">
               <label className="flex items-center justify-between gap-2 text-[12px] text-frost/85">
                 {zhMode ? '目标日期' : 'Date'}
@@ -146,7 +157,7 @@ export default function DynResult({ dyn, zhMode, target, onDate, cornerActions }
                 />
               </label>
               <p className="text-[10.5px] leading-relaxed text-muted/70">
-                {zhMode ? '次限盘: 出生后 1 天 = 1 年 (标准推运法)。行星按本命宫位排布, 四轴/宫位不变。' : 'Secondary progression: 1 day after birth = 1 year. Planets placed in natal houses.'}
+                {zhMode ? kind.note : kind.noteEn}
               </p>
               {outer.solarArc !== undefined && (
                 <p className="flex items-center justify-between text-[11.5px] text-frost/85">
@@ -164,7 +175,7 @@ export default function DynResult({ dyn, zhMode, target, onDate, cornerActions }
       </div>
 
       {/* 下方: 推运 × 本命 相位表 */}
-      <Panel title={`${zhMode ? '推运相位' : 'Progressed aspects'} (${zhMode ? '次限' : 'P'} → ${zhMode ? '本命' : 'natal'}) — ${rows.length}`}>
+      <Panel title={`${zhMode ? kind.zh + '相位' : kind.en + ' aspects'} (→ ${zhMode ? '本命' : 'natal'}) — ${rows.length}`}>
         <ul className="grid grid-cols-1 gap-x-5 md:grid-cols-2 xl:grid-cols-3">
           {rows.map((a, i) => (
             <li key={i} className="flex items-center gap-1.5 border-b border-white/[0.04] px-3 py-[5.5px] text-[12px] last:border-0">

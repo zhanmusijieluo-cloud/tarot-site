@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { type BirthData, type CastSettings, type HouseSystem } from '@/lib/astro/chart'
 import {
-  castTransitChart, castProgressionChart, castSolarReturnChart,
+  castTransitChart, castProgressionChart, castSolarReturnChart, castLunarReturnChart,
   type DynamicType,
 } from '@/lib/astro/dynamic'
 
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
 
     // 目标日期 (行运/推运用) / 返照年 (日返用)
     const type = String(body?.type ?? '') as DynamicType
-    if (!['transit', 'progression', 'solar-arc', 'solar-return'].includes(type)) return bad('盘型无效')
+    if (!['transit', 'progression', 'tertiary', 'solar-arc', 'solar-return', 'lunar-return'].includes(type)) return bad('盘型无效')
     let target = { year: 0, month: 1, day: 1 }
     if (type === 'solar-return') {
       const ry = Number(body?.returnYear ?? new Date().getFullYear())
@@ -117,8 +117,10 @@ export async function POST(req: NextRequest) {
 
     let chart
     if (type === 'transit') chart = castTransitChart(birth, settings, target)
-    else if (type === 'progression') chart = castProgressionChart(birth, settings, target, false)
-    else if (type === 'solar-arc') chart = castProgressionChart(birth, settings, target, true)
+    else if (type === 'progression') chart = castProgressionChart(birth, settings, target, 'secondary')
+    else if (type === 'tertiary') chart = castProgressionChart(birth, settings, target, 'tertiary')
+    else if (type === 'solar-arc') chart = castProgressionChart(birth, settings, target, 'solar-arc')
+    else if (type === 'lunar-return') chart = castLunarReturnChart(birth, settings, target, location)
     else chart = castSolarReturnChart(birth, settings, target.year, location)
 
     return NextResponse.json({ chart })
