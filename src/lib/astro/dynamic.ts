@@ -355,6 +355,24 @@ function midArc(x: number, y: number): number {
  *  待理论化; 未来补充年份对照时在此表校准 */
 const PROG_AXIS_CORR: Record<'secondary' | 'tertiary', number> = { secondary: 2.1, tertiary: -2.0 }
 
+/** 组合推运盘"宫头推进"逐宫修正表 (反解测测/爱星盘口径, 2026+2027 两年对照, 残差≤0.4°):
+ *  推运宫头[i] = 本命组合宫头[i] + 组合太阳弧 + PROG_CUSP_CORR[i]
+ *  (1宫头 +2.11 与 ASC 校准 +2.1 同源自洽; 4/10宫头 -0.14 ≈ MC 不加校准)
+ *  待理论化; 补充年份对照时在此表校准 */
+const PROG_CUSP_CORR = [2.11, -0.85, -1.09, -0.14, 0.89, 2.73, 2.11, -0.50, -0.79, -0.14, 1.26, 3.04]
+
+/** 推运盘宫头推进 (全 12 宫头): base 宫头 + 太阳弧 + 逐宫修正表
+ *  axis 传入时强制四轴锚定 (1=ASC, 4=IC, 7=DSC, 10=MC 与轴精确一致) */
+function progCusps(base: number[] | null, arc: number, axis?: { asc?: number; mc?: number }): number[] | null {
+  if (!base || base.length !== 12) return null
+  const out = base.map((c, i) => norm360(c + arc + PROG_CUSP_CORR[i]))
+  if (axis?.asc !== undefined) out[0] = axis.asc
+  if (axis?.mc !== undefined) out[9] = axis.mc
+  if (axis?.asc !== undefined) out[6] = norm360(axis.asc + 180)
+  if (axis?.mc !== undefined) out[3] = norm360(axis.mc + 180)
+  return out
+}
+
 /** 推运日期 → 出生数据 (保留地点/时区/档案属性):
  *  次限=1天:1年; 三限=1天:1恒星月(27.321582) — 与 castProgressionChart 同口径
  *  (用于"重排口径"的推运轴计算; 当前轴推进采用 PROG_AXIS_CORR 表) */
@@ -385,6 +403,10 @@ export function castComposite(a: NatalChart, b: NatalChart, settings: CastSettin
   let cusps: number[] | null = null
   if (a.cusps && b.cusps && a.cusps.length === 12 && b.cusps.length === 12) {
     cusps = Array.from({ length: 12 }, (_, i) => midArc(a.cusps![i], b.cusps![i]))
+    // 推运盘: 宫头随轴一起推进 (对齐测测/爱星盘; 2026+2027 两年对照反解)
+    if (ov?.arc !== undefined && ov?.mode) {
+      cusps = progCusps(cusps, ov.arc, { asc, mc })
+    }
   } else if (asc !== undefined) {
     cusps = Array.from({ length: 12 }, (_, i) => norm360(asc + i * 30))
   }
@@ -448,15 +470,16 @@ export function marksBirth(birthSelf: BirthData, davisonIn: BirthData): BirthDat
   return davisonBirth(birthSelf, davisonIn)
 }
 
-/** 用一组行星替换盘面行星 (推运衍生盘: 保留 base 的宫位/宫制, 重算相位与宫位号)
- *  axes 传入时替换四轴(推运盘轴推进); 缺省=沿用 base 轴(原行为) */
-function chartFromPlanets(base: NatalChart, planets: ChartPlanet[], settings: CastSettings, axes?: { asc?: number; mc?: number }): NatalChart {
+/** 用一组行星替换盘面行星 (推运衍生盘: 保留 base 的宫制, 重算相位与宫位号)
+ *  axes 传入时替换四轴/宫头(推运盘轴推进); 缺省=沿用 base (原行为) */
+function chartFromPlanets(base: NatalChart, planets: ChartPlanet[], settings: CastSettings, axes?: { asc?: number; mc?: number; cusps?: number[] }): NatalChart {
+  const cusps = axes?.cusps ?? base.cusps
   const withHouse = (c: ChartPlanet): ChartPlanet => {
     let house: number | null = null
-    if (base.cusps && base.cusps.length === 12) {
+    if (cusps && cusps.length === 12) {
       for (let h = 0; h < 12; h++) {
-        const a0 = base.cusps[h]
-        const span = norm360(base.cusps[(h + 1) % 12] - a0 + 360) % 360 || 30
+        const a0 = cusps[h]
+        const span = norm360(cusps[(h + 1) % 12] - a0 + 360) % 360 || 30
         if (norm360(c.longitude - a0) < span) { house = h + 1; break }
       }
     }
@@ -490,7 +513,7 @@ function chartFromPlanets(base: NatalChart, planets: ChartPlanet[], settings: Ca
   }))
   const mkAng = (name: string, lon: number | undefined): ChartPlanet | null =>
     lon === undefined ? null : posToPlanet({ name, longitude: lon, latitude: 0, longitudeSpeed: 0, isRetrograde: false }, null)
-  return { ...base, planets: pl, aspects: aspectsOut, angles: { ascendant: mkAng('ASC', ascLon), midheaven: mkAng('MC', mcLon) } }
+  return { ...base, planets: pl, aspects: aspectsOut, cusps, angles: { ascendant: mkAng('ASC', ascLon), midheaven: mkAng('MC', mcLon) } }
 }
 
 export function castSynastry(birthA: BirthData, birthB: BirthData, settings: CastSettings): SynastryChart {
@@ -575,13 +598,17 @@ export function castSynastry(birthA: BirthData, birthB: BirthData, settings: Cas
     const s0 = sunLonOf(chart), s1 = progSun(birth, mode)
     return s0 !== undefined && s1 !== undefined ? norm360(s1 - s0) : undefined
   }
-  /** 推运轴: base 轴 + 太阳弧 (+ASC 校准量; MC 不加校准 — 2027 爱星盘 MC 对照差0.14°) */
-  const advAxes = (chart: NatalChart, arc: number | undefined, mode: 'secondary' | 'tertiary'): { asc?: number; mc?: number } | undefined => {
+  /** 推运轴/宫头: base 轴 + 太阳弧 (+ASC 校准量; MC 不加校准 — 2027 爱星盘 MC 对照差0.14°)
+   *  宫头全 12 宫随轴推进 (PROG_CUSP_CORR 表; 2026+2027 两年对照) */
+  const advAxes = (chart: NatalChart, arc: number | undefined, mode: 'secondary' | 'tertiary'): { asc?: number; mc?: number; cusps?: number[] } | undefined => {
     if (arc === undefined) return undefined
     const asc0 = chart.angles.ascendant?.longitude, mc0 = chart.angles.midheaven?.longitude
+    const asc = asc0 !== undefined ? norm360(asc0 + arc + PROG_AXIS_CORR[mode]) : undefined
+    const mc = mc0 !== undefined ? norm360(mc0 + arc) : undefined
     return {
-      asc: asc0 !== undefined ? norm360(asc0 + arc + PROG_AXIS_CORR[mode]) : undefined,
-      mc: mc0 !== undefined ? norm360(mc0 + arc) : undefined,
+      asc,
+      mc,
+      cusps: progCusps(chart.cusps, arc, { asc, mc }) ?? undefined,
     }
   }
   /** 推运衍生盘 = base 行星被推运行星替换 + 轴推进 */
