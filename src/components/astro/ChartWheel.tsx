@@ -742,19 +742,22 @@ const BODY_IMP: Record<string, number> = {
 };
 const impOf = (n: string) => BODY_IMP[n] ?? 0;
 
-function PlanetDetail({ p, chart, zhMode, onClose, dual }: {
+function PlanetDetail({ p, chart, zhMode, onClose, dual, sel }: {
   p: VPlanet; chart: VChart; zhMode: boolean; onClose: () => void;
   /** 双环态 (爸爸: 相位解释要明确 内环X与外环Y) — 内环=本命, 外环=推运 */
   dual?: boolean;
+  /** 当前选中串 (含环标记 ·in/·out — 合盘时精确过滤对应环的相位) */
+  sel?: string | null;
 }) {
   const { t } = useI18n();
   // 推运盘: 盘上行星名不带后缀, cross 条目一端带 '·P'/·T'/·R' — 匹配与显示都要剥后缀 (爸爸: 弹窗又见 Jupiter·P 英文)
-  const nmS = (x: string) => x.replace(/·[APTRB]$/, '');   // 推运·P/行运·T/返照·R/合盘·A·B
+  const nmS = (x: string) => x.replace(/·(?:[APTRB]|in|out)$/, '');   // 推运·P/行运·T/返照·R/合盘·A·B/环·in·out
   const isProgName = (x: string) => x !== nmS(x);
   const otherOf = (a: { a: string; b: string }) => (nmS(a.a) === p.name ? a.b : a.a);
     // 相位列表: 先按对方星体重要度倒序 (BODY_IMP 模块级), 同级再按容许度
+  const selRing = sel && (sel.endsWith('·in') || sel.endsWith('·out')) ? sel : null;
   const myAspects = [...chart.aspects]
-    .filter((a) => nmS(a.a) === p.name || nmS(a.b) === p.name)
+    .filter((a) => (selRing ? a.a === selRing || a.b === selRing : nmS(a.a) === p.name || nmS(a.b) === p.name))
     .sort((x, y) => impOf(nmS(otherOf(y))) - impOf(nmS(otherOf(x))) || x.orb - y.orb);
   // 木木体系(爸爸4讲P29-30): 接纳=须成相位的单向许可; 互容=双向同住无需相位; 与古典/IbnEzra完全一致
   // 按 pair 归并: 互容时双向记录合成一条 (此前只显示单向"互容", 漏掉本星对对方的接纳方向 — 爸爸抓到)
@@ -771,7 +774,17 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual }: {
   }
   const myRecep = [...recepPairs.values()].sort((a, b) => Number(b.mutual) - Number(a.mutual) || impOf(b.other) - impOf(a.other))
   const signZh = (s: string) => SIGNS_ZH_MINI[s] ?? s;
-  const zhOf = (n: string) => chart.planets.find((x) => x.name === n)?.zh ?? PLANET_ZH_OF(n)
+  const zhOf = (n: string) => chart.planets.find((x) => x.name === n)?.zh ?? PLANET_ZH_OF(n);
+  // 落宫: 简盘=该星自己盘的宫位; 双环合盘=按盘面宫区重算 (爸爸: 盘上画在6宫, 弹窗也要说6宫)
+  const houseShown = (() => {
+    if (!dual || !chart.cusps || chart.cusps.length !== 12) return p.house;
+    for (let h = 0; h < 12; h++) {
+      const a0 = chart.cusps[h];
+      const span = ((((chart.cusps[(h + 1) % 12] - a0) % 360) + 360) % 360) || 30;
+      if (((((p.longitude - a0) % 360) + 360) % 360) < span) return h + 1;
+    }
+    return p.house;
+  })();
 
   return (
     <div className="mt-3 rounded-2xl border border-white/[0.12] bg-[#0c101c]/[0.97] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.55)] backdrop-blur-md" style={{ animation: 'rise-in 0.35s cubic-bezier(0.16,1,0.3,1)' }}>
@@ -793,7 +806,7 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual }: {
         </div>
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-2 py-2.5">
           <p className="text-[10px] tracking-[0.2em] text-muted uppercase">{t('astro.d.house')}</p>
-          <p className="mt-1 text-[14.5px] text-frost">{p.house ? (zhMode ? `第${p.house}宫` : `H${p.house}`) : '—'}</p>
+          <p className="mt-1 text-[14.5px] text-frost">{houseShown ? (zhMode ? `第${houseShown}宫` : `H${houseShown}`) : '—'}</p>
         </div>
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-2 py-2.5">
           <p className="text-[10px] tracking-[0.2em] text-muted uppercase">{t('astro.d.state')}</p>
@@ -822,12 +835,12 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual }: {
                   <span className="text-accent/80">{a.symbol}</span>
                   <span className="text-[17px] leading-none text-frost/90" title={zhMode ? p.zh : p.name}>{p.symbol}</span>
                   {dual
-                    ? <span className="text-[10.5px] text-muted/60">{isProgName(pEnd) ? (zhMode ? '外环' : 'Outer') : (zhMode ? '内环' : 'Inner')}</span>
+                    ? <span className="text-[10.5px] text-muted/60">{pEnd.endsWith('·in') ? (zhMode ? '内环' : 'Inner') : pEnd.endsWith('·out') ? (zhMode ? '外环' : 'Outer') : (isProgName(pEnd) ? (zhMode ? '外环' : 'Outer') : (zhMode ? '内环' : 'Inner'))}</span>
                     : isProgName(pEnd) && <span className="text-[10.5px] text-muted/60">{zhMode ? '推' : 'P'}</span>}
                   <span>{zhMode ? a.typeZh : a.type}</span>
                   <span className="text-[17px] leading-none text-frost/90" title={zhMode ? zhOf(other) : other}>{otherSym}</span>
                   {dual
-                    ? <span className="text-[10.5px] text-muted/60">{isProgName(otherRaw) ? (zhMode ? '外环' : 'Outer') : (zhMode ? '内环' : 'Inner')}</span>
+                    ? <span className="text-[10.5px] text-muted/60">{otherRaw.endsWith('·in') ? (zhMode ? '内环' : 'Inner') : otherRaw.endsWith('·out') ? (zhMode ? '外环' : 'Outer') : (isProgName(otherRaw) ? (zhMode ? '外环' : 'Outer') : (zhMode ? '内环' : 'Inner'))}</span>
                     : isProgName(otherRaw) && <span className="text-[10.5px] text-muted/60">{zhMode ? '推' : 'P'}</span>}
                   <span className="text-accent/70">{a.orb.toFixed(1)}°</span>
                   {a.actualAngle !== undefined && <span className="text-[11px] text-muted/60">{zhMode ? '实际' : 'actual'} {a.actualAngle.toFixed(1)}°</span>}
@@ -887,7 +900,17 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
   const [selInner, setSelInner] = useState<string | null>(null);
   const selected = selProp !== undefined ? selProp : selInner;
   const setSelected = onSelect ?? setSelInner;
-  const selPlanet = selected ? [...chart.planets, chart.angles.ascendant, chart.angles.midheaven].find((p) => p?.name === selected) ?? null : null;
+  const baseOf = (x: string) => x.replace(/·(?:[APTRB]|in|out)$/, '');
+  // 选中解析: 双环时按"环"取星 (爸爸: 点内环月亮不能显示外环月亮 — 同名星不能撞)
+  const selPlanet = (() => {
+    if (!selected) return null;
+    const base = baseOf(selected);
+    if (dualRing) {
+      if (selected.endsWith('·in')) return (dualRing.inner.find((x) => x.name === base) as unknown as typeof chart.planets[number] | null) ?? null;
+      if (selected.endsWith('·out')) return (dualRing.outer.find((x) => x.name === base) as unknown as typeof chart.planets[number] | null) ?? null;
+    }
+    return [...chart.planets, chart.angles.ascendant, chart.angles.midheaven].find((p) => p?.name === base) ?? null;
+  })();
   const sceneApiRef = useRef<{ reset?: () => void; zoom?: (f: number) => void } | null>(null);
 
   return (
@@ -918,9 +941,13 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
           {[...chart.planets].sort((a, b) => impOf(b.name) - impOf(a.name)).map((p) => (
             <button
               key={p.name}
-              onClick={() => setSelected(p.name === selected ? null : p.name)}
+              onClick={() => {
+                if (!dualRing) { setSelected(p.name === selected ? null : p.name); return; }
+                const tIn = p.name + '·in';
+                setSelected(selected === tIn || selected === p.name + '·out' ? null : tIn);
+              }}
               className={`rounded-full border px-2 py-0.5 text-[12px] leading-none transition-colors ${
-                selected === p.name ? 'border-accent/60 bg-accent/[0.12] text-accent' : 'border-white/[0.12] text-frost/75 hover:border-white/30'
+                selected === p.name || selected === p.name + '·in' || selected === p.name + '·out' ? 'border-accent/60 bg-accent/[0.12] text-accent' : 'border-white/[0.12] text-frost/75 hover:border-white/30'
               }`}
               title={zhMode ? p.zh : p.name}
             >
@@ -983,7 +1010,7 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
       {/* 点击标注: 宽屏浮动在盘旁小窗, 窄屏退回盘下 */}
       {selPlanet && (
         <div className="mt-3 lg:absolute lg:right-3 lg:top-14 lg:z-30 lg:mt-0 lg:max-h-[calc(100%-5rem)] lg:w-[280px] lg:overflow-y-auto">
-          <PlanetDetail p={selPlanet} chart={chart} zhMode={zhMode} dual={!!dualRing} onClose={() => setSelected(null)} />
+          <PlanetDetail p={selPlanet} chart={chart} zhMode={zhMode} dual={!!dualRing} sel={selected} onClose={() => setSelected(null)} />
         </div>
       )}
     </div>

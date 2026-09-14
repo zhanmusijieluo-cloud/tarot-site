@@ -167,8 +167,17 @@ export default function SynastryResult({ syn, zhMode, tab, onTab, aLabel, bLabel
       )}
 
       {(cur === 'compA' || cur === 'compB') && (() => {
-        // 双环: 内=主视角方行星, 外=另一方; 弦=A×B (·A→A 表, ·B→盘上 B; 借 extraPoints 与 chart.planets 分流)
-        const viewChart: VChart = { ...b, planets: b.planets, aspects: syn.crossAspects as unknown as VChart['aspects'], receptions: [], extraPoints: ptsOf(a) };
+        // 双环: 内=主视角方行星, 外=另一方; 弦端名映射为环名 ·in/·out (爸爸: 点外环不连带内环)
+        const innerC = cur === 'compB' ? b : a;
+        const outerC = cur === 'compB' ? a : b;
+        const mapEnd = (e: string) => {
+          const isA = e.endsWith('·A');
+          const bare = e.replace(/·[AB]$/, '');
+          const isInner = isA ? cur === 'compA' : cur === 'compB';
+          return bare + (isInner ? '·in' : '·out');
+        };
+        const crossMapped = syn.crossAspects.map((x) => ({ ...x, a: mapEnd(x.a), b: mapEnd(x.b) }));
+        const viewChart: VChart = { ...outerC, planets: outerC.planets, aspects: crossMapped as unknown as VChart['aspects'], receptions: [], extraPoints: ptsOf(innerC) };
         return (
           <>
             <ChartWheel

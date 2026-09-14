@@ -126,7 +126,8 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
     [dualRing?.inner, dualRing?.outer]);
 
   const aspList = chart.aspects;
-  const rel = (a: { a: string; b: string }) => !selected || a.a.replace(/·[APTRB]$/, '') === selected || a.b.replace(/·[APTRB]$/, '') === selected;
+  const stripRing = (x: string) => x.replace(/·(?:[APTRB]|in|out)$/, '');
+  const rel = (a: { a: string; b: string }) => !selected || a.a === selected || a.b === selected || stripRing(a.a) === selected || stripRing(a.b) === selected;
 
   // 扇区环带 path
   const sector = (rOut: number, rIn: number, a0: number, a1: number) => {
@@ -151,8 +152,17 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
       const [d1x, d1y] = xy(R - dOff1, a);
       const [d2x, d2y] = xy(R - dOff2, a);
       const col = SHADE[ELEMENTS[signIdx(p.longitude)] as 'fire'];
-      const isSel = selected === p.name;
-      const relatedSel = selected && chart.aspects.some((x) => (x.a === p.name || x.b === p.name) && (x.a === selected || x.b === selected));
+      const ringName = kind === 'in' ? p.name + '·in' : kind === 'out' ? p.name + '·out' : p.name;   // 环名分离 (合盘双环: 内/外各自独立选中)
+      const isSel = selected === ringName;
+      const selBase = selected ? stripRing(selected) : '';
+      const selRing = selected ? (selected.endsWith('·in') ? 'in' : selected.endsWith('·out') ? 'out' : null) : null;
+      const relatedSel = !!selected && chart.aspects.some((x) => {
+        const eof = (n: string) => ({ b: stripRing(n), r: n.endsWith('·in') ? 'in' : n.endsWith('·out') ? 'out' : null });
+        const e1 = eof(x.a), e2 = eof(x.b);
+        const mine = (e: { b: string; r: string | null }) => e.b === p.name && (kind === 'single' || e.r === kind || e.r === null);
+        const selm = (e: { b: string; r: string | null }) => e.b === selBase && (selRing === null || e.r === selRing || e.r === null);
+        return (mine(e1) && selm(e2)) || (mine(e2) && selm(e1));
+      });
       const dim = selected && !isSel && !relatedSel;
       const TAU = Math.PI * 2;
       const slipAmt = ((a - realA) % TAU + TAU * 1.5) % TAU - Math.PI;
@@ -162,7 +172,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
       const [lx1, ly1] = xy(R_ASPECT + 3, sa), [lx2, ly2] = xy(R + 13, a);
       const [dg1, dg2] = fmtDeg(p.longitude);
       return (
-        <g key={`${kind}-${p.name}`} onClick={(e) => { e.stopPropagation(); onSelect(isSel ? null : p.name); }} style={{ cursor: 'pointer', opacity: dim ? 0.55 : 1, transition: 'opacity 0.25s' }}>
+        <g key={`${kind}-${p.name}`} data-ring={kind} data-name={p.name} onClick={(e) => { e.stopPropagation(); onSelect(isSel ? null : ringName); }} style={{ cursor: 'pointer', opacity: dim ? 0.55 : 1, transition: 'opacity 0.25s' }}>
           {withLead && <line x1={tk1x} y1={tk1y} x2={tk2x} y2={tk2y} stroke={col} strokeWidth="1.4" opacity="0.9" />}
           {withLead && slipped && <line x1={lx1} y1={ly1} x2={lx2} y2={ly2} stroke={P.houseLine} strokeWidth="0.7" opacity="0.5" />}
           {isSel && <circle cx={gx} cy={gy} r={compact ? 12 : 13.5} fill="none" stroke={P.sel} strokeWidth="1.4" />}
@@ -257,10 +267,10 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
           Descendant: chart.angles.ascendant ? wrap(chart.angles.ascendant.longitude + 180) : NaN,
           IC: chart.angles.midheaven ? wrap(chart.angles.midheaven.longitude + 180) : NaN,
         };
-        const nmStrip = (x: string) => x.replace(/·[APTRB]$/, '');   // ·P推运/·T行运/·R返照/·A··B合盘
+        const nmStrip = (x: string) => x.replace(/·(?:[APTRB]|in|out)$/, '');   // ·P/·T/·R/·A/·B/·in/·out
         const angOf = (n: string) => {
-          // 合盘 ·A 端: A 盘的点表 (extraPoints)
-          if (n.endsWith('·A')) {
+          // 合盘 内环端 (·in / ·A): 内环盘的点表 (extraPoints)
+          if (n.endsWith('·in') || n.endsWith('·A')) {
             const bareA = nmStrip(n);
             return extraPoints && extraPoints[bareA] !== undefined ? la(extraPoints[bareA]) : null;
           }
