@@ -206,7 +206,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                     className={`cursor-pointer border-b border-white/[0.04] transition-colors last:border-0 ${isSel ? 'bg-accent/[0.07]' : 'hover:bg-white/[0.03]'}`}
                   >
                     <td className={`${tdCls} text-frost/90`}><span className="mr-1.5 text-accent/80">{p.symbol}</span>{p.zh}</td>
-                    <td className={`${tdCls} text-muted tabular-nums`}>{dms(p.degInSign)} <SignGlyph si={si} color={signColor(si)} /></td>
+                    <td className={`${tdCls} text-muted tabular-nums`}><span className="inline-block w-[3.5em] text-right">{dms(p.degInSign)}</span><SignGlyph si={si} color={signColor(si)} className="ml-1.5" /></td>
                     <td className={`${tdCls} text-muted`}>{p.house ?? '—'}</td>
                     <td className={`${tdCls} text-muted`}>{(() => { const h = rulingHouses(p.name, SIGN_RULER); return h.length ? h.join(' ') : '—' })()}</td>
                     <td className={`${tdCls} text-muted`}>{(() => { const h = rulingHouses(p.name, SIGN_EXALT); return h.length ? h.join(' ') : '—' })()}</td>
@@ -256,7 +256,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                 ) : cuspRows.map((r) => (
                   <tr key={r.house} className="border-b border-white/[0.04] last:border-0">
                     <td className={`${tdCls} text-muted`}>{r.house}</td>
-                    <td className={`${tdCls} text-muted tabular-nums`}>{dms(r.lon % 30)} <SignGlyph si={r.si} color={signColor(r.si)} /></td>
+                    <td className={`${tdCls} text-muted tabular-nums`}><span className="inline-block w-[3.5em] text-right">{dms(r.lon % 30)}</span><SignGlyph si={r.si} color={signColor(r.si)} className="ml-1.5" /></td>
                     <td className={`${tdCls} text-center text-frost/85`}>{symOf(r.dom)}</td>
                     <td className={`${tdCls} text-center text-frost/75`}>{r.exa ? symOf(r.exa) : <span className="text-muted/30">—</span>}</td>
                     <td className={`${tdCls} text-center text-frost/85`}>{r.alm ? symOf(r.alm) : <span className="text-muted/30">—</span>}</td>
@@ -284,7 +284,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                   ) : lots.map((l) => (
                     <tr key={l.key} className="border-b border-white/[0.04] last:border-0">
                       <td className={`${tdCls} text-frost/85`}>{zhMode ? l.zh : l.en}</td>
-                      <td className={`${tdCls} text-muted tabular-nums`}>{dms(l.longitude % 30)} <SignGlyph si={signIdxOf(l.longitude)} color={signColor(signIdxOf(l.longitude))} /> <span className="text-muted/50">({l.longitude.toFixed(2)}°)</span></td>
+                      <td className={`${tdCls} text-muted tabular-nums`}><span className="inline-block w-[3.5em] text-right">{dms(l.longitude % 30)}</span><SignGlyph si={signIdxOf(l.longitude)} color={signColor(signIdxOf(l.longitude))} className="ml-1.5" /><span className="ml-2 text-muted/50">({l.longitude.toFixed(2)}°)</span></td>
                     </tr>
                   ))}
                 </tbody>
@@ -307,7 +307,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                   ) : starRows.map(({ s, lon, conj }) => (
                     <tr key={s.en} className="border-b border-white/[0.04] last:border-0">
                       <td className={`${tdCls} text-frost/85`} title={s.en}>{zhMode ? s.zh : s.en}</td>
-                      <td className={`${tdCls} text-muted tabular-nums`}>{dms(lon % 30)} <SignGlyph si={signIdxOf(lon)} color={signColor(signIdxOf(lon))} /></td>
+                      <td className={`${tdCls} text-muted tabular-nums`}><span className="inline-block w-[3.5em] text-right">{dms(lon % 30)}</span><SignGlyph si={signIdxOf(lon)} color={signColor(signIdxOf(lon))} className="ml-1.5" /></td>
                       <td className={`${tdCls} text-frost/85`}>{conj.map((n) => symOf(n)).join(' ')}</td>
                     </tr>
                   ))}
