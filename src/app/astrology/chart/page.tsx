@@ -210,15 +210,15 @@ function ChartPageInner() {
         {/* 盘种切换条 (爸爸: 本命/三限/次限/行运/日返/月返/日弧/天象/法达) */}
         <div className="mb-3 flex flex-wrap items-center justify-center gap-1.5">
           {([
+            ['sky', zhMode ? '天象盘' : 'Sky'],
             ['', zhMode ? '本命盘' : 'Natal'],
+            ['tr', zhMode ? '行运盘' : 'Transit'],
             ['t', zhMode ? '三限盘' : 'Tertiary'],
             ['s', zhMode ? '次限盘' : 'Secondary'],
-            ['tr', zhMode ? '行运盘' : 'Transit'],
-            ['sr', zhMode ? '日返盘' : 'Solar Return'],
             ['lr', zhMode ? '月返盘' : 'Lunar Return'],
-            ['arc', zhMode ? '日弧' : 'Solar Arc'],
-            ['sky', zhMode ? '天象盘' : 'Sky'],
+            ['sr', zhMode ? '日返盘' : 'Solar Return'],
             ['fir', zhMode ? '法达' : 'Firdaria'],
+            ['arc', zhMode ? '日弧' : 'Solar Arc'],
             ['prof', zhMode ? '小限' : 'Profection'],
           ] as [string, string][]).map(([key, label]) => {
             const disabled = false;
