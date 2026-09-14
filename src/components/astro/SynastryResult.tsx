@@ -135,8 +135,8 @@ export default function SynastryResult({ syn, zhMode, tab, onTab, aLabel, bLabel
     </div>
   );
 
-  const inner = cur === 'compB' ? b : a;   // 内环 (compA: A 内; compB: B 内)
-  const outer = cur === 'compB' ? a : b;
+  const inner = cur === 'compA' ? b : a;   // 内环 (行业惯例对齐: 比较盘A=档案方在内; 爸爸)
+  const outer = cur === 'compA' ? a : b;
 
   return (
     <div className="space-y-4">
@@ -170,8 +170,8 @@ export default function SynastryResult({ syn, zhMode, tab, onTab, aLabel, bLabel
       {(cur === 'compA' || cur === 'compB') && (() => {
         // 双环: 内=主视角方行星, 外=另一方; 弦端名映射为环名 ·in/·out (爸爸: 点外环不连带内环)
         // 行业惯例对齐 (爸爸): 比较盘A = 档案方在内环, 主盘在外环; 比较盘B 反之
-        const innerC = cur === 'compA' ? b : a;
-        const outerC = cur === 'compA' ? a : b;
+        const innerC = inner;
+        const outerC = outer;
         const mapEnd = (e: string) => {
           const isA = e.endsWith('·A');
           const bare = e.replace(/·[AB]$/, '');
