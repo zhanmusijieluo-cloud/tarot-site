@@ -290,6 +290,14 @@ function ChartPageInner() {
       <section className="mb-10 mt-4">
         {/* 盘种切换条 (爸爸: 本命/三限/次限/行运/日返/月返/日弧/天象/法达) */}
         <div className="mb-3 flex flex-wrap items-center justify-center gap-1.5">
+          <button
+            onClick={() => setSynOpen(true)}
+            title={zhMode ? '选择档案与当下本命盘合盘' : 'Synastry with an archive'}
+            className={`rounded-full border px-3 py-1.5 text-[11px] tracking-[0.12em] transition-colors ${syncId ? 'border-accent/50 bg-accent/[0.08] text-accent' : 'border-white/[0.1] text-muted hover:border-white/25'}`}
+          >
+            ☍ {zhMode ? '合盘' : 'Synastry'}
+          </button>
+          <span className="mx-1 h-4 w-px bg-white/[0.12]" aria-hidden />
           {([
             ['sky', zhMode ? '天象盘' : 'Sky'],
             ['', zhMode ? '本命盘' : 'Natal'],
@@ -323,13 +331,6 @@ function ChartPageInner() {
               </button>
             );
           })}
-          <button
-            onClick={() => setSynOpen(true)}
-            title={zhMode ? '选择档案与当下本命盘合盘' : 'Synastry with an archive'}
-            className={`rounded-full border px-3 py-1.5 text-[11px] tracking-[0.12em] transition-colors ${syncId ? 'border-accent/50 bg-accent/[0.08] text-accent' : 'border-white/[0.1] text-muted hover:border-white/25'}`}
-          >
-            ☍ {zhMode ? '合盘' : 'Synastry'}
-          </button>
         </div>
 
         {/* 控制行(仅小屏): 大屏时三按钮已嵌入盘内资料卡下方竖排 (爸爸: 嵌入卡下) */}
