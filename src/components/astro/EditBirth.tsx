@@ -15,11 +15,14 @@ const inputCls =
   'outline-none transition-colors placeholder:text-muted/40 focus:border-accent/40';
 const labelCls = 'mb-1 block text-[10px] tracking-[0.25em] text-muted uppercase';
 
-export default function EditBirth({ birth, open, onClose, onSave }: {
+export default function EditBirth({ birth, open, onClose, onSave, archive, note0, contact0 }: {
   birth: BirthData;
   open: boolean;
   onClose: () => void;
-  onSave: (b: BirthData) => void;
+  onSave: (b: BirthData, extra?: { note: string; contact: string }) => void;
+  archive?: boolean;          // 档案模式: 多出「备注 / 联系方式」两栏
+  note0?: string;
+  contact0?: string;
 }) {
   const { t, lang } = useI18n();
   const zhMode = lang !== 'en';
@@ -34,6 +37,8 @@ export default function EditBirth({ birth, open, onClose, onSave }: {
     lat: birth.latitude, lng: birth.longitude, tz: birth.timezone,
     label: birth.city ?? '', cnCode: birth.cnCode,
   }));
+  const [note, setNote] = useState(note0 ?? '');
+  const [contact, setContact] = useState(contact0 ?? '');
   const [err, setErr] = useState('');
 
   // 每次打开都以当前盘面为准重置 (父级可能已换盘)
@@ -44,8 +49,9 @@ export default function EditBirth({ birth, open, onClose, onSave }: {
     setHour(String(birth.hour)); setMinute(String(birth.minute));
     setTimeKnown(birth.timeKnown !== false);
     setPlace({ lat: birth.latitude, lng: birth.longitude, tz: birth.timezone, label: birth.city ?? '', cnCode: birth.cnCode });
+    setNote(note0 ?? ''); setContact(contact0 ?? '');
     setErr('');
-  }, [open, birth]);
+  }, [open, birth, note0, contact0]);
 
   if (!open) return null;
 
@@ -61,14 +67,14 @@ export default function EditBirth({ birth, open, onClose, onSave }: {
     if (!(b.year >= 1900 && b.year <= 2100) || !(b.month >= 1 && b.month <= 12) || !(b.day >= 1 && b.day <= 31)) { setErr(t('astro.form.failed')); return; }
     if (timeKnown && (!(b.hour >= 0 && b.hour <= 23) || !(b.minute >= 0 && b.minute <= 59))) { setErr(t('astro.form.failed')); return; }
     if (!Number.isFinite(b.latitude) || !Number.isFinite(b.longitude)) { setErr(t('astro.form.failed')); return; }
-    onSave(b);
+    onSave(b, archive ? { note: note.trim(), contact: contact.trim() } : undefined);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-10 backdrop-blur-sm" onClick={onClose}>
       <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-[#0b0f1c] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.6)]" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="font-display text-base tracking-[0.18em] text-frost">{t('astro.edit.title')}</h3>
+          <h3 className="font-display text-base tracking-[0.18em] text-frost">{archive ? (zhMode ? '档案资料' : 'Archive profile') : t('astro.edit.title')}</h3>
           <button onClick={onClose} className="text-muted transition-colors hover:text-frost" aria-label="close">✕</button>
         </div>
 
@@ -99,6 +105,19 @@ export default function EditBirth({ birth, open, onClose, onSave }: {
             {t('astro.form.noTime')}
           </button>
         </div>
+
+        {archive && (
+          <>
+            <div className="mt-3">
+              <label className={labelCls}>{zhMode ? '备注' : 'Note'}</label>
+              <input value={note} maxLength={200} onChange={(e) => setNote(e.target.value)} className={inputCls} placeholder={zhMode ? '谁介绍的 / 关注的问题 / 随手记 (可留空)' : 'Notes (optional)'} />
+            </div>
+            <div className="mt-3">
+              <label className={labelCls}>{zhMode ? '联系方式' : 'Contact'}</label>
+              <input value={contact} maxLength={60} onChange={(e) => setContact(e.target.value)} className={inputCls} placeholder={zhMode ? '微信 / 电话 (可留空, 仅您自己可见)' : 'WeChat / phone (optional, private)'} />
+            </div>
+          </>
+        )}
 
         {err && <p className="mt-3 rounded-xl border border-[#e8a08a]/25 bg-[#e8a08a]/[0.05] px-3 py-2 text-[12px] text-[#e8a08a]">{err}</p>}
 

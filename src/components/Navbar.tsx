@@ -35,8 +35,6 @@ export default function Navbar() {
     const { data: sub } = sb.auth.onAuthStateChange((_e, sess) => { setMail(sess?.user.email ?? null); });
     return () => { alive = false; sub.subscription.unsubscribe(); };
   }, []);
-  const signOut = async () => { await supabaseBrowser()?.auth.signOut(); setMail(null); };
-
   const go = (route: string) => {
     setMenuOpen(false);
     if (route.startsWith('#')) {
@@ -184,8 +182,8 @@ export default function Navbar() {
           </div>
 
           {mail ? (
-            <button onClick={signOut} title={mail} className="btn-text px-4 py-2 text-sm">
-              {mail.split('@')[0]} · {lang === 'en' ? 'Sign out' : '退出'}
+            <button onClick={() => go('/archives')} title={mail} className="btn-text px-4 py-2 text-sm">
+              {mail.split('@')[0]} · {lang === 'en' ? 'Archives' : '我的档案'}
             </button>
           ) : (
             <>
@@ -242,8 +240,8 @@ export default function Navbar() {
                 {t('nav.home')}
               </button>
               {mail ? (
-                <button onClick={signOut} className="btn-ghost flex-1 py-2.5 text-sm">
-                  {mail.split('@')[0]} · {lang === 'en' ? 'Sign out' : '退出'}
+                <button onClick={() => go('/archives')} className="btn-ghost flex-1 py-2.5 text-sm">
+                  {mail.split('@')[0]} · {lang === 'en' ? 'Archives' : '我的档案'}
                 </button>
               ) : (
                 <>

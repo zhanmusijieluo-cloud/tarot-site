@@ -18,7 +18,7 @@ import type { DynamicChart } from '@/lib/astro/dynamic';
 import BandResult from '@/components/astro/BandResult';
 import TimeStepper from '@/components/astro/TimeStepper';
 import SynastryResult, { type SynData } from '@/components/astro/SynastryResult';
-import { listArchives, saveArchive, deleteArchive, getArchive, type Archive } from '@/lib/astro/archives';
+import { loadArchivesSmart, saveArchiveSmart, deleteArchiveSmart, type Archive } from '@/lib/astro/archives';
 import type { VChart } from '@/components/astro/ChartWheel';
 import { birthFromParams, paramsFromBirth, settingsFromParams, settingsToParams } from '@/lib/astro/chart-url';
 import { HOUSE_SYSTEM_ZH, type BirthData, type CastSettings, type HouseSystem } from '@/lib/astro/chart';
@@ -166,9 +166,14 @@ function ChartPageInner() {
   const [synOpen, setSynOpen] = useState(false);
   const [newArcOpen, setNewArcOpen] = useState(false);
   const [arcList, setArcList] = useState<Archive[]>([]);
-  useEffect(() => { setArc(syncId ? getArchive(syncId) : null); }, [syncId]);
   useEffect(() => {
-    if (synOpen || newArcOpen) setArcList(listArchives());
+    if (!syncId) { setArc(null); return; }
+    let alive = true;
+    loadArchivesSmart().then((r) => { if (alive) setArc(r.list.find((x) => x.id === syncId) ?? null); });
+    return () => { alive = false; };
+  }, [syncId]);
+  useEffect(() => {
+    if (synOpen || newArcOpen) loadArchivesSmart().then((r) => setArcList(r.list));
   }, [synOpen, newArcOpen]);
   useEffect(() => {
     if (!birth || !arc) { setSyn(null); setSynErr(''); return; }
@@ -422,7 +427,7 @@ function ChartPageInner() {
                       <p className="text-[10.5px] text-muted/70">{x.birth.year}-{String(x.birth.month).padStart(2, '0')}-{String(x.birth.day).padStart(2, '0')} {String(x.birth.hour).padStart(2, '0')}:{String(x.birth.minute).padStart(2, '0')} · {x.birth.city ?? ''}</p>
                     </div>
                     <button
-                      onClick={(e) => { e.stopPropagation(); deleteArchive(x.id); setArcList(listArchives()); }}
+                      onClick={(e) => { e.stopPropagation(); deleteArchiveSmart(x.id).then(() => loadArchivesSmart().then((r) => setArcList(r.list))); }}
                       className="ml-2 shrink-0 text-[10.5px] text-muted/50 transition-colors hover:text-[#e8a08a]"
                     >
                       {zhMode ? '删除' : 'Del'}
@@ -444,7 +449,8 @@ function ChartPageInner() {
           birth={emptyB}
           open={newArcOpen}
           onClose={() => setNewArcOpen(false)}
-          onSave={(b) => { saveArchive(b); setArcList(listArchives()); setNewArcOpen(false); setSynOpen(true); }}
+          archive
+          onSave={(b, ex) => { saveArchiveSmart(b, ex).then(() => { loadArchivesSmart().then((r) => setArcList(r.list)); setNewArcOpen(false); setSynOpen(true); }); }}
         />
       </section>
     </PageShell>
