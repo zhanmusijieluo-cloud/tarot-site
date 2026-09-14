@@ -264,7 +264,7 @@ function ChartPageInner() {
     >
       <section className="mb-10 mt-4">
         {/* 盘种切换条 (爸爸: 本命/三限/次限/行运/日返/月返/日弧/天象/法达) */}
-        <div className="mb-3 flex flex-wrap items-center justify-center gap-1.5">
+        <div className={`mb-3 flex flex-wrap items-center justify-center gap-1.5${syncId ? ' hidden' : ''}`}>
           <button
             onClick={() => setSynOpen(true)}
             title={zhMode ? '选择档案与当下本命盘合盘' : 'Synastry with an archive'}
@@ -309,7 +309,7 @@ function ChartPageInner() {
         </div>
 
         {/* 控制行(仅小屏): 大屏时三按钮已嵌入盘内资料卡下方竖排 (爸爸: 嵌入卡下) */}
-        <div className="mb-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11.5px] text-muted lg:hidden">
+        <div className={`mb-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11.5px] text-muted lg:hidden${syncId ? ' hidden' : ''}`}>
           <button
             onClick={() => openSettings('houses')}
             className="rounded-full border border-white/[0.12] px-2.5 py-0.5 text-[10.5px] text-frost/75 transition-colors hover:border-accent/40 hover:text-accent"
