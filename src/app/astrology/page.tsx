@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import SignGlyph, { signColor } from '@/components/astro/SignGlyph';
 import PageShell, { Reveal, SectionHead } from '@/components/PageShell';
 import NatalForm from '@/components/astro/NatalForm';
 import { useI18n } from '@/i18n';
@@ -99,10 +100,10 @@ export default function AstrologyPage() {
                 className="group h-full w-full rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 text-center transition-all duration-300 hover:-translate-y-1 hover:border-accent/35 hover:bg-accent/[0.05]"
               >
                 <span
-                  className="block text-2xl transition-all duration-300 group-hover:scale-110"
+                  className="block transition-all duration-300 group-hover:scale-110"
                   style={{ filter: 'drop-shadow(0 0 8px rgba(200,216,255,0.35))' }}
                 >
-                  {s.symbol}
+                  <SignGlyph si={i} color={signColor(i)} size={26} />
                 </span>
                 <span className="font-display mt-2.5 block text-sm tracking-[0.1em] text-frost">
                   {t(s.nameKey)}
@@ -192,10 +193,10 @@ export default function AstrologyPage() {
             style={{ animation: 'rise-in 0.5s cubic-bezier(0.16,1,0.3,1)' }}
           >
             <span
-              className="block text-4xl"
+              className="block"
               style={{ filter: 'drop-shadow(0 0 12px rgba(200,216,255,0.5))' }}
             >
-              {sign.symbol}
+              <SignGlyph si={activeSign ?? 0} color={signColor(activeSign ?? 0)} size={34} />
             </span>
             <h3 className="font-display mt-3 text-xl tracking-[0.2em] text-frost">{t(sign.nameKey)}</h3>
             <p className="mt-1 text-[10px] tracking-[0.3em] text-muted/70 uppercase">{sign.en}</p>
