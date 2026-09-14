@@ -313,6 +313,16 @@ export interface SynastryChart {
   composite: NatalChart
   davisonChart: NatalChart
   davisonInput: BirthData
+  marksA: NatalChart
+  marksB: NatalChart
+  marksAS: NatalChart
+  marksAT: NatalChart
+  marksBS: NatalChart
+  marksBT: NatalChart
+  davS: NatalChart
+  davT: NatalChart
+  compS: NatalChart
+  compT: NatalChart
   warnings: string[]
 }
 // ---------- 组合盘 / 时空盘 (合盘体系: 组合=对应中点, 时空=时地中点真实星空) ----------
@@ -324,8 +334,10 @@ function midArc(x: number, y: number): number {
 }
 
 /** 组合盘 (Composite): 双方对应天体黄经短弧中点, ASC/MC 取中点, 宫头四轴三等分重挂 */
-export function castComposite(a: NatalChart, b: NatalChart, settings: CastSettings): NatalChart {
-  const bp = new Map(b.planets.map((p) => [p.name, p.longitude]))
+export function castComposite(a: NatalChart, b: NatalChart, settings: CastSettings, ov?: { a: ChartPlanet[]; b: ChartPlanet[] }): NatalChart {
+  const listA = ov ? ov.a : a.planets
+  const listB = ov ? ov.b : b.planets
+  const bp = new Map(listB.map((p) => [p.name, p.longitude]))
   const ascA = a.angles.ascendant?.longitude, ascB = b.angles.ascendant?.longitude
   const mcA = a.angles.midheaven?.longitude, mcB = b.angles.midheaven?.longitude
   const asc = ascA !== undefined && ascB !== undefined ? midArc(ascA, ascB) : undefined
@@ -346,7 +358,7 @@ export function castComposite(a: NatalChart, b: NatalChart, settings: CastSettin
       cusps = Array.from({ length: 12 }, (_, i) => norm360(asc + i * 30))
     }
   }
-  const planets = a.planets.map((p) => {
+  const planets = listA.map((p) => {
     const y = bp.get(p.name)
     const lon = y === undefined ? p.longitude : midArc(p.longitude, y)
     return posToPlanet({ name: p.name, longitude: lon, latitude: 0, longitudeSpeed: 0, isRetrograde: false }, cusps)
@@ -398,6 +410,58 @@ export function davisonBirth(birthA: BirthData, birthB: BirthData): BirthData {
     timezone: tzMid, latitude: latMid, longitude: lngMid,
     city: '时空中点', label: '时空盘', timeKnown: true, houseSystem: birthA.houseSystem ?? 'placidus',
   }
+}
+
+/** 马盘 (马克思盘): 一方的时间 + 对方的出生地点 (主流算法; 爸爸拿宫神星核) */
+export function marksBirth(birthSelf: BirthData, birthOther: BirthData): BirthData {
+  return {
+    ...birthSelf,
+    latitude: birthOther.latitude,
+    longitude: birthOther.longitude,
+    timezone: birthOther.timezone,
+    city: birthOther.city,
+    label: '马盘',
+  }
+}
+
+/** 用一组行星替换盘面行星 (推运衍生盘: 保留 base 的宫位/四轴, 重算相位与宫位号) */
+function chartFromPlanets(base: NatalChart, planets: ChartPlanet[], settings: CastSettings): NatalChart {
+  const withHouse = (c: ChartPlanet): ChartPlanet => {
+    let house: number | null = null
+    if (base.cusps && base.cusps.length === 12) {
+      for (let h = 0; h < 12; h++) {
+        const a0 = base.cusps[h]
+        const span = norm360(base.cusps[(h + 1) % 12] - a0 + 360) % 360 || 30
+        if (norm360(c.longitude - a0) < span) { house = h + 1; break }
+      }
+    }
+    return { ...c, house }
+  }
+  const pl = planets.map(withHouse)
+  const pts = [
+    ...pl.map((p) => ({ name: p.name, longitude: p.longitude, longitudeSpeed: p.speed ?? 0 })),
+    ...(base.angles.ascendant ? [
+      { name: 'ASC', longitude: base.angles.ascendant.longitude, longitudeSpeed: 0 },
+      { name: 'DSC', longitude: norm360(base.angles.ascendant.longitude + 180), longitudeSpeed: 0 },
+    ] : []),
+    ...(base.angles.midheaven ? [
+      { name: 'MC', longitude: base.angles.midheaven.longitude, longitudeSpeed: 0 },
+      { name: 'IC', longitude: norm360(base.angles.midheaven.longitude + 180), longitudeSpeed: 0 },
+    ] : []),
+  ]
+  const { aspects } = calculateAspects(pts, {
+    aspectTypes: atFrom(settings),
+    orbs: settings.orbs as Partial<Record<AspectType, number>> | undefined,
+    includeOutOfSign: settings.outOfSign !== false,
+    outOfSignPenalty: settings.oosPenalty ?? 0,
+    minimumStrength: settings.minStrength ?? 0,
+  })
+  const aspectsOut: ChartAspect[] = (aspects as Array<{ body1: string; body2: string; type: string; symbol: string; deviation: number }>).map((x) => ({
+    a: x.body1, b: x.body2,
+    type: x.type as ChartAspect['type'], typeZh: ASPECT_ZH_OF(x.type),
+    symbol: x.symbol, orb: toPct(x.deviation), applying: null,
+  }))
+  return { ...base, planets: pl, aspects: aspectsOut }
 }
 
 export function castSynastry(birthA: BirthData, birthB: BirthData, settings: CastSettings): SynastryChart {
@@ -459,5 +523,22 @@ export function castSynastry(birthA: BirthData, birthB: BirthData, settings: Cas
   const composite = castComposite(a, b, settings)
   const davisonIn = davisonBirth(birthA, birthB)
   const davisonChart = castNatalChart(davisonIn, settings)
-  return { a, b, crossAspects: cross, composite, davisonChart, davisonInput: davisonIn, warnings }
+  // ---- 衍生盘补齐 (爸爸 16 盘): 马盘 A/B + 组合/马盘/时空 各自次限三限 (当前时刻) ----
+  const now = new Date()
+  const todayTarget: DynDate = { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() }
+  const progOf = (birth: BirthData, mode: 'secondary' | 'tertiary') =>
+    castProgressionChart(birth, settings, todayTarget, mode).outer?.planets ?? []
+  const marksAIn = marksBirth(birthA, birthB)
+  const marksBIn = marksBirth(birthB, birthA)
+  const marksA = castNatalChart(marksAIn, settings)
+  const marksB = castNatalChart(marksBIn, settings)
+  const davS = chartFromPlanets(davisonChart, progOf(davisonIn, 'secondary'), settings)
+  const davT = chartFromPlanets(davisonChart, progOf(davisonIn, 'tertiary'), settings)
+  const marksAS = chartFromPlanets(marksA, progOf(marksAIn, 'secondary'), settings)
+  const marksAT = chartFromPlanets(marksA, progOf(marksAIn, 'tertiary'), settings)
+  const marksBS = chartFromPlanets(marksB, progOf(marksBIn, 'secondary'), settings)
+  const marksBT = chartFromPlanets(marksB, progOf(marksBIn, 'tertiary'), settings)
+  const compS = castComposite(a, b, settings, { a: progOf(birthA, 'secondary'), b: progOf(birthB, 'secondary') })
+  const compT = castComposite(a, b, settings, { a: progOf(birthA, 'tertiary'), b: progOf(birthB, 'tertiary') })
+  return { a, b, crossAspects: cross, composite, davisonChart, davisonInput: davisonIn, marksA, marksB, marksAS, marksAT, marksBS, marksBT, davS, davT, compS, compT, warnings }
 }

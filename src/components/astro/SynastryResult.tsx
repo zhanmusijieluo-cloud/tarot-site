@@ -17,6 +17,16 @@ export interface SynData {
   crossAspects: ChartAspect[];
   composite: VChart;
   davisonChart: VChart;
+  marksA: VChart;
+  marksB: VChart;
+  marksAS: VChart;
+  marksAT: VChart;
+  marksBS: VChart;
+  marksBT: VChart;
+  davS: VChart;
+  davT: VChart;
+  compS: VChart;
+  compT: VChart;
   warnings: string[];
 }
 
@@ -38,18 +48,7 @@ const TABS: [string, string, string][] = [
   ['natalA', '本命盘A', 'Natal A'],
   ['natalB', '本命盘B', 'Natal B'],
 ];
-const TODO_NOTE: Record<string, string> = {
-  marksA: '马盘A (Marks): A 对 B 的心理盘; 算法核对后开发',
-  marksB: '马盘B (Marks): B 对 A 的心理盘; 算法核对后开发',
-  compT: '组合三限 (组合盘套三限推运); 随组合盘开发',
-  compS: '组合次限 (组合盘套次限推运); 随组合盘开发',
-  marksAT: '马盘A三限; 随马盘开发',
-  marksBT: '马盘B三限; 随马盘开发',
-  marksAS: '马盘A次限; 随马盘开发',
-  marksBS: '马盘B次限; 随马盘开发',
-  davT: '时空三限; 随时空盘开发',
-  davS: '时空次限; 随时空盘开发',
-};
+const SINGLE_TABS = ['natalA', 'natalB', 'composite', 'davison', 'marksA', 'marksB', 'compS', 'compT', 'marksAS', 'marksAT', 'marksBS', 'marksBT', 'davS', 'davT'];
 
 const IMP: Record<string, number> = { Sun: 70, Moon: 68, Mercury: 66, Venus: 64, Mars: 62, Jupiter: 60, Saturn: 58, Uranus: 30, Neptune: 30, Pluto: 30, ASC: 15, DSC: 14, MC: 13, IC: 12 };
 const ASPECT_ORDER: Record<string, number> = { conjunction: 0, sextile: 1, square: 2, trine: 3, opposition: 4, quincunx: 5 };
@@ -193,19 +192,40 @@ export default function SynastryResult({ syn, zhMode, tab, onTab, aLabel, bLabel
         );
       })()}
 
-      {(cur === 'natalA' || cur === 'natalB' || cur === 'composite' || cur === 'davison') && (() => {
-        const c = (cur === 'natalA' ? a : cur === 'natalB' ? b : cur === 'composite' ? syn.composite : syn.davisonChart) as VChart;
-        const title = cur === 'natalA' ? `${zhMode ? '本命盘' : 'Natal'} A`
-          : cur === 'natalB' ? `${zhMode ? '本命盘' : 'Natal'} B`
-          : cur === 'composite' ? (zhMode ? '组合盘' : 'Composite')
-          : (zhMode ? '时空盘' : 'Davison');
-        const sub = cur === 'natalA' ? aLabel
-          : cur === 'natalB' ? bLabel
-          : cur === 'composite' ? (zhMode ? `${aLabel} × ${bLabel} · 对应天体中点` : 'Midpoints of both')
-          : (zhMode ? `${aLabel} × ${bLabel} · 时间地点中点` : 'Time & place midpoint');
-        const aspTitle = cur === 'composite' ? (zhMode ? '组合盘相位' : 'Composite aspects')
-          : cur === 'davison' ? (zhMode ? '时空盘相位' : 'Davison aspects')
-          : (zhMode ? '本命相位' : 'Natal aspects');
+      {SINGLE_TABS.includes(cur) && (() => {
+        const chartMap: Record<string, VChart> = {
+          natalA: a, natalB: b,
+          composite: syn.composite, davison: syn.davisonChart,
+          marksA: syn.marksA, marksB: syn.marksB,
+          compS: syn.compS, compT: syn.compT,
+          marksAS: syn.marksAS, marksAT: syn.marksAT, marksBS: syn.marksBS, marksBT: syn.marksBT,
+          davS: syn.davS, davT: syn.davT,
+        };
+        const c = chartMap[cur] as VChart;
+        const tabDef = TABS.find((x) => x[0] === cur)!;
+        const title = zhMode ? tabDef[1] : tabDef[2];
+        const SUBZH: Record<string, string> = {
+          natalA: aLabel, natalB: bLabel,
+          composite: `${aLabel} × ${bLabel} · 对应天体中点`,
+          davison: `${aLabel} × ${bLabel} · 时间地点中点`,
+          marksA: `${aLabel}对${bLabel} · 心理盘 (时间×地点)`,
+          marksB: `${bLabel}对${aLabel} · 心理盘 (时间×地点)`,
+          compS: `双方次限推运的中点 · 当前`, compT: `双方三限推运的中点 · 当前`,
+          marksAS: `马盘A的次限推运 · 当前`, marksAT: `马盘A的三限推运 · 当前`,
+          marksBS: `马盘B的次限推运 · 当前`, marksBT: `马盘B的三限推运 · 当前`,
+          davS: `时空盘的次限推运 · 当前`, davT: `时空盘的三限推运 · 当前`,
+        };
+        const SUBEN: Record<string, string> = {
+          natalA: aLabel, natalB: bLabel,
+          composite: `${aLabel} × ${bLabel} · midpoints`, davison: 'Time & place midpoint',
+          marksA: `${aLabel} on ${bLabel}`, marksB: `${bLabel} on ${aLabel}`,
+          compS: 'Composite secondary · now', compT: 'Composite tertiary · now',
+          marksAS: 'Marks A secondary · now', marksAT: 'Marks A tertiary · now',
+          marksBS: 'Marks B secondary · now', marksBT: 'Marks B tertiary · now',
+          davS: 'Davison secondary · now', davT: 'Davison tertiary · now',
+        };
+        const sub = zhMode ? (SUBZH[cur] ?? '') : (SUBEN[cur] ?? '');
+        const aspTitle = `${title}${zhMode ? '相位' : ' aspects'}`;
         const asp = [...(c.aspects ?? [])].sort((x, y) => (IMP[nmS(y.a)] ?? 0) - (IMP[nmS(x.a)] ?? 0) || (ASPECT_ORDER[x.type] ?? 9) - (ASPECT_ORDER[y.type] ?? 9) || x.orb - y.orb);
         const card = (
           <div className="pointer-events-auto flex w-[248px] flex-col gap-1.5">
@@ -236,13 +256,6 @@ export default function SynastryResult({ syn, zhMode, tab, onTab, aLabel, bLabel
         );
       })()}
 
-      {!['compA', 'compB', 'natalA', 'natalB', 'composite', 'davison'].includes(cur) && (
-        <Panel title={TABS.find((x) => x[0] === cur)![zhMode ? 1 : 2]}>
-          <div className="px-3 py-16 text-center">
-            <p className="text-[13px] text-muted/80">{zhMode ? TODO_NOTE[cur] ?? '开发中' : 'In development'}</p>
-          </div>
-        </Panel>
-      )}
     </div>
   );
 }
