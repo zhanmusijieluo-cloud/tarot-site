@@ -47,7 +47,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
   const symOf = (name: string | null | undefined): string => {
     if (!name) return '—';
     const p = chart.planets.find((x) => x.name === name);
-    return p?.symbol ?? FALLBACK_SYM[name] ?? name.slice(0, 2);
+    return p?.symbol ?? FALLBACK_SYM[name] ?? ({ Ascendant: 'ASC', Descendant: 'DSC', Midheaven: 'MC', IC: 'IC' } as Record<string, string>)[name] ?? name.slice(0, 2);
   };
   const zhOf = (name: string): string => PLANET_ZH[name] ?? name;
 
@@ -145,8 +145,8 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
     </button>
   );
 
-  const thCls = 'px-2.5 py-2 font-normal';
-  const tdCls = 'px-2.5 py-1.5 whitespace-nowrap';
+  const thCls = 'px-3 py-2.5 font-normal';
+  const tdCls = 'px-3 py-2 whitespace-nowrap';
 
   return (
     <div>
@@ -163,7 +163,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
       {/* ============ 黄道状态 ============ */}
       {tab === 'ecliptic' && (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[980px] text-left text-[12px]">
+          <table className="w-full min-w-[980px] text-left text-[13px]">
             <thead>
               <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
                 <th className={thCls}>{T('星体', 'Body')}</th>
@@ -231,10 +231,11 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
 
       {/* ============ 黄道状态-2 (宫位表/阿拉伯点/恒星, 宫神星同款) ============ */}
       {tab === 'ecliptic2' && (
-        <div className="flex flex-wrap items-start gap-8">
+        <div className="grid items-start gap-x-8 gap-y-6 md:grid-cols-2 xl:grid-cols-3">
           {/* 宫位表 */}
           <div>
-            <table className="text-left text-[12px]">
+            <p className="mb-1.5 text-[11px] tracking-[0.2em] text-muted/75">{T('宫位表', 'HOUSES')}</p>
+            <table className="w-full text-left text-[13px]">
               <thead>
                 <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
                   <th className={thCls}>{T('宫', 'House')}</th>
@@ -262,10 +263,10 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
               {T('宫神星 = 宫头度数的尊贵计分最强主星 (庙5 旺4 三分3 界2 面1, 平分取高类别)', 'Almuten = strongest essential-dignity ruler of the cusp degree (5/4/3/2/1)')}
             </p>
           </div>
-          <div className="flex flex-col gap-6">
-            {/* 阿拉伯点表 */}
-            <div>
-              <table className="text-left text-[12px]">
+          {/* 阿拉伯点表 */}
+          <div>
+            <p className="mb-1.5 text-[11px] tracking-[0.2em] text-muted/75">{T('阿拉伯点', 'ARABIC LOTS')}</p>
+            <table className="w-full text-left text-[13px]">
                 <thead>
                   <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
                     <th className={thCls}>{T('阿拉伯点', 'Arabic Lot')}</th>
@@ -284,9 +285,10 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                 </tbody>
               </table>
             </div>
-            {/* 恒星表 */}
-            <div>
-              <table className="text-left text-[12px]">
+          {/* 恒星表 */}
+          <div>
+            <p className="mb-1.5 text-[11px] tracking-[0.2em] text-muted/75">{T('恒星', 'FIXED STARS')}</p>
+            <table className="w-full text-left text-[13px]">
                 <thead>
                   <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
                     <th className={thCls}>{T('恒星', 'Fixed Star')}</th>
@@ -309,7 +311,6 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
               <p className="mt-1.5 max-w-[420px] text-[10px] text-muted/50">
                 {T('恒星黄经含出生年岁差; 列出与星体/四轴合相 ≤2° 的传统亮星 (共 17 颗库)', 'Star longitudes include precession to birth year; conjunctions within 2° with bodies/axes')}
               </p>
-            </div>
           </div>
         </div>
       )}
@@ -320,7 +321,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
           <p className="mb-2 text-[11px] text-muted/70">
             {T(`法达星限 (${dayChart ? '昼生盘' : '夜生盘'}序) — 每段掌限主星与年龄段, 总 75 年`, `Firdaria (${dayChart ? 'day' : 'night'} chart) — 75-year planetary periods`)}
           </p>
-          <table className="w-full max-w-[560px] text-left text-[12px]">
+          <table className="w-full max-w-[560px] text-left text-[13px]">
             <thead>
               <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
                 <th className={thCls}>{T('序', 'No.')}</th>
@@ -356,7 +357,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
             {T('小限法 — 出生 ASC 所在宫为起点, 每岁推进一宫 (0 岁=1 宫)', 'Profections — annual house from ASC, advancing one house per year')}
           </p>
           <div className="max-h-[420px] overflow-y-auto rounded border border-white/[0.06]">
-            <table className="w-full max-w-[560px] text-left text-[12px]">
+            <table className="w-full max-w-[560px] text-left text-[13px]">
               <thead className="sticky top-0 bg-[#0c101c]">
                 <tr className="border-b border-white/[0.06] text-[10px] tracking-[0.15em] text-muted uppercase">
                   <th className={thCls}>{T('年龄', 'Age')}</th>
@@ -399,7 +400,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                 {T('起点', 'Start')}: <span className="text-accent/70">{SIGN_SYM[signIdxOf(lot.longitude)]}</span> {SIGN_ZH_BY_IDX[signIdxOf(lot.longitude)]}
               </span>
             </p>
-            <table className="w-full max-w-[620px] text-left text-[12px]">
+            <table className="w-full max-w-[620px] text-left text-[13px]">
               <thead>
                 <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
                   <th className={thCls}>{T('序', 'No.')}</th>
