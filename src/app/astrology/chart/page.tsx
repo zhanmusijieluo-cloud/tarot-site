@@ -112,14 +112,14 @@ function ChartPageInner() {
       compact
     >
       <section className="mb-10 mt-4">
-        {/* 控制行: 身份资料已嵌入盘内左上角卡片, 顶行只留操作件 (宫制切换入口 + 设置) */}
-        <div className="mb-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11.5px] text-muted">
+        {/* 控制行(仅小屏): 大屏时三按钮已嵌入盘内资料卡下方竖排 (爸爸: 嵌入卡下) */}
+        <div className="mb-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11.5px] text-muted lg:hidden">
           <button
             onClick={() => openSettings('houses')}
             className="rounded-full border border-white/[0.12] px-2.5 py-0.5 text-[10.5px] text-frost/75 transition-colors hover:border-accent/40 hover:text-accent"
             title={t('astro.set.houseHint')}
           >
-            {zhMode ? (SYS_ZH[data?.houseSystemUsed ?? birth.houseSystem ?? 'placidus'] ?? data?.houseSystemUsed ?? '普拉西德') : (data?.houseSystemUsed ?? birth.houseSystem ?? 'placidus')}
+            {zhMode ? '宫位设置 · ' : 'Houses · '}{zhMode ? (SYS_ZH[data?.houseSystemUsed ?? birth.houseSystem ?? 'placidus'] ?? data?.houseSystemUsed ?? '普拉西德') : (data?.houseSystemUsed ?? birth.houseSystem ?? 'placidus')}
             <span className="ml-1 text-[8px] text-muted/60">▾</span>
           </button>
           <button
@@ -147,7 +147,33 @@ function ChartPageInner() {
           <p className="py-20 text-center text-[12px] tracking-[0.3em] text-muted">{t('astro.form.casting')}</p>
         )}
         <EditBirth birth={birth} open={editOpen} onClose={() => setEditOpen(false)} onSave={saveBirth} />
-        {data && <ChartResult chart={data} zhMode={zhMode} aspectMode={aspectMode} onAspectMode={(m) => patchParams((p) => { if (m === 'list') p.set('ag', 'list'); else p.delete('ag'); })} />}
+        {data && <ChartResult chart={data} zhMode={zhMode} aspectMode={aspectMode} onAspectMode={(m) => patchParams((p) => { if (m === 'list') p.set('ag', 'list'); else p.delete('ag'); })} cornerActions={
+          <>
+            <button
+              onClick={() => setEditOpen(true)}
+              title={t('astro.edit.hint')}
+              className="flex w-full items-center gap-2 rounded-xl border border-white/[0.1] bg-[#0a0e19]/90 px-3.5 py-[9px] text-left text-[11.5px] text-frost/75 shadow-[0_6px_18px_rgba(0,0,0,0.35)] backdrop-blur-sm transition-colors hover:border-accent/40 hover:text-accent"
+            >
+              <span className="text-[12px]">✎</span> {t('astro.edit.btn')}
+            </button>
+            <button
+              onClick={() => openSettings('houses')}
+              title={t('astro.set.houseHint')}
+              className="flex w-full items-center gap-2 rounded-xl border border-white/[0.1] bg-[#0a0e19]/90 px-3.5 py-[9px] text-left text-[11.5px] text-frost/75 shadow-[0_6px_18px_rgba(0,0,0,0.35)] backdrop-blur-sm transition-colors hover:border-accent/40 hover:text-accent"
+            >
+              <span className="text-[12px]">⬡</span> {zhMode ? '宫位设置' : 'Houses'}
+              <span className="ml-auto text-[10px] text-muted/70">{zhMode ? (SYS_ZH[data.houseSystemUsed ?? birth.houseSystem ?? 'placidus'] ?? data.houseSystemUsed ?? '普拉西德') : (data.houseSystemUsed ?? birth.houseSystem ?? 'placidus')} ▾</span>
+            </button>
+            <ChartSettings
+              variant="block"
+              value={settings}
+              onChange={applySettings}
+              sys={data.houseSystemUsed ?? birth.houseSystem ?? 'placidus'}
+              onSysChange={(s) => switchSystem(s as HouseSystem)}
+              tabSignal={tabSignal}
+            />
+          </>
+        } />}
       </section>
     </PageShell>
   );

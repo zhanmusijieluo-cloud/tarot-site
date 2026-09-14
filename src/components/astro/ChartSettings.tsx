@@ -42,13 +42,17 @@ const MINOR = [
 
 type Tab = 'time' | 'bodies' | 'houses' | 'aspects' | 'display';
 
-export default function ChartSettings({ value, onChange, sys, onSysChange, tabSignal }: {
+const BLOCK_BTN = 'flex w-full items-center gap-2 rounded-xl border border-white/[0.1] bg-[#0a0e19]/90 px-3.5 py-[9px] text-left text-[11.5px] text-frost/75 shadow-[0_6px_18px_rgba(0,0,0,0.35)] backdrop-blur-sm transition-colors hover:border-accent/40 hover:text-accent';
+
+export default function ChartSettings({ value, onChange, sys, onSysChange, tabSignal, variant = 'pill' }: {
   value: CastSettings;
   onChange: (s: CastSettings) => void;
   sys?: string;
   onSysChange?: (s: string) => void;
   /** 父级请求直接打开某 Tab (nonce 变化触发) */
   tabSignal?: { tab: string; nonce: number };
+  /** pill=顶部小按钮(默认); block=资料卡下方通栏按钮 */
+  variant?: 'pill' | 'block';
 }) {
   const { t, lang } = useI18n();
   const zhMode = lang !== 'en';
@@ -136,10 +140,10 @@ export default function ChartSettings({ value, onChange, sys, onSysChange, tabSi
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 rounded-full border border-white/[0.12] px-3.5 py-1.5 text-[11px] tracking-[0.15em] text-muted transition-colors hover:border-accent/40 hover:text-frost"
+        className={variant === 'block' ? BLOCK_BTN : 'flex items-center gap-1.5 rounded-full border border-white/[0.12] px-3.5 py-1.5 text-[11px] tracking-[0.15em] text-muted transition-colors hover:border-accent/40 hover:text-frost'}
       >
         ⚙ {t('astro.set.title')}
-        {activeCount > 0 && <span className="rounded-full bg-accent/20 px-1.5 text-[10px] text-accent">{activeCount}</span>}
+        {activeCount > 0 && <span className={`${variant === 'block' ? 'ml-auto ' : ''}rounded-full bg-accent/20 px-1.5 text-[10px] text-accent`}>{activeCount}</span>}
       </button>
 
       {open && (

@@ -46,11 +46,13 @@ function Panel({ title, children, className = '' }: { title: string; children: R
   );
 }
 
-export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAspectMode }: {
+export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAspectMode, cornerActions }: {
   chart: VChart; zhMode: boolean;
   /** 相位区模式受控于页面 URL (ag=grid); 不传则内部自管 */
   aspectMode?: 'list' | 'grid';
   onAspectMode?: (m: 'list' | 'grid') => void;
+  /** 资料卡下方竖排操作 (爸爸: 编辑资料/宫位设置/排盘设置 嵌入卡下) */
+  cornerActions?: React.ReactNode;
 }) {
   const { t } = useI18n();
   const [selected, setSelected] = useState<string | null>(null);
@@ -279,7 +281,8 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
         {/* ---- 中央: 星盘主区 ---- */}
         <div className="min-w-0">
           <ChartWheel chart={chart} zhMode={zhMode} selected={selected} onSelect={setSelected} cornerSlot={
-      <div className="pointer-events-auto w-[248px] rounded-2xl border border-white/[0.1] bg-[#0a0e19]/90 px-3.5 py-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.45)] backdrop-blur-sm">
+      <div className="pointer-events-auto flex w-[248px] flex-col gap-1.5">
+      <div className="w-full rounded-2xl border border-white/[0.1] bg-[#0a0e19]/90 px-3.5 py-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.45)] backdrop-blur-sm">
         <p className="mb-1 flex items-baseline gap-2">
           <span className="font-display text-[14px] tracking-[0.12em] text-accent">{chart.input.label || (zhMode ? '本命盘' : 'Natal Chart')}</span>
           <span className="text-[9px] tracking-[0.2em] text-muted/60 uppercase">{zhMode ? '本命图' : 'Natal'}</span>
@@ -292,6 +295,8 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
             </div>
           ))}
         </dl>
+      </div>
+      {cornerActions}
       </div>
           } />
         </div>
