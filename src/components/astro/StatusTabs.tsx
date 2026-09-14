@@ -16,6 +16,10 @@ const SIGNS_ZH: Record<string, string> = {
 };
 const SIGN_SYM = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
 const SIGN_ZH_BY_IDX = ['白羊', '金牛', '双子', '巨蟹', '狮子', '处女', '天秤', '天蝎', '射手', '摩羯', '水瓶', '双鱼'];
+// 星座符号着色 = 四元素色 (与线条盘墨黑主题 SHADE 同源; 爸爸: 不喜欢紫色星座符号)
+const ELEM_HEX = ['#ff9c90', '#f0c470', '#84e89e', '#8cc0ff']; // 火 土 风 水
+const elemOfSign = (si: number) => [0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3][((si % 12) + 12) % 12];
+const signColor = (si: number) => ELEM_HEX[elemOfSign(si)];
 const PLANET_ZH: Record<string, string> = {
   Sun: '太阳', Moon: '月亮', Mercury: '水星', Venus: '金星', Mars: '火星', Jupiter: '木星', Saturn: '土星',
   NorthNode: '北交', SouthNode: '南交', Uranus: '天王星', Neptune: '海王星', Pluto: '冥王星',
@@ -201,7 +205,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                     className={`cursor-pointer border-b border-white/[0.04] transition-colors last:border-0 ${isSel ? 'bg-accent/[0.07]' : 'hover:bg-white/[0.03]'}`}
                   >
                     <td className={`${tdCls} text-frost/90`}><span className="mr-1.5 text-accent/80">{p.symbol}</span>{p.zh}</td>
-                    <td className={`${tdCls} text-muted tabular-nums`}>{dms(p.degInSign)} <span className="text-accent/70">{SIGN_SYM[si]}</span></td>
+                    <td className={`${tdCls} text-muted tabular-nums`}>{dms(p.degInSign)} <span style={{ color: signColor(si) }}>{SIGN_SYM[si]}</span></td>
                     <td className={`${tdCls} text-muted`}>{p.house ?? '—'}</td>
                     <td className={`${tdCls} text-muted`}>{(() => { const h = rulingHouses(p.name, SIGN_RULER); return h.length ? h.join(' ') : '—' })()}</td>
                     <td className={`${tdCls} text-muted`}>{(() => { const h = rulingHouses(p.name, SIGN_EXALT); return h.length ? h.join(' ') : '—' })()}</td>
@@ -251,7 +255,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                 ) : cuspRows.map((r) => (
                   <tr key={r.house} className="border-b border-white/[0.04] last:border-0">
                     <td className={`${tdCls} text-muted`}>{r.house}</td>
-                    <td className={`${tdCls} text-muted tabular-nums`}>{dms(r.lon % 30)} <span className="text-accent/70">{SIGN_SYM[r.si]}</span></td>
+                    <td className={`${tdCls} text-muted tabular-nums`}>{dms(r.lon % 30)} <span style={{ color: signColor(r.si) }}>{SIGN_SYM[r.si]}</span></td>
                     <td className={`${tdCls} text-center text-frost/85`}>{symOf(r.dom)}</td>
                     <td className={`${tdCls} text-center text-frost/75`}>{r.exa ? symOf(r.exa) : <span className="text-muted/30">—</span>}</td>
                     <td className={`${tdCls} text-center text-frost/85`}>{r.alm ? symOf(r.alm) : <span className="text-muted/30">—</span>}</td>
@@ -279,7 +283,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                   ) : lots.map((l) => (
                     <tr key={l.key} className="border-b border-white/[0.04] last:border-0">
                       <td className={`${tdCls} text-frost/85`}>{zhMode ? l.zh : l.en}</td>
-                      <td className={`${tdCls} text-muted tabular-nums`}>{dms(l.longitude % 30)} <span className="text-accent/70">{SIGN_SYM[signIdxOf(l.longitude)]}</span> <span className="text-muted/50">({l.longitude.toFixed(2)}°)</span></td>
+                      <td className={`${tdCls} text-muted tabular-nums`}>{dms(l.longitude % 30)} <span style={{ color: signColor(signIdxOf(l.longitude)) }}>{SIGN_SYM[signIdxOf(l.longitude)]}</span> <span className="text-muted/50">({l.longitude.toFixed(2)}°)</span></td>
                     </tr>
                   ))}
                 </tbody>
@@ -302,7 +306,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                   ) : starRows.map(({ s, lon, conj }) => (
                     <tr key={s.en} className="border-b border-white/[0.04] last:border-0">
                       <td className={`${tdCls} text-frost/85`} title={s.en}>{zhMode ? s.zh : s.en}</td>
-                      <td className={`${tdCls} text-muted tabular-nums`}>{dms(lon % 30)} <span className="text-accent/70">{SIGN_SYM[signIdxOf(lon)]}</span></td>
+                      <td className={`${tdCls} text-muted tabular-nums`}>{dms(lon % 30)} <span style={{ color: signColor(signIdxOf(lon)) }}>{SIGN_SYM[signIdxOf(lon)]}</span></td>
                       <td className={`${tdCls} text-frost/85`}>{conj.map((n) => symOf(n)).join(' ')}</td>
                     </tr>
                   ))}
@@ -373,7 +377,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                     <tr key={x.age} className={`border-b border-white/[0.04] last:border-0 ${cur ? 'bg-accent/[0.07]' : ''}`}>
                       <td className={`${tdCls} text-muted tabular-nums`}>{x.age}</td>
                       <td className={`${tdCls} text-muted tabular-nums`}>{T(`${x.house} 宫`, `H${x.house}`)}</td>
-                      <td className={`${tdCls} text-frost/80`}><span className="mr-1 text-accent/70">{SIGN_SYM[x.signIdx]}</span>{SIGN_ZH_BY_IDX[x.signIdx]}</td>
+                      <td className={`${tdCls} text-frost/80`}><span className="mr-1" style={{ color: signColor(x.signIdx) }}>{SIGN_SYM[x.signIdx]}</span>{SIGN_ZH_BY_IDX[x.signIdx]}</td>
                       <td className={`${tdCls} text-frost/80`}><span className="mr-1.5 text-accent/80">{symOf(x.lord)}</span>{zhOf(x.lord)}{cur ? <span className="ml-2 text-[10px] text-accent">{T('当前', 'now')}</span> : null}</td>
                     </tr>
                   );
@@ -397,7 +401,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
             <p className="mb-2 text-[11px] text-muted/70">
               {T(`${lotName} Aphesis (黄道释放) — 从${lotName}所在星座起按黄道推进, 每座年数=其主星小年 (日19/月25/水20/金8/火15/木12/土27-30)`, `${lotName} Aphesis (zodiacal releasing) — periods by sign rulership minor years`)}
               <span className="ml-2 text-muted/50">
-                {T('起点', 'Start')}: <span className="text-accent/70">{SIGN_SYM[signIdxOf(lot.longitude)]}</span> {SIGN_ZH_BY_IDX[signIdxOf(lot.longitude)]}
+                {T('起点', 'Start')}: <span style={{ color: signColor(signIdxOf(lot.longitude)) }}>{SIGN_SYM[signIdxOf(lot.longitude)]}</span> {SIGN_ZH_BY_IDX[signIdxOf(lot.longitude)]}
               </span>
             </p>
             <table className="w-full max-w-[620px] text-left text-[13px]">
@@ -417,7 +421,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                   return (
                     <tr key={i} className={`border-b border-white/[0.04] last:border-0 ${cur ? 'bg-accent/[0.07]' : ''}`}>
                       <td className={`${tdCls} text-muted/60`}>{i + 1}</td>
-                      <td className={`${tdCls} text-frost/85`}><span className="mr-1 text-accent/70">{SIGN_SYM[sg.signIdx]}</span>{SIGN_ZH_BY_IDX[sg.signIdx]}</td>
+                      <td className={`${tdCls} text-frost/85`}><span className="mr-1" style={{ color: signColor(sg.signIdx) }}>{SIGN_SYM[sg.signIdx]}</span>{SIGN_ZH_BY_IDX[sg.signIdx]}</td>
                       <td className={`${tdCls} text-frost/85`}><span className="mr-1.5 text-accent/80">{symOf(sg.lord)}</span>{zhOf(sg.lord)}</td>
                       <td className={`${tdCls} text-muted tabular-nums`}>{sg.years}</td>
                       <td className={`${tdCls} text-muted tabular-nums`}>{sg.startAge}–{sg.endAge} {T('岁', 'y')}</td>
