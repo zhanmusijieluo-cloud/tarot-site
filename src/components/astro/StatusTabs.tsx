@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import type { VChart, VPlanet } from '@/components/astro/ChartWheel';
 import { SIGN_RULER, SIGN_EXALT, firdaria, profections, aphesisL1 } from '@/lib/astro/timing';
+import { FIXED_STARS, starConjunctions, starLonAt } from '@/lib/astro/fixed-stars';
 
 const SIGNS_ZH: Record<string, string> = {
   Aries: '白羊', Taurus: '金牛', Gemini: '双子', Cancer: '巨蟹', Leo: '狮子', Virgo: '处女',
@@ -40,7 +41,7 @@ export interface StatusTabsProps {
 }
 
 export default function StatusTabs({ chart, zhMode, selected, onSelect }: StatusTabsProps) {
-  const [tab, setTab] = useState<'ecliptic' | 'firdaria' | 'profection' | 'aphesisF' | 'aphesisS'>('ecliptic');
+  const [tab, setTab] = useState<'ecliptic' | 'ecliptic2' | 'firdaria' | 'profection' | 'aphesisF' | 'aphesisS'>('ecliptic');
   const T = (zh: string, en: string) => (zhMode ? zh : en);
 
   const symOf = (name: string | null | undefined): string => {
@@ -110,6 +111,18 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
 
   const rows: VPlanet[] = [...chart.planets, chart.angles.ascendant, chart.angles.midheaven].filter(Boolean) as VPlanet[];
 
+  // ---- 黄道状态-2: 宫位表 / 阿拉伯点表 / 恒星表 ----
+  const lots = chart.arabicLots ?? [];
+  const almuten = chart.cuspAlmuten ?? [];
+  const cuspRows = hasHouses && cusps ? cusps.map((c, i) => {
+    const cn = norm(c); const si = signIdxOf(cn);
+    return { house: i + 1, lon: cn, si, dom: SIGN_RULER[si], exa: SIGN_EXALT[si], alm: almuten[i] ?? null };
+  }) : [];
+  const starBodies = [...chart.planets, chart.angles.ascendant, chart.angles.midheaven].filter(Boolean) as VPlanet[];
+  const starRows = FIXED_STARS.map((s) => ({
+    s, lon: starLonAt(s, chart.input.year), conj: starConjunctions(s, chart.input.year, starBodies),
+  })).filter((x) => x.conj.length > 0);
+
   // ---- 法达星限 ----
   const fird = firdaria(dayChart);
   // ---- 小限法 ----
@@ -140,6 +153,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
       {/* Tab 排 */}
       <div className="mb-3 flex flex-wrap gap-1.5">
         {tabBtn('ecliptic', T('黄道状态', 'Ecliptic Status'))}
+        {tabBtn('ecliptic2', T('黄道状态-2', 'Ecliptic Status 2'))}
         {tabBtn('firdaria', T('法达星限', 'Firdaria'))}
         {tabBtn('profection', T('小限法', 'Profections'))}
         {tabBtn('aphesisF', T('福点 Aphesis', 'Fortune Aphesis'))}
@@ -212,6 +226,91 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
           <p className="mt-1.5 text-[10px] text-muted/50">
             {T('守护宫/曜升宫=该星作为(庙/曜升)主星管辖的宫头宫位; 分数: 庙+5 旺+4 三分+3 界+2 面+1, 失势-5 落陷-4, 0分游走=0 P; 得时/失时=简化判定(星派×半球)', 'Rules/Exalted=house cusps this planet rules; Score: dom+5 exa+4 tri+3 bnd+2 dec+1, detr-5 fall-4; 0 P=peregrine')}
           </p>
+        </div>
+      )}
+
+      {/* ============ 黄道状态-2 (宫位表/阿拉伯点/恒星, 宫神星同款) ============ */}
+      {tab === 'ecliptic2' && (
+        <div className="flex flex-wrap items-start gap-8">
+          {/* 宫位表 */}
+          <div>
+            <table className="text-left text-[12px]">
+              <thead>
+                <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
+                  <th className={thCls}>{T('宫', 'House')}</th>
+                  <th className={thCls}>{T('黄经度数', 'Longitude')}</th>
+                  <th className={`${thCls} text-center`}>{T('本垣', 'Dom')}</th>
+                  <th className={`${thCls} text-center`}>{T('曜升', 'Exa')}</th>
+                  <th className={`${thCls} text-center`}>{T('宫神星', 'Almuten')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cuspRows.length === 0 ? (
+                  <tr><td className={`${tdCls} text-muted/60`} colSpan={5}>{T('时间未知, 无宫位', 'No houses (unknown time)')}</td></tr>
+                ) : cuspRows.map((r) => (
+                  <tr key={r.house} className="border-b border-white/[0.04] last:border-0">
+                    <td className={`${tdCls} text-muted`}>{r.house}</td>
+                    <td className={`${tdCls} text-muted tabular-nums`}>{dms(r.lon % 30)} <span className="text-accent/70">{SIGN_SYM[r.si]}</span></td>
+                    <td className={`${tdCls} text-center text-frost/85`}>{symOf(r.dom)}</td>
+                    <td className={`${tdCls} text-center text-frost/75`}>{r.exa ? symOf(r.exa) : <span className="text-muted/30">—</span>}</td>
+                    <td className={`${tdCls} text-center text-frost/85`}>{r.alm ? symOf(r.alm) : <span className="text-muted/30">—</span>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p className="mt-1.5 max-w-[380px] text-[10px] text-muted/50">
+              {T('宫神星 = 宫头度数的尊贵计分最强主星 (庙5 旺4 三分3 界2 面1, 平分取高类别)', 'Almuten = strongest essential-dignity ruler of the cusp degree (5/4/3/2/1)')}
+            </p>
+          </div>
+          <div className="flex flex-col gap-6">
+            {/* 阿拉伯点表 */}
+            <div>
+              <table className="text-left text-[12px]">
+                <thead>
+                  <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
+                    <th className={thCls}>{T('阿拉伯点', 'Arabic Lot')}</th>
+                    <th className={thCls}>{T('黄经度数', 'Longitude')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lots.length === 0 ? (
+                    <tr><td className={`${tdCls} text-muted/60`} colSpan={2}>{T('时间未知, 无法计算', 'Requires birth time')}</td></tr>
+                  ) : lots.map((l) => (
+                    <tr key={l.key} className="border-b border-white/[0.04] last:border-0">
+                      <td className={`${tdCls} text-frost/85`}>{zhMode ? l.zh : l.en}</td>
+                      <td className={`${tdCls} text-muted tabular-nums`}>{dms(l.longitude % 30)} <span className="text-accent/70">{SIGN_SYM[signIdxOf(l.longitude)]}</span> <span className="text-muted/50">({l.longitude.toFixed(2)}°)</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* 恒星表 */}
+            <div>
+              <table className="text-left text-[12px]">
+                <thead>
+                  <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
+                    <th className={thCls}>{T('恒星', 'Fixed Star')}</th>
+                    <th className={thCls}>{T('黄经度数', 'Longitude')}</th>
+                    <th className={thCls}>{T('合相', 'Conj')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {starRows.length === 0 ? (
+                    <tr><td className={`${tdCls} text-muted/60`} colSpan={3}>{T('本盘无明显恒星合相 (±2°)', 'No notable star conjunctions (±2°)')}</td></tr>
+                  ) : starRows.map(({ s, lon, conj }) => (
+                    <tr key={s.en} className="border-b border-white/[0.04] last:border-0">
+                      <td className={`${tdCls} text-frost/85`} title={s.en}>{zhMode ? s.zh : s.en}</td>
+                      <td className={`${tdCls} text-muted tabular-nums`}>{dms(lon % 30)} <span className="text-accent/70">{SIGN_SYM[signIdxOf(lon)]}</span></td>
+                      <td className={`${tdCls} text-frost/85`}>{conj.map((n) => symOf(n)).join(' ')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="mt-1.5 max-w-[420px] text-[10px] text-muted/50">
+                {T('恒星黄经含出生年岁差; 列出与星体/四轴合相 ≤2° 的传统亮星 (共 17 颗库)', 'Star longitudes include precession to birth year; conjunctions within 2° with bodies/axes')}
+              </p>
+            </div>
+          </div>
         </div>
       )}
 

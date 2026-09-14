@@ -165,6 +165,12 @@ export interface NatalChart {
   Cazimi?: string[]        // 日核: 距日 0°~17′ (PPT33) 如皇帝内臣, 倍受宠爱反强
   underBeams?: string[]    // 在日光下: 距日 8°30′~17° (PPT33) 受影响程度轻, 兼有"近贵" 
   viaCombusta: string[]    // 燃烧之路 (巨蟹14°55′—摩羯14°55′ 之间)
+  /** 阿拉伯点 (宫神星"阿拉伯点"表): 福/精/物质/婚姻(男/女)/子女 */
+  arabicLots?: { key: string; zh: string; en: string; longitude: number }[]
+  /** 每宫宫头宫神星 (almuten: 庙5旺4三分3界2面1 计分最高者, 12项; 宫头未知=[]) */
+  cuspAlmuten?: string[]
+  /** 月亮空亡 (出座前不再与其他七政精确成相) */
+  moonVoid?: boolean
   warnings: string[]
 }
 
@@ -577,6 +583,81 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
     if (inZone) viaCombusta.push(p.name)
   }
 
+  // ---------- 阿拉伯点 (宫神星"阿拉伯点"表; Al-Biruni/阿拉伯传承六点) ----------
+  const arabicLots: { key: string; zh: string; en: string; longitude: number }[] = []
+  if (timeKnown && angles.ascendant) {
+    const ascL = angles.ascendant.longitude
+    const lonOf = (n: string) => planets.find((p) => p.name === n)?.longitude
+    const sunL = lonOf('Sun'), moonL = lonOf('Moon'), jupL = lonOf('Jupiter'),
+      merL = lonOf('Mercury'), venL = lonOf('Venus'), satL = lonOf('Saturn')
+    if ([sunL, moonL, jupL, merL, venL, satL].every((x) => x !== undefined)) {
+      // 福/精: 日盘 福=Asc+月-日 精=Asc+日-月; 夜盘互换 (与 celestine lots 同式)
+      arabicLots.push({ key: 'fortune', zh: '福点', en: 'Fortune', longitude: dayChart ? norm(ascL + moonL! - sunL!) : norm(ascL + sunL! - moonL!) })
+      arabicLots.push({ key: 'spirit', zh: '精神点', en: 'Spirit', longitude: dayChart ? norm(ascL + sunL! - moonL!) : norm(ascL + moonL! - sunL!) })
+      // 物质点: Asc+木-水 (Firmicus 传承, 日夜同式)
+      arabicLots.push({ key: 'substance', zh: '物质点', en: 'Substance', longitude: norm(ascL + jupL! - merL!) })
+      // 婚姻点: 男=Asc+金-土 女=Asc+土-金 (Dorotheus/Hermes, 日夜同式)
+      arabicLots.push({ key: 'marriage_m', zh: '婚姻点(男)', en: 'Marriage (M)', longitude: norm(ascL + venL! - satL!) })
+      arabicLots.push({ key: 'marriage_f', zh: '婚姻点(女)', en: 'Marriage (F)', longitude: norm(ascL + satL! - venL!) })
+      // 子女点: 日盘 Asc+土-木; 夜盘反转 (Al-Biruni 5宫条)
+      arabicLots.push({ key: 'children', zh: '子女点', en: 'Children', longitude: dayChart ? norm(ascL + satL! - jupL!) : norm(ascL + jupL! - satL!) })
+    }
+  }
+
+  // ---------- 每宫宫头宫神星 (almuten: 庙5 旺4 三分3(宗派主) 界2 面1, 计分最高者; 平分取高类别) ----------
+  const cuspAlmuten: string[] = []
+  if (timeKnown && cuspsOut) {
+    for (const c of cuspsOut) {
+      const cn = norm(c)
+      const si2 = Math.floor(cn / 30)
+      const deg2 = cn % 30
+      const scores: Record<string, number> = {}
+      const order: string[] = []
+      const add = (n: string | undefined | null, v: number) => {
+        if (!n) return
+        if (!(n in scores)) order.push(n)
+        scores[n] = (scores[n] ?? 0) + v
+      }
+      add(getSignInfo(si2 as never).traditionalRuler, 5)                                        // 本垣
+      const exP = Object.entries(EXALTATION_SIGN).find(([, s]) => s && SIGN_IDX[s] === si2)?.[0]
+      add(exP, 4)                                                                                // 曜升
+      const trp = TRIPLICITY[ELEM_OF_SIGN[si2]]
+      add(trp ? (dayChart ? trp.day : trp.night) : null, 3)                                      // 三分(宗派主)
+      for (const [pl, end] of EGYPTIAN_TERMS[si2]) if (deg2 < end) { add(pl, 2); break }         // 界
+      add(FACES[si2][Math.min(2, Math.floor(deg2 / 10))], 1)                                     // 面
+      let best = '', bestScore = 0
+      for (const n of order) if (scores[n] > bestScore) { best = n; bestScore = scores[n] }
+      cuspAlmuten.push(best)
+    }
+  }
+
+  // ---------- 月亮空亡 (VOC): 月出座前不再与七政精确成相 (Lilly 口径, 五主相位) ----------
+  let moonVoid = false
+  if (timeKnown) {
+    const moonP = planets.find((p) => p.name === 'Moon')
+    const seven = planets.filter((p) => ['Sun', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'].includes(p.name))
+    if (moonP && seven.length) {
+      const ASP = [0, 60, 90, 120, 180]
+      const remain = 30 - (norm(moonP.longitude) % 30)   // 出座前剩余度数
+      const step = 0.05
+      const others = seven.map((o) => ({ lon: norm(o.longitude), sp: o.speed ?? 0 }))
+      let hit = false
+      for (let s = step; s <= remain + 1e-9 && !hit; s += step) {
+        const t = s / 13.176  // 天
+        const prevM = norm(moonP.longitude + s - step)
+        const curM = norm(moonP.longitude + s)
+        for (const o of others) {
+          const oL = o.lon + o.sp * t
+          const d0 = (() => { const d = Math.abs(prevM - oL) % 360; return d > 180 ? 360 - d : d })()
+          const d1 = (() => { const d = Math.abs(curM - oL) % 360; return d > 180 ? 360 - d : d })()
+          for (const A of ASP) if ((d0 - A) * (d1 - A) <= 0) { hit = true; break }
+          if (hit) break
+        }
+      }
+      moonVoid = !hit
+    }
+  }
+
   return {
     input: birth,
     settings,
@@ -587,6 +668,7 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
     hourRuler: timeKnown ? hourRulerOf(birth.year, birth.month, birth.day, birth.hour) : null,
     cusps: cuspsOut,
     aspects, receptions, combust: combustOld, Cazimi: cazimi, underBeams, viaCombusta, warnings,
+    arabicLots, cuspAlmuten, moonVoid,
   }
 }
 
@@ -654,5 +736,14 @@ export function chartEvidence(ch: NatalChart): string {
     lines.push(`【精度声明】`)
     for (const w of ch.warnings) lines.push(`! ${w}`)
   }
+  // 阿拉伯点 (六点) + 宫神星 + 月亮空亡 — 古典技法判读用
+  if (ch.arabicLots?.length) {
+    const fmtLot = (lon: number) => { const si = Math.floor(((lon % 360) + 360) % 360 / 30); const d = lon % 30; return `${SIGNS_ZH[Object.keys(SIGNS_ZH)[si]] ?? ''} ${Math.floor(d)}°${String(Math.round((d % 1) * 60)).padStart(2, '0')}′` }
+    lines.push(`【阿拉伯点】(六点): ${ch.arabicLots.map((l) => `${l.zh}=${fmtLot(l.longitude)}`).join(' · ')}`)
+  }
+  if (ch.cuspAlmuten?.length) {
+    lines.push(`【宫神星】(各宫宫头尊贵计分最强主星, 庙5旺4三分3界2面1): ${ch.cuspAlmuten.map((n, i) => `${i + 1}宫=${PLANET_ZH[n] ?? n}`).join(' ')}`)
+  }
+  if (ch.moonVoid) lines.push(`【月亮空亡】是 — 月出座前不再与其他七政精确成相, 推进类事项易悬置难落地 (古典凶兆之一)`)
   return lines.join('\n')
 }

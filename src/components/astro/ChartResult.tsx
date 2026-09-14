@@ -197,6 +197,20 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
       ),
     })
   }
+  // 月亮空亡 (VOC): 月出座前不再与其他七政精确成相
+  if (chart.moonVoid) {
+    features.push({
+      tone: 'warn',
+      tip: zhMode ? '月亮空亡 (Void of Course): 从出生位到出座前, 不再与任何七政精确成相 — 事项悬置、推进类易空转 (古典凶兆之一)' : undefined,
+      el: (
+        <span>
+          <b className="font-normal text-frost">☽</b>
+          <span className="ml-1 text-[#e8a08a]">{zhMode ? '月亮空亡' : 'Moon void of course'}</span>
+          <span className="ml-1 text-muted/70 text-[10px]">{zhMode ? '(出座前不再成相)' : ''}</span>
+        </span>
+      ),
+    })
+  }
   // 映点 Antiscia: ♀♊ 与 ☿♊ 成映点 (对宫合相)
   {
     const antiKey = (lon: number) => (((180 - lon) % 360) + 360) % 360

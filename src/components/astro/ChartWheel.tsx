@@ -46,6 +46,12 @@ export interface VChart {
   cusps: number[] | null;
   aspects: VAspect[];
   receptions: VReception[];
+  /** 阿拉伯点 (福/精/物质/婚姻男女/子女) */
+  arabicLots?: { key: string; zh: string; en: string; longitude: number }[];
+  /** 每宫宫头宫神星 (almuten) */
+  cuspAlmuten?: string[];
+  /** 月亮空亡 */
+  moonVoid?: boolean;
   warnings: string[];
 }
 

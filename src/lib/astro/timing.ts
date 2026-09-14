@@ -13,10 +13,11 @@ export const SIGN_RULER_ZH: string[] = [
   '火星', '金星', '水星', '月亮', '太阳', '水星',
   '金星', '火星', '木星', '土星', '土星', '木星',
 ]
-// 曜升主 (七曜; 双子/狮子/天蝎/水瓶无曜升)
+// 曜升主 (七曜; 双子/狮子/天蝎/射手/水瓶无曜升)
+// 白羊☉ 金牛☽ 巨蟹♃ 处女☿ 天秤♄ 摩羯♂ 双鱼♀ (托勒密《四书》I.19)
 export const SIGN_EXALT: (string | null)[] = [
   'Sun', 'Moon', null, 'Jupiter', null, 'Mercury',
-  'Saturn', null, 'Jupiter', 'Mars', 'Saturn', null,
+  'Saturn', null, null, 'Mars', null, 'Venus',
 ]
 // 都勒斯小年 (Aphesis / 黄道释放用): 太阳19 月亮25 水星20 金星8 火星15 木星12 土星30(摩羯27)
 export const MINOR_YEARS: Record<string, number> = {
