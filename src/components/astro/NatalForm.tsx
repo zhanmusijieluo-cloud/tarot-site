@@ -11,6 +11,8 @@ import { useRouter } from 'next/navigation';
 import { useI18n } from '@/i18n';
 import BirthplacePicker, { type BirthPlace } from '@/components/astro/BirthplacePicker';
 import { paramsFromBirth } from '@/lib/astro/chart-url';
+import ArchivePicker from '@/components/astro/ArchivePicker';
+import type { Archive } from '@/lib/astro/archives';
 import type { BirthData, HouseSystem } from '@/lib/astro/chart';
 
 const HOUSE_SYSTEMS: { value: HouseSystem; zh: string }[] = [
@@ -44,6 +46,16 @@ export default function NatalForm() {
   const [houseSystem, setHouseSystem] = useState<HouseSystem>('placidus');
   const [error, setError] = useState('');
 
+  const fillFrom = (a: Archive) => {
+    const b = a.birth;
+    setYear(String(b.year)); setMonth(String(b.month)); setDay(String(b.day));
+    setHour(String(b.hour)); setMinute(String(b.minute));
+    setTimeKnown(b.timeKnown !== false);
+    setPlace({ lat: b.latitude, lng: b.longitude, tz: b.timezone, label: b.city ?? '', cnCode: b.cnCode });
+    setLabel(a.label && a.label !== '未命名' ? a.label : '');
+    setError('');
+  };
+
   const cast = () => {
     setError('');
     const b: BirthData = {
@@ -69,6 +81,11 @@ export default function NatalForm() {
 
   return (
     <div className="rounded-3xl border border-white/[0.07] bg-white/[0.02] p-6 sm:p-8">
+      {/* 从我的档案选择 (爸爸: 选档案一键带入) */}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <ArchivePicker onPick={fillFrom} />
+        <p className="text-[10.5px] text-muted/50">{zhMode ? '选一份档案, 出生资料自动带入' : 'Pick an archive to auto-fill'}</p>
+      </div>
       {/* ---- 表单 ---- */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div>

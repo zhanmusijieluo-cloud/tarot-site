@@ -12,6 +12,7 @@ import { loadArchivesSmart, saveArchiveSmart, deleteArchiveSmart, listArchives, 
 import { supabaseBrowser } from '@/lib/supabase';
 import { useI18n } from '@/i18n';
 import type { BirthData } from '@/lib/astro/chart';
+import { paramsFromBirth } from '@/lib/astro/chart-url';
 
 const EMPTY: BirthData = { year: 1995, month: 1, day: 1, hour: 12, minute: 0, timezone: 8, latitude: 39.9, longitude: 116.41, city: '北京', timeKnown: true, houseSystem: 'placidus' };
 const pad = (x: number) => String(x).padStart(2, '0');
@@ -164,6 +165,12 @@ export default function ArchivesPage() {
                     mail ? null : <span className="rounded-full border border-white/[0.12] px-2 py-0.5 text-[9.5px] text-muted/60">{zhMode ? '本机' : 'Local'}</span>
                   )}
                   <span className="ml-auto flex items-center gap-3">
+                    <a
+                      href={`/astrology/chart?${paramsFromBirth({ ...x.birth, label: x.label })}`}
+                      className="text-[11px] text-accent/80 transition-colors hover:text-accent"
+                    >
+                      {zhMode ? '→ 星盘' : '→ Chart'}
+                    </a>
                     <button onClick={() => openEdit(x)} className="text-[11px] text-muted/70 transition-colors hover:text-accent">{zhMode ? '编辑' : 'Edit'}</button>
                     <button onClick={() => del(x.id)} className="text-[11px] text-muted/50 transition-colors hover:text-[#e8a08a]">{zhMode ? '删除' : 'Del'}</button>
                   </span>
