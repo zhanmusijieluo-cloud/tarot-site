@@ -112,6 +112,29 @@ function ChartPageInner() {
       compact
     >
       <section className="mb-10 mt-4">
+        {/* 盘种切换条 (爸爸: 上面用来切换 本命/三限/次限…等盘; 现阶段仅本命可看, 其余置灰待接) */}
+        <div className="mb-3 flex flex-wrap items-center justify-center gap-1.5">
+          <button
+            className="rounded-full border border-accent/50 bg-accent/[0.08] px-3.5 py-1.5 text-[11px] tracking-[0.15em] text-accent"
+          >
+            {zhMode ? '本命盘' : 'Natal'}
+          </button>
+          <button
+            aria-disabled="true"
+            title={zhMode ? '三限盘 · 开发中' : 'Tertiary progression · in development'}
+            className="cursor-not-allowed rounded-full border border-white/[0.06] px-3.5 py-1.5 text-[11px] tracking-[0.15em] text-muted/40"
+          >
+            {zhMode ? '三限盘' : 'Tertiary'}
+          </button>
+          <button
+            aria-disabled="true"
+            title={zhMode ? '次限盘 · 开发中' : 'Secondary progression · in development'}
+            className="cursor-not-allowed rounded-full border border-white/[0.06] px-3.5 py-1.5 text-[11px] tracking-[0.15em] text-muted/40"
+          >
+            {zhMode ? '次限盘' : 'Secondary'}
+          </button>
+        </div>
+
         {/* 控制行(仅小屏): 大屏时三按钮已嵌入盘内资料卡下方竖排 (爸爸: 嵌入卡下) */}
         <div className="mb-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11.5px] text-muted lg:hidden">
           <button
