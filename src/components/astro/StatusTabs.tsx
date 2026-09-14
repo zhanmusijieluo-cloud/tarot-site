@@ -4,9 +4,9 @@
 // 底部状态区 Tab 排 (宫神星同款结构): 黄道状态 / 法达星限 / 小限法 / 福点·精神点 Aphesis
 // 爸爸: 把下面也做成这样 (红箭头指 Tab 排)
 // ============================================================
-import { useState } from 'react';
+import React, { useState } from 'react';
 import type { VChart, VPlanet } from '@/components/astro/ChartWheel';
-import { SIGN_RULER, SIGN_EXALT, firdaria, profections, aphesisL1 } from '@/lib/astro/timing';
+import { SIGN_RULER, SIGN_EXALT, firdariaTable, profections, aphesisL1 } from '@/lib/astro/timing';
 import { FIXED_STARS, starConjunctions, starLonAt } from '@/lib/astro/fixed-stars';
 import SignGlyph, { signColor } from '@/components/astro/SignGlyph';
 
@@ -56,8 +56,9 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
   // 昼盘判定: 太阳落 7~12 宫 = 昼盘 (与引擎同口径)
   const sun = chart.planets.find((x) => x.name === 'Sun');
   const dayChart = !!sun?.house && sun.house >= 7;
-  // 当前年龄 (近似: 未过生日差一岁)
-  const curAge = Math.max(0, new Date().getFullYear() - chart.input.year);
+  // 当前年龄: 精确浮点 (含月日) + 整数版 (小限按岁)
+  const curAgeExact = Math.max(0, (Date.now() - Date.UTC(chart.input.year, chart.input.month - 1, chart.input.day)) / (365.2425 * 86400000));
+  const curAge = Math.floor(curAgeExact);
 
   const cusps = chart.cusps;
   const hasHouses = chart.timeKnown && !!cusps;
@@ -125,8 +126,10 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
     s, lon: starLonAt(s, chart.input.year), conj: starConjunctions(s, chart.input.year, starBodies),
   })).filter((x) => x.conj.length > 0);
 
-  // ---- 法达星限 ----
-  const fird = firdaria(dayChart);
+  // ---- 法达星限 (Abu Ma'shar 二级: 每主段7子段+交点不细分, 循环2轮=150年) ----
+  const firdRows = firdariaTable(dayChart, chart.input.year, chart.input.month, chart.input.day, 2);
+  const FIRD_COLS = 6;
+  const firdPerCol = Math.ceil(firdRows.length / FIRD_COLS);
   // ---- 小限法 ----
   const ascSignIdx = chart.angles.ascendant ? signIdxOf(chart.angles.ascendant.longitude) : 0;
   const profs = profections(ascSignIdx, 75);
@@ -317,38 +320,51 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
         </div>
       )}
 
-      {/* ============ 法达星限 ============ */}
+      {/* ============ 法达星限 (宫神星同款: 6栏二级表 主|次|起始日期, Abu Ma'shar 细分) ============ */}
       {tab === 'firdaria' && (
         <div>
           <p className="mb-2 text-[11px] text-muted/70">
-            {T(`法达星限 (${dayChart ? '昼生盘' : '夜生盘'}序) — 每段掌限主星与年龄段, 总 75 年`, `Firdaria (${dayChart ? 'day' : 'night'} chart) — 75-year planetary periods`)}
+            {T(`法达星限 (${dayChart ? '昼生盘' : '夜生盘'}序) — 每主段平分 7 个子段, 第 1 子段=主星自己, 之后按迦勒底序轮转; 交点不细分; 75 年一轮, 循环 2 轮`, `Firdaria (${dayChart ? 'diurnal' : 'nocturnal'}) — each period splits into 7 equal sub-periods starting from the lord itself; nodes do not subdivide; 75-year cycle repeated`)}
           </p>
-          <table className="w-full max-w-[560px] text-left text-[13px]">
-            <thead>
-              <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
-                <th className={thCls}>{T('序', 'No.')}</th>
-                <th className={thCls}>{T('主星', 'Lord')}</th>
-                <th className={thCls}>{T('年数', 'Years')}</th>
-                <th className={thCls}>{T('年龄', 'Age')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {fird.map((f, i) => {
-                const cur = curAge >= f.startAge && curAge < f.endAge;
-                return (
-                  <tr key={i} className={`border-b border-white/[0.04] last:border-0 ${cur ? 'bg-accent/[0.07]' : ''}`}>
-                    <td className={`${tdCls} text-muted/60`}>{i + 1}</td>
-                    <td className={`${tdCls} text-frost/90`}>
-                      <span className="mr-1.5 text-accent/80">{symOf(f.lord)}</span>{zhOf(f.lord)}
-                      {cur ? <span className="ml-2 rounded bg-accent/15 px-1.5 py-0.5 text-[10px] text-accent">{T('当前', 'now')}</span> : null}
-                    </td>
-                    <td className={`${tdCls} text-muted tabular-nums`}>{f.years}</td>
-                    <td className={`${tdCls} text-muted tabular-nums`}>{f.startAge}–{f.endAge} {T('岁', 'y')}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1180px] text-left text-[13px]">
+              <thead>
+                <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
+                  {Array.from({ length: FIRD_COLS }, (_, c) => (
+                    <React.Fragment key={c}>
+                      <th className={`${thCls} text-center ${c > 0 ? 'border-l border-dashed border-white/[0.12]' : ''}`}>{T('主', 'Lord')}</th>
+                      <th className={`${thCls} text-center`}>{T('次', 'Sub')}</th>
+                      <th className={thCls}>{T('起始日期', 'Start')}</th>
+                    </React.Fragment>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {Array.from({ length: firdPerCol }, (_, r) => (
+                  <tr key={r} className="border-b border-white/[0.04] last:border-0">
+                    {Array.from({ length: FIRD_COLS }, (_, c) => {
+                      const item = firdRows[c * firdPerCol + r];
+                      if (!item) return <td key={c} colSpan={3} />;
+                      const isNow = curAgeExact >= item.startAge && curAgeExact < item.endAge;
+                      const dateStr = `${item.y}-${String(item.m).padStart(2, '0')}-${String(item.d).padStart(2, '0')}`;
+                      return (
+                        <React.Fragment key={c}>
+                          <td className={`${tdCls} text-center text-[15px] text-frost/90 ${isNow ? 'bg-accent/[0.10]' : ''} ${c > 0 ? 'border-l border-dashed border-white/[0.12]' : ''}`}>{symOf(item.lord)}</td>
+                          <td className={`${tdCls} text-center text-[15px] text-frost/75 ${isNow ? 'bg-accent/[0.10]' : ''}`}>{item.sub ? symOf(item.sub) : <span className="text-[11px] text-muted/40">—</span>}</td>
+                          <td className={`${tdCls} text-muted tabular-nums ${isNow ? 'bg-accent/[0.10] text-accent' : ''}`}>
+                            {dateStr}{isNow ? <span className="ml-1.5 text-[10px] text-accent">{T('当前', 'now')}</span> : null}
+                          </td>
+                        </React.Fragment>
+                      );
+                    })}
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-1.5 text-[10px] text-muted/50">
+            {T('「主」=一级掌限 75 年序; 「次」=主段内 7 等分子段 (Abu Ma\'shar 法: 第 1 子段=主星自己, 其余按迦勒底序); 日期按真实年 365.2425 天自出生推算; 每栏自上往下、栏间自左往右顺序阅读', 'Lord=level-1 period lord (75-year cycle); Sub=equal seventh sub-period (Abu Ma\'shar: first sub = lord itself, then Chaldean order); dates at real years 365.2425 days')}
+          </p>
         </div>
       )}
 
@@ -415,7 +431,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
               </thead>
               <tbody>
                 {segs.map((sg, i) => {
-                  const cur = curAge >= sg.startAge && curAge < sg.endAge;
+                  const cur = curAgeExact >= sg.startAge && curAgeExact < sg.endAge;
                   return (
                     <tr key={i} className={`border-b border-white/[0.04] last:border-0 ${cur ? 'bg-accent/[0.07]' : ''}`}>
                       <td className={`${tdCls} text-muted/60`}>{i + 1}</td>

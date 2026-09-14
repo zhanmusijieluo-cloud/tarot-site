@@ -41,6 +41,39 @@ const FIRDARIA_NIGHT: [string, number][] = [
   ['NorthNode', 3], ['SouthNode', 2], ['Sun', 10], ['Venus', 8], ['Mercury', 13],
 ]
 export interface FirdarSeg { lord: string; years: number; startAge: number; endAge: number }
+
+// ---- 法达二级表 (Abu Ma'shar: 每主段平分7子段, 第1子段=主星自己, 然后按迦勒底序循环; 交点不细分; 75年循环; 真实年365.2425) ----
+export interface FirdarRow { lord: string; sub: string | null; y: number; m: number; d: number; startAge: number; endAge: number }
+// 子序基准: 迦勒底降序 (日→金→水→月→土→木→火), 与主序同源
+const CHALDEAN7 = ['Sun', 'Venus', 'Mercury', 'Moon', 'Saturn', 'Jupiter', 'Mars']
+const YEAR_DAYS = 365.2425
+
+export function firdariaTable(dayChart: boolean, by: number, bm: number, bd: number, rounds = 2): FirdarRow[] {
+  const seq = dayChart ? FIRDARIA_DAY : FIRDARIA_NIGHT
+  const base = Date.UTC(by, bm - 1, bd)
+  const rows: FirdarRow[] = []
+  let days = 0
+  for (let r = 0; r < rounds; r++) {
+    for (const [lord, years] of seq) {
+      const isNode = lord === 'NorthNode' || lord === 'SouthNode'
+      const parts = isNode ? 1 : 7
+      const partLen = years / parts
+      const startIdx = CHALDEAN7.indexOf(lord)
+      for (let k = 0; k < parts; k++) {
+        const dt = new Date(base + Math.round(days) * 86400000)
+        rows.push({
+          lord,
+          sub: isNode ? null : CHALDEAN7[(startIdx + k) % 7],
+          y: dt.getUTCFullYear(), m: dt.getUTCMonth() + 1, d: dt.getUTCDate(),
+          startAge: days / YEAR_DAYS,
+          endAge: (days + partLen * YEAR_DAYS) / YEAR_DAYS,
+        })
+        days += partLen * YEAR_DAYS
+      }
+    }
+  }
+  return rows
+}
 export function firdaria(dayChart: boolean): FirdarSeg[] {
   const seq = dayChart ? FIRDARIA_DAY : FIRDARIA_NIGHT
   let age = 0
