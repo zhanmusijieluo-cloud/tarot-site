@@ -14,7 +14,7 @@ import { useI18n } from '@/i18n';
 import { AspectLegend } from '@/components/astro/AspectGrid';
 import ChartWheel2D from '@/components/astro/ChartWheel2D';
 import { aspectNum } from '@/lib/astro/aspect-colors';
-import { PLANET_ZH_OF } from '@/lib/astro/chart';
+import { ASPECT_SYMBOL_OF,  PLANET_ZH_OF } from '@/lib/astro/chart';
 
 // ---------- 与 API 返回对齐的数据类型 ----------
 export interface VPlanet {
@@ -779,8 +779,8 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual }: {
         <div className="flex items-center gap-3">
           <span className="text-3xl text-accent">{p.symbol}</span>
           <div>
-            <p className="font-display text-lg tracking-[0.12em] text-frost">{zhMode ? p.zh : p.name}</p>
-            <p className="text-[11px] text-muted">{p.formatted}</p>
+            <p className="font-display text-xl tracking-[0.12em] text-frost">{zhMode ? p.zh : p.name}</p>
+            <p className="text-[12.5px] text-muted">{p.formatted}</p>
           </div>
         </div>
         <button onClick={onClose} className="glass-btn px-3 py-1 text-[10px] tracking-[0.2em]">✕</button>
@@ -788,16 +788,16 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual }: {
 
       <div className="mt-4 grid grid-cols-3 gap-2 text-center">
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-2 py-2.5">
-          <p className="text-[9px] tracking-[0.2em] text-muted uppercase">{t('astro.d.sign')}</p>
-          <p className="mt-1 text-[13px] text-frost">{zhMode ? `${p.signZh} ${p.degInSign.toFixed(1)}°` : `${p.sign} ${p.degInSign.toFixed(1)}°`}</p>
+          <p className="text-[10px] tracking-[0.2em] text-muted uppercase">{t('astro.d.sign')}</p>
+          <p className="mt-1 text-[14.5px] text-frost">{zhMode ? `${p.signZh} ${p.degInSign.toFixed(1)}°` : `${p.sign} ${p.degInSign.toFixed(1)}°`}</p>
         </div>
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-2 py-2.5">
-          <p className="text-[9px] tracking-[0.2em] text-muted uppercase">{t('astro.d.house')}</p>
-          <p className="mt-1 text-[13px] text-frost">{p.house ? (zhMode ? `第${p.house}宫` : `H${p.house}`) : '—'}</p>
+          <p className="text-[10px] tracking-[0.2em] text-muted uppercase">{t('astro.d.house')}</p>
+          <p className="mt-1 text-[14.5px] text-frost">{p.house ? (zhMode ? `第${p.house}宫` : `H${p.house}`) : '—'}</p>
         </div>
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-2 py-2.5">
-          <p className="text-[9px] tracking-[0.2em] text-muted uppercase">{t('astro.d.state')}</p>
-          <p className="mt-1 text-[13px] text-frost">
+          <p className="text-[10px] tracking-[0.2em] text-muted uppercase">{t('astro.d.state')}</p>
+          <p className="mt-1 text-[14.5px] text-frost">
             {p.dignity && p.dignity.state !== 'Peregrine'
               ? `${DIGNITY_ZH[p.dignity.state] ?? p.dignity.state}${p.dignity.strength ? ` ${p.dignity.strength > 0 ? '+' : ''}${p.dignity.strength}` : ''}`
               : (zhMode ? '游走' : 'Peregrine')}
@@ -808,30 +808,30 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual }: {
 
       {myAspects.length > 0 && (
         <div className="mt-4">
-          <p className="text-[10px] tracking-[0.25em] text-muted uppercase">{t('astro.d.aspects')}</p>
+          <p className="text-[11px] tracking-[0.25em] text-muted uppercase">{t('astro.d.aspects')}</p>
           <div className="mt-2 space-y-1.5">
             {myAspects.map((a, i) => {
               const pEnd = nmS(a.a) === p.name ? a.a : a.b;   // 此星所在端 (含后缀信息)
               const otherRaw = pEnd === a.a ? a.b : a.a;      // 对方端
               const other = nmS(otherRaw);
               const AX_SYM: Record<string, string> = { Ascendant: 'ASC', Midheaven: 'MC', Descendant: 'DSC', IC: 'IC', ASC: 'ASC', DSC: 'DSC', MC: 'MC' };
-              const otherSym = chart.planets.find((x) => x.name === other)?.symbol ?? AX_SYM[other] ?? other;
+              const otherSym = chart.planets.find((x) => x.name === other)?.symbol ?? ASPECT_SYMBOL_OF(other);  // 点位/四轴兜底: ⊖⊕ ASC/MC
               const app = a.applying === true ? (zhMode ? '入相' : 'applying') : a.applying === false ? (zhMode ? '出相' : 'separating') : '';
               return (
-                <p key={i} className="flex flex-wrap items-baseline gap-x-1.5 text-[12.5px] text-muted">
+                <p key={i} className="flex flex-wrap items-baseline gap-x-1.5 text-[13.5px] text-muted">
                   <span className="text-accent/80">{a.symbol}</span>
-                  <span className="text-[15px] leading-none text-frost/90" title={zhMode ? p.zh : p.name}>{p.symbol}</span>
+                  <span className="text-[17px] leading-none text-frost/90" title={zhMode ? p.zh : p.name}>{p.symbol}</span>
                   {dual
-                    ? <span className="text-[9px] text-muted/60">{isProgName(pEnd) ? (zhMode ? '外环' : 'Outer') : (zhMode ? '内环' : 'Inner')}</span>
-                    : isProgName(pEnd) && <span className="text-[9px] text-muted/60">{zhMode ? '推' : 'P'}</span>}
+                    ? <span className="text-[10.5px] text-muted/60">{isProgName(pEnd) ? (zhMode ? '外环' : 'Outer') : (zhMode ? '内环' : 'Inner')}</span>
+                    : isProgName(pEnd) && <span className="text-[10.5px] text-muted/60">{zhMode ? '推' : 'P'}</span>}
                   <span>{zhMode ? a.typeZh : a.type}</span>
-                  <span className="text-[15px] leading-none text-frost/90" title={zhMode ? zhOf(other) : other}>{otherSym}</span>
+                  <span className="text-[17px] leading-none text-frost/90" title={zhMode ? zhOf(other) : other}>{otherSym}</span>
                   {dual
-                    ? <span className="text-[9px] text-muted/60">{isProgName(otherRaw) ? (zhMode ? '外环' : 'Outer') : (zhMode ? '内环' : 'Inner')}</span>
-                    : isProgName(otherRaw) && <span className="text-[9px] text-muted/60">{zhMode ? '推' : 'P'}</span>}
+                    ? <span className="text-[10.5px] text-muted/60">{isProgName(otherRaw) ? (zhMode ? '外环' : 'Outer') : (zhMode ? '内环' : 'Inner')}</span>
+                    : isProgName(otherRaw) && <span className="text-[10.5px] text-muted/60">{zhMode ? '推' : 'P'}</span>}
                   <span className="text-accent/70">{a.orb.toFixed(1)}°</span>
-                  {a.actualAngle !== undefined && <span className="text-[10px] text-muted/60">{zhMode ? '实际' : 'actual'} {a.actualAngle.toFixed(1)}°</span>}
-                  {app && <span className="text-[10px] text-muted/70">{app}</span>}
+                  {a.actualAngle !== undefined && <span className="text-[11px] text-muted/60">{zhMode ? '实际' : 'actual'} {a.actualAngle.toFixed(1)}°</span>}
+                  {app && <span className="text-[11px] text-muted/70">{app}</span>}
                 </p>
               );
             })}
@@ -841,10 +841,10 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual }: {
 
       {myRecep.length > 0 && (
         <div className="mt-4">
-          <p className="text-[10px] tracking-[0.25em] text-muted uppercase">{t('astro.d.reception')}</p>
+          <p className="text-[11px] tracking-[0.25em] text-muted uppercase">{t('astro.d.reception')}</p>
           <div className="mt-2 space-y-1.5">
             {myRecep.slice(0, 8).map((rp, i) => (
-              <p key={i} className="text-[12.5px] text-muted">
+              <p key={i} className="text-[13.5px] text-muted">
                 {rp.mutual && <span className="mr-1 rounded bg-[#cdb88a]/10 px-1 py-px text-[9px] text-[#cdb88a]/90">{rp.aspected ? (zhMode ? '互容+接纳' : 'MR+reception') : (zhMode ? '互容·无相位' : 'MR, no aspect')}</span>}
                 {rp.mutual
                   ? (zhMode
