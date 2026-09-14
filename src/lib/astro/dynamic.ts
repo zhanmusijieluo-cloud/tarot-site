@@ -357,21 +357,13 @@ export function castComposite(a: NatalChart, b: NatalChart, settings: CastSettin
   const mcA = a.angles.midheaven?.longitude, mcB = b.angles.midheaven?.longitude
   const asc = ascA !== undefined && ascB !== undefined ? midArc(ascA, ascB) : undefined
   const mc = mcA !== undefined && mcB !== undefined ? midArc(mcA, mcB) : undefined
+  // 宫头 = 双方对应宫头各取(短弧)中点 (行业口径; 爸爸: 用市面专业算法)
+  // 两盘宫头必须都是真宫头(同宫制/时间已知)才可用; 否则退回等宫兜底
   let cusps: number[] | null = null
-  if (asc !== undefined) {
-    if (mc !== undefined) {
-      const ic = norm360(mc + 180), dsc = norm360(asc + 180)
-      const rel = [0, norm360(ic - asc), norm360(dsc - asc), norm360(mc - asc)].sort((x, y) => x - y)
-      const out: number[] = []
-      for (let i = 0; i < 4; i++) {
-        const a0 = asc + rel[i], a1 = i < 3 ? asc + rel[i + 1] : asc + 360
-        const span = a1 - a0
-        out.push(norm360(a0), norm360(a0 + span / 3), norm360(a0 + (2 * span) / 3))
-      }
-      cusps = out.slice(0, 12)
-    } else {
-      cusps = Array.from({ length: 12 }, (_, i) => norm360(asc + i * 30))
-    }
+  if (a.cusps && b.cusps && a.cusps.length === 12 && b.cusps.length === 12) {
+    cusps = Array.from({ length: 12 }, (_, i) => midArc(a.cusps![i], b.cusps![i]))
+  } else if (asc !== undefined) {
+    cusps = Array.from({ length: 12 }, (_, i) => norm360(asc + i * 30))
   }
   const planets = listA.map((p) => {
     const y = bp.get(p.name)
