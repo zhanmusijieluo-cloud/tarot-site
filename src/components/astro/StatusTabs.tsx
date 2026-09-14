@@ -364,8 +364,8 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                       const dateStr = `${item.y}-${String(item.m).padStart(2, '0')}-${String(item.d).padStart(2, '0')}`;
                       return (
                         <React.Fragment key={c}>
-                          <td style={cellStyle} className={`${tdCls} text-center text-[15px] ${isNow ? 'text-accent' : isStart ? 'font-semibold text-frost' : 'text-frost/90'} ${c > 0 ? 'border-l border-dashed border-white/[0.12]' : ''}`}>{symOf(item.lord)}</td>
-                          <td style={cellStyle} className={`${tdCls} text-center text-[15px] ${isStart ? 'font-semibold text-frost' : 'text-frost/75'}`}>{isStart ? null : symOf(item.sub!)}</td>
+                          <td colSpan={isStart ? 2 : undefined} style={cellStyle} className={`${tdCls} text-center text-[15px] ${isNow ? 'text-accent' : isStart ? 'font-semibold text-frost' : 'text-frost/90'} ${c > 0 ? 'border-l border-dashed border-white/[0.12]' : ''}`}>{symOf(item.lord)}</td>
+                          {!isStart && <td style={cellStyle} className={`${tdCls} text-center text-[15px] text-frost/75`}>{symOf(item.sub!)}</td>}
                           <td style={dateStyle} className={`${tdCls} tabular-nums ${isNow ? 'text-accent' : isStart ? '' : 'text-muted'}`}>
                             {dateStr}{isNow ? <span className="ml-1.5 text-[10px] text-accent">{T('当前', 'now')}</span> : null}
                           </td>
