@@ -47,13 +47,15 @@ function Panel({ title, children, className = '' }: { title: string; children: R
   );
 }
 
-export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAspectMode, cornerActions }: {
+export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAspectMode, cornerActions, hideStatus }: {
   chart: VChart; zhMode: boolean;
   /** 相位区模式受控于页面 URL (ag=grid); 不传则内部自管 */
   aspectMode?: 'list' | 'grid';
   onAspectMode?: (m: 'list' | 'grid') => void;
   /** 资料卡下方竖排操作 (爸爸: 编辑资料/宫位设置/排盘设置 嵌入卡下) */
   cornerActions?: React.ReactNode;
+  /** 天象盘模式: 隐藏底部状态区 (法达/小限等时序对本命才有意义) */
+  hideStatus?: boolean;
 }) {
   const { t } = useI18n();
   const [selected, setSelected] = useState<string | null>(null);
@@ -368,12 +370,14 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
         </div>
       </Panel>
 
-      {/* ---- 底部: 状态区 Tab (宫神星同款: 黄道状态/法达星限/小限法/福点·精神点 Aphesis) ---- */}
-      <Panel title={zhMode ? '黄道状态' : 'Ecliptic Status'}>
-        <div className="p-3">
-          <StatusTabs chart={chart} zhMode={zhMode} selected={selected} onSelect={setSelected} />
-        </div>
-      </Panel>
+      {/* ---- 底部: 状态区 Tab (宫神星同款: 黄道状态/法达星限/小限法/福点·精神点 Aphesis; 天象盘 hideStatus 整块不渲染) ---- */}
+      {!hideStatus && (
+        <Panel title={zhMode ? '黄道状态' : 'Ecliptic Status'}>
+          <div className="p-3">
+            <StatusTabs chart={chart} zhMode={zhMode} selected={selected} onSelect={setSelected} />
+          </div>
+        </Panel>
+      )}
 
       <p className="pt-1 text-center text-[11px] tracking-[0.15em] text-muted/60">
         {t('astro.res.nextHint')}

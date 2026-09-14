@@ -11,6 +11,7 @@ import { useMemo, useState } from 'react';
 import type { VChart, VPlanet } from '@/components/astro/ChartWheel';
 import { aspectHex } from '@/lib/astro/aspect-colors';
 import { GLYPH_PATHS, SYMBOL_TO_GLYPH, ZODIAC_GLYPH_NAMES } from '@/lib/astro/glyph-paths';
+import { firdariaTable, SIGN_RULER } from '@/lib/astro/timing';
 
 // 矢量符号渲染: 统一描边粗细 + 双层(白色防粘底+彩色笔画) (爸爸: 像宫神星那样, 系统字体的Unicode符号天然粗细不一)
 const GLYPH_SIZE = 24;   // 目标视觉高度 (px) — 爸爸: 再稍微缩小一点点 (26→24)
@@ -48,6 +49,9 @@ const R_PLANET = 284;         // 行星圈: 所有符号严格同一半径 (爸�
 const R_DUAL_IN = 256;        // 双环: 内圈(本命) — 本命+次限对比 (爸爸: 双击/按钮切双环)
 const R_DUAL_OUT = 300;       // 双环: 外圈(次限)
 const R_ASPECT = 228;         // 内圆 = 相位弦边界
+const R_BAND_IN = 395;        // 外圈信息带内缘 (法达环/小限环)
+const R_BAND_OUT = 444;       // 外圈信息带外缘
+const R_BAND_MID = (R_BAND_IN + R_BAND_OUT) / 2;   // 418
 
 const xy = (r: number, a: number) => [C + r * Math.cos(a), C - r * Math.sin(a)] as const;
 const wrap = (lon: number) => ((lon % 360) + 360) % 360;
@@ -81,10 +85,12 @@ function layoutRing(planets: VPlanet[], R: number, la: (lon: number) => number) 
   return arr.map((it) => ({ p: it.p, a: it.a, realA: it.realA }));
 }
 
-export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRing }: {
+export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRing, outerBand }: {
   chart: VChart; zhMode: boolean; selected: string | null; onSelect: (n: string | null) => void;
   /** 双环 (次限盘专属): 内=本命行星@256, 外=次限行星@300; 不传=单环现状 */
   dualRing?: { inner: VPlanet[]; outer: VPlanet[] } | null;
+  /** 外圈信息带 (爸爸: 法达盘/小限盘 = 盘外圈挂环) */
+  outerBand?: 'firdaria' | 'profection' | null;
 }) {
   const [paper, setPaper] = useState(true);
   const ascLon = chart.angles.ascendant?.longitude ?? 0;
@@ -264,6 +270,60 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
       ) : (
         renderRing(glyphs, R_PLANET, 'single')
       )}
+
+      {/* ---- 外圈信息带: 法达环 (12点=0岁, 顺时针, 75年=360°) ---- */}
+      {outerBand === 'firdaria' && (() => {
+        const sunP = chart.planets.find((x) => x.name === 'Sun');
+        const dayChart = !!sunP?.house && sunP.house >= 7;
+        const all = firdariaTable(dayChart, chart.input.year, chart.input.month, chart.input.day, 1);
+        const mains = all.filter((r) => r.sub === r.lord || r.sub === null);
+        const yearA = (age: number) => Math.PI / 2 - (age / 75) * Math.PI * 2;   // 12点起顺时针
+        const curAgeD = (Date.now() - Date.UTC(chart.input.year, chart.input.month - 1, chart.input.day)) / (365.2425 * 86400000);
+        const SYM_OF: Record<string, string> = { Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀', Mars: '♂', Jupiter: '♃', Saturn: '♄', NorthNode: '☊', SouthNode: '☋' };
+        const arcCw = (rIn: number, rOut: number, a0: number, a1: number) => {
+          const [x1, y1] = xy(rOut, a0), [x2, y2] = xy(rOut, a1), [x3, y3] = xy(rIn, a1), [x4, y4] = xy(rIn, a0);
+          return `M ${x1} ${y1} A ${rOut} ${rOut} 0 0 1 ${x2} ${y2} L ${x3} ${y3} A ${rIn} ${rIn} 0 0 0 ${x4} ${y4} Z`;
+        };
+        return mains.map((m, i) => {
+          const a0 = yearA(m.startAge), a1 = yearA(m.endAge);
+          const isNow = curAgeD >= m.startAge && curAgeD < m.endAge;
+          const isNode = m.lord === 'NorthNode' || m.lord === 'SouthNode';
+          const seqP = dayChart ? ['Sun', 'Venus', 'Mercury', 'Moon', 'Saturn', 'Jupiter', 'Mars'] : ['Moon', 'Saturn', 'Jupiter', 'Mars', 'Sun', 'Venus', 'Mercury'];
+          const subs = isNode ? [m.lord] : Array.from({ length: 7 }, (_, k) => seqP[(seqP.indexOf(m.lord) + k) % 7]);
+          const [lx, ly] = xy(R_BAND_IN + 14, a0);
+          return (
+            <g key={`fir-${i}`}>
+              <path d={arcCw(R_BAND_IN, R_BAND_OUT, a0, a1)} fill={isNow ? 'rgba(217,168,184,0.20)' : (i % 2 ? 'rgba(255,255,255,0.035)' : 'rgba(255,255,255,0.06)')} stroke={P.ring} strokeWidth="0.8" />
+              {/* 段界径向线 */}
+              <line x1={xy(R_BAND_IN, a0)[0]} y1={xy(R_BAND_IN, a0)[1]} x2={xy(R_BAND_OUT, a0)[0]} y2={xy(R_BAND_OUT, a0)[1]} stroke={P.ring} strokeWidth="0.8" />
+              <text x={lx} y={ly + 4} textAnchor="middle" fontSize="10.5" fontWeight={600} fill={isNow ? '#d9a8b8' : P.ink} opacity={isNow ? 1 : 0.75}>{Math.round(m.startAge)}岁</text>
+              {subs.map((lord, k) => {
+                const seg = (a0 - a1) / subs.length;
+                const [sx, sy] = xy(R_BAND_MID, a0 - seg * (k + 0.5));
+                return <GlyphPath key={k} name={SYMBOL_TO_GLYPH[SYM_OF[lord]] ?? ''} cx={sx} cy={sy} color={isNow ? '#d9a8b8' : P.ink} size={13} />;
+              })}
+            </g>
+          );
+        });
+      })()}
+
+      {/* ---- 外圈信息带: 小限环 (每宫一段, 段内=宫头星座庙主星单字) ---- */}
+      {outerBand === 'profection' && hasHouses && cusps!.map((c0, h) => {
+        const c1 = cusps![(h + 1) % 12];
+        const a0 = la(c0), a1 = la(c1);
+        const lord = SIGN_RULER[signIdx(c0)];
+        const LORD_ZH: Record<string, string> = { Sun: '日', Moon: '月', Mercury: '水', Venus: '金', Mars: '火', Jupiter: '木', Saturn: '土' };
+        const curAge = Math.max(0, Math.floor((Date.now() - Date.UTC(chart.input.year, chart.input.month - 1, chart.input.day)) / (365.2425 * 86400000)));
+        const curHouse = (curAge % 12) + 1;
+        const isNow = curHouse === h + 1;
+        const [tx, ty] = xy(R_BAND_MID, (a0 + a1) / 2);
+        return (
+          <g key={`prof-${h}`}>
+            <path d={sector(R_BAND_OUT, R_BAND_IN, a0, a1)} fill={isNow ? 'rgba(217,168,184,0.20)' : (h % 2 ? 'rgba(255,255,255,0.035)' : 'rgba(255,255,255,0.06)')} stroke={P.ring} strokeWidth="0.8" />
+            <text x={tx} y={ty + 5} textAnchor="middle" fontSize="15" fontWeight={600} fill={isNow ? '#d9a8b8' : P.ink} opacity={isNow ? 1 : 0.8}>{LORD_ZH[lord] ?? '?'}</text>
+          </g>
+        );
+      })}
       </svg>
     </div>
   );

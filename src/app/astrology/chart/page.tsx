@@ -15,6 +15,7 @@ import EditBirth from '@/components/astro/EditBirth';
 import ChartSettings from '@/components/astro/ChartSettings';
 import DynResult from '@/components/astro/DynResult';
 import type { DynamicChart } from '@/lib/astro/dynamic';
+import BandResult from '@/components/astro/BandResult';
 import type { VChart } from '@/components/astro/ChartWheel';
 import { birthFromParams, paramsFromBirth, settingsFromParams, settingsToParams } from '@/lib/astro/chart-url';
 import { HOUSE_SYSTEM_ZH, type BirthData, type CastSettings, type HouseSystem } from '@/lib/astro/chart';
@@ -118,6 +119,30 @@ function ChartPageInner() {
     return () => { alive = false; };
   }, [birth, settings, dynType, dpy, dpm, dpd, t]);
 
+  // ---- 法达盘 / 小限盘 (纯前端: 盘+外环, 用本命数据) / 天象盘 (纯天象) ----
+  const bandKind: 'firdaria' | 'profection' | null = dpKey === 'fir' ? 'firdaria' : dpKey === 'prof' ? 'profection' : null;
+  const skyMode = dpKey === 'sky';
+  const skyHour = sp.get('dph') !== null ? Math.min(23, Math.max(0, Number(sp.get('dph')) || 0)) : nowD.getHours();
+  const skyMin = sp.get('dpmi') !== null ? Math.min(59, Math.max(0, Number(sp.get('dpmi')) || 0)) : nowD.getMinutes();
+  const [sky, setSky] = useState<VChart | null>(null);
+  const skyBirth = useMemo(() => (birth && skyMode ? {
+    ...birth,
+    year: dpy, month: dpm, day: dpd, hour: skyHour, minute: skyMin, timeKnown: true,
+    label: zhMode ? '天象盘' : 'Sky chart',
+  } : null), [birth, skyMode, dpy, dpm, dpd, skyHour, skyMin, zhMode]);
+  useEffect(() => {
+    if (!skyBirth) { setSky(null); return; }
+    let alive = true;
+    fetch('/api/astro/chart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ birth: { ...skyBirth, houseSystem: skyBirth.houseSystem ?? 'placidus' }, settings }),
+    })
+      .then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.error || 'failed'); if (alive) setSky(j.chart as VChart); })
+      .catch(() => { if (alive) setSky(null); });
+    return () => { alive = false; };
+  }, [skyBirth, settings]);
+
 
   if (!birth) {
     return (
@@ -182,8 +207,9 @@ function ChartPageInner() {
             ['arc', zhMode ? '日弧' : 'Solar Arc'],
             ['sky', zhMode ? '天象盘' : 'Sky'],
             ['fir', zhMode ? '法达' : 'Firdaria'],
+            ['prof', zhMode ? '小限' : 'Profection'],
           ] as [string, string][]).map(([key, label]) => {
-            const disabled = key === 'sky' || key === 'fir';
+            const disabled = false;
             const active = dpKey === key;
             return (
               <button
@@ -240,7 +266,39 @@ function ChartPageInner() {
           <p className="py-20 text-center text-[12px] tracking-[0.3em] text-muted">{t('astro.form.casting')}</p>
         )}
         <EditBirth birth={birth} open={editOpen} onClose={() => setEditOpen(false)} onSave={saveBirth} />
-        {dpMode ? (
+        {skyMode ? (
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-[11.5px] text-muted">
+              <span>{zhMode ? '天象时刻' : 'Sky time'}</span>
+              <input
+                type="date"
+                value={`${dpy}-${String(dpm).padStart(2, '0')}-${String(dpd).padStart(2, '0')}`}
+                min="1900-01-01"
+                max="2100-12-31"
+                onChange={(e) => {
+                  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(e.target.value);
+                  if (m) patchParams((p) => { p.set('dpy', m[1]); p.set('dpm', String(Number(m[2]))); p.set('dpd', String(Number(m[3]))); });
+                }}
+                className="rounded-lg border border-white/[0.12] bg-white/[0.04] px-2 py-1 text-[11.5px] text-frost [color-scheme:dark]"
+              />
+              <input
+                type="time"
+                value={`${String(skyHour).padStart(2, '0')}:${String(skyMin).padStart(2, '0')}`}
+                onChange={(e) => {
+                  const m = /^(\d{2}):(\d{2})$/.exec(e.target.value);
+                  if (m) patchParams((p) => { p.set('dph', String(Number(m[1]))); p.set('dpmi', String(Number(m[2]))); });
+                }}
+                className="rounded-lg border border-white/[0.12] bg-white/[0.04] px-2 py-1 text-[11.5px] text-frost [color-scheme:dark]"
+              />
+              <span className="text-muted/60">{zhMode ? '纯天象盘 (地点沿用本命; 不含本命对照)' : 'Pure sky chart (birth location; no natal overlay)'}</span>
+            </div>
+            {sky ? (
+              <ChartResult chart={sky} zhMode={zhMode} hideStatus cornerActions={cornerActions} />
+            ) : (
+              <p className="py-20 text-center text-[12px] tracking-[0.3em] text-muted">{t('astro.form.casting')}</p>
+            )}
+          </div>
+        ) : dpMode ? (
           dyn ? (
             <DynResult
               dyn={dyn}
@@ -254,6 +312,8 @@ function ChartPageInner() {
           ) : (
             <p className="py-20 text-center text-[12px] tracking-[0.3em] text-muted">{t('astro.form.casting')}</p>
           )
+        ) : bandKind ? (
+          data && <BandResult chart={data} zhMode={zhMode} kind={bandKind} cornerActions={cornerActions} />
         ) : (
           data && <ChartResult chart={data} zhMode={zhMode} aspectMode={aspectMode} onAspectMode={(m) => patchParams((p) => { if (m === 'list') p.set('ag', 'list'); else p.delete('ag'); })} cornerActions={cornerActions} />
         )}
