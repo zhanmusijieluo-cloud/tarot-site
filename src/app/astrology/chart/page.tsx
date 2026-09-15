@@ -10,6 +10,7 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { useRouter, useSearchParams } from 'next/navigation';
 import PageShell from '@/components/PageShell';
 import { useI18n } from '@/i18n';
+import { L } from '@/lib/astro/i18n';
 import ChartResult from '@/components/astro/ChartResult';
 import EditBirth from '@/components/astro/EditBirth';
 import ChartSettings from '@/components/astro/ChartSettings';
@@ -287,16 +288,16 @@ function ChartPageInner() {
           </button>
           <span className="mx-1 h-4 w-px bg-white/[0.12]" aria-hidden />
           {([
-            ['sky', zhMode ? '天象盘' : 'Sky'],
-            ['', zhMode ? '本命盘' : 'Natal'],
-            ['tr', zhMode ? '行运盘' : 'Transit'],
-            ['t', zhMode ? '三限盘' : 'Tertiary'],
-            ['s', zhMode ? '次限盘' : 'Secondary'],
-            ['lr', zhMode ? '月返盘' : 'Lunar Return'],
-            ['sr', zhMode ? '日返盘' : 'Solar Return'],
-            ['fir', zhMode ? '法达' : 'Firdaria'],
-            ['arc', zhMode ? '日弧' : 'Solar Arc'],
-            ['prof', zhMode ? '小限' : 'Profection'],
+            ['sky', L(lang, '天象盘', 'Sky', 'トランシット')],
+            ['', L(lang, '本命盘', 'Natal', 'ネイタル')],
+            ['tr', L(lang, '行运盘', 'Transit', 'トランシット')],
+            ['t', L(lang, '三限盘', 'Tertiary', '三次限')],
+            ['s', L(lang, '次限盘', 'Secondary', '二次限')],
+            ['lr', L(lang, '月返盘', 'Lunar Return', 'ルナリターン')],
+            ['sr', L(lang, '日返盘', 'Solar Return', 'ソーラーリターン')],
+            ['fir', L(lang, '法达', 'Firdaria', 'ファルダリア')],
+            ['arc', L(lang, '日弧', 'Solar Arc', 'ソーラーアーク')],
+            ['prof', L(lang, '小限', 'Profection', 'プロフェクション')],
           ] as [string, string][]).map(([key, label]) => {
             const disabled = false;
             const active = dpKey === key;

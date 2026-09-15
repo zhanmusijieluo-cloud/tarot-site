@@ -5,6 +5,7 @@
 // 爸爸: 把下面也做成这样 (红箭头指 Tab 排)
 // ============================================================
 import React, { useState } from 'react';
+import { useI18n } from '@/i18n';
 import type { VChart, VPlanet } from '@/components/astro/ChartWheel';
 import { SIGN_RULER, SIGN_EXALT, firdariaTable, profections, zodiacalReleasing } from '@/lib/astro/timing';
 import { FIXED_STARS, starConjunctions, starLonAt } from '@/lib/astro/fixed-stars';
@@ -36,7 +37,9 @@ export interface StatusTabsProps {
 
 export default function StatusTabs({ chart, zhMode, selected, onSelect }: StatusTabsProps) {
   const [tab, setTab] = useState<'ecliptic' | 'ecliptic2' | 'firdaria' | 'profection' | 'aphesisF' | 'aphesisS'>('ecliptic');
-  const T = (zh: string, en: string) => (zhMode ? zh : en);
+  const { lang } = useI18n();
+  // 三语: 传了第三参数才用日文, 否则维持原两分支行为(未翻译处日文回退中文)
+  const T = (zh: string, en: string, ja?: string) => (lang === 'ja' && ja ? ja : zhMode ? zh : en);
 
   const symOf = (name: string | null | undefined): string => {
     if (!name) return '—';
@@ -153,12 +156,12 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
     <div>
       {/* Tab 排 */}
       <div className="mb-3 flex flex-wrap gap-1.5">
-        {tabBtn('ecliptic', T('黄道状态', 'Ecliptic Status'))}
-        {tabBtn('ecliptic2', T('黄道状态-2', 'Ecliptic Status 2'))}
-        {tabBtn('firdaria', T('法达星限', 'Firdaria'))}
-        {tabBtn('profection', T('小限法', 'Profections'))}
-        {tabBtn('aphesisF', T('福点 Aphesis', 'Fortune Aphesis'))}
-        {tabBtn('aphesisS', T('精神点 Aphesis', 'Spirit Aphesis'))}
+        {tabBtn('ecliptic', T('黄道状态', 'Ecliptic Status', '黄道ステータス'))}
+        {tabBtn('ecliptic2', T('黄道状态-2', 'Ecliptic Status 2', '黄道ステータス2'))}
+        {tabBtn('firdaria', T('法达星限', 'Firdaria', 'ファルダリア'))}
+        {tabBtn('profection', T('小限法', 'Profections', 'プロフェクション'))}
+        {tabBtn('aphesisF', T('福点 Aphesis', 'Fortune Aphesis', 'フォーチュン・アフェシス'))}
+        {tabBtn('aphesisS', T('精神点 Aphesis', 'Spirit Aphesis', 'スピリット・アフェシス'))}
       </div>
 
       {/* ============ 黄道状态 ============ */}
