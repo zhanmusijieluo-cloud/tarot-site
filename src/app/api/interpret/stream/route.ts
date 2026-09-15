@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { TarotMcpServer, TarotStreamEvent } from '@/mcp/server';
+import { rateLimit, clientKey, readJsonLimited, AI_LIMITS } from '@/lib/rate-limit';
 
 // 流式解读：允许函数运行到 Vercel Hobby 上限 300s（含一次重试预算）
 export const maxDuration = 300;
@@ -15,22 +16,32 @@ export const maxDuration = 300;
  *   {type:'error',message}  不可恢复错误
  */
 export async function POST(request: NextRequest) {
-  let body: any;
-  try {
-    body = await request.json();
-  } catch {
-    return new Response(JSON.stringify({ error: '请求体解析失败' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
+  const jsonErr = (msg: string, status: number, extra?: Record<string, string>) =>
+    new Response(JSON.stringify({ error: msg }), {
+      status,
+      headers: { 'Content-Type': 'application/json', ...(extra || {}) },
     });
+
+  // 防刷：流式解读同样消耗 AI 额度，与 /api/interpret 共用同一档限流
+  const rl = rateLimit(`interpret:${clientKey(request)}`, AI_LIMITS.interpret.limit, AI_LIMITS.interpret.windowMs);
+  if (!rl.ok) {
+    return jsonErr(`请求过于频繁，请 ${rl.retryAfter} 秒后再试`, 429, { 'Retry-After': String(rl.retryAfter) });
+  }
+  // 防刷：请求体体积上限
+  const limited = await readJsonLimited(request, AI_LIMITS.maxBodyBytes);
+  if (!limited.ok) {
+    return limited.reason === 'too_large'
+      ? jsonErr('请求体过大', 413)
+      : jsonErr('请求体解析失败', 400);
   }
 
+  const body = limited.body;
   const { cards, question, background, spreadName, positions, lang, deck, spreadKey } = body || {};
   if (!cards || cards.length === 0) {
-    return new Response(JSON.stringify({ error: '需要至少一张牌' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonErr('需要至少一张牌', 400);
+  }
+  if (cards.length > AI_LIMITS.maxCards) {
+    return jsonErr(`牌数超出上限（最多 ${AI_LIMITS.maxCards} 张）`, 400);
   }
 
   const server = new TarotMcpServer();
