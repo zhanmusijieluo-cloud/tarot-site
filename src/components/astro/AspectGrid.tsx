@@ -130,8 +130,8 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
                     </button>
                   </td>
                 );
-                // 上三角: 空格 (保留网格线, 结构可见)
-                if (ci > ri) return <td key={col.name} style={{ height: gs, border: GRID }} />;
+                // 上三角: 不渲染任何格子 (爸爸: 画线的空白三角删掉 — 阶梯形, 不再有一堆空框)
+                if (ci > ri) return <td key={col.name} className="p-0" />;
                 const a = byPair.get(`${row.name}|${col.name}`);
                 if (!a) return <td key={col.name} style={{ height: gs, border: GRID }} />;
                 const color = ASPECT_COLOR[a.type] ?? '#9aa3b5';

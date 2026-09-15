@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { useI18n } from '@/i18n';
 import ChartWheel, { type VChart, type VPlanet } from '@/components/astro/ChartWheel';
 import { HOUSE_SYSTEM_ZH } from '@/lib/astro/chart';
-import AspectGrid, { AspectLegend, ASPECT_COLOR } from '@/components/astro/AspectGrid';
+import AspectGrid, { AspectLegend, ASPECT_COLOR, fmtOrbDms } from '@/components/astro/AspectGrid';
 import NatalCard from '@/components/astro/NatalCard';
 import StatusTabs from '@/components/astro/StatusTabs';
 
@@ -321,17 +321,15 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
               const g = groups.find((x) => x.main === main);
               if (g) g.items.push(a2); else groups.push({ main, items: [a2] });
             }
-            // ② 平衡分列: 先算总高, 再按"目标列高=总高/列数"均分 — 两列内容均衡 (爸爸: 一列挤爆一列空=乱)
-            const COL_H = 630; // 与左侧矩阵高度对齐 (14行×42px)
-            const totalH = groups.reduce((acc, g) => acc + 24 + g.items.length * 26, 0)
-            const nCols = Math.max(1, Math.ceil(totalH / COL_H))
-            const target = totalH / nCols
-            const cols: typeof groups[] = [[]]
-            let h = 0
+            // ② 竖排对齐 (爸爸定稿): 分组顺序=网格行顺序, 第一列从网格顶对齐往下排,
+            //    列高超过网格高度才开第二列 (组不切断)
+            const COL_H = 588; // = 网格高 (14行×42px); 超出才另起一列
+            const cols: typeof groups[] = []
             for (const g of groups) {
               const gh = 24 + g.items.length * 26
-              if (h > 0 && h + gh > target * 1.12 && cols.length < nCols) { cols.push([g]); h = gh }
-              else { cols[cols.length - 1].push(g); h += gh }
+              const cur = cols[cols.length - 1]
+              const curH = cur ? cur.reduce((s, x) => s + 24 + x.items.length * 26, 0) : 0
+              if (!cur || curH + gh > COL_H) cols.push([g]); else cur.push(g)
             }
             return (
               <div className="flex w-full items-start gap-4 overflow-x-auto">
@@ -355,7 +353,11 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
                                 <span className="w-4 shrink-0 text-center text-[12px]" style={{ color: col }}>{a2.symbol}</span>
                                 <span className="shrink-0 text-[13px] text-frost/90" title={zhMode ? `${zhOf(a2.a)}–${zhOf(a2.b)}` : undefined}>{sSym(a2.a)}<span className="mx-0.5 text-muted/50">–</span>{sSym(a2.b)}</span>
                                 <span className="shrink-0 text-[10px]" style={{ color: col }}>{a2.typeZh}</span>
-                                <span className="w-[3.6em] shrink-0 text-right tabular-nums" style={{ color: col }}>{a2.orb.toFixed(1)}°{a2.applying === true ? 'A' : a2.applying === false ? 'S' : ''}</span>
+                                {/* 实际夹角 + 偏差°′ (爸爸: 列表也要标夹角; 宫神星同款精确到分; 合相两者同值不重复显示) */}
+                                <span className="ml-auto shrink-0 text-right tabular-nums" style={{ color: col }}>
+                                  {a2.actualAngle !== undefined && Math.abs(a2.actualAngle - a2.orb) > 0.01 && <span className="text-frost/80">{fmtOrbDms(a2.actualAngle)}</span>}
+                                  {' '}±{fmtOrbDms(a2.orb)}{a2.applying === true ? 'A' : a2.applying === false ? 'S' : ''}
+                                </span>
                               </button>
                             </li>
                           )
