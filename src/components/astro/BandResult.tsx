@@ -6,6 +6,7 @@
 // 小限环: 每宫一段(按宫位实际跨度), 段内=宫头星座庙主星单字, 当前年宫高亮
 // ============================================================
 import React from 'react';
+import { useI18n } from '@/i18n';
 import ChartWheel, { type VChart } from '@/components/astro/ChartWheel';
 import NatalCard from '@/components/astro/NatalCard';
 import { firdariaTable, SIGN_RULER } from '@/lib/astro/timing';
@@ -29,6 +30,7 @@ export default function BandResult({ chart, zhMode, kind, cornerActions, onBandD
   /** 外环分段点击 → 跳转排盘到该段起始日 (爱星盘同款交互) */
   onBandDate?: (year: number, month: number, day: number) => void;
 }) {
+  const { lang } = useI18n();
   const curAgeD = (Date.now() - Date.UTC(chart.input.year, chart.input.month - 1, chart.input.day)) / (365.2425 * 86400000);
   const curAge = Math.max(0, Math.floor(curAgeD));
 
@@ -47,16 +49,16 @@ export default function BandResult({ chart, zhMode, kind, cornerActions, onBandD
     body = (
       <div className="grid gap-2 p-3 text-[12.5px] sm:grid-cols-2">
         <div className="flex items-center gap-2 text-frost/85">
-          <span className="text-muted/70">{zhMode ? '当前大运' : 'Period'}</span>
+          <span className="text-muted/70">{lang === 'ja' ? '現在の大運' : zhMode ? '当前大运' : 'Period'}</span>
           <span className="text-[15px] text-accent">{LORD_SYM[curMain?.lord ?? ''] ?? ''}</span>
           {LORD_ZH[curMain?.lord ?? ''] ?? '—'}
-          <span className="text-muted">{curMain ? `${curMain.startAge}–${curMain.endAge} ${zhMode ? '岁' : 'y'}` : ''}</span>
+          <span className="text-muted">{curMain ? `${curMain.startAge}–${curMain.endAge} ${lang === 'ja' ? '歳' : zhMode ? '岁' : 'y'}` : ''}</span>
         </div>
         <div className="flex items-center gap-2 text-frost/85">
-          <span className="text-muted/70">{zhMode ? '当前子段' : 'Sub'}</span>
+          <span className="text-muted/70">{lang === 'ja' ? '現在のサブ' : zhMode ? '当前子段' : 'Sub'}</span>
           <span className="text-[15px] text-accent">{LORD_SYM[curSub?.lord ?? ''] ?? ''}</span>
           {curSub?.sub && curSub.sub !== curSub.lord && <span className="text-[15px] text-frost/70">{LORD_SYM[curSub.sub] ?? ''}</span>}
-          <span className="text-muted">{curSub ? `${String(curSub.y)}-${String(curSub.m).padStart(2, '0')}-${String(curSub.d).padStart(2, '0')} ${zhMode ? '起' : ''}` : ''}</span>
+          <span className="text-muted">{curSub ? `${String(curSub.y)}-${String(curSub.m).padStart(2, '0')}-${String(curSub.d).padStart(2, '0')} ${lang === 'ja' ? '〜' : zhMode ? '起' : ''}` : ''}</span>
         </div>
       </div>
     );
@@ -72,12 +74,12 @@ export default function BandResult({ chart, zhMode, kind, cornerActions, onBandD
     body = (
       <div className="grid gap-2 p-3 text-[12.5px] sm:grid-cols-2">
         <div className="flex items-center gap-2 text-frost/85">
-          <span className="text-muted/70">{zhMode ? '当前年龄' : 'Age'}</span>
-          <span className="tabular-nums">{curAge} {zhMode ? '岁' : 'y'}</span>
+          <span className="text-muted/70">{lang === 'ja' ? '現在の年齢' : zhMode ? '当前年龄' : 'Age'}</span>
+          <span className="tabular-nums">{curAge} {lang === 'ja' ? '歳' : zhMode ? '岁' : 'y'}</span>
         </div>
         <div className="flex items-center gap-2 text-frost/85">
-          <span className="text-muted/70">{zhMode ? '当前年宫' : 'House'}</span>
-          <span className="tabular-nums text-accent">{house} {zhMode ? '宫' : ''} · {SIGN_ZH[signName]} · {LORD_SYM[lord] ?? ''} {LORD_ZH[lord]}</span>
+          <span className="text-muted/70">{lang === 'ja' ? '年のハウス' : zhMode ? '当前年宫' : 'House'}</span>
+          <span className="tabular-nums text-accent">{house} {lang === 'ja' ? 'ハウス' : zhMode ? '宫' : ''} · {SIGN_ZH[signName]} · {LORD_SYM[lord] ?? ''} {LORD_ZH[lord]}</span>
         </div>
       </div>
     );
@@ -97,7 +99,7 @@ export default function BandResult({ chart, zhMode, kind, cornerActions, onBandD
           </div>
         }
       />
-      <Panel title={kind === 'firdaria' ? (zhMode ? '法达盘' : 'Firdaria') : (zhMode ? '小限盘' : 'Profection')}>
+      <Panel title={kind === 'firdaria' ? (lang === 'ja' ? 'ファルダリア' : zhMode ? '法达盘' : 'Firdaria') : (lang === 'ja' ? 'プロフェクション' : zhMode ? '小限盘' : 'Profection')}>
         <p className="border-b border-white/[0.04] px-3 py-2 text-[10.5px] leading-relaxed text-muted/70">{note}</p>
         {body}
       </Panel>
