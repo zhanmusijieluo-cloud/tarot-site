@@ -339,7 +339,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
         const R_SUB_MID = (R_SUB_IN + R_SUB_OUT) / 2;
         return (
           <>
-            {/* 大运环 (内): 9主段 — 符号正立居中环中 (旋转会斜出环界, 爸爸圈红: 不许超环); 年纪正立小字在环下缘内侧 */}
+            {/* 大运环 (内): 9主段 — 符号正立居中环中; 年纪放在「对着外环同主星小运段」的角度 (爸爸: 角度天然错开不重叠), 南北交点不设数字 */}
             {firPeriods.map((m, i) => {
               const a0 = yearA(m.startAge), a1 = yearA(m.endAge);
               const isNow = curAgeD >= m.startAge && curAgeD < m.endAge;
@@ -347,7 +347,11 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
               const hov = mainHover === i || (bandPin?.kind === 'main' && bandPin.idx === i);
               const mid = (a0 + a1) / 2;
               const [gx, gy] = xy(R_MAIN_MID + 3, mid);
-              const [tx, ty] = xy(R_MAIN_IN + 12, mid);
+              // 对齐外环: 该大运首子段=主星自己的小运 (交点段无子段=不标)
+              const row0 = (m.lord === 'NorthNode' || m.lord === 'SouthNode') ? null
+                : firRows!.find((r) => r.lord === m.lord && r.sub === m.lord)
+              const subMid = row0 ? yearA((row0.startAge + row0.endAge) / 2) : null
+              const [tx, ty] = subMid !== null ? xy(R_MAIN_MID - 1, subMid) : [0, 0]
               return (
                 <g key={`main-${i}`}
                   onMouseEnter={() => setMainHover(i)} onMouseLeave={() => setMainHover(null)}
@@ -359,7 +363,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
                     fillOpacity={isPast ? 1 : (isNow ? (hov ? 0.66 : 0.5) : (hov ? 0.44 : 0.26))}
                     stroke={isNow ? THEME : P.ring} strokeWidth={isNow ? 1.4 : 0.8} strokeOpacity={isNow ? 1 : 0.6} />
                   <GlyphPath name={SYMBOL_TO_GLYPH[SYM_OF[m.lord]] ?? ''} cx={gx} cy={gy} color={isPast ? PASTC : (isNow ? '#ffd75e' : THEME)} bg={P.bg} size={hov ? 23 : 20} />
-                  <text x={tx} y={ty + 3.5} textAnchor="middle" fontSize="10.5" fontWeight={600} fill={isPast ? PASTC : THEME} stroke={P.bg} strokeWidth="2.4" paintOrder="stroke">{Math.round(m.startAge)}岁</text>
+                  {subMid !== null && <text x={tx} y={ty + 3.5} textAnchor="middle" fontSize="10.5" fontWeight={600} fill={isPast ? PASTC : THEME} stroke={P.bg} strokeWidth="2.4" paintOrder="stroke">{Math.round(m.startAge)}岁</text>}
                 </g>
               );
             })}
