@@ -20,8 +20,16 @@ const EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.avif',
  * PNG 大图自动转 WebP（体积可降 90%+），转成功后不再保留 PNG，避免大图进入部署包。
  * 调用独立 Python 脚本 optimize_images.py 在 Python 进程内处理，
  * 避免跨进程传中文路径时的编码问题。
+ *
+ * 解释器按序探测：IMAGE_PYTHON 环境变量 → 本机 managed 路径 → PATH 上的 python。
+ * （原值硬编码 C:/Users/Administrator/... 是另一台机器的路径，本机不存在，
+ *   会导致这步必然 warn 失败；缺失时只 warn，不影响主同步。）
  */
-const PYTHON = process.env.IMAGE_PYTHON || 'C:/Users/Administrator/.workbuddy/binaries/python/versions/3.13.12/python.exe';
+const PYTHON = [
+  process.env.IMAGE_PYTHON,
+  'C:/Users/99192/.workbuddy/binaries/python/versions/3.13.12/python.exe',
+  'python',
+].filter(Boolean).find((p) => p === 'python' || existsSync(p)) || 'python';
 const OPT_SCRIPT = join(process.cwd(), 'scripts', 'optimize_images.py');
 
 /** 递归收集源目录中所有图片文件 */
@@ -39,7 +47,7 @@ function collect(dir, acc = []) {
 }
 
 if (!existsSync(SRC)) {
-  console.warn(`[sync-images] 素材目录不存在：${SRC}，跳过同步（public/images 将保持为空）`);
+  console.warn(`[sync-images] 素材目录不存在：${SRC}，跳过同步（public/images 保持现状，不会清空）。如需指定源目录：IMAGE_SRC=<路径> npm run build`);
   process.exit(0);
 }
 
