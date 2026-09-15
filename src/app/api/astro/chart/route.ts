@@ -9,7 +9,7 @@ import { castNatalChart, chartEvidence, type BirthData, type CastSettings, type 
 
 const HOUSE_SYSTEMS: HouseSystem[] = [
   'placidus', 'koch', 'equal', 'whole-sign', 'porphyry', 'regiomontanus', 'campanus',
-  'morinus', 'vettius',
+  'morinus', 'vettius', 'alcabitiuses', 'sripati', 'pullen', 'polich-page', 'krusinski', 'carter', 'vehlow',
 ]
 
 function bad(msg: string) {

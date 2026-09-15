@@ -10,7 +10,7 @@ import { castSynastry } from '@/lib/astro/dynamic'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const HOUSE_SYSTEMS: HouseSystem[] = ['placidus', 'koch', 'equal', 'whole-sign', 'porphyry', 'regiomontanus', 'campanus', 'morinus', 'vettius']
+const HOUSE_SYSTEMS: HouseSystem[] = ['placidus', 'koch', 'equal', 'whole-sign', 'porphyry', 'regiomontanus', 'campanus', 'morinus', 'vettius', 'alcabitiuses', 'sripati', 'pullen', 'polich-page', 'krusinski', 'carter', 'vehlow']
 const VALID_ASPECTS = new Set(['conjunction', 'sextile', 'square', 'trine', 'opposition', 'quincunx', 'semi-sextile', 'semi-square', 'sesquiquadrate', 'quintile', 'biquintile', 'septile', 'novile', 'decile'])
 const VALID_GROUPS = new Set(['asteroids', 'chiron', 'nodes', 'lots', 'lilith'])
 

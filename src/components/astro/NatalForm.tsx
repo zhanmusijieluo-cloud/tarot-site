@@ -23,6 +23,14 @@ const HOUSE_SYSTEMS: { value: HouseSystem; zh: string }[] = [
   { value: 'porphyry', zh: '波菲里' },
   { value: 'regiomontanus', zh: '雷吉奥蒙塔努斯' },
   { value: 'campanus', zh: '坎帕努斯' },
+  { value: 'alcabitiuses', zh: '阿卡比特' },
+  { value: 'sripati', zh: '斯里帕蒂' },
+  { value: 'vehlow', zh: '维洛等宫' },
+  { value: 'pullen', zh: '普伦SD' },
+  { value: 'morinus', zh: '莫里努斯' },
+  { value: 'polich-page', zh: '波利奇-佩奇' },
+  { value: 'krusinski', zh: '克鲁辛斯基' },
+  { value: 'carter', zh: '卡特赤经' },
 ];
 
 const inputCls =

@@ -3,7 +3,7 @@
 import { ALL_CITIES, findCity } from '@/lib/astro/cities';
 import type { BirthData, CastSettings, HouseSystem } from '@/lib/astro/chart';
 
-const SYS: HouseSystem[] = ['placidus', 'koch', 'equal', 'whole-sign', 'porphyry', 'regiomontanus', 'campanus', 'morinus', 'vettius'];
+const SYS: HouseSystem[] = ['placidus', 'koch', 'equal', 'whole-sign', 'porphyry', 'regiomontanus', 'campanus', 'morinus', 'vettius', 'alcabitiuses', 'sripati', 'pullen', 'polich-page', 'krusinski', 'carter', 'vehlow'];
 
 // settings 的 URL 编码: bd=小行星.凯龙.交点.福点.莉莉丝(0/1) | as=追加的次要相位 | ob=合,冲,拱,刑,六合容许度
 const MINOR_ASPECTS = ['quincunx', 'semi-sextile', 'semi-square', 'sesquiquadrate', 'quintile', 'biquintile', 'septile', 'novile', 'decile'] as const;

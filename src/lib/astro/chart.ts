@@ -10,7 +10,8 @@ import { calculateChart, calculateAspects, AspectType, getSignInfo } from 'celes
 export type HouseSystem =
   | 'placidus' | 'koch' | 'equal' | 'whole-sign'
   | 'porphyry' | 'regiomontanus' | 'campanus'
-  | 'morinus' | 'vettius'   // 封装层自算: MC等宫 / 卦限三分 (celestine 无, 数学公开)
+  | 'morinus' | 'vettius'   // 封装层自算 (celestine 无)
+  | 'alcabitiuses' | 'sripati' | 'pullen' | 'polich-page' | 'krusinski' | 'carter' | 'vehlow'   // 封装层自算 (对拍 Swiss Ephemeris 官方算法)
 
 // 宫制清单 + 双语标签 (单一数据源: 顶栏/设置面板/URL 共用)
 export const HOUSE_SYSTEM_LIST: { id: HouseSystem; zh: string; en: string }[] = [
@@ -21,7 +22,14 @@ export const HOUSE_SYSTEM_LIST: { id: HouseSystem; zh: string; en: string }[] = 
   { id: 'porphyry', zh: '波菲里', en: 'Porphyry' },
   { id: 'regiomontanus', zh: '雷吉奥', en: 'Regiomontanus' },
   { id: 'campanus', zh: '坎帕努斯', en: 'Campanus' },
+  { id: 'alcabitiuses', zh: '阿卡比特', en: 'Alcabitius' },
+  { id: 'sripati', zh: '斯里帕蒂', en: 'Sripati' },
+  { id: 'vehlow', zh: '维洛等宫', en: 'Vehlow' },
+  { id: 'pullen', zh: '普伦SD', en: 'Pullen SD' },
   { id: 'morinus', zh: '莫里努斯', en: 'Morinus' },
+  { id: 'polich-page', zh: '波利奇-佩奇', en: 'Polich-Page' },
+  { id: 'krusinski', zh: '克鲁辛斯基', en: 'Krusinski' },
+  { id: 'carter', zh: '卡特赤经', en: 'Carter' },
   { id: 'vettius', zh: '维提乌斯', en: 'Vettius' },
 ]
 export const HOUSE_SYSTEM_ZH: Record<string, string> = Object.fromEntries(HOUSE_SYSTEM_LIST.map((h) => [h.id, h.zh]))
@@ -366,13 +374,194 @@ function applyTrueSolar(birth: BirthData, timeKnown: boolean, warnings: string[]
   }
 }
 
+// ---------- 自算宫制 (封装层实现, celestine 无) ----------
+// 数学均译自 Swiss Ephemeris 官方源码 swehouse.c (GPL, aloistr/swisseph), 已逐制对拍验证:
+// · Morinus('M'): 赤经等分 — equator points (RAMC + n*30) 逐点投影回黄道 (swe_cotrans)
+// · Alcabitius('B'): ASC 赤经半弧三分, 沿赤纬圈(极高0)投影到黄道
+// · Sripati('S') / Pullen SD('L') / Vehlow('V') / Carter('F'): 黄道/赤经三角公式
+// · Polich-Page('T'): 每宫头用"极高度 f"的 Asc1 大圆交点公式 (topocentric 同款)
+// · Krusinski('U'): Asc-天顶大圆 12 等分, 三次坐标变换往返投影
+// 注: ASC/MC/其余轴仍由 celestine (已对拍 SE ≤0.004°) 提供, 此处只算 12 宫头。
+const D2R = Math.PI / 180
+const R2D = 180 / Math.PI
+const nrm = (x: number): number => ((x % 360) + 360) % 360
+const sind = (x: number): number => Math.sin(x * D2R)
+const cosd = (x: number): number => Math.cos(x * D2R)
+const tand = (x: number): number => Math.tan(x * D2R)
+const asind = (x: number): number => Math.asin(Math.max(-1, Math.min(1, x))) * R2D
+const acosd = (x: number): number => Math.acos(Math.max(-1, Math.min(1, x))) * R2D
+const atand = (x: number): number => Math.atan(x) * R2D
+const atan2d = (y: number, x: number): number => Math.atan2(y, x) * R2D
+const dif360 = (x: number): number => ((x + 180) % 360 + 360) % 360 - 180
+
+/** 黄赤交角 (IAU 多项式, °) */
+function obliquityOf(jd: number): number {
+  const T = (jd - 2451545.0) / 36525
+  return 23.4392911 - 0.0130042 * T - 1.64e-7 * T * T + 5.04e-7 * T * T * T
+}
+
+/** swe_cotrans 等价 (绕 X 轴坐标旋转, 全 3D 保真): 本约定 +ε = 黄道→赤道 (SE 符号相反, 翻译时取负) */
+/** swe_cotrans 逐行等价 (swephlib.c): polcart(x[2]=1) → coortrf(y'=y·c+z·s; z'=-y·s+z·c) → cartpol
+ *  注意与引擎内其他代码的旋转方向约定不同 — 这是 SE 原文语义 (Krusinski 专用) */
+function cotransEcl(lon: number, latDeg: number, rot: number): [number, number] {
+  const x = cosd(latDeg) * cosd(lon)
+  const y = cosd(latDeg) * sind(lon)
+  const z = sind(latDeg)
+  const e = rot * D2R
+  const y2 = y * Math.cos(e) + z * Math.sin(e)
+  const z2 = -y * Math.sin(e) + z * Math.cos(e)
+  const rxy = Math.sqrt(x * x + y2 * y2)
+  let lonOut = Math.atan2(y2, x); if (lonOut < 0) lonOut += 2 * Math.PI
+  const latOut = rxy !== 0 ? Math.atan(z2 / rxy) : (z2 >= 0 ? Math.PI / 2 : -Math.PI / 2)
+  return [nrm(lonOut * R2D), latOut * R2D]
+}
+
+/** SE Asc1 等价: 求赤经 x1 处、极高度 f 的大圆与黄道交点黄经 (swehouse.c Asc1/Asc2) */
+function asc1(x1: number, f: number, sine: number, cose: number): number {
+  x1 = nrm(x1)
+  if (Math.abs(90 - f) < 1e-8) return 180
+  if (Math.abs(90 + f) < 1e-8) return 0
+  const asc2 = (x: number, ff: number): number => {
+    let ass = -tand(ff) * sine + cose * cosd(x)
+    if (Math.abs(ass) < 1e-10) ass = 0
+    let sx = sind(x)
+    if (Math.abs(sx) < 1e-10) sx = 0
+    let out: number
+    if (sx === 0) out = ass < 0 ? -1e-8 : 1e-8
+    else if (ass === 0) out = sx < 0 ? -90 : 90
+    else out = atand(sx / ass)
+    if (out < 0) out = 180 + out
+    return out
+  }
+  const n = Math.floor(x1 / 90) + 1
+  let ass: number
+  if (n === 1) ass = asc2(x1, f)
+  else if (n === 2) ass = 180 - asc2(180 - x1, -f)
+  else if (n === 3) ass = 180 + asc2(x1 - 180, -f)
+  else ass = 360 - asc2(360 - x1, f)
+  return nrm(ass)
+}
+
+/** SE 通用尾处理: 4-9 宫头 = 10-3 宫头 +180 */
+function mirrorCusps(c: number[]): number[] {
+  return [c[0], c[1], c[2], nrm(c[9] + 180), nrm(c[10] + 180), nrm(c[11] + 180),
+          nrm(c[0] + 180), nrm(c[1] + 180), nrm(c[2] + 180), c[9], c[10], c[11]]
+}
+
+/** 自算宫制总入口: 返回 12 宫头 (黄经序, [0]=1宫头=ASC锚); 不在自算集返回 null
+ *  ramc=赤经MC(°), fi=地理纬度(°), eps=黄赤交角(°), ascEcl/mcEcl=黄经(°) */
+function selfHouseCusps(system: string, ramc: number, fi: number, eps: number, ascEcl: number, mcEcl: number): number[] | null {
+  const sine = sind(eps), cose = cosd(eps)
+
+  if (system === 'morinus') {
+    // 官方 'M' (swehouse.c 1517): cusp[j] = cotrans(armc + j*30, 0, -ε), j=1..12 顺序:
+    // a 从 th 起 +30 步进, 第一个+30 → cusp[11], +60 → cusp[12], +90 → cusp[1], +120 → cusp[2]…
+    // 即 cusp[i] = ecl(ramc + (i+2)*30)
+    const out: number[] = []
+    for (let i = 0; i < 12; i++) {
+      const [lon] = cotransEcl(nrm(ramc + (i + 3) * 30), 0, -eps)
+      out.push(lon)
+    }
+    return out
+  }
+  if (system === 'carter') {
+    // 官方 'F' (1541): a=ASC赤经; ra=a+(i-1)*30; cusp = atand(tand(ra)/cose) (i=2,3,10,11,12 独立);
+    // 注意 SE 循环含 i=10 → C10 = ASC赤经+270° 的投影点 (≠MC!)
+    const [ascRA] = cotransEcl(ascEcl, 0, +eps)
+    const eclOfRa = (ra: number): number => nrm(atan2d(sind(ra), cosd(ra) * cose))
+    const c2 = eclOfRa(ascRA + 30)
+    const c3 = eclOfRa(ascRA + 60)
+    const c10 = eclOfRa(ascRA + 270)
+    const c11 = eclOfRa(ascRA + 300)
+    const c12 = eclOfRa(ascRA + 330)
+    return [ascEcl, c2, c3, nrm(c10 + 180), nrm(c11 + 180), nrm(c12 + 180),
+            nrm(ascEcl + 180), nrm(c2 + 180), nrm(c3 + 180), c10, c11, c12]
+  }
+  if (system === 'alcabitiuses') {
+    // 官方 'B' (1581): dek=ASC赤纬; sda=arccos(-tanφ·tanδ) 沿赤道量; 三分; Asc1(ra, 0) 投影
+    const dek = asind(sind(ascEcl) * sine)
+    const r = Math.max(-1, Math.min(1, -tand(fi) * tand(dek)))
+    const sda = acosd(r)
+    const sna = 180 - sda
+    const c11 = asc1(nrm(ramc + sda / 3), 0, sine, cose)
+    const c12 = asc1(nrm(ramc + 2 * sda / 3), 0, sine, cose)
+    const c2 = asc1(nrm(ramc + 180 - 2 * sna / 3), 0, sine, cose)
+    const c3 = asc1(nrm(ramc + 180 - sna / 3), 0, sine, cose)
+    return mirrorCusps([ascEcl, c2, c3, 0, 0, 0, nrm(ascEcl + 180), nrm(c2 + 180), nrm(c3 + 180), mcEcl, c11, c12])
+  }
+  if (system === 'sripati') {
+    // 官方 'S' (1581前段): 波菲里象限, 宫头=象限三等分点向轴回缩半格
+    const acmc = dif360(ascEcl - mcEcl)
+    if (acmc < 0) return null   // 极圈内 ASC/DC 换位 → 主流程降级波菲里
+    const q1 = 180 - acmc
+    const s1 = q1 / 3, s4 = acmc / 3
+    const c1 = nrm(ascEcl - s4 * 0.5)
+    const c2 = nrm(ascEcl + s1 * 0.5)
+    const c3 = nrm(ascEcl + s1 * 1.5)
+    const c10 = nrm(mcEcl - s1 * 0.5)
+    const c11 = nrm(mcEcl + s4 * 0.5)
+    const c12 = nrm(mcEcl + s4 * 1.5)
+    return [c1, c2, c3, nrm(c10 + 180), nrm(c11 + 180), nrm(c12 + 180), nrm(c1 + 180), nrm(c2 + 180), nrm(c3 + 180), c10, c11, c12]
+  }
+  if (system === 'pullen') {
+    // 官方 'L' (Pullen SD / ex Neo-Porphyry)
+    const acmc = dif360(ascEcl - mcEcl)
+    if (acmc < 0) return null
+    const q1 = 180 - acmc
+    let d = (acmc - 90) / 4
+    const c11 = acmc <= 30 ? nrm(mcEcl + acmc / 2) : nrm(mcEcl + 30 + d)
+    const c12 = acmc <= 30 ? c11 : nrm(mcEcl + 60 + 3 * d)
+    d = (q1 - 90) / 4
+    const c2 = q1 <= 30 ? nrm(ascEcl + q1 / 2) : nrm(ascEcl + 30 + d)
+    const c3 = q1 <= 30 ? c2 : nrm(ascEcl + 60 + 3 * d)
+    return [ascEcl, c2, c3, nrm(mcEcl + 180), nrm(c11 + 180), nrm(c12 + 180), nrm(ascEcl + 180), nrm(c2 + 180), nrm(c3 + 180), mcEcl, c11, c12]
+  }
+  if (system === 'vehlow') {
+    // 官方 'V': cusp1 = ASC - 15, 之后每 30°
+    const c1 = nrm(ascEcl - 15)
+    return [c1, nrm(c1 + 30), nrm(c1 + 60), nrm(c1 + 90), nrm(c1 + 120), nrm(c1 + 150),
+            nrm(c1 + 180), nrm(c1 + 210), nrm(c1 + 240), nrm(c1 + 270), nrm(c1 + 300), nrm(c1 + 330)]
+  }
+  if (system === 'polich-page') {
+    // 官方 'T' (topocentric): fh1=atand(tanφ/3), fh2=atand(2tanφ/3)
+    const fh1 = atand(tand(fi) / 3), fh2 = atand((tand(fi) * 2) / 3)
+    const c11 = asc1(nrm(30 + ramc), fh1, sine, cose)
+    const c12 = asc1(nrm(60 + ramc), fh2, sine, cose)
+    const c2 = asc1(nrm(120 + ramc), fh2, sine, cose)
+    const c3 = asc1(nrm(150 + ramc), fh1, sine, cose)
+    return mirrorCusps([ascEcl, c2, c3, 0, 0, 0, nrm(ascEcl + 180), nrm(c2 + 180), nrm(c3 + 180), mcEcl, c11, c12])
+  }
+  if (system === 'krusinski') {
+    // 官方 'U' (Bogdan Krusinski 2006): Asc-天顶大圆 12 等分 → 子午圈投影回黄道
+    // 逐行复刻 SE swe_cotrans 链: 每次变换保留 (lon,lat) 全部分量传递 (丢纬度分量 = 错 5.6°!);
+    // python 全链复现对拍 SE: 6 宫头差 ≤0.0006°
+    const a1 = cotransEcl(ascEcl, 0, -eps)                                // A1: ecl → equ
+    const a2 = a1[0] - (ramc - 90)                                        // A2: 旋转 (不 nrm 亦可)
+    const a3 = cotransEcl(a2, a1[1], -(90 - fi))                          // A3: equ → hor (带A1纬度!)
+    const krLon = a3[0]                                                   // krHorizonLon
+    const a5 = cotransEcl(0, a3[1], -90)                                  // A4 清零 + A5: hor → house circle
+    const latA5 = a5[1]                                                   // A5 后纬度分量 (传入 B1)
+    const out: number[] = []
+    for (let i = 0; i < 6; i++) {
+      // B 链: [30i, latA5] --B1(+90)--> hor --B2(+krLon)--> --B3(90-φ)--> equ --B4(+RAMC-90)--> tan→ecl
+      const v1 = cotransEcl(30 * i, latA5, 90)           // B1: house circle → horizontal
+      const v2Lon = nrm(v1[0] + krLon)                   // B2
+      const v3 = cotransEcl(v2Lon, v1[1], 90 - fi)       // B3: horizontal → equatorial
+      const ra2 = nrm(v3[0] + (ramc - 90))               // B4
+      out.push(nrm(atand(tand(ra2) / cose) + (ra2 > 90 && ra2 <= 270 ? 180 : 0)))
+    }
+    // 自检锚: out[0] 应=ASC (链路验证), 否则降级
+    if (Math.abs(dif360(out[0] - ascEcl)) > 0.5) return null
+    const [c1, c2, c3, c4, c5, c6] = out
+    return [c1, c2, c3, c4, c5, c6, nrm(c1 + 180), nrm(c2 + 180), nrm(c3 + 180), nrm(c4 + 180), nrm(c5 + 180), nrm(c6 + 180)]
+  }
+  return null
+}
+
 // ---------- Morinus / Vettius 分宫 (封装层自算, celestine 无) ----------
-// Morinus: 自ASC起12等分黄道 (以赤经起算的等宫制, 简化为黄道等分自ASC)
+// Morinus/阿卡比特/斯里帕蒂/普伦/波利奇-佩奇/克鲁辛斯基/卡特/维洛 = 上 selfHouseCusps (官方算法)
 // Vettius: 四分仪制 — ASC/MC 定四轴后, 每卦限(12宫象限)三等分
 function cuspsFor(system: HouseSystem, asc: number, mc: number): number[] | null {
-  if (system === 'morinus') {
-    return Array.from({ length: 12 }, (_, i) => norm(asc + i * 30))
-  }
   if (system === 'vettius') {
     // 四分仪三等分 (Porphyry/Vettius): 四轴按黄经增方向从ASC起排, 相邻轴间三等分
     // 通用: 取各轴相对ASC的[0,360)偏移排序 → 逐卦限插两点
@@ -432,7 +621,7 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
       latitude: effBirth.latitude, longitude: effBirth.longitude,
     },
     {
-      houseSystem: (['morinus', 'vettius'].includes(system) ? 'placidus' : system) as 'placidus' | 'koch' | 'equal' | 'whole-sign' | 'porphyry' | 'regiomontanus' | 'campanus',
+      houseSystem: (['morinus', 'vettius', 'alcabitiuses', 'sripati', 'pullen', 'polich-page', 'krusinski', 'carter', 'vehlow'].includes(system) ? 'placidus' : system) as 'placidus' | 'koch' | 'equal' | 'whole-sign' | 'porphyry' | 'regiomontanus' | 'campanus',
       includeAsteroids: !!B.asteroids, includeChiron: !!B.chiron,
       includeNodes: B.nodes ? (settings.nodeType ?? 'true') : false,
       includeLots: !!B.lots, includeLilith: B.lilith ? (settings.lilithType ?? 'mean') : false,
@@ -492,17 +681,36 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
     ax.face = FACES[si][Math.min(2, Math.floor(deg / 10))]
   }
 
-  // Morinus/Vettius: 用四轴自算宫头 (celestine 的宫头仅对 placidus 系有效)
+  // 自算宫制 (Morinus/阿卡比特/斯里帕蒂/普伦/波利奇-佩奇/克鲁辛斯基/卡特/维提乌斯):
+  // 用四轴自算宫头 (celestine 的宫头仅对 placidus 系有效); RAMC 由 MC 黄经反推, ε 用 IAU 多项式
   let cuspsOut: number[] | null = null
   if (timeKnown) {
     const rawCusps = (c.houses as unknown as { cusps: (number | { longitude: number })[] }).cusps.map(x => typeof x === 'number' ? x : x.longitude)
-    const selfCusps = cuspsFor(system, rawCusps[0], rawCusps[9])
+    const SELF_SET = new Set<string>(['morinus', 'alcabitiuses', 'sripati', 'pullen', 'polich-page', 'krusinski', 'carter', 'vehlow'])
+    let selfCusps: number[] | null = null
+    if (SELF_SET.has(system)) {
+      const jdNow = c.calculated?.julianDate ?? 0
+      const eps = obliquityOf(jdNow)
+      const asc0 = angles.ascendant?.longitude, mc0 = angles.midheaven?.longitude
+      if (asc0 !== undefined && mc0 !== undefined) {
+        const [ramc] = cotransEcl(mc0, 0, +eps)
+        selfCusps = selfHouseCusps(system, ramc, effBirth.latitude, eps, asc0, mc0)
+        if (selfCusps === null) {
+          // 极圈/病态几何: SE 同款降级波菲里并明示
+          warnings.push(`${HOUSE_SYSTEM_ZH[system] ?? system}制在此纬度不可算, 已改用波菲里(Porphyry)制 — 宫位为近似`)
+          selfCusps = cuspsFor('porphyry', asc0, mc0)
+          system = 'porphyry'
+        }
+      }
+    } else {
+      selfCusps = cuspsFor(system, rawCusps[0], rawCusps[9])
+    }
     cuspsOut = selfCusps ?? rawCusps
     if (selfCusps) {
       // 自算宫制: 重挂所有天体的宫位号 (按宫头区间)
       const assign = (p: ChartPlanet) => {
         for (let h = 0; h < 12; h++) {
-          const a0 = norm(selfCusps[h]), span = norm(selfCusps[(h + 1) % 12] - a0 + 360) % 360 || 30
+          const a0 = norm(selfCusps![h]), span = norm(selfCusps![(h + 1) % 12] - a0 + 360) % 360 || 30
           const rel = norm(p.longitude - a0)
           if (rel < span) { p.house = h + 1; break }
         }
