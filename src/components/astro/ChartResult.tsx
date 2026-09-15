@@ -188,7 +188,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
       el: (
         <span>
           <b className="font-normal text-frost">{p2.symbol}</b>
-          <span className="mx-1 text-accent/95">{p2.signZh}</span>
+          <span className="mx-1 text-accent/95">{zhMode ? p2.signZh : p2.sign}</span>
           <span className="text-[#e8a08a]">在燃烧之路</span>
         </span>
       ),
@@ -227,10 +227,10 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
             el: (
               <span>
                 <b className="font-normal text-frost">{pa.symbol}</b>
-                <span className="mx-1 text-accent/95">{pa.signZh}</span>
+                <span className="mx-1 text-accent/95">{zhMode ? pa.signZh : pa.sign}</span>
                 <span className="mx-1">与</span>
                 <b className="font-normal text-frost">{pb.symbol}</b>
-                <span className="mx-1 text-accent/95">{pb.signZh}</span>
+                <span className="mx-1 text-accent/95">{zhMode ? pb.signZh : pb.sign}</span>
                 <span className="text-[#8aa8d8]">成映点</span>
                 {sep < 0.5 ? <span className="ml-1 text-muted/70">0°</span> : <span className="ml-1 text-muted/70">{sep.toFixed(1)}°</span>}
               </span>
@@ -349,7 +349,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
                               >
                                 <span className="w-4 shrink-0 text-center text-[12px]" style={{ color: col }}>{a2.symbol}</span>
                                 <span className="shrink-0 text-[13px] text-frost/90" title={zhMode ? `${zhOf(a2.a)}–${zhOf(a2.b)}` : undefined}>{sSym(a2.a)}<span className="mx-0.5 text-muted/50">–</span>{sSym(a2.b)}</span>
-                                <span className="shrink-0 text-[10px]" style={{ color: col }}>{a2.typeZh}</span>
+                                <span className="shrink-0 text-[10px]" style={{ color: col }}>{zhMode ? a2.typeZh : a2.type}</span>
                                 {/* 实际夹角 + 偏差°′ (爸爸: 数字紧跟相位名, 不再推到行尾留大空档) */}
                                 <span className="shrink-0 tabular-nums" style={{ color: col }}>
                                   {a2.actualAngle !== undefined && Math.abs(a2.actualAngle - a2.orb) > 0.01 && <span className="text-frost/80">{fmtOrbDms(a2.actualAngle)}</span>}

@@ -194,7 +194,7 @@ export default function DynResult({ dyn, zhMode, target, onDate, onNow, cornerAc
             <li key={i} className="flex items-center gap-1.5 border-b border-white/[0.04] px-3 py-[5.5px] text-[12px] last:border-0">
               <span className="w-7 text-center text-[14px] leading-none text-frost/90" title={zhOf(a.a)}>{symOf(a.a)}</span>
               <span className="text-[9px] text-muted/45">{zhMode ? (dual ? '外环' : '推') : (dual ? 'Outer' : 'P')}</span>
-              <span className="w-5 text-center text-[13px] leading-none" style={{ color: ASPECT_COLOR[a.type] ?? '#9aa3b5' }} title={a.typeZh}>{a.symbol}</span>
+              <span className="w-5 text-center text-[13px] leading-none" style={{ color: ASPECT_COLOR[a.type] ?? '#9aa3b5' }} title={zhMode ? a.typeZh : a.type}>{a.symbol}</span>
               <span className="w-7 text-center text-[14px] leading-none text-frost/90" title={zhOf(a.b)}>{symOf(a.b)}</span>
               <span className="text-[9px] text-muted/45">{zhMode ? (dual ? '内环' : '本命') : (dual ? 'Inner' : 'N')}</span>
               <span className="ml-auto tabular-nums text-[11px] text-muted">
