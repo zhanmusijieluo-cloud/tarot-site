@@ -94,10 +94,10 @@ export default function NatalForm() {
 
   return (
     <div className="rounded-3xl border border-white/[0.07] bg-white/[0.02] p-6 sm:p-8">
-      {/* 从我的档案选择 (爸爸: 选档案一键带入) */}
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      {/* 从我的档案选择 (爸爸: 选档案一键带入) — 按钮占满整行, 说明文字挪到按钮下方 */}
+      <div className="mb-5">
         <ArchivePicker onPick={pickAndCast} />
-        <p className="text-[10.5px] text-muted/50">{zhMode ? '选一份档案 → 直接排出星盘 (资料已存档确认)' : 'Pick an archive → chart directly'}</p>
+        <p className="mt-2 text-[11px] text-muted/55">{zhMode ? '选一份档案 → 直接排出星盘（资料已存档确认）' : 'Pick an archive → chart directly'}</p>
       </div>
       {/* ---- 表单 ---- */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

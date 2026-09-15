@@ -50,17 +50,17 @@ export default function ArchivePicker({ onPick }: { onPick: (a: Archive) => void
   const initial = (label: string) => (label?.trim()?.[0] ?? '档').toUpperCase();
 
   return (
-    <div ref={boxRef} className="relative inline-block">
+    <div ref={boxRef} className="relative block">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="listbox"
-        className="inline-flex items-center gap-2.5 rounded-full border border-accent/50 bg-accent/[0.1] px-5 py-2.5 text-[12.5px] tracking-[0.08em] text-accent transition-colors hover:border-accent/80 hover:bg-accent/[0.18]"
+        className="flex w-full items-center gap-2.5 rounded-full border border-accent/50 bg-accent/[0.1] px-5 py-2.5 text-[12.5px] tracking-[0.08em] text-accent transition-colors hover:border-accent/80 hover:bg-accent/[0.18]"
       >
         <span className="inline-block h-3.5 w-3.5 shrink-0 rounded-[4px] border border-[#c9a961]/70 bg-[#c9a961]/10" aria-hidden />
         {zhMode ? '从我的档案选择' : 'Pick from archives'}
-        <span className={`text-[10px] transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden>
+        <span className={`ml-auto text-[10px] transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden>
           ▾
         </span>
       </button>
