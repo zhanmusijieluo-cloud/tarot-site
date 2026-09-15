@@ -11,7 +11,7 @@
 - **getPlanetaryDignity 的 Sign 枚举=数字** (Aries=0..Pisces=11): 传字符串 'Cancer' **静默返回 Peregrine**; 正确 `getPlanetaryDignity(name, si, deg)` (si=floor(lon/30))
 - DignityState 枚举值 = 'Exaltation' (非 'Exalted') — 中文映射表要覆盖
 - posToPlanet(raw, natal.cusps): 外盘行星按本命宫位分宫
-- 推运 `castProgressionChart(birth, settings, target, mode)`: mode='secondary'|'tertiary'|'solar-arc' — **三限(tertiary)=自算分支: 1天=1恒星月 27.321582天 (每年≈13.37天), 勿用 celestine 内置 12天/年 (差11%)**; 次限=1天=1年; 日弧=solar-arc
+- 推运 `castProgressionChart(birth, settings, target, mode)`: mode='secondary'|'tertiary'|'solar-arc' — **三限(tertiary)=自算分支: 1天=1 月亮月 27.321582天 (该值实为分点月 tropical month, 非恒星月 27.321661 — 勿按"恒星月"改数) (每年≈13.368天), 勿用 celestine 内置 12天/年 (差11%)**; 次限=1天=1年; 日弧=solar-arc
 - 月返 `castLunarReturnChart`: 月亮回归扫描 (0.5天步长扫35天 + 二分40次)
 - 日返/月返 cross 后缀 '·R', 推运 '·P', 行运 '·T'
 
