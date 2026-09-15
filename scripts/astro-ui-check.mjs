@@ -34,7 +34,7 @@ const duo = await page.evaluate(() => {
   const g = document.querySelector('table[data-testid="aspect-matrix"]')
   const sec = g?.closest('section')
   if (!sec) return null
-  const list = [...sec.querySelectorAll('ul li button')].filter((x) => x.textContent.includes('\u2013') && x.textContent.includes('\u00b0'))
+  const list = [...sec.querySelectorAll('[data-testid="aspect-list"] button')].filter((x) => x.textContent.includes('\u2013') && x.textContent.includes('\u00b0'))
   // 右清单与矩阵同屏: 条数应与相位数一致级别
   return { listCount: list.length, hasToggle: [...sec.querySelectorAll('button')].some((x) => x.textContent.trim() === '列表' || x.textContent.trim() === '网格') }
 })
@@ -43,7 +43,7 @@ check(!!duo && !duo.hasToggle, `无列表/网格切换钮 (同屏后多余)`)
 // 空白消除: 矩阵右侧紧邻清单 (水平间距 < 面板宽30%)
 const fill = await page.evaluate(() => {
   const g = document.querySelector('table[data-testid="aspect-matrix"]').getBoundingClientRect()
-  const ul = document.querySelector('table[data-testid="aspect-matrix"]').closest('section')?.querySelector('ul')
+  const ul = document.querySelector('[data-testid="aspect-list"]')
   if (!ul) return 9999
   return Math.round(ul.getBoundingClientRect().left - g.right)
 })

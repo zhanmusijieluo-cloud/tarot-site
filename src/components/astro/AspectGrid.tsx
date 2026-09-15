@@ -14,6 +14,21 @@ import { ASPECT_HEX } from '@/lib/astro/aspect-colors';
 /** 相位配色 (唯一定义在 aspect-colors.ts, 盘线同源) */
 export const ASPECT_COLOR = ASPECT_HEX;
 const SYM: Record<string, string> = { conjunction: '☌', opposition: '☍', square: '□', trine: '△', sextile: '⚹', quincunx: '⚻' };
+/** 星体重要度 (网格/清单同源: 七大→三王→小行星→虚点→四轴; 用于取前10与排序) */
+export const ASPECT_IMP: Record<string, number> = {
+  Sun: 70, Moon: 65, Mercury: 60, Venus: 55, Mars: 50, Jupiter: 45, Saturn: 40,
+  Uranus: 30, Neptune: 25, Pluto: 20, Chiron: 18, Ceres: 12, Pallas: 11, Juno: 10, Vesta: 9,
+  'North Node': 8, 'South Node': 8, 'Mean North Node': 8, 'Mean South Node': 8,
+  'True North Node': 8, 'True South Node': 8, Lilith: 7, 'Mean Lilith': 7, 'True Lilith': 7,
+  'Part of Fortune': 6, 'Part of Spirit': 6, Ascendant: 15, Descendant: 13, Midheaven: 12, IC: 10,
+}
+/** 与网格同源的"参与点位" = 十大(按重要度)+四轴 (清单据此过滤相位) */
+export function aspectMatrixPoints(chart: VChart): string[] {
+  const impOf = (x: { name: string }) => ASPECT_IMP[x.name] ?? 0
+  const pts = [...[...chart.planets].sort((a, b) => impOf(b) - impOf(a)).slice(0, 10).map((p) => p.name)]
+  if (chart.angles.ascendant) pts.push('Ascendant', 'Descendant', 'Midheaven', 'IC')
+  return pts
+}
 // 图例用固定符号表 (不依赖当前盘是否恰好含该相位)
 const legendItems = (zhMode: boolean): [string, string][] => [
   ['conjunction', zhMode ? '合' : 'Conj'], ['opposition', zhMode ? '冲' : 'Opp'],
@@ -62,14 +77,8 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
     axisCols.push({ name: 'Midheaven', symbol: 'MC', zh: zhMode ? '中天' : 'MC', retrograde: false });
     axisCols.push({ name: 'IC', symbol: 'IC', zh: zhMode ? '天底' : 'IC', retrograde: false });
   }
-  // 星体重要度 (同弹窗: 七大→三王→4轴; 只用于排行列, 相位判据不依赖)
-  const IMP: Record<string, number> = {
-    Sun: 70, Moon: 65, Mercury: 60, Venus: 55, Mars: 50, Jupiter: 45, Saturn: 40,
-    Uranus: 30, Neptune: 25, Pluto: 20, Chiron: 18, Ceres: 12, Pallas: 11, Juno: 10, Vesta: 9,
-    'North Node': 8, 'South Node': 8, 'Mean North Node': 8, 'Mean South Node': 8,
-    'True North Node': 8, 'True South Node': 8, Lilith: 7, 'Mean Lilith': 7, 'True Lilith': 7,
-    'Part of Fortune': 6, 'Part of Spirit': 6, Ascendant: 15, Descendant: 13, Midheaven: 12, IC: 10,
-  }
+  // 星体重要度 (同弹窗: 七大→三王→4轴; 只用于排行列, 相位判据不依赖) — 导出供清单同源
+  const IMP = ASPECT_IMP
   const impOf = (x: { name: string }) => IMP[x.name] ?? 0
   // 行星取前10 (重要度), 四轴必在 → 最多14列 (宫神星同款: 盘面可读不爆)
   const cols: (VPlanet | { name: string; symbol: string; zh: string; retrograde?: boolean })[] = [...[...chart.planets].sort((a, b) => impOf(b) - impOf(a)).slice(0, 10), ...axisCols];

@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { useI18n } from '@/i18n';
 import ChartWheel, { type VChart, type VPlanet } from '@/components/astro/ChartWheel';
 import { HOUSE_SYSTEM_ZH } from '@/lib/astro/chart';
-import AspectGrid, { AspectLegend, ASPECT_COLOR, fmtOrbDms } from '@/components/astro/AspectGrid';
+import AspectGrid, { AspectLegend, ASPECT_COLOR, fmtOrbDms, aspectMatrixPoints } from '@/components/astro/AspectGrid';
 import NatalCard from '@/components/astro/NatalCard';
 import StatusTabs from '@/components/astro/StatusTabs';
 
@@ -300,12 +300,17 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
           <div className="overflow-x-auto">
             <AspectGrid chart={chart} zhMode={zhMode} selected={selected} onPick={setSelected} bare hideLegend />
           </div>
-          {/* 右列: 相位清单 — 按星体分组排列; 列数自适应: 与左矩阵等高, 超出按组整体开第二列(组不截断) (爸爸: 只有一列太长了) */}
+          {/* 右列: 相位清单 — 与网格严格同源(十大+四轴); CSS 多列原生排版:
+              列高硬锁=网格高(爸爸: 写不下就换右边去写, 列数可增加, 不靠估算) */}
           {(() => {
             const TYPE_ORDER: Record<string, number> = { conjunction: 1, sextile: 2, square: 3, trine: 4, opposition: 5, quincunx: 6 };
             const impMax = (a: { a: string; b: string }) => Math.max(impOf(a.a), impOf(a.b));
             const otherOf = (a: { a: string; b: string }, sel: string) => (a.a === sel ? a.b : a.a);
-            const sorted = [...chart.aspects].sort((x, y) => {
+            // 同源过滤: 只列"网格参与点"(十大+四轴)之间的相位 — 小行星/虚点不画格也不列行
+            const matPts = new Set(aspectMatrixPoints(chart))
+            const sorted = chart.aspects
+              .filter((x) => matPts.has(x.a) && matPts.has(x.b))
+              .sort((x, y) => {
               const dImp = impMax(y) - impMax(x);
               if (dImp) return dImp;
               const dType = (TYPE_ORDER[x.type] ?? 9) - (TYPE_ORDER[y.type] ?? 9);
@@ -314,38 +319,37 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
               const yMain = otherOf(y, impOf(y.a) >= impOf(y.b) ? y.a : y.b);
               return impOf(yMain) - impOf(xMain);
             });
-            // ① 按主星切组 (一组 = 组头 + 若干条相位)
+            // 按主星切组 (一组 = 组头 + 若干条相位; 整组不断列)
             const groups: { main: string; items: typeof sorted }[] = [];
             for (const a2 of sorted) {
               const main = impOf(a2.a) >= impOf(a2.b) ? a2.a : a2.b;
               const g = groups.find((x) => x.main === main);
               if (g) g.items.push(a2); else groups.push({ main, items: [a2] });
             }
-            // ② 竖排对齐 (爸爸定稿): 列高硬锁=网格真实高 (n行×42px);
-            //    行高用实测值 33px (按钮30+间距3), 组头 27px — 排满一列自动开下一列, 列数不限, 组不切断
+            // 列高=网格真实高; 行高实测=按钮30+间距3, 组开销=标题20+组距4 → 按此精确分列 (flex, 列数不限)
             const nGrid = Math.min(chart.planets.length, 10) + (chart.angles.ascendant ? 4 : 0)
             const COL_H = nGrid * 42
-            const gh = (g: { items: unknown[] }) => 27 + g.items.length * 33
-            const cols: typeof groups[] = []
+            const gh = (g: { items: unknown[] }) => g.items.length * 33 + 24
+            const jsCols: typeof groups[] = []
             for (const g of groups) {
-              const cur = cols[cols.length - 1]
+              const cur = jsCols[jsCols.length - 1]
               const curH = cur ? cur.reduce((s, x) => s + gh(x), 0) : 0
-              if (!cur || curH + gh(g) > COL_H) cols.push([g]); else cur.push(g)
+              if (!cur || curH + gh(g) > COL_H) jsCols.push([g]); else cur.push(g)
             }
             return (
-              <div className="flex w-full items-start gap-4 overflow-x-auto">
-                {cols.map((colG, ci) => (
-                  <ul key={ci} className="grid min-w-[210px] flex-1 grid-cols-1 gap-y-[3px]">
+              <div className="flex w-full items-start gap-4 overflow-x-auto pb-1" data-testid="aspect-list">
+                {jsCols.map((colG, ci) => (
+                  <div key={ci} className="w-[218px] shrink-0">
                     {colG.map((g, gi) => (
-                      <React.Fragment key={gi}>
-                        <li className="mb-0.5 flex items-center gap-1.5 pt-1 text-[10px] tracking-[0.18em] text-muted/60 uppercase">
+                      <div key={g.main + gi} className="mb-1">
+                        <div className="mb-0.5 flex items-center gap-1.5 pt-1 text-[10px] tracking-[0.18em] text-muted/60 uppercase">
                           <span className="w-4 text-center text-[11px]">{firstChar(g.main)}</span>
                           <span>{zhMode ? `${zhOf(g.main)} 相关相位` : `${g.main} aspects`}</span>
-                        </li>
+                        </div>
                         {g.items.map((a2, i) => {
                           const col = ASPECT_COLOR[a2.type] ?? '#9aa3b5'
                           return (
-                            <li key={i}>
+                            <div key={i} className="mb-[3px]">
                               <button
                                 onClick={() => setSelected(selected === a2.a ? null : a2.a)}
                                 className={`flex w-fit items-center gap-1.5 rounded-lg border-l-2 px-2 py-[5px] text-left text-[11.5px] transition-colors hover:bg-white/[0.04] ${selected === a2.a || selected === a2.b ? 'bg-white/[0.05]' : ''}`}
@@ -360,12 +364,12 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
                                   {' '}±{fmtOrbDms(a2.orb)}{a2.applying === true ? 'A' : a2.applying === false ? 'S' : ''}
                                 </span>
                               </button>
-                            </li>
+                            </div>
                           )
                         })}
-                      </React.Fragment>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 ))}
               </div>
             );
