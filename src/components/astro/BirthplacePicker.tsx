@@ -81,7 +81,7 @@ export default function BirthplacePicker({ value, onChange }: {
     const cityLabel = pn === dn ? pn : `${pn}·${dn}`;
     onChange({
       lat: d.lat, lng: d.lng, tz: 8,
-      label: zhMode ? cityLabel : `${pn} ${dn}`,
+      label: lang === 'ja' ? cityLabel : zhMode ? cityLabel : `${pn} ${dn}`,
       cnCode: `${pn}~${cn}~${dn}`,
     });
   };
@@ -99,7 +99,7 @@ export default function BirthplacePicker({ value, onChange }: {
   const pickWorld = (id: string) => {
     const c = CITIES_WORLD.find((x) => x.id === id);
     if (!c) return;
-    onChange({ lat: c.lat, lng: c.lng, tz: c.tz, label: zhMode ? c.zh : c.en });
+    onChange({ lat: c.lat, lng: c.lng, tz: c.tz, label: lang === 'ja' ? c.zh : zhMode ? c.zh : c.en });
   };
 
   // ---- 手动 ----
@@ -180,7 +180,7 @@ export default function BirthplacePicker({ value, onChange }: {
               onChange={(e) => pickWorld(e.target.value)} className={selCls}>
               {CITIES_WORLD.map((c) => (
                 <option key={c.id} value={c.id} className="bg-[#0b0e17]">
-                  {zhMode ? c.zh : c.en}
+                  {lang === 'ja' ? c.zh : zhMode ? c.zh : c.en}
                 </option>
               ))}
             </select>
@@ -210,7 +210,7 @@ export default function BirthplacePicker({ value, onChange }: {
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className={labelCls}>{t('astro.place.placeName')}</label>
-              <input value={mcity} onChange={(e) => setMcity(e.target.value)} onBlur={emitManual} className={inputCls} placeholder={zhMode ? '如: 拉萨·当雄' : 'e.g. Lhasa'} />
+              <input value={mcity} onChange={(e) => setMcity(e.target.value)} onBlur={emitManual} className={inputCls} placeholder={lang === 'ja' ? '例: ラサ' : zhMode ? '如: 拉萨·当雄' : 'e.g. Lhasa'} />
             </div>
             <div className="flex items-end pb-2">
               <p className="text-[11px] leading-snug text-muted/70">{t('astro.place.manualHint')}</p>

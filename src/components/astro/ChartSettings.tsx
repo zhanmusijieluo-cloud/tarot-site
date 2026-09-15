@@ -183,14 +183,14 @@ export default function ChartSettings({ value, onChange, sys, onSysChange, tabSi
                     <Toggle
                       on={!!value.trueSolar}
                       label={L(lang, '真太阳时校正', 'True solar time', '真太陽時補正')}
-                      hint={zhMode ? '钟表时→视太阳时 (经度差+均时差)' : ''}
+                      hint={lang === 'ja' ? '時計時→視太陽時' : zhMode ? '钟表时→视太阳时 (经度差+均时差)' : ''}
                       onClick={() => set({ trueSolar: !value.trueSolar })}
                     />
                     <p className="mt-1.5 text-[10px] leading-relaxed text-muted/60">{t('astro.set.trueSolarHint')}</p>
                   </Row>
                   <Row label={L(lang, '出生时间未知模式', 'Unknown-time mode', '出生時刻不明モード')}>
                     <p className="text-[11px] leading-relaxed text-muted/70">
-                      {zhMode ? '在排盘表单点「我不知道出生时间」即可 — 上升/宫位不显示，月亮按正午近似并全程声明。' : 'Use the "no birth time" toggle on the form — ASC/houses hidden with a moon disclaimer.'}
+                      {lang === 'ja' ? 'フォームの「出生時刻不明」を使用 — ASC/ハウス非表示、月は正午で近似。' : zhMode ? '在排盘表单点「我不知道出生时间」即可 — 上升/宫位不显示，月亮按正午近似并全程声明。' : 'Use the "no birth time" toggle on the form — ASC/houses hidden with a moon disclaimer.'}
                     </p>
                   </Row>
                 </>
@@ -248,7 +248,7 @@ export default function ChartSettings({ value, onChange, sys, onSysChange, tabSi
                   )}
                   <Row label={L(lang, '整宫制起点', 'Whole-sign basis', 'ホールサインの起点')}>
                     <p className="text-[11px] leading-relaxed text-muted/70">
-                      {zhMode ? '本盘整宫制以上升星座为首宫（行业默认）。宫头制间差异属流派问题，无对错。' : 'Whole sign starts at the ASC sign (industry default).'}
+                      {lang === 'ja' ? 'ホールサインはASCのサインを1室とする（業界標準）。' : zhMode ? '本盘整宫制以上升星座为首宫（行业默认）。宫头制间差异属流派问题，无对错。' : 'Whole sign starts at the ASC sign (industry default).'}
                     </p>
                   </Row>
                 </>
@@ -382,7 +382,7 @@ export default function ChartSettings({ value, onChange, sys, onSysChange, tabSi
                   <Row label={L(lang, '图层', 'Layers', 'レイヤー')}>
                     <div className="space-y-1.5">
                       <Toggle on={disp.aspects !== false} label={L(lang, '相位线', 'Aspect lines', 'アスペクト線')} onClick={() => set({ display: { ...disp, aspects: disp.aspects === false ? undefined : false } })} />
-                      <Toggle on={!!disp.feetAlways} label={L(lang, '脚线刻度点', 'Foot lines', 'フットライン')} hint={zhMode ? '关 → 仅选中星 → 常显 三态循环' : 'off → selected-only → always'} onClick={() => {
+                      <Toggle on={!!disp.feetAlways} label={L(lang, '脚线刻度点', 'Foot lines', 'フットライン')} hint={lang === 'ja' ? 'オフ → 選択時のみ → 常時表示' : zhMode ? '关 → 仅选中星 → 常显 三态循环' : 'off → selected-only → always'} onClick={() => {
                         const n = { ...disp }; const cur = n.feet === false ? 0 : n.feetAlways ? 1 : 2; // 0关 1常显 2仅选中(默认)
                         delete n.feetAlways; delete n.feet
                         if (cur === 0) n.feetAlways = true        // 关 → 常显

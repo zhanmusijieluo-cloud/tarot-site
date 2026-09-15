@@ -204,7 +204,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                     onClick={() => onSelect(isSel ? null : p.name)}
                     className={`cursor-pointer border-b border-white/[0.04] transition-colors last:border-0 ${isSel ? 'bg-accent/[0.07]' : 'hover:bg-white/[0.03]'}`}
                   >
-                    <td className={`${tdCls} text-frost/90`}><span className="mr-1.5 text-accent/80">{p.symbol}</span>{zhMode ? p.zh : p.name}</td>
+                    <td className={`${tdCls} text-frost/90`}><span className="mr-1.5 text-accent/80">{p.symbol}</span>{lang === 'ja' ? p.zh : zhMode ? p.zh : p.name}</td>
                     <td className={`${tdCls} text-muted tabular-nums`}><span className="inline-block w-[3.5em] text-right">{dms(p.degInSign)}</span><SignGlyph si={si} color={signColor(si)} className="ml-1.5" /></td>
                     <td className={`${tdCls} text-muted`}>{p.house ?? '—'}</td>
                     <td className={`${tdCls} text-muted`}>{(() => { const h = rulingHouses(p.name, SIGN_RULER); return h.length ? h.join(' ') : '—' })()}</td>
@@ -282,7 +282,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                     <tr><td className={`${tdCls} text-muted/60`} colSpan={2}>{T('时间未知, 无法计算', 'Requires birth time')}</td></tr>
                   ) : lots.map((l) => (
                     <tr key={l.key} className="border-b border-white/[0.04] last:border-0">
-                      <td className={`${tdCls} text-frost/85`}>{zhMode ? l.zh : l.en}</td>
+                      <td className={`${tdCls} text-frost/85`}>{lang === 'ja' ? l.zh : zhMode ? l.zh : l.en}</td>
                       <td className={`${tdCls} text-muted tabular-nums`}><span className="inline-block w-[3.5em] text-right">{dms(l.longitude % 30)}</span><SignGlyph si={signIdxOf(l.longitude)} color={signColor(signIdxOf(l.longitude))} className="ml-1.5" /><span className="ml-2 text-muted/50">({l.longitude.toFixed(2)}°)</span></td>
                     </tr>
                   ))}
@@ -305,7 +305,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                     <tr><td className={`${tdCls} text-muted/60`} colSpan={3}>{T('本盘无明显恒星合相 (±2°)', 'No notable star conjunctions (±2°)')}</td></tr>
                   ) : starRows.map(({ s, lon, conj }) => (
                     <tr key={s.en} className="border-b border-white/[0.04] last:border-0">
-                      <td className={`${tdCls} text-frost/85`} title={s.en}>{zhMode ? s.zh : s.en}</td>
+                      <td className={`${tdCls} text-frost/85`} title={s.en}>{lang === 'ja' ? s.zh : zhMode ? s.zh : s.en}</td>
                       <td className={`${tdCls} text-muted tabular-nums`}><span className="inline-block w-[3.5em] text-right">{dms(lon % 30)}</span><SignGlyph si={signIdxOf(lon)} color={signColor(signIdxOf(lon))} className="ml-1.5" /></td>
                       <td className={`${tdCls} text-frost/85`}>{conj.map((n) => symOf(n)).join(' ')}</td>
                     </tr>

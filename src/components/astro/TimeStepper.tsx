@@ -6,6 +6,7 @@
 // 供 推运盘 (次限/三限/行运/日返/月返/日弧) 与 天象盘 共用
 // ============================================================
 import React, { useState } from 'react';
+import { useI18n } from '@/i18n';
 
 export type StepUnit = 'y' | 'mo' | 'd' | 'h' | 'mi';
 export interface TimeParts { y: number; m: number; d: number; h: number; mi: number }
@@ -47,6 +48,7 @@ export default function TimeStepper({ value, units, zhMode, onChange, onNow }: {
   /** "今": 回到访客当下 (爸爸: 别人进来=当下时间) */
   onNow?: () => void;
 }) {
+  const { lang } = useI18n();
   const [unit, setUnit] = useState<StepUnit>(units[0] ?? 'd');
   const active = units.includes(unit) ? unit : units[0];
   const showTime = units.includes('h') || units.includes('mi');
@@ -61,7 +63,7 @@ export default function TimeStepper({ value, units, zhMode, onChange, onNow }: {
           <p className="font-display text-[14px] leading-tight tracking-[0.08em] text-frost tabular-nums">
             {value.y}-{pad(value.m)}-{pad(value.d)}{showTime ? ` ${pad(value.h)}:${pad(value.mi)}` : ''}
           </p>
-          {!showTime && <p className="text-[9px] text-muted/45">{zhMode ? '盘面按日推进' : 'date-level'}</p>}
+          {!showTime && <p className="text-[9px] text-muted/45">{lang === 'ja' ? '日付単位で進行' : zhMode ? '盘面按日推进' : 'date-level'}</p>}
         </div>
         <button className={btnCls} aria-label="next" onClick={() => onChange(stepTime(value, 1, active))}>▶</button>
       </div>
@@ -72,16 +74,16 @@ export default function TimeStepper({ value, units, zhMode, onChange, onNow }: {
             onClick={() => setUnit(u)}
             className={`rounded-full border px-2.5 py-0.5 text-[10.5px] transition-colors ${active === u ? 'border-accent/50 bg-accent/[0.08] text-accent' : 'border-white/[0.08] text-muted/70 hover:border-white/25'}`}
           >
-            {zhMode ? UNIT_ZH[u] : UNIT_EN[u]}
+            {lang === 'ja' ? UNIT_ZH[u] : zhMode ? UNIT_ZH[u] : UNIT_EN[u]}
           </button>
         ))}
         {onNow && (
           <button
             onClick={onNow}
-            title={zhMode ? '回到现在' : 'Back to now'}
+            title={lang === 'ja' ? '現在に戻る' : zhMode ? '回到现在' : 'Back to now'}
             className="rounded-full border border-white/[0.08] px-2.5 py-0.5 text-[10.5px] text-muted/70 transition-colors hover:border-accent/40 hover:text-accent"
           >
-            {zhMode ? '今' : 'Now'}
+            {lang === 'ja' ? '今' : zhMode ? '今' : 'Now'}
           </button>
         )}
       </div>
