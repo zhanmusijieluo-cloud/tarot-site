@@ -60,7 +60,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
       ?? ({ Ascendant: 'ASC', Descendant: 'DSC', Midheaven: 'MC', IC: 'IC' } as Record<string, string>)[name]
       ?? name[0]
     const firstChar = (n: string) => chart.planets.find((x) => x.name === n)?.symbol ?? ({ Ascendant: 'ASC', Descendant: 'DSC', Midheaven: 'MC', IC: 'IC' } as Record<string, string>)[n] ?? n[0]
-    const sz = (s: string) => SIGNS_ZH_MINI[s] ?? s;
+    const sz = (s: string) => (zhMode ? (SIGNS_ZH_MINI[s] ?? s) : s);
 
   const sun = chart.planets.find((p) => p.name === 'Sun');
   const moon = chart.planets.find((p) => p.name === 'Moon');
@@ -82,17 +82,17 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
   const placeLine = (p: VPlanet, label: string) => (
     <span>
       <b className="font-normal text-frost">{p.symbol}</b>
-      <span className="ml-1.5 text-accent/95">{p.signZh}</span>
+      <span className="ml-1.5 text-accent/95">{zhMode ? p.signZh : p.sign}</span>
       <span className="mx-1.5 text-frost">{dms(p.degInSign)}</span>
-      {p.house ? <span className="text-muted/80">· 第{p.house}宫</span> : null}
-      {p.retrograde ? <span className="ml-1.5 text-[#e8a08a]">逆行</span> : null}
+      {p.house ? <span className="text-muted/80">{zhMode ? `· 第${p.house}宫` : `· H${p.house}`}</span> : null}
+      {p.retrograde ? <span className="ml-1.5 text-[#e8a08a]">{zhMode ? '逆行' : 'Rx'}</span> : null}
       {label ? <span className="ml-1.5 text-muted/50">{label}</span> : null}
     </span>
   )
   if (sun) features.push({ el: placeLine(sun, ''), tone: 'gold' })
   if (moon) features.push({ el: placeLine(moon, ''), tone: 'gold' })
-  if (asc) features.push({ el: placeLine(asc, '上升'), tone: 'gold' })
-  if (mc) features.push({ el: placeLine(mc, '中天'), tone: 'gold' })
+  if (asc) features.push({ el: placeLine(asc, zhMode ? '上升' : 'ASC'), tone: 'gold' })
+  if (mc) features.push({ el: placeLine(mc, zhMode ? '中天' : 'MC'), tone: 'gold' })
   // 互容 · 接纳 (宫神星判词句式): ☉ 被 ♀ 接纳 (本垣♉) / ♀ 与 ♂ 互容 (♎/♈ 本垣)
   const recepFeats: Feat[] = []
   // 爸爸定标: 尊贵档 — 本垣/曜升对技法权重最高, 三分/界/面次之 (特征面板判词排序用)
@@ -106,7 +106,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
       if (seen.has(key)) continue;
       seen.add(key);
       const impMax = Math.max(impOf(r.a), impOf(r.b));
-      const kind = RECEPTION_KIND_ZH[r.kind] ?? r.kind
+      const kind = zhMode ? (RECEPTION_KIND_ZH[r.kind] ?? r.kind) : r.kind
       const pa = chart.planets.find((x) => x.name === r.a), pb = chart.planets.find((x) => x.name === r.b)
       if (r.mutual) {
         const rev = chart.receptions.find((x) => x.a === r.b && x.b === r.a)
@@ -114,16 +114,18 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
           tone: 'soft',
           main: impMax,
           rank: Math.min(DIGNITY_RANK[r.kind] ?? 2, rev ? DIGNITY_RANK[rev.kind] ?? 2 : 2),
-          tip: `${pa?.zh ?? r.a} 与 ${pb?.zh ?? r.b} 互容${r.aspected ? '+接纳（有相位，能量互通）' : '（无相位仍成立，能量共享）'}: 互居对方${kind}之座 ${sz(r.bySign)}/${sz(rev?.bySign ?? '')}`,
+          tip: zhMode
+            ? `${pa?.zh ?? r.a} 与 ${pb?.zh ?? r.b} 互容${r.aspected ? '+接纳（有相位，能量互通）' : '（无相位仍成立，能量共享）'}: 互居对方${kind}之座 ${sz(r.bySign)}/${sz(rev?.bySign ?? '')}`
+            : `${r.a} & ${r.b} mutual reception${r.aspected ? ' + reception' : ''}: ${sz(r.bySign)} / ${sz(rev?.bySign ?? '')}`,
           el: (
             <span>
-              <b className="font-normal text-frost">{psym(r.a)}</b><span className="mx-1">与</span><b className="font-normal text-frost">{psym(r.b)}</b>
-              <span className="ml-1 text-[#cdb88a]">{r.aspected ? '互容·接纳' : '互容'}</span>
+              <b className="font-normal text-frost">{psym(r.a)}</b><span className="mx-1">{zhMode ? '与' : '&'}</span><b className="font-normal text-frost">{psym(r.b)}</b>
+              <span className="ml-1 text-[#cdb88a]">{r.aspected ? (zhMode ? '互容·接纳' : 'MR + reception') : (zhMode ? '互容' : 'MR')}</span>
               <span className="ml-1 text-muted/80">(</span>
-              <span className="text-frost/90">{psym(r.a)}居{sz(r.bySign)}=</span><span className="text-accent/95">{pb?.zh ?? r.b}{kind}</span>
+              <span className="text-frost/90">{psym(r.a)}{zhMode ? '居' : ' in '}{sz(r.bySign)}=</span><span className="text-accent/95">{zhMode ? (pb?.zh ?? r.b) : r.b}{kind}</span>
               {rev && <>
                 <span className="mx-1 text-muted/60">·</span>
-                <span className="text-frost/90">{psym(r.b)}居{sz(rev.bySign)}=</span><span className="text-accent/95">{pa?.zh ?? r.a}{RECEPTION_KIND_ZH[rev.kind] ?? rev.kind}</span>
+                <span className="text-frost/90">{psym(r.b)}{zhMode ? '居' : ' in '}{sz(rev.bySign)}=</span><span className="text-accent/95">{zhMode ? (pa?.zh ?? r.a) : r.a}{zhMode ? (RECEPTION_KIND_ZH[rev.kind] ?? rev.kind) : rev.kind}</span>
               </>}
               <span className="text-muted/80">)</span>
             </span>
@@ -134,10 +136,12 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
           tone: 'soft',
           main: impMax,
           rank: DIGNITY_RANK[r.kind] ?? 2,
-          tip: `${pa?.zh ?? r.a} 被 ${pb?.zh ?? r.b} 接纳（居其${kind}·${sz(r.bySign)}）`,
+          tip: zhMode
+            ? `${pa?.zh ?? r.a} 被 ${pb?.zh ?? r.b} 接纳（居其${kind}·${sz(r.bySign)}）`
+            : `${r.a} received by ${r.b} (in its ${kind} · ${sz(r.bySign)})`,
           el: (
             <span>
-              <b className="font-normal text-frost">{psym(r.a)}</b><span className="mx-1.5">被</span><b className="font-normal text-frost">{psym(r.b)}</b><span className="ml-1">接纳</span>
+              <b className="font-normal text-frost">{psym(r.a)}</b><span className="mx-1.5">{zhMode ? '被' : ' by '}</span><b className="font-normal text-frost">{psym(r.b)}</b><span className="ml-1">{zhMode ? '接纳' : 'received'}</span>
               <span className="ml-1 text-muted/80">({kind} </span>
               <span className="text-accent/95">{sz(r.bySign)}</span>
               <span className="text-muted/80">)</span>

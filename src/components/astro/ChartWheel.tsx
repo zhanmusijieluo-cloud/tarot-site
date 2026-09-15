@@ -780,7 +780,7 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual, sel }: {
           <p className="text-[10px] tracking-[0.2em] text-muted uppercase">{t('astro.d.state')}</p>
           <p className="mt-1 text-[14.5px] text-frost">
             {p.dignity && p.dignity.state !== 'Peregrine'
-              ? `${DIGNITY_ZH[p.dignity.state] ?? p.dignity.state}${p.dignity.strength ? ` ${p.dignity.strength > 0 ? '+' : ''}${p.dignity.strength}` : ''}`
+              ? `${zhMode ? (DIGNITY_ZH[p.dignity.state] ?? p.dignity.state) : p.dignity.state}${p.dignity.strength ? ` ${p.dignity.strength > 0 ? '+' : ''}${p.dignity.strength}` : ''}`
               : (zhMode ? '游走' : 'Peregrine')}
             {p.retrograde && <span className="ml-1 text-[#e8a08a]">℞</span>}
           </p>
