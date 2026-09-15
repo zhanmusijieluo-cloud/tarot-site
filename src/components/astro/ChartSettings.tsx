@@ -7,6 +7,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/i18n';
+import { L } from '@/lib/astro/i18n';
 import type { BodyGroup, CastSettings } from '@/lib/astro/chart';
 import { HOUSE_SYSTEM_LIST } from '@/lib/astro/chart';
 import { DEFAULT_ORBS } from '@/lib/astro/chart-url';
@@ -181,13 +182,13 @@ export default function ChartSettings({ value, onChange, sys, onSysChange, tabSi
                   <Row label={t('astro.set.trueSolar')}>
                     <Toggle
                       on={!!value.trueSolar}
-                      label={zhMode ? '真太阳时校正' : 'True solar time'}
+                      label={L(lang, '真太阳时校正', 'True solar time', '真太陽時補正')}
                       hint={zhMode ? '钟表时→视太阳时 (经度差+均时差)' : ''}
                       onClick={() => set({ trueSolar: !value.trueSolar })}
                     />
                     <p className="mt-1.5 text-[10px] leading-relaxed text-muted/60">{t('astro.set.trueSolarHint')}</p>
                   </Row>
-                  <Row label={zhMode ? '出生时间未知模式' : 'Unknown-time mode'}>
+                  <Row label={L(lang, '出生时间未知模式', 'Unknown-time mode', '出生時刻不明モード')}>
                     <p className="text-[11px] leading-relaxed text-muted/70">
                       {zhMode ? '在排盘表单点「我不知道出生时间」即可 — 上升/宫位不显示，月亮按正午近似并全程声明。' : 'Use the "no birth time" toggle on the form — ASC/houses hidden with a moon disclaimer.'}
                     </p>
@@ -205,18 +206,18 @@ export default function ChartSettings({ value, onChange, sys, onSysChange, tabSi
                   </div>
                   <p className="text-[10px] leading-relaxed text-muted/60">{t('astro.set.bodiesHint')}</p>
                   {bodies.nodes && (
-                    <Row label={zhMode ? '交点类型' : 'Node type'}>
+                    <Row label={L(lang, '交点类型', 'Node type', 'ノードの種類')}>
                       <Seg
-                        opts={[{ v: 'true', label: zhMode ? '真交点(默认)' : 'True' }, { v: 'mean', label: zhMode ? '平交点' : 'Mean' }]}
+                        opts={[{ v: 'true', label: L(lang, '真交点(默认)', 'True', 'トゥルーノード（既定）') }, { v: 'mean', label: L(lang, '平交点', 'Mean', 'ミーンノード') }]}
                         val={value.nodeType ?? 'true'}
                         onPick={(v) => set({ nodeType: v as 'true' | 'mean' })}
                       />
                     </Row>
                   )}
                   {bodies.lilith && (
-                    <Row label={zhMode ? '莉莉丝类型' : 'Lilith type'}>
+                    <Row label={L(lang, '莉莉丝类型', 'Lilith type', 'リリス種別')}>
                       <Seg
-                        opts={[{ v: 'mean', label: zhMode ? '平均(默认)' : 'Mean' }, { v: 'true', label: zhMode ? '真' : 'True' }, { v: 'both', label: zhMode ? '两者' : 'Both' }]}
+                        opts={[{ v: 'mean', label: L(lang, '平均(默认)', 'Mean', 'ミーン（既定）') }, { v: 'true', label: L(lang, '真', 'True', 'トゥルー') }, { v: 'both', label: L(lang, '两者', 'Both', '両方') }]}
                         val={value.lilithType ?? 'mean'}
                         onPick={(v) => set({ lilithType: v as 'mean' | 'true' | 'both' })}
                       />
@@ -245,7 +246,7 @@ export default function ChartSettings({ value, onChange, sys, onSysChange, tabSi
                       ))}
                     </div>
                   )}
-                  <Row label={zhMode ? '整宫制起点' : 'Whole-sign basis'}>
+                  <Row label={L(lang, '整宫制起点', 'Whole-sign basis', 'ホールサインの起点')}>
                     <p className="text-[11px] leading-relaxed text-muted/70">
                       {zhMode ? '本盘整宫制以上升星座为首宫（行业默认）。宫头制间差异属流派问题，无对错。' : 'Whole sign starts at the ASC sign (industry default).'}
                     </p>
@@ -256,28 +257,28 @@ export default function ChartSettings({ value, onChange, sys, onSysChange, tabSi
               {/* ---- 相位 ---- */}
               {tab === 'aspects' && (
                 <>
-                  <Row label={zhMode ? '参与相位的天体范围' : 'Aspect bodies'}>
+                  <Row label={L(lang, '参与相位的天体范围', 'Aspect bodies', 'アスペクト対象')}>
                     <Seg
                       opts={[
-                        { v: 'core', label: zhMode ? '十主星' : 'Core' },
-                        { v: 'planets', label: zhMode ? '主星+虚点' : '+Points' },
-                        { v: 'asteroids', label: zhMode ? '+小行星' : '+Astr' },
-                        { v: 'all', label: zhMode ? '全部' : 'All' },
+                        { v: 'core', label: L(lang, '十主星', 'Core', '主要10天体') },
+                        { v: 'planets', label: L(lang, '主星+虚点', '+Points', '＋ポイント') },
+                        { v: 'asteroids', label: L(lang, '+小行星', '+Astr', '＋小惑星') },
+                        { v: 'all', label: L(lang, '全部', 'All', 'すべて') },
                       ]}
                       val={value.aspectScope ?? 'all'}
                       onPick={(v) => set({ aspectScope: v as CastSettings['aspectScope'] })}
                     />
                   </Row>
-                  <Row label={zhMode ? '跨星座相位' : 'Out-of-sign aspects'}>
+                  <Row label={L(lang, '跨星座相位', 'Out-of-sign aspects', 'サイン外アスペクト')}>
                     <Toggle
                       on={value.outOfSign !== false}
-                      label={zhMode ? '允许跨星座成相' : 'Allow out-of-sign'}
+                      label={L(lang, '允许跨星座成相', 'Allow out-of-sign', 'サイン外を許可')}
                       onClick={() => set({ outOfSign: value.outOfSign === false })}
                     />
                     {value.outOfSign !== false && (
                       <div className="mt-2.5">
                         <div className="mb-1 flex items-center justify-between text-[11px]">
-                          <span className="text-frost/85">{zhMode ? '跨星座强度惩罚' : 'OOS penalty'}</span>
+                          <span className="text-frost/85">{L(lang, '跨星座强度惩罚', 'OOS penalty', 'サイン外の強度ペナルティ')}</span>
                           <span className={value.oosPenalty ? 'text-accent' : 'text-muted/60'}>
                             {((value.oosPenalty ?? 0) * 100).toFixed(0)}%
                             {!!value.oosPenalty && (
@@ -291,9 +292,9 @@ export default function ChartSettings({ value, onChange, sys, onSysChange, tabSi
                       </div>
                     )}
                   </Row>
-                  <Row label={zhMode ? '相位最低强度 (0=全显示)' : 'Min aspect strength'}>
+                  <Row label={L(lang, '相位最低强度 (0=全显示)', 'Min aspect strength', 'アスペクト最低強度（0=全表示）')}>
                     <div className="mb-1 flex items-center justify-between text-[11px]">
-                      <span className="text-frost/85">{zhMode ? '过滤松散相位' : 'Filter loose'}</span>
+                      <span className="text-frost/85">{L(lang, '过滤松散相位', 'Filter loose', '緩いアスペクトを除外')}</span>
                       <span className={value.minStrength ? 'text-accent' : 'text-muted/60'}>
                         {value.minStrength ?? 0}
                         {!!value.minStrength && <button onClick={() => set({ minStrength: undefined })} className="ml-1.5 underline decoration-dotted">↺</button>}
@@ -303,7 +304,7 @@ export default function ChartSettings({ value, onChange, sys, onSysChange, tabSi
                       onChange={(e) => set({ minStrength: Number(e.target.value) || undefined })}
                       className="w-full accent-[var(--accent,#c9a86c)]" />
                   </Row>
-                  <Row label={zhMode ? '相位类型' : 'Aspect types'}>
+                  <Row label={L(lang, '相位类型', 'Aspect types', 'アスペクト種別')}>
                     <div className="grid grid-cols-2 gap-1.5">
                       {MAJOR.map((a) => (
                         <div key={a.key} className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2">
@@ -363,25 +364,25 @@ export default function ChartSettings({ value, onChange, sys, onSysChange, tabSi
               {/* ---- 显示 ---- */}
               {tab === 'display' && (
                 <>
-                  <Row label={zhMode ? '盘向' : 'Wheel direction'}>
+                  <Row label={L(lang, '盘向', 'Wheel direction', 'ホイールの向き')}>
                     <Seg
-                      opts={[{ v: 'ccw', label: zhMode ? '逆时针(标准)' : 'CCW (standard)' }, { v: 'cw', label: zhMode ? '顺时针' : 'CW' }]}
+                      opts={[{ v: 'ccw', label: L(lang, '逆时针(标准)', 'CCW (standard)', '反時計回り（標準）') }, { v: 'cw', label: L(lang, '顺时针', 'CW', '時計回り') }]}
                       val={disp.dir ?? 'ccw'}
                       onPick={(v) => set({ display: { ...disp, dir: v === 'cw' ? 'cw' : undefined } })}
                     />
                     <p className="mt-1.5 text-[10px] leading-relaxed text-muted/60">{t('astro.set.dirHint')}</p>
                   </Row>
-                  <Row label={zhMode ? '上升点位置' : 'ASC position'}>
+                  <Row label={L(lang, '上升点位置', 'ASC position', 'アセンダントの位置')}>
                     <Seg
-                      opts={[{ v: 'left', label: zhMode ? '左(9点·标准)' : 'Left (9h)' }, { v: 'top', label: zhMode ? '上(12点)' : 'Top (12h)' }]}
+                      opts={[{ v: 'left', label: L(lang, '左(9点·标准)', 'Left (9h)', '左（9時・標準）') }, { v: 'top', label: L(lang, '上(12点)', 'Top (12h)', '上（12時）') }]}
                       val={disp.ascPos ?? 'left'}
                       onPick={(v) => set({ display: { ...disp, ascPos: v === 'top' ? 'top' : undefined } })}
                     />
                   </Row>
-                  <Row label={zhMode ? '图层' : 'Layers'}>
+                  <Row label={L(lang, '图层', 'Layers', 'レイヤー')}>
                     <div className="space-y-1.5">
-                      <Toggle on={disp.aspects !== false} label={zhMode ? '相位线' : 'Aspect lines'} onClick={() => set({ display: { ...disp, aspects: disp.aspects === false ? undefined : false } })} />
-                      <Toggle on={!!disp.feetAlways} label={zhMode ? '脚线刻度点' : 'Foot lines'} hint={zhMode ? '关 → 仅选中星 → 常显 三态循环' : 'off → selected-only → always'} onClick={() => {
+                      <Toggle on={disp.aspects !== false} label={L(lang, '相位线', 'Aspect lines', 'アスペクト線')} onClick={() => set({ display: { ...disp, aspects: disp.aspects === false ? undefined : false } })} />
+                      <Toggle on={!!disp.feetAlways} label={L(lang, '脚线刻度点', 'Foot lines', 'フットライン')} hint={zhMode ? '关 → 仅选中星 → 常显 三态循环' : 'off → selected-only → always'} onClick={() => {
                         const n = { ...disp }; const cur = n.feet === false ? 0 : n.feetAlways ? 1 : 2; // 0关 1常显 2仅选中(默认)
                         delete n.feetAlways; delete n.feet
                         if (cur === 0) n.feetAlways = true        // 关 → 常显
@@ -389,8 +390,8 @@ export default function ChartSettings({ value, onChange, sys, onSysChange, tabSi
                         else n.feet = false                        // 仅选中 → 关
                         set({ display: n })
                       }} />
-                      <Toggle on={disp.nums !== false} label={zhMode ? '宫号' : 'House numbers'} onClick={() => set({ display: { ...disp, nums: disp.nums === false ? undefined : false } })} />
-                      <Toggle on={disp.ticks !== false} label={zhMode ? '刻度针脚' : 'Degree ticks'} onClick={() => set({ display: { ...disp, ticks: disp.ticks === false ? undefined : false } })} />
+                      <Toggle on={disp.nums !== false} label={L(lang, '宫号', 'House numbers', 'ハウス番号')} onClick={() => set({ display: { ...disp, nums: disp.nums === false ? undefined : false } })} />
+                      <Toggle on={disp.ticks !== false} label={L(lang, '刻度针脚', 'Degree ticks', '度数ティック')} onClick={() => set({ display: { ...disp, ticks: disp.ticks === false ? undefined : false } })} />
                     </div>
                   </Row>
                 </>
