@@ -22,10 +22,10 @@ const ASPECT_ORDER: Record<string, number> = { conjunction: 0, sextile: 1, squar
 const AX_ZH: Record<string, string> = { ASC: '上升', DSC: '下降', MC: '天顶', IC: '天底' };
 
 // 盘种文案 (按 dyn.type 切换; 爸爸盘种条: 本命/三限/次限/行运/日返/月返/日弧)
-const KIND: Record<string, { zh: string; en: string; note: string; noteEn: string }> = {
-  progression: { zh: '次限盘', en: 'Secondary', note: '次限盘: 出生后 1 天 = 1 年 (标准推运法)。行星按本命宫位排布, 四轴/宫位不变。', noteEn: 'Secondary progression: 1 day after birth = 1 year. Planets in natal houses.' },
-  tertiary: { zh: '三限盘', en: 'Tertiary', note: '三限盘: 出生后 1 天 = 1 个月 (每年推进 12 天)。行星按本命宫位排布, 四轴/宫位不变。', noteEn: 'Tertiary progression: 1 day after birth = 1 month (12 days per year). Planets in natal houses.' },
-  transit: { zh: '行运盘', en: 'Transit', note: '行运盘: 目标日期的实时天象行星, 对照本命宫位与四轴。', noteEn: 'Transit: real-sky planets of the target date against the natal chart.' },
+const KIND: Record<string, { zh: string; en: string; ja?: string; note: string; noteEn: string; noteJa?: string }> = {
+  progression: { zh: '次限盘', en: 'Secondary', ja: '二次限', note: '次限盘: 出生后 1 天 = 1 年 (标准推运法)。行星按本命宫位排布, 四轴/宫位不变。', noteEn: 'Secondary progression: 1 day after birth = 1 year. Planets in natal houses.' },
+  tertiary: { zh: '三限盘', en: 'Tertiary', ja: '三次限', note: '三限盘: 出生后 1 天 = 1 个月 (每年推进 12 天)。行星按本命宫位排布, 四轴/宫位不变。', noteEn: 'Tertiary progression: 1 day after birth = 1 month (12 days per year). Planets in natal houses.' },
+  transit: { zh: '行运盘', en: 'Transit', ja: 'トランシット', note: '行运盘: 目标日期的实时天象行星, 对照本命宫位与四轴。', noteEn: 'Transit: real-sky planets of the target date against the natal chart.' },
   'solar-return': { zh: '日返盘', en: 'Solar Return', note: '太阳返照盘: 太阳回到本命黄经的时刻重排全盘 (外盘=返照时刻行星)。', noteEn: 'Solar return: chart cast for the moment the Sun returns to its natal longitude.' },
   'lunar-return': { zh: '月返盘', en: 'Lunar Return', note: '月亮返照盘: 月亮回到本命黄经的时刻重排全盘 (约每月一次)。', noteEn: 'Lunar return: chart cast for the moment the Moon returns to its natal longitude.' },
   'solar-arc': { zh: '日弧盘', en: 'Solar Arc', note: '太阳弧盘: 全盘按太阳推运弧统一前移的推运法。', noteEn: 'Solar arc: every point advanced by the Sun\'s progressed arc.' },
@@ -56,7 +56,7 @@ export default function DynResult({ dyn, zhMode, target, onDate, onNow, cornerAc
   onNow?: () => void;
   cornerActions?: React.ReactNode;
 }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const natal = dyn.natal as unknown as VChart;
   const outer = dyn.outer;
   // 单环/双环 (爸爸: 双击盘面或按钮切换; 双环=内本命+外次限)
@@ -130,14 +130,14 @@ export default function DynResult({ dyn, zhMode, target, onDate, onNow, cornerAc
               onClick={() => setDual(false)}
               className={`rounded-full border px-3 py-1 text-[10.5px] tracking-[0.12em] transition-colors ${!dual ? 'border-accent/50 bg-accent/[0.08] text-accent' : 'border-white/[0.1] text-muted hover:border-white/25'}`}
             >
-              {zhMode ? '单环' : 'Single'}
+              {lang === 'ja' ? 'シングル' : zhMode ? '单环' : 'Single'}
             </button>
             <button
               onClick={() => setDual(true)}
-              title={zhMode ? '本命(内圈) + 推运(外圈); 双击盘面也可切换' : 'Natal inner + progressed outer; double-click to toggle'}
+              title={lang === 'ja' ? 'ネイタル（内輪）＋プログレス（外輪）; ダブルクリックでも切替' : zhMode ? '本命(内圈) + 推运(外圈); 双击盘面也可切换' : 'Natal inner + progressed outer; double-click to toggle'}
               className={`rounded-full border px-3 py-1 text-[10.5px] tracking-[0.12em] transition-colors ${dual ? 'border-accent/50 bg-accent/[0.08] text-accent' : 'border-white/[0.1] text-muted hover:border-white/25'}`}
             >
-              {zhMode ? '双环' : 'Dual'}
+              {lang === 'ja' ? 'デュアル' : zhMode ? '双环' : 'Dual'}
             </button>
           </div>
         }
@@ -145,7 +145,7 @@ export default function DynResult({ dyn, zhMode, target, onDate, onNow, cornerAc
           <div className="pointer-events-auto flex w-[248px] flex-col gap-1.5">
             <div className="w-full rounded-2xl border border-white/[0.1] bg-[#0a0e19]/90 px-3 py-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.45)] backdrop-blur-sm">
               <p className="mb-2 flex items-baseline gap-2">
-                <span className="font-display text-[13.5px] tracking-[0.1em] text-accent">{zhMode ? `${kind.zh}设置` : kind.en}</span>
+                <span className="font-display text-[13.5px] tracking-[0.1em] text-accent">{lang === 'ja' ? `${kind.ja ?? kind.en}設定` : zhMode ? `${kind.zh}设置` : kind.en}</span>
               </p>
               <TimeStepper
                 value={{ y: target.year, m: target.month, d: target.day, h: target.hour ?? 12, mi: target.minute ?? 0 }}
@@ -155,7 +155,7 @@ export default function DynResult({ dyn, zhMode, target, onDate, onNow, cornerAc
                 onNow={onNow}
               />
               <label className="mt-2 flex items-center justify-between gap-2 text-[11px] text-muted/80">
-                {zhMode ? '跳转' : 'Jump'}
+                {lang === 'ja' ? 'ジャンプ' : zhMode ? '跳转' : 'Jump'}
                 <input
                   type="date"
                   value={dateVal}
@@ -169,16 +169,16 @@ export default function DynResult({ dyn, zhMode, target, onDate, onNow, cornerAc
                 />
               </label>
               <p className="mt-2 text-[10px] leading-relaxed text-muted/70">
-                {zhMode ? kind.note : kind.noteEn}
+                {lang === 'ja' ? (kind.noteJa ?? kind.noteEn) : zhMode ? kind.note : kind.noteEn}
               </p>
               {outer.solarArc !== undefined && (
                 <p className="mt-1.5 flex items-center justify-between text-[11px] text-frost/85">
-                  {zhMode ? '太阳弧' : 'Solar arc'}
+                  {lang === 'ja' ? 'ソーラーアーク' : zhMode ? '太阳弧' : 'Solar arc'}
                   <span className="tabular-nums text-muted">+{outer.solarArc}°</span>
                 </p>
               )}
               <p className="mt-1 flex items-center justify-between text-[11px] text-frost/85">
-                {zhMode ? '盘面时间' : 'Chart date'}
+                {lang === 'ja' ? 'チャート日時' : zhMode ? '盘面时间' : 'Chart date'}
                 <span className="tabular-nums text-muted">{outer.label}</span>
               </p>
             </div>
@@ -188,24 +188,24 @@ export default function DynResult({ dyn, zhMode, target, onDate, onNow, cornerAc
       />
 
       {/* 下方: 推运 × 本命 相位表 */}
-      <Panel title={`${zhMode ? kind.zh + '相位' : kind.en + ' aspects'} (→ ${zhMode ? '本命' : 'natal'}) — ${rows.length}`}>
+      <Panel title={`${lang === 'ja' ? (kind.ja ?? kind.en) + 'アスペクト' : zhMode ? kind.zh + '相位' : kind.en + ' aspects'} (→ ${lang === 'ja' ? 'ネイタル' : zhMode ? '本命' : 'natal'}) — ${rows.length}`}>
         <ul className="grid grid-cols-1 gap-x-5 md:grid-cols-2 xl:grid-cols-3">
           {rows.map((a, i) => (
             <li key={i} className="flex items-center gap-1.5 border-b border-white/[0.04] px-3 py-[5.5px] text-[12px] last:border-0">
               <span className="w-7 text-center text-[14px] leading-none text-frost/90" title={zhOf(a.a)}>{symOf(a.a)}</span>
-              <span className="text-[9px] text-muted/45">{zhMode ? (dual ? '外环' : '推') : (dual ? 'Outer' : 'P')}</span>
-              <span className="w-5 text-center text-[13px] leading-none" style={{ color: ASPECT_COLOR[a.type] ?? '#9aa3b5' }} title={zhMode ? a.typeZh : a.type}>{a.symbol}</span>
+              <span className="text-[9px] text-muted/45">{lang === 'ja' ? (dual ? '外輪' : 'P') : zhMode ? (dual ? '外环' : '推') : (dual ? 'Outer' : 'P')}</span>
+              <span className="w-5 text-center text-[13px] leading-none" style={{ color: ASPECT_COLOR[a.type] ?? '#9aa3b5' }} title={lang === 'ja' ? a.type : zhMode ? a.typeZh : a.type}>{a.symbol}</span>
               <span className="w-7 text-center text-[14px] leading-none text-frost/90" title={zhOf(a.b)}>{symOf(a.b)}</span>
-              <span className="text-[9px] text-muted/45">{zhMode ? (dual ? '内环' : '本命') : (dual ? 'Inner' : 'N')}</span>
+              <span className="text-[9px] text-muted/45">{lang === 'ja' ? (dual ? '内輪' : 'N') : zhMode ? (dual ? '内环' : '本命') : (dual ? 'Inner' : 'N')}</span>
               <span className="ml-auto tabular-nums text-[11px] text-muted">
                 {dmsOrb(a.orb)}
                 {a.actualAngle !== undefined && <span className="ml-1.5 text-[9.5px] text-muted/55">{a.actualAngle.toFixed(1)}°</span>}
-                {a.applying !== null && a.applying !== undefined && <span className="ml-1 text-[9px] text-accent/55">{a.applying ? (zhMode ? '入' : 'A') : (zhMode ? '出' : 'S')}</span>}
+                {a.applying !== null && a.applying !== undefined && <span className="ml-1 text-[9px] text-accent/55">{a.applying ? (lang === 'ja' ? 'A' : zhMode ? '入' : 'A') : (lang === 'ja' ? 'S' : zhMode ? '出' : 'S')}</span>}
               </span>
             </li>
           ))}
           {rows.length === 0 && (
-            <li className="px-3 py-3 text-[12px] text-muted/60">{zhMode ? '无容许度内相位' : 'No aspects within orb'}</li>
+            <li className="px-3 py-3 text-[12px] text-muted/60">{lang === 'ja' ? 'オーブ内にアスペクトなし' : zhMode ? '无容许度内相位' : 'No aspects within orb'}</li>
           )}
         </ul>
       </Panel>
