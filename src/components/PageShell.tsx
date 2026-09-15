@@ -90,7 +90,9 @@ export default function PageShell({
   subtitle,
   children,
   footer,
-  wide = false,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  wide = false, // ⚠️ 目前无实现：默认容器 max-w-[106.25rem](1700px) 已覆盖所有调用方，
+                //    此 prop 被 10+ 处传入但从未生效。若要让某些页更宽，需先定宽度规格再实现。
   compact = false,
 }: {
   label: string;
