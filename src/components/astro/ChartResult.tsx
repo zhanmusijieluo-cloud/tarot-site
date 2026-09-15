@@ -321,15 +321,16 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
               const g = groups.find((x) => x.main === main);
               if (g) g.items.push(a2); else groups.push({ main, items: [a2] });
             }
-            // ② 竖排对齐 (爸爸定稿): 分组顺序=网格行顺序, 第一列从网格顶对齐往下排,
-            //    列高超过网格高度才开第二列 (组不切断)
-            const COL_H = 588; // = 网格高 (14行×42px); 超出才另起一列
+            // ② 竖排对齐 (爸爸定稿): 列高硬锁=网格真实高 (n行×42px);
+            //    行高用实测值 33px (按钮30+间距3), 组头 27px — 排满一列自动开下一列, 列数不限, 组不切断
+            const nGrid = Math.min(chart.planets.length, 10) + (chart.angles.ascendant ? 4 : 0)
+            const COL_H = nGrid * 42
+            const gh = (g: { items: unknown[] }) => 27 + g.items.length * 33
             const cols: typeof groups[] = []
             for (const g of groups) {
-              const gh = 24 + g.items.length * 26
               const cur = cols[cols.length - 1]
-              const curH = cur ? cur.reduce((s, x) => s + 24 + x.items.length * 26, 0) : 0
-              if (!cur || curH + gh > COL_H) cols.push([g]); else cur.push(g)
+              const curH = cur ? cur.reduce((s, x) => s + gh(x), 0) : 0
+              if (!cur || curH + gh(g) > COL_H) cols.push([g]); else cur.push(g)
             }
             return (
               <div className="flex w-full items-start gap-4 overflow-x-auto">
