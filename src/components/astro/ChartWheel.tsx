@@ -93,6 +93,22 @@ const ELEMENT_HEX: Record<string, string> = {
 };
 const SIGN_GLYPH = ['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
 const SIGN_ORDER = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+// 日文：尊贵状态 / 接纳等级 / 行星名
+const DIGNITY_JA: Record<string, string> = {
+  Domicile: 'ドミサイル', Exalted: 'エグザルテーション', Exaltation: 'エグザルテーション',
+  Detriment: 'デトリメント', Fall: 'フォール', Peregrine: 'ペレグリン',
+};
+const RECEPTION_KIND_JA: Record<string, string> = {
+  domicile: 'ドミサイル', exaltation: 'エグザルテーション', triplicity: 'トリプリシティ',
+  detriment: 'デトリメント', fall: 'フォール', term: 'ターム', face: 'フェイス',
+};
+const PLANET_JA: Record<string, string> = {
+  Sun: '太陽', Moon: '月', Mercury: '水星', Venus: '金星', Mars: '火星',
+  Jupiter: '木星', Saturn: '土星', Uranus: '天王星', Neptune: '海王星', Pluto: '冥王星',
+  NorthNode: 'ドラゴンヘッド', SouthNode: 'ドラゴンテイル',
+  Ascendant: 'アセンダント', Descendant: 'ディセンダント', Midheaven: 'MC', IC: 'IC',
+};
+const jaOf = (n: string) => PLANET_JA[n] ?? n;
 export const DIGNITY_ZH: Record<string, string> = {
   Domicile: '入庙', Exalted: '耀升', Exaltation: '耀升', Detriment: '失势', Fall: '落陷', Peregrine: '游走',
 };
@@ -717,7 +733,7 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual, sel }: {
   /** 当前选中串 (含环标记 ·in/·out — 合盘时精确过滤对应环的相位) */
   sel?: string | null;
 }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   // 推运盘: 盘上行星名不带后缀, cross 条目一端带 '·P'/·T'/·R' — 匹配与显示都要剥后缀 (爸爸: 弹窗又见 Jupiter·P 英文)
   const nmS = (x: string) => x.replace(/·(?:[APTRB]|in|out)$/, '');   // 推运·P/行运·T/返照·R/合盘·A·B/环·in·out
   const isProgName = (x: string) => x !== nmS(x);
@@ -742,7 +758,7 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual, sel }: {
   }
   const myRecep = [...recepPairs.values()].sort((a, b) => Number(b.mutual) - Number(a.mutual) || impOf(b.other) - impOf(a.other))
   const signZh = (s: string) => SIGNS_ZH_MINI[s] ?? s;
-  const zhOf = (n: string) => (zhMode ? (chart.planets.find((x) => x.name === n)?.zh ?? PLANET_ZH_OF(n)) : n);
+  const zhOf = (n: string) => (lang === 'ja' ? jaOf(n) : zhMode ? (chart.planets.find((x) => x.name === n)?.zh ?? PLANET_ZH_OF(n)) : n);
   // 落宫: 简盘=该星自己盘的宫位; 双环合盘=按盘面宫区重算 (爸爸: 盘上画在6宫, 弹窗也要说6宫)
   const houseShown = (() => {
     if (!dual || !chart.cusps || chart.cusps.length !== 12) return p.house;
@@ -760,7 +776,7 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual, sel }: {
         <div className="flex items-center gap-3">
           <span className="text-3xl text-accent">{p.symbol}</span>
           <div>
-            <p className="font-display text-xl tracking-[0.12em] text-frost">{zhMode ? p.zh : p.name}</p>
+            <p className="font-display text-xl tracking-[0.12em] text-frost">{lang === 'ja' ? jaOf(p.name) : zhMode ? p.zh : p.name}</p>
             <p className="text-[12.5px] text-muted">{p.formatted}</p>
           </div>
         </div>
@@ -770,18 +786,18 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual, sel }: {
       <div className="mt-4 grid grid-cols-3 gap-2 text-center">
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-2 py-2.5">
           <p className="text-[10px] tracking-[0.2em] text-muted uppercase">{t('astro.d.sign')}</p>
-          <p className="mt-1 text-[14.5px] text-frost">{zhMode ? `${p.signZh} ${p.degInSign.toFixed(1)}°` : `${p.sign} ${p.degInSign.toFixed(1)}°`}</p>
+          <p className="mt-1 text-[14.5px] text-frost">{lang === 'ja' ? `${p.sign} ${p.degInSign.toFixed(1)}°` : zhMode ? `${p.signZh} ${p.degInSign.toFixed(1)}°` : `${p.sign} ${p.degInSign.toFixed(1)}°`}</p>
         </div>
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-2 py-2.5">
           <p className="text-[10px] tracking-[0.2em] text-muted uppercase">{t('astro.d.house')}</p>
-          <p className="mt-1 text-[14.5px] text-frost">{houseShown ? (zhMode ? `第${houseShown}宫` : `H${houseShown}`) : '—'}</p>
+          <p className="mt-1 text-[14.5px] text-frost">{houseShown ? (lang === 'ja' ? `${houseShown}ハウス` : zhMode ? `第${houseShown}宫` : `H${houseShown}`) : '—'}</p>
         </div>
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-2 py-2.5">
           <p className="text-[10px] tracking-[0.2em] text-muted uppercase">{t('astro.d.state')}</p>
           <p className="mt-1 text-[14.5px] text-frost">
             {p.dignity && p.dignity.state !== 'Peregrine'
-              ? `${zhMode ? (DIGNITY_ZH[p.dignity.state] ?? p.dignity.state) : p.dignity.state}${p.dignity.strength ? ` ${p.dignity.strength > 0 ? '+' : ''}${p.dignity.strength}` : ''}`
-              : (zhMode ? '游走' : 'Peregrine')}
+              ? `${lang === 'ja' ? (DIGNITY_JA[p.dignity.state] ?? p.dignity.state) : zhMode ? (DIGNITY_ZH[p.dignity.state] ?? p.dignity.state) : p.dignity.state}${p.dignity.strength ? ` ${p.dignity.strength > 0 ? '+' : ''}${p.dignity.strength}` : ''}`
+              : (lang === 'ja' ? 'ペレグリン' : zhMode ? '游走' : 'Peregrine')}
             {p.retrograde && <span className="ml-1 text-[#e8a08a]">℞</span>}
           </p>
         </div>
@@ -801,17 +817,17 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual, sel }: {
               return (
                 <p key={i} className="flex flex-wrap items-baseline gap-x-1.5 text-[13.5px] text-muted">
                   <span className="text-accent/80">{a.symbol}</span>
-                  <span className="text-[17px] leading-none text-frost/90" title={zhMode ? p.zh : p.name}>{p.symbol}</span>
+                  <span className="text-[17px] leading-none text-frost/90" title={lang === 'ja' ? jaOf(p.name) : zhMode ? p.zh : p.name}>{p.symbol}</span>
                   {dual
-                    ? <span className="text-[10.5px] text-muted/60">{pEnd.endsWith('·in') ? (zhMode ? '内环' : 'Inner') : pEnd.endsWith('·out') ? (zhMode ? '外环' : 'Outer') : (isProgName(pEnd) ? (zhMode ? '外环' : 'Outer') : (zhMode ? '内环' : 'Inner'))}</span>
-                    : isProgName(pEnd) && <span className="text-[10.5px] text-muted/60">{zhMode ? '推' : 'P'}</span>}
-                  <span>{zhMode ? a.typeZh : a.type}</span>
-                  <span className="text-[17px] leading-none text-frost/90" title={zhMode ? zhOf(other) : other}>{otherSym}</span>
+                    ? <span className="text-[10.5px] text-muted/60">{pEnd.endsWith('·in') ? (lang === 'ja' ? '内輪' : zhMode ? '内环' : 'Inner') : pEnd.endsWith('·out') ? (lang === 'ja' ? '外輪' : zhMode ? '外环' : 'Outer') : (isProgName(pEnd) ? (lang === 'ja' ? '外輪' : zhMode ? '外环' : 'Outer') : (lang === 'ja' ? '内輪' : zhMode ? '内环' : 'Inner'))}</span>
+                    : isProgName(pEnd) && <span className="text-[10.5px] text-muted/60">{lang === 'ja' ? 'P' : zhMode ? '推' : 'P'}</span>}
+                  <span>{lang === 'ja' ? a.type : zhMode ? a.typeZh : a.type}</span>
+                  <span className="text-[17px] leading-none text-frost/90" title={lang === 'ja' ? jaOf(other) : zhMode ? zhOf(other) : other}>{otherSym}</span>
                   {dual
-                    ? <span className="text-[10.5px] text-muted/60">{otherRaw.endsWith('·in') ? (zhMode ? '内环' : 'Inner') : otherRaw.endsWith('·out') ? (zhMode ? '外环' : 'Outer') : (isProgName(otherRaw) ? (zhMode ? '外环' : 'Outer') : (zhMode ? '内环' : 'Inner'))}</span>
-                    : isProgName(otherRaw) && <span className="text-[10.5px] text-muted/60">{zhMode ? '推' : 'P'}</span>}
+                    ? <span className="text-[10.5px] text-muted/60">{otherRaw.endsWith('·in') ? (lang === 'ja' ? '内輪' : zhMode ? '内环' : 'Inner') : otherRaw.endsWith('·out') ? (lang === 'ja' ? '外輪' : zhMode ? '外环' : 'Outer') : (isProgName(otherRaw) ? (lang === 'ja' ? '外輪' : zhMode ? '外环' : 'Outer') : (lang === 'ja' ? '内輪' : zhMode ? '内环' : 'Inner'))}</span>
+                    : isProgName(otherRaw) && <span className="text-[10.5px] text-muted/60">{lang === 'ja' ? 'P' : zhMode ? '推' : 'P'}</span>}
                   <span className="text-accent/70">{a.orb.toFixed(1)}°</span>
-                  {a.actualAngle !== undefined && <span className="text-[11px] text-muted/60">{zhMode ? '实际' : 'actual'} {a.actualAngle.toFixed(1)}°</span>}
+                  {a.actualAngle !== undefined && <span className="text-[11px] text-muted/60">{lang === 'ja' ? '実際' : zhMode ? '实际' : 'actual'} {a.actualAngle.toFixed(1)}°</span>}
                   {app && <span className="text-[11px] text-muted/70">{app}</span>}
                 </p>
               );
@@ -826,7 +842,7 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual, sel }: {
           <div className="mt-2 space-y-1.5">
             {myRecep.slice(0, 8).map((rp, i) => (
               <p key={i} className="text-[13.5px] text-muted">
-                {rp.mutual && <span className="mr-1 rounded bg-[#cdb88a]/10 px-1 py-px text-[9px] text-[#cdb88a]/90">{rp.aspected ? (zhMode ? '互容+接纳' : 'MR+reception') : (zhMode ? '互容·无相位' : 'MR, no aspect')}</span>}
+                {rp.mutual && <span className="mr-1 rounded bg-[#cdb88a]/10 px-1 py-px text-[9px] text-[#cdb88a]/90">{rp.aspected ? (lang === 'ja' ? 'MR＋レセプション' : zhMode ? '互容+接纳' : 'MR+reception') : (lang === 'ja' ? 'MR・アスペクトなし' : zhMode ? '互容·无相位' : 'MR, no aspect')}</span>}
                 {rp.mutual
                   ? (zhMode
                     ? `⇄ ${zhOf(rp.other)}与它互容${rp.aspected ? '+接纳' : ''}: ${rp.dir!.map((d) => `${d.guest === p.name ? '此星' : zhOf(d.guest)}居${signZh(d.sign)}为${d.host === p.name ? '它' : zhOf(d.host)}之${RECEPTION_KIND_ZH[d.kind] ?? d.kind}`).join(', ')}`
@@ -865,7 +881,7 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
 }) {
   // VChart.extraPoints 由 chart 自带 (推运盘: 本命端黄经)
 
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [view, setView] = useState<'top' | 'side' | 'classic'>('classic');   // 爸爸: 排完盘进来就是线条盘
   const [selInner, setSelInner] = useState<string | null>(null);
   const selected = selProp !== undefined ? selProp : selInner;
@@ -919,7 +935,7 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
               className={`rounded-full border px-2 py-0.5 text-[12px] leading-none transition-colors ${
                 selected === p.name || selected === p.name + '·in' || selected === p.name + '·out' ? 'border-accent/60 bg-accent/[0.12] text-accent' : 'border-white/[0.12] text-frost/75 hover:border-white/30'
               }`}
-              title={zhMode ? p.zh : p.name}
+              title={lang === 'ja' ? jaOf(p.name) : zhMode ? p.zh : p.name}
             >
               {p.symbol}
             </button>
