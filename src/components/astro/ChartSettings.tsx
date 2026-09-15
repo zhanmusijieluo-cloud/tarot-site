@@ -14,31 +14,31 @@ import { DEFAULT_ORBS } from '@/lib/astro/chart-url';
 
 const HOUSE_LIST = HOUSE_SYSTEM_LIST;
 
-const GROUPS: { key: BodyGroup; zh: string; en: string; hint: string }[] = [
-  { key: 'asteroids', zh: '小行星', en: 'Asteroids', hint: '谷神⚳ 智神⚴ 婚神⚵ 灶神⚶' },
-  { key: 'chiron', zh: '凯龙星', en: 'Chiron', hint: '⚷ 疗愈者' },
-  { key: 'nodes', zh: '月亮交点', en: 'Lunar Nodes', hint: '☊☋ 南北交' },
-  { key: 'lilith', zh: '莉莉丝', en: 'Lilith', hint: '⚸ 暗月' },
-  { key: 'lots', zh: '阿拉伯点位', en: 'Arabic Lots', hint: '⊕福点 ⊖精神点' },
+const GROUPS: { key: BodyGroup; zh: string; en: string; ja: string; hint: string }[] = [
+  { key: 'asteroids', zh: '小行星', en: 'Asteroids', ja: '小惑星', hint: '谷神⚳ 智神⚴ 婚神⚵ 灶神⚶' },
+  { key: 'chiron', zh: '凯龙星', en: 'Chiron', ja: 'キロン', hint: '⚷ 疗愈者' },
+  { key: 'nodes', zh: '月亮交点', en: 'Lunar Nodes', ja: 'ノード', hint: '☊☋ 南北交' },
+  { key: 'lilith', zh: '莉莉丝', en: 'Lilith', ja: 'リリス', hint: '⚸ 暗月' },
+  { key: 'lots', zh: '阿拉伯点位', en: 'Arabic Lots', ja: 'アラビックパーツ', hint: '⊕福点 ⊖精神点' },
 ];
 
 const MAJOR = [
-  { key: 'conjunction', sym: '☌', zh: '合', en: 'Conjunction', deg: '0°' },
-  { key: 'opposition', sym: '☍', zh: '冲', en: 'Opposition', deg: '180°' },
-  { key: 'trine', sym: '△', zh: '三合', en: 'Trine', deg: '120°' },
-  { key: 'square', sym: '□', zh: '刑', en: 'Square', deg: '90°' },
-  { key: 'sextile', sym: '⚹', zh: '六合', en: 'Sextile', deg: '60°' },
+  { key: 'conjunction', sym: '☌', zh: '合', en: 'Conjunction', ja: 'コンジャンクション', deg: '0°' },
+  { key: 'opposition', sym: '☍', zh: '冲', en: 'Opposition', ja: 'オポジション', deg: '180°' },
+  { key: 'trine', sym: '△', zh: '三合', en: 'Trine', ja: 'トライン', deg: '120°' },
+  { key: 'square', sym: '□', zh: '刑', en: 'Square', ja: 'スクエア', deg: '90°' },
+  { key: 'sextile', sym: '⚹', zh: '六合', en: 'Sextile', ja: 'セクスタイル', deg: '60°' },
 ];
 const MINOR = [
-  { key: 'quincunx', sym: '⚻', zh: '梅花', en: 'Quincunx', deg: '150°' },
-  { key: 'semi-sextile', sym: '⚶', zh: '半六合', en: 'Semi-sextile', deg: '30°' },
-  { key: 'semi-square', sym: '∠', zh: '半刑', en: 'Semi-square', deg: '45°' },
-  { key: 'sesquiquadrate', sym: '⚼', zh: '倍半刑', en: 'Sesqui-quad.', deg: '135°' },
-  { key: 'quintile', sym: 'Q', zh: '五分相', en: 'Quintile', deg: '72°' },
-  { key: 'biquintile', sym: 'Q²', zh: '倍五分相', en: 'Biquintile', deg: '144°' },
-  { key: 'septile', sym: 'S', zh: '七分相', en: 'Septile', deg: '51.4°' },
-  { key: 'novile', sym: 'N', zh: '九分相', en: 'Novile', deg: '40°' },
-  { key: 'decile', sym: 'Y', zh: '十分相', en: 'Decile', deg: '36°' },
+  { key: 'quincunx', sym: '⚻', zh: '梅花', en: 'Quincunx', ja: 'クインカンクス', deg: '150°' },
+  { key: 'semi-sextile', sym: '⚶', zh: '半六合', en: 'Semi-sextile', ja: 'セミセクスタイル', deg: '30°' },
+  { key: 'semi-square', sym: '∠', zh: '半刑', en: 'Semi-square', ja: 'セミスクエア', deg: '45°' },
+  { key: 'sesquiquadrate', sym: '⚼', zh: '倍半刑', en: 'Sesqui-quad.', ja: 'セスキクアドレート', deg: '135°' },
+  { key: 'quintile', sym: 'Q', zh: '五分相', en: 'Quintile', ja: 'クインタイル', deg: '72°' },
+  { key: 'biquintile', sym: 'Q²', zh: '倍五分相', en: 'Biquintile', ja: 'バイクインタイル', deg: '144°' },
+  { key: 'septile', sym: 'S', zh: '七分相', en: 'Septile', ja: 'セプタイル', deg: '51.4°' },
+  { key: 'novile', sym: 'N', zh: '九分相', en: 'Novile', ja: 'ノヴァイル', deg: '40°' },
+  { key: 'decile', sym: 'Y', zh: '十分相', en: 'Decile', ja: 'デカイル', deg: '36°' },
 ];
 
 type Tab = 'time' | 'bodies' | 'houses' | 'aspects' | 'display';
@@ -91,12 +91,12 @@ export default function ChartSettings({ value, onChange, sys, onSysChange, tabSi
     (value.nodeType === 'mean' ? 1 : 0) + (value.lilithType && value.lilithType !== 'mean' ? 1 : 0) +
     (value.trueSolar ? 1 : 0) + Object.keys(disp).length;
 
-  const TABS: { id: Tab; icon: string; zh: string; en: string }[] = [
-    { id: 'time', icon: '🕐', zh: '时间', en: 'Time' },
-    { id: 'bodies', icon: '☉', zh: '天体', en: 'Bodies' },
-    { id: 'houses', icon: '⬡', zh: '宫制', en: 'Houses' },
-    { id: 'aspects', icon: '△', zh: '相位', en: 'Aspects' },
-    { id: 'display', icon: '👁', zh: '显示', en: 'Display' },
+  const TABS: { id: Tab; icon: string; zh: string; en: string; ja: string }[] = [
+    { id: 'time', icon: '🕐', zh: '时间', en: 'Time', ja: '時間' },
+    { id: 'bodies', icon: '☉', zh: '天体', en: 'Bodies', ja: '天体' },
+    { id: 'houses', icon: '⬡', zh: '宫制', en: 'Houses', ja: 'ハウスシステム' },
+    { id: 'aspects', icon: '△', zh: '相位', en: 'Aspects', ja: 'アスペクト' },
+    { id: 'display', icon: '👁', zh: '显示', en: 'Display', ja: '表示' },
   ];
 
   // 小组件: 开关行
@@ -170,7 +170,7 @@ export default function ChartSettings({ value, onChange, sys, onSysChange, tabSi
                     tab === tb.id ? 'border-b-2 border-accent text-accent' : 'text-muted hover:text-frost'
                   }`}
                 >
-                  <span className="mr-1">{tb.icon}</span>{zhMode ? tb.zh : tb.en}
+                  <span className="mr-1">{tb.icon}</span>{L(lang, tb.zh, tb.en, tb.ja)}
                 </button>
               ))}
             </div>
@@ -201,7 +201,7 @@ export default function ChartSettings({ value, onChange, sys, onSysChange, tabSi
                 <>
                   <div className="space-y-1.5">
                     {GROUPS.map((g) => (
-                      <Toggle key={g.key} on={!!bodies[g.key]} label={zhMode ? g.zh : g.en} hint={g.hint} onClick={() => toggleGroup(g.key)} />
+                      <Toggle key={g.key} on={!!bodies[g.key]} label={L(lang, g.zh, g.en, g.ja)} hint={g.hint} onClick={() => toggleGroup(g.key)} />
                     ))}
                   </div>
                   <p className="text-[10px] leading-relaxed text-muted/60">{t('astro.set.bodiesHint')}</p>
@@ -240,7 +240,7 @@ export default function ChartSettings({ value, onChange, sys, onSysChange, tabSi
                             sys === h.id ? 'border-accent/45 bg-accent/[0.07] text-accent' : 'border-white/[0.08] bg-white/[0.02] text-muted hover:border-white/20'
                           }`}
                         >
-                          <span className="block">{zhMode ? h.zh : h.en}</span>
+                          <span className="block">{L(lang, h.zh, h.en, h.ja)}</span>
                           <span className="block text-[8.5px] text-muted/60">{h.id}</span>
                         </button>
                       ))}
@@ -309,7 +309,7 @@ export default function ChartSettings({ value, onChange, sys, onSysChange, tabSi
                       {MAJOR.map((a) => (
                         <div key={a.key} className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2">
                           <span className="w-5 text-center text-[13px] text-accent/80">{a.sym}</span>
-                          <span className="flex-1 text-[12px] text-frost/90">{zhMode ? a.zh : a.en}<span className="ml-1 text-[9px] text-muted/60">{a.deg}</span></span>
+                          <span className="flex-1 text-[12px] text-frost/90">{L(lang, a.zh, a.en, a.ja)}<span className="ml-1 text-[9px] text-muted/60">{a.deg}</span></span>
                           <span className="text-[9px] text-muted/50">{t('astro.set.alwaysOn')}</span>
                         </div>
                       ))}
@@ -327,7 +327,7 @@ export default function ChartSettings({ value, onChange, sys, onSysChange, tabSi
                             }`}
                           >
                             <span className="block text-[13px]">{a.sym}</span>
-                            <span className="block text-[10px]">{zhMode ? a.zh : a.en}</span>
+                            <span className="block text-[10px]">{L(lang, a.zh, a.en, a.ja)}</span>
                             <span className="block text-[8.5px] text-muted/60">{a.deg}</span>
                           </button>
                         );
@@ -342,7 +342,7 @@ export default function ChartSettings({ value, onChange, sys, onSysChange, tabSi
                         return (
                           <div key={a.key}>
                             <div className="mb-1 flex items-center justify-between text-[11px]">
-                              <span className="text-frost/85">{a.sym} {zhMode ? a.zh : a.en}</span>
+                              <span className="text-frost/85">{a.sym} {L(lang, a.zh, a.en, a.ja)}</span>
                               <span className={changed ? 'text-accent' : 'text-muted/60'}>
                                 {v.toFixed(1)}°{changed && (
                                   <button onClick={() => { const n = { ...orbs }; delete n[a.key]; set({ orbs: n }); }} className="ml-1.5 underline decoration-dotted">↺</button>

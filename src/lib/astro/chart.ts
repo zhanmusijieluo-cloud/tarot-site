@@ -14,23 +14,23 @@ export type HouseSystem =
   | 'alcabitiuses' | 'sripati' | 'pullen' | 'polich-page' | 'krusinski' | 'carter' | 'vehlow'   // 封装层自算 (对拍 Swiss Ephemeris 官方算法)
 
 // 宫制清单 + 双语标签 (单一数据源: 顶栏/设置面板/URL 共用)
-export const HOUSE_SYSTEM_LIST: { id: HouseSystem; zh: string; en: string }[] = [
-  { id: 'placidus', zh: '普拉西德', en: 'Placidus' },
-  { id: 'koch', zh: '科赫', en: 'Koch' },
-  { id: 'equal', zh: '等宫', en: 'Equal' },
-  { id: 'whole-sign', zh: '整宫', en: 'Whole Sign' },
-  { id: 'porphyry', zh: '波菲里', en: 'Porphyry' },
-  { id: 'regiomontanus', zh: '雷吉奥', en: 'Regiomontanus' },
-  { id: 'campanus', zh: '坎帕努斯', en: 'Campanus' },
-  { id: 'alcabitiuses', zh: '阿卡比特', en: 'Alcabitius' },
-  { id: 'sripati', zh: '斯里帕蒂', en: 'Sripati' },
-  { id: 'vehlow', zh: '维洛等宫', en: 'Vehlow' },
-  { id: 'pullen', zh: '普伦SD', en: 'Pullen SD' },
-  { id: 'morinus', zh: '莫里努斯', en: 'Morinus' },
-  { id: 'polich-page', zh: '波利奇-佩奇', en: 'Polich-Page' },
-  { id: 'krusinski', zh: '克鲁辛斯基', en: 'Krusinski' },
-  { id: 'carter', zh: '卡特赤经', en: 'Carter' },
-  { id: 'vettius', zh: '维提乌斯', en: 'Vettius' },
+export const HOUSE_SYSTEM_LIST: { id: HouseSystem; zh: string; en: string; ja: string }[] = [
+  { id: 'placidus', zh: '普拉西德', en: 'Placidus' , ja: 'プラシーダス' },
+  { id: 'koch', zh: '科赫', en: 'Koch' , ja: 'コッホ' },
+  { id: 'equal', zh: '等宫', en: 'Equal' , ja: 'イコール' },
+  { id: 'whole-sign', zh: '整宫', en: 'Whole Sign' , ja: 'ホールサイン' },
+  { id: 'porphyry', zh: '波菲里', en: 'Porphyry' , ja: 'ポルフィリオス' },
+  { id: 'regiomontanus', zh: '雷吉奥', en: 'Regiomontanus' , ja: 'レギオモンタヌス' },
+  { id: 'campanus', zh: '坎帕努斯', en: 'Campanus' , ja: 'カンパヌス' },
+  { id: 'alcabitiuses', zh: '阿卡比特', en: 'Alcabitius' , ja: 'アルカビトゥス' },
+  { id: 'sripati', zh: '斯里帕蒂', en: 'Sripati' , ja: 'スリパティ' },
+  { id: 'vehlow', zh: '维洛等宫', en: 'Vehlow' , ja: 'ヴェロー' },
+  { id: 'pullen', zh: '普伦SD', en: 'Pullen SD' , ja: 'プランSD' },
+  { id: 'morinus', zh: '莫里努斯', en: 'Morinus' , ja: 'モリヌス' },
+  { id: 'polich-page', zh: '波利奇-佩奇', en: 'Polich-Page' , ja: 'ポリッチ＝ペイジ' },
+  { id: 'krusinski', zh: '克鲁辛斯基', en: 'Krusinski' , ja: 'クルシンスキー' },
+  { id: 'carter', zh: '卡特赤经', en: 'Carter' , ja: 'カーター' },
+  { id: 'vettius', zh: '维提乌斯', en: 'Vettius' , ja: 'ウェッティウス' },
 ]
 export const HOUSE_SYSTEM_ZH: Record<string, string> = Object.fromEntries(HOUSE_SYSTEM_LIST.map((h) => [h.id, h.zh]))
 
