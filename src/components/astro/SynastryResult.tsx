@@ -7,6 +7,7 @@
 // 比较盘: 内环=主盘方, 外环=档案方; 弦=A×B 跨盘相位 (·A/·B 端)
 // ============================================================
 import React from 'react';
+import { useI18n } from '@/i18n';
 import ChartWheel, { type VChart } from '@/components/astro/ChartWheel';
 import { ASPECT_COLOR } from '@/components/astro/AspectGrid';
 import type { ChartAspect } from '@/lib/astro/chart';
@@ -76,6 +77,7 @@ function ptsOf(c: VChart): Record<string, number> {
 
 /** 合盘相位表 (A×B) */
 function CrossTable({ cross, a, b, zhMode, title }: { cross: ChartAspect[]; a: VChart; b: VChart; zhMode: boolean; title: string }) {
+  const { lang } = useI18n();
   const rows = [...cross].sort((x, y) => (IMP[nmS(y.a)] ?? 0) - (IMP[nmS(x.a)] ?? 0) || (ASPECT_ORDER[x.type] ?? 9) - (ASPECT_ORDER[y.type] ?? 9) || x.orb - y.orb);
   const symEnd = (end: string) => {
     const bare = nmS(end);
@@ -85,7 +87,7 @@ function CrossTable({ cross, a, b, zhMode, title }: { cross: ChartAspect[]; a: V
   const nameEnd = (end: string) => {
     const bare = nmS(end);
     const c = end.endsWith('·A') ? a : b;
-    return zhMode ? (c.planets.find((p) => p.name === bare)?.zh ?? AX_SYM[bare] ?? bare) : (AX_SYM[bare] ?? bare);
+    return lang === 'ja' ? (c.planets.find((p) => p.name === bare)?.zh ?? AX_SYM[bare] ?? bare) : zhMode ? (c.planets.find((p) => p.name === bare)?.zh ?? AX_SYM[bare] ?? bare) : (AX_SYM[bare] ?? bare);
   };
   return (
     <Panel title={`${title} — ${rows.length}`}>
@@ -100,11 +102,11 @@ function CrossTable({ cross, a, b, zhMode, title }: { cross: ChartAspect[]; a: V
             <span className="text-[9px] text-muted/45">{x.b.endsWith('·A') ? 'A' : 'B'}</span>
             <span className="shrink-0 tabular-nums text-[12px] text-frost/90">{x.actualAngle !== undefined ? `${x.actualAngle.toFixed(1)}°` : ''}</span>
             <span className="shrink-0 tabular-nums text-[11px]" style={{ color: x.applying === true ? undefined : 'var(--color-muted, #9aa3b5)' }}>
-              {x.applying === true ? (zhMode ? '入' : 'A') : x.applying === false ? (zhMode ? '出' : 'S') : ''}{x.orb.toFixed(1)}°
+              {x.applying === true ? (lang === 'ja' ? 'A' : zhMode ? '入' : 'A') : x.applying === false ? (lang === 'ja' ? 'S' : zhMode ? '出' : 'S') : ''}{x.orb.toFixed(1)}°
             </span>
           </li>
         ))}
-        {rows.length === 0 && <li className="px-3 py-3 text-[12px] text-muted/60">{zhMode ? '无容许度内相位' : 'No aspects'}</li>}
+        {rows.length === 0 && <li className="px-3 py-3 text-[12px] text-muted/60">{lang === 'ja' ? 'オーブ内にアスペクトなし' : zhMode ? '无容许度内相位' : 'No aspects'}</li>}
       </ul>
     </Panel>
   );
@@ -117,6 +119,7 @@ export default function SynastryResult({ syn, zhMode, tab, onTab, aLabel, bLabel
   onExit: () => void;
   cornerActions?: React.ReactNode;
 }) {
+  const { lang } = useI18n();
   const a = syn.a, b = syn.b;
   const cur = TABS.some((x) => x[0] === tab) ? tab : 'compA';
 
@@ -125,7 +128,7 @@ export default function SynastryResult({ syn, zhMode, tab, onTab, aLabel, bLabel
   const duoCard = (
     <div className="pointer-events-auto flex w-[248px] flex-col gap-1.5">
       <div className="w-full rounded-2xl border border-white/[0.1] bg-[#0a0e19]/90 px-3 py-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.45)] backdrop-blur-sm">
-        <p className="mb-1.5 font-display text-[13px] tracking-[0.1em] text-accent">{zhMode ? '合盘' : 'Synastry'}</p>
+        <p className="mb-1.5 font-display text-[13px] tracking-[0.1em] text-accent">{lang === 'ja' ? 'シナストリー' : zhMode ? '合盘' : 'Synastry'}</p>
         <p className="truncate text-[11.5px] text-frost/85"><span className="mr-1 text-[9.5px] text-muted/60">A·{aIn ? '内' : '外'}</span>{aLabel} — {fmtDate(a)}</p>
         <p className="truncate text-[11.5px] text-frost/85"><span className="mr-1 text-[9.5px] text-muted/60">B·{aIn ? '外' : '内'}</span>{bLabel} — {fmtDate(b)}</p>
       </div>
@@ -144,7 +147,7 @@ export default function SynastryResult({ syn, zhMode, tab, onTab, aLabel, bLabel
           onClick={onExit}
           className="mr-1 rounded-full border border-white/[0.14] px-3.5 py-1.5 text-[12px] text-muted transition-colors hover:border-accent/40 hover:text-accent"
         >
-          ← {zhMode ? '退出合盘' : 'Exit'}
+          ← {lang === 'ja' ? 'シナストリー終了' : zhMode ? '退出合盘' : 'Exit'}
         </button>
         {TABS.map(([k, zh, en]) => (
           <button
@@ -186,7 +189,7 @@ export default function SynastryResult({ syn, zhMode, tab, onTab, aLabel, bLabel
               dualRing={{ inner: inner.planets, outer: outer.planets }}
               cornerSlot={duoCard}
             />
-            <CrossTable cross={syn.crossAspects} a={a} b={b} zhMode={zhMode} title={zhMode ? '比较相位 (A × B)' : 'Cross aspects (A × B)'} />
+            <CrossTable cross={syn.crossAspects} a={a} b={b} zhMode={zhMode} title={lang === 'ja' ? 'クロスアスペクト (A × B)' : zhMode ? '比较相位 (A × B)' : 'Cross aspects (A × B)'} />
           </>
         );
       })()}
@@ -202,7 +205,7 @@ export default function SynastryResult({ syn, zhMode, tab, onTab, aLabel, bLabel
         };
         const c = chartMap[cur] as VChart;
         const tabDef = TABS.find((x) => x[0] === cur)!;
-        const title = zhMode ? tabDef[1] : tabDef[2];
+        const title = lang === 'ja' ? tabDef[1] : zhMode ? tabDef[1] : tabDef[2];
         const SUBZH: Record<string, string> = {
           natalA: aLabel, natalB: bLabel,
           composite: `${aLabel} × ${bLabel} · 对应天体中点`,
@@ -224,7 +227,7 @@ export default function SynastryResult({ syn, zhMode, tab, onTab, aLabel, bLabel
           davS: 'Davison secondary · now', davT: 'Davison tertiary · now',
         };
         const sub = zhMode ? (SUBZH[cur] ?? '') : (SUBEN[cur] ?? '');
-        const aspTitle = `${title}${zhMode ? '相位' : ' aspects'}`;
+        const aspTitle = `${title}${lang === 'ja' ? 'アスペクト' : zhMode ? '相位' : ' aspects'}`;
         const asp = [...(c.aspects ?? [])].sort((x, y) => (IMP[nmS(y.a)] ?? 0) - (IMP[nmS(x.a)] ?? 0) || (ASPECT_ORDER[x.type] ?? 9) - (ASPECT_ORDER[y.type] ?? 9) || x.orb - y.orb);
         const card = (
           <div className="pointer-events-auto flex w-[248px] flex-col gap-1.5">
