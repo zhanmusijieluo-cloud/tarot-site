@@ -91,18 +91,18 @@ function CrossTable({ cross, a, b, zhMode, title }: { cross: ChartAspect[]; a: V
     <Panel title={`${title} — ${rows.length}`}>
       <ul className="grid grid-cols-1 gap-x-5 md:grid-cols-2 xl:grid-cols-3">
         {rows.map((x, i) => (
-          <li key={i} className="flex items-center gap-1.5 border-b border-white/[0.04] px-3 py-[5.5px] text-[12px] last:border-0">
+          // 爸爸定稿: 夹角度数紧跟相位符号, 容许度+出相/入相随后, 对方行星放句尾 (禁 ml-auto 推远)
+          <li key={i} className="flex items-center gap-1 border-b border-white/[0.04] px-3 py-[5.5px] text-[12px] last:border-0">
             <span className="w-6 text-center text-[13px] leading-none text-frost/90" title={nameEnd(x.a)}>{symEnd(x.a)}</span>
             <span className="text-[9px] text-muted/45">{x.a.endsWith('·A') ? 'A' : 'B'}</span>
             <span className="w-5 text-center text-[13px] leading-none" style={{ color: ASPECT_COLOR[x.type] ?? '#9aa3b5' }}>{x.symbol}</span>
+            <span className="shrink-0 tabular-nums text-[11.5px] text-frost/85">{x.actualAngle !== undefined ? `${x.actualAngle.toFixed(1)}°` : ''}</span>
+            <span className="shrink-0 tabular-nums text-[11px] text-muted">±{x.orb.toFixed(1)}°</span>
+            {x.applying === true && <span className="shrink-0 text-[9px] text-accent/55">{zhMode ? '入' : 'A'}</span>}
+            {x.applying === false && <span className="shrink-0 text-[9px] text-muted/55">{zhMode ? '出' : 'S'}</span>}
+            <span className="mx-1 text-muted/30">·</span>
             <span className="w-6 text-center text-[13px] leading-none text-frost/90" title={nameEnd(x.b)}>{symEnd(x.b)}</span>
             <span className="text-[9px] text-muted/45">{x.b.endsWith('·A') ? 'A' : 'B'}</span>
-            <span className="ml-auto tabular-nums text-[11px] text-muted">
-              {x.orb.toFixed(1)}°
-              {x.actualAngle !== undefined && <span className="ml-1.5 text-[9.5px] text-muted/55">{x.actualAngle.toFixed(1)}°</span>}
-              {x.applying === true && <span className="ml-1 text-[9px] text-accent/55">{zhMode ? '入' : 'A'}</span>}
-              {x.applying === false && <span className="ml-1 text-[9px] text-muted/55">{zhMode ? '出' : 'S'}</span>}
-            </span>
           </li>
         ))}
         {rows.length === 0 && <li className="px-3 py-3 text-[12px] text-muted/60">{zhMode ? '无容许度内相位' : 'No aspects'}</li>}
@@ -243,11 +243,12 @@ export default function SynastryResult({ syn, zhMode, tab, onTab, aLabel, bLabel
             <Panel title={`${aspTitle} — ${asp.length}`}>
               <ul className="grid grid-cols-1 gap-x-5 md:grid-cols-2 xl:grid-cols-3">
                 {asp.map((x, i) => (
-                  <li key={i} className="flex items-center gap-1.5 border-b border-white/[0.04] px-3 py-[5.5px] text-[12px] last:border-0">
+                  // 爸爸定稿: 度数紧跟符号, 不用 ml-auto 推远
+                  <li key={i} className="flex items-center gap-1 border-b border-white/[0.04] px-3 py-[5.5px] text-[12px] last:border-0">
                     <span className="w-6 text-center text-[13px] leading-none text-frost/90">{c.planets.find((p) => p.name === x.a)?.symbol ?? x.a}</span>
                     <span className="w-5 text-center text-[13px] leading-none" style={{ color: ASPECT_COLOR[x.type] ?? '#9aa3b5' }}>{x.symbol}</span>
                     <span className="w-6 text-center text-[13px] leading-none text-frost/90">{c.planets.find((p) => p.name === x.b)?.symbol ?? x.b}</span>
-                    <span className="ml-auto tabular-nums text-[11px] text-muted">{x.orb.toFixed(1)}°</span>
+                    <span className="ml-0.5 shrink-0 tabular-nums text-[11px] text-muted">±{x.orb.toFixed(1)}°</span>
                   </li>
                 ))}
               </ul>
