@@ -23,10 +23,12 @@ function GlyphPath({ name, cx, cy, color, bg, size = GLYPH_SIZE }: { name: strin
   const s = size / Math.max(g.w, g.h);
   const t = `translate(${cx},${cy}) scale(${s}) translate(${-g.cx},${-g.cy})`;
   const paths = g.ds.map((d, i) => <path key={i} d={d} />);
+  // 笔画随尺寸等比缩 (地板 0.95px 防看不见): 固定1.5px设计在 24px 刚好, 缩到 12px 笔画占11%+白边=糊成一团 (爸爸: 看不清是符号设计问题)
+  const strokePx = Math.max(0.95, GLYPH_STROKE * (size / GLYPH_SIZE));
   return (
     <g>
-      {bg && <g transform={t} fill="none" stroke={bg} strokeWidth={4.2 / s} strokeLinecap="round" strokeLinejoin="round">{paths}</g>}
-      <g transform={t} fill="none" stroke={color} strokeWidth={GLYPH_STROKE / s} strokeLinecap="round" strokeLinejoin="round">{paths}</g>
+      {bg && <g transform={t} fill="none" stroke={bg} strokeWidth={strokePx * 2.8 / s} strokeLinecap="round" strokeLinejoin="round">{paths}</g>}
+      <g transform={t} fill="none" stroke={color} strokeWidth={strokePx / s} strokeLinecap="round" strokeLinejoin="round">{paths}</g>
     </g>
   );
 }
@@ -52,10 +54,10 @@ const R_DUAL_IN = 256;         // 双环: 内圈(本命) — 本命+次限对比
 const R_DUAL_OUT = 300;        // 双环: 外圈(次限)
 const R_ASPECT = 228;          // 内圆 = 相位弦边界
 // —— 外圈双环带 (绝对半径, 不随盘体缩放): 从外到里 小运环→大运环→星座→宫位 (爸爸定稿) ——
-const R_SUB_OUT = 384;         // 小运环 (法达子段/小限) 外缘
-const R_SUB_IN = 352;          // 小运环内缘
-const R_MAIN_OUT = 348;        // 大运环外缘 (主星符号+年龄段, 环内旋转弧排)
-const R_MAIN_IN = 316;         // 大运环内缘 (盘体缩到 0.80 刚好贴住, 无缝隙黑圈 — 爸爸: 中间黑环不好看)
+const R_SUB_OUT = 392;         // 小运环 (法达子段/小限) 外缘
+const R_SUB_IN = 346;          // 小运环内缘 (带宽46: 16px 正立符号无压力)
+const R_MAIN_OUT = 342;        // 大运环外缘 (符号正立20px 居中放得下, 爸爸: 不许超环)
+const R_MAIN_IN = 306;         // 大运环内缘 (盘体 kDisk=0.78 → 392*0.78=306 贴合无缝)
 const xy = (r: number, a: number) => [C + r * Math.cos(a), C - r * Math.sin(a)] as const;
 const wrap = (lon: number) => ((lon % 360) + 360) % 360;
 const fmtDeg = (lon: number) => {
@@ -114,7 +116,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
   const ascLon = chart.angles.ascendant?.longitude ?? 0;
   // 法达/小限盘: 内盘整体缩小 16% 给外圈大运/小运环腾位, 整盘最大外径仍与普通盘一致 (爸爸: 整体大小相同, 加了环所以原环缩小)
   const bandOn = outerBand === 'firdaria' || outerBand === 'profection';
-  const kDisk = bandOn ? 0.80 : 1;   // 盘沿 392*0.80=314 ≈ R_MAIN_IN 贴合无黑缝
+  const kDisk = bandOn ? 0.78 : 1;   // 盘沿 392*0.78≈306 = R_MAIN_IN 贴合无黑缝
   const DIR = chart.settings?.display?.dir ?? 'ccw';
   const ASCP = chart.settings?.display?.ascPos ?? 'left';
   const la = (lon: number) => lonToAngle(lon, ascLon, DIR, ASCP);
@@ -333,20 +335,19 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
         };
         const THEME = paper ? '#c25d84' : '#d9a8b8';               // 主题色 (未走过)
         const PASTC = paper ? '#9aa3af' : '#8a93a3';               // 无色档 (已走过)
-        const rotAt = (a: number) => { let d = 90 - a * 180 / Math.PI; d = ((d % 360) + 360) % 360; return d > 180 ? d - 360 : d; };  // 符号顶朝外沿弧旋转
         const R_MAIN_MID = (R_MAIN_IN + R_MAIN_OUT) / 2;
         const R_SUB_MID = (R_SUB_IN + R_SUB_OUT) / 2;
         return (
           <>
-            {/* 大运环 (内): 9主段 — 符号居中旋转沿弧 + 起运年纪在环内边界; 当前段高亮 */}
+            {/* 大运环 (内): 9主段 — 符号正立居中环中 (旋转会斜出环界, 爸爸圈红: 不许超环); 年纪正立小字在环下缘内侧 */}
             {firPeriods.map((m, i) => {
               const a0 = yearA(m.startAge), a1 = yearA(m.endAge);
               const isNow = curAgeD >= m.startAge && curAgeD < m.endAge;
               const isPast = curAgeD >= m.endAge;
               const hov = mainHover === i || (bandPin?.kind === 'main' && bandPin.idx === i);
               const mid = (a0 + a1) / 2;
-              const [gx, gy] = xy(R_MAIN_MID + 8, mid);
-              const [tx, ty] = xy(R_MAIN_MID - 2, a0);
+              const [gx, gy] = xy(R_MAIN_MID + 3, mid);
+              const [tx, ty] = xy(R_MAIN_IN + 12, mid);
               return (
                 <g key={`main-${i}`}
                   onMouseEnter={() => setMainHover(i)} onMouseLeave={() => setMainHover(null)}
@@ -357,16 +358,12 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
                     fill={isPast ? (paper ? 'rgba(120,130,145,0.10)' : 'rgba(148,163,184,0.07)') : THEME}
                     fillOpacity={isPast ? 1 : (isNow ? (hov ? 0.66 : 0.5) : (hov ? 0.44 : 0.26))}
                     stroke={isNow ? THEME : P.ring} strokeWidth={isNow ? 1.4 : 0.8} strokeOpacity={isNow ? 1 : 0.6} />
-                  <g transform={`rotate(${rotAt(mid)} ${gx} ${gy})`}>
-                    <GlyphPath name={SYMBOL_TO_GLYPH[SYM_OF[m.lord]] ?? ''} cx={gx} cy={gy} color={isPast ? PASTC : (isNow ? '#ffd75e' : THEME)} bg={P.bg} size={hov ? 19 : 17} />
-                  </g>
-                  <g transform={`rotate(${rotAt(a0)} ${tx} ${ty})`}>
-                    <text x={tx} y={ty + 3.5} textAnchor="middle" fontSize="10" fontWeight={600} fill={isPast ? PASTC : THEME} stroke={P.bg} strokeWidth="2.4" paintOrder="stroke">{Math.round(m.startAge)}岁</text>
-                  </g>
+                  <GlyphPath name={SYMBOL_TO_GLYPH[SYM_OF[m.lord]] ?? ''} cx={gx} cy={gy} color={isPast ? PASTC : (isNow ? '#ffd75e' : THEME)} bg={P.bg} size={hov ? 23 : 20} />
+                  <text x={tx} y={ty + 3.5} textAnchor="middle" fontSize="10.5" fontWeight={600} fill={isPast ? PASTC : THEME} stroke={P.bg} strokeWidth="2.4" paintOrder="stroke">{Math.round(m.startAge)}岁</text>
                 </g>
               );
             })}
-            {/* 小运环 (外): 61子段 — 符号旋转沿弧全量显示 (不再省略窄段, 爸爸: 有空白) */}
+            {/* 小运环 (外): 61子段 — 符号正立居中环中, 全量显示 */}
             {firRows.map((r, i) => {
               const a0 = yearA(r.startAge), a1 = yearA(r.endAge);
               const isNow = curAgeD >= r.startAge && curAgeD < r.endAge;
@@ -386,10 +383,8 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
                     fill={isPast ? (paper ? 'rgba(120,130,145,0.10)' : 'rgba(148,163,184,0.07)') : THEME}
                     fillOpacity={isPast ? 1 : (isNow ? (hov ? 0.62 : 0.45) : (hov ? 0.42 : 0.24))}
                     stroke={isMainStart ? THEME : P.ring} strokeWidth={isMainStart ? 1 : 0.5} strokeOpacity={isMainStart ? 0.9 : 0.5} />
-                  <g transform={`rotate(${rotAt(mid)} ${sx} ${sy})`}>
-                    <GlyphPath name={SYMBOL_TO_GLYPH[SYM_OF[lord]] ?? ''} cx={sx} cy={sy}
-                      color={isPast ? PASTC : (isNow ? '#ffd75e' : THEME)} bg={P.bg} size={hov ? 16 : 13.5} />
-                  </g>
+                  <GlyphPath name={SYMBOL_TO_GLYPH[SYM_OF[lord]] ?? ''} cx={sx} cy={sy}
+                    color={isPast ? PASTC : (isNow ? '#ffd75e' : THEME)} bg={P.bg} size={hov ? 16 : 13.5} />
                 </g>
               );
             })}
