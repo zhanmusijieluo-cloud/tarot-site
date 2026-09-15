@@ -114,7 +114,7 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
                   className={`flex h-full w-full items-center justify-center rounded-[4px] leading-none transition-colors ${
                     selected === row.name ? 'bg-accent/20 text-accent' : 'text-frost/70 hover:bg-white/[0.06]'
                   } ${row.name === 'Ascendant' || row.name === 'Midheaven' || row.name === 'Descendant' || row.name === 'IC' ? 'text-[10px] tracking-[0.1em]' : 'text-[15px]'}`}
-                  title={row.zh}
+                  title={zhMode ? row.zh : row.name}
                 >
                   {row.symbol}{row.retrograde && <sup style={{ fontSize: 8 }} className="text-[#e8a08a]">R</sup>}
                 </button>
@@ -128,7 +128,7 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
                       className={`flex h-full w-full items-center justify-center rounded-[4px] leading-none transition-colors ${
                         selected === col.name ? 'bg-accent/20 text-accent' : 'text-frost/70 hover:bg-white/[0.06]'
                       }`}
-                      title={col.zh}
+                      title={zhMode ? col.zh : col.name}
                     >
                       <span className={col.name === 'Ascendant' || col.name === 'Midheaven' || col.name === 'Descendant' || col.name === 'IC' ? 'text-[10px] font-medium' : 'text-[15px]'}>
                         {col.symbol}{col.retrograde && <sup style={{ fontSize: 8 }} className="text-[#e8a08a]">R</sup>}
@@ -143,7 +143,7 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
                 const color = ASPECT_COLOR[a.type] ?? '#9aa3b5';
                 return (
                   <td key={col.name} className="p-0" style={{ height: gs, border: GRID }}
-                    title={`${row.zh} ${col.zh} ${a.typeZh} ±${fmtOrbDms(a.orb)}`}>
+                    title={`${zhMode ? row.zh : row.name} ${zhMode ? col.zh : col.name} ${zhMode ? a.typeZh : a.type} ±${fmtOrbDms(a.orb)}`}>
                     <div className="relative flex h-full w-full items-center justify-center leading-none"
                       style={{ background: `${color}33`, color }}>
                       <span style={{ fontSize: symFs }}>{a.symbol}</span>

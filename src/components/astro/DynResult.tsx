@@ -72,7 +72,7 @@ export default function DynResult({ dyn, zhMode, target, onDate, onNow, cornerAc
   const zhOf = (raw: string) => {
     const n = nameOf(raw);
     if (AX_ZH[n]) return AX_ZH[n];
-    return natal.planets.find((p) => p.name === n)?.zh ?? n;
+    return zhMode ? (natal.planets.find((p) => p.name === n)?.zh ?? n) : n;
   };
 
   // 本命点黄经表 (爸爸: 推运盘中心要有相位线 — 画 推运星→本命位置 的 cross 弦)

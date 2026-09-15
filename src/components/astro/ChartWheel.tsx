@@ -742,7 +742,7 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual, sel }: {
   }
   const myRecep = [...recepPairs.values()].sort((a, b) => Number(b.mutual) - Number(a.mutual) || impOf(b.other) - impOf(a.other))
   const signZh = (s: string) => SIGNS_ZH_MINI[s] ?? s;
-  const zhOf = (n: string) => chart.planets.find((x) => x.name === n)?.zh ?? PLANET_ZH_OF(n);
+  const zhOf = (n: string) => (zhMode ? (chart.planets.find((x) => x.name === n)?.zh ?? PLANET_ZH_OF(n)) : n);
   // 落宫: 简盘=该星自己盘的宫位; 双环合盘=按盘面宫区重算 (爸爸: 盘上画在6宫, 弹窗也要说6宫)
   const houseShown = (() => {
     if (!dual || !chart.cusps || chart.cusps.length !== 12) return p.house;

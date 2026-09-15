@@ -201,7 +201,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                     onClick={() => onSelect(isSel ? null : p.name)}
                     className={`cursor-pointer border-b border-white/[0.04] transition-colors last:border-0 ${isSel ? 'bg-accent/[0.07]' : 'hover:bg-white/[0.03]'}`}
                   >
-                    <td className={`${tdCls} text-frost/90`}><span className="mr-1.5 text-accent/80">{p.symbol}</span>{p.zh}</td>
+                    <td className={`${tdCls} text-frost/90`}><span className="mr-1.5 text-accent/80">{p.symbol}</span>{zhMode ? p.zh : p.name}</td>
                     <td className={`${tdCls} text-muted tabular-nums`}><span className="inline-block w-[3.5em] text-right">{dms(p.degInSign)}</span><SignGlyph si={si} color={signColor(si)} className="ml-1.5" /></td>
                     <td className={`${tdCls} text-muted`}>{p.house ?? '—'}</td>
                     <td className={`${tdCls} text-muted`}>{(() => { const h = rulingHouses(p.name, SIGN_RULER); return h.length ? h.join(' ') : '—' })()}</td>

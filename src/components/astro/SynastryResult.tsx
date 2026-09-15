@@ -85,7 +85,7 @@ function CrossTable({ cross, a, b, zhMode, title }: { cross: ChartAspect[]; a: V
   const nameEnd = (end: string) => {
     const bare = nmS(end);
     const c = end.endsWith('·A') ? a : b;
-    return c.planets.find((p) => p.name === bare)?.zh ?? AX_SYM[bare] ?? bare;
+    return zhMode ? (c.planets.find((p) => p.name === bare)?.zh ?? AX_SYM[bare] ?? bare) : (AX_SYM[bare] ?? bare);
   };
   return (
     <Panel title={`${title} — ${rows.length}`}>
