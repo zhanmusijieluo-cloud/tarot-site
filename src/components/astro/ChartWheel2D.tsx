@@ -11,7 +11,7 @@ import { useMemo, useState } from 'react';
 import type { VChart, VPlanet } from '@/components/astro/ChartWheel';
 import { aspectHex } from '@/lib/astro/aspect-colors';
 import { GLYPH_PATHS, SYMBOL_TO_GLYPH, ZODIAC_GLYPH_NAMES } from '@/lib/astro/glyph-paths';
-import { firdariaTable, SIGN_RULER } from '@/lib/astro/timing';
+import { firdariaTable, firdaria, SIGN_RULER } from '@/lib/astro/timing';
 import { LORD_HEX_OF } from '@/lib/astro/lord-colors';
 
 // 矢量符号渲染: 统一描边粗细 + 双层(白色防粘底+彩色笔画) (爸爸: 像宫神星那样, 系统字体的Unicode符号天然粗细不一)
@@ -41,19 +41,21 @@ function lonToAngle(lon: number, ascLon: number, dir: 'ccw' | 'cw' = 'ccw', ascP
 const ELEMENTS = ['fire', 'earth', 'air', 'water', 'fire', 'earth', 'air', 'water', 'fire', 'earth', 'air', 'water'];
 
 const SIZE = 920, C = SIZE / 2;
-const R_OUT = 392;            // 外边界 (最外刻度带已删, 这就是盘沿)
-const R_SIGN_IN = 348;        // 星座环内缘
-const R_GLYPH = 376;          // 星座符号位
-const R_HOUSE_IN = 314;       // 宫位环内缘
-const R_HOUSE_NUM = 331;      // 宫号位
-const R_PLANET = 284;         // 行星圈: 所有符号严格同一半径 (爸爸铁令)
-const R_DUAL_IN = 256;        // 双环: 内圈(本命) — 本命+次限对比 (爸爸: 双击/按钮切双环)
-const R_DUAL_OUT = 300;       // 双环: 外圈(次限)
-const R_ASPECT = 228;         // 内圆 = 相位弦边界
-const R_BAND_IN = 395;        // 外圈信息带内缘 (法达环/小限环)
-const R_BAND_OUT = 444;       // 外圈信息带外缘
-const R_BAND_MID = (R_BAND_IN + R_BAND_OUT) / 2;   // 418
-
+// —— 盘体半径 (普通盘全尺寸; 法达/小限盘整盘乘 diskS 缩小, 给外圈大运环/小运环腾位置 — 爸爸: 整体外径与其他盘相同) ——
+const R_OUT = 392;             // 盘沿 (最外刻度带已删, 这就是盘沿)
+const R_SIGN_IN = 348;         // 星座环内缘
+const R_GLYPH = 376;           // 星座符号位
+const R_HOUSE_IN = 314;        // 宫位环内缘
+const R_HOUSE_NUM = 331;       // 宫号位
+const R_PLANET = 284;          // 行星圈: 所有符号严格同一半径 (爸爸铁令)
+const R_DUAL_IN = 256;         // 双环: 内圈(本命) — 本命+次限对比 (爸爸: 双击/按钮切双环)
+const R_DUAL_OUT = 300;        // 双环: 外圈(次限)
+const R_ASPECT = 228;          // 内圆 = 相位弦边界
+// —— 外圈双环带 (绝对半径, 不随盘体缩放): 从外到里 小运环→大运环→星座→宫位 (爸爸定稿) ——
+const R_SUB_OUT = 430;         // 小运环 (法达子段/小限) 外缘 (整盘最大外径, 与其他盘+角标的观感一致)
+const R_SUB_IN = 398;          // 小运环内缘
+const R_MAIN_OUT = 394;        // 大运环外缘 (新增: 主星符号+年龄阶段)
+const R_MAIN_IN = 362;         // 大运环内缘
 const xy = (r: number, a: number) => [C + r * Math.cos(a), C - r * Math.sin(a)] as const;
 const wrap = (lon: number) => ((lon % 360) + 360) % 360;
 const fmtDeg = (lon: number) => {
@@ -98,14 +100,21 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
   onBandDate?: (year: number, month: number, day: number) => void;
 }) {
   const [paper, setPaper] = useState(true);
-  const [bandHover, setBandHover] = useState<number | null>(null);   // 外环段悬停高亮
+  const [bandHover, setBandHover] = useState<number | null>(null);   // 小运环段悬停
+  const [mainHover, setMainHover] = useState<number | null>(null);    // 大运环段悬停
+  const [bandPin, setBandPin] = useState<{ kind: 'sub' | 'main'; idx: number } | null>(null); // 点击钉住的弹窗 (爸爸: 点击只弹窗不跳转, 防误触)
   // ---- 法达数据 (SVG 环 + 悬停信息面板同源) ----
   const firDay = outerBand === 'firdaria'
     ? !!chart.planets.find((x) => x.name === 'Sun')?.house && (chart.planets.find((x) => x.name === 'Sun')!.house! >= 7)
     : false;
   const firRows = outerBand === 'firdaria' ? firdariaTable(firDay, chart.input.year, chart.input.month, chart.input.day, 1) : null;
   const firMains = firRows ? firRows.filter((r) => r.sub === r.lord || r.sub === null) : null;
+  // 大运主段 (内圈大运环用): 9段含起止年龄
+  const firPeriods = outerBand === 'firdaria' ? firdaria(firDay) : null;
   const ascLon = chart.angles.ascendant?.longitude ?? 0;
+  // 法达/小限盘: 内盘整体缩小 16% 给外圈大运/小运环腾位, 整盘最大外径仍与普通盘一致 (爸爸: 整体大小相同, 加了环所以原环缩小)
+  const bandOn = outerBand === 'firdaria' || outerBand === 'profection';
+  const kDisk = bandOn ? 0.84 : 1;
   const DIR = chart.settings?.display?.dir ?? 'ccw';
   const ASCP = chart.settings?.display?.ascPos ?? 'left';
   const la = (lon: number) => lonToAngle(lon, ascLon, DIR, ASCP);
@@ -204,9 +213,11 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
       >
         {paper ? (zhMode ? '墨黑' : 'Dark') : (zhMode ? '纸白' : 'Paper')}
       </button>
-      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="h-full w-full select-none" onClick={(e) => { if (e.target === e.currentTarget) onSelect(null); }}>
+      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="h-full w-full select-none" onClick={(e) => { if (e.target === e.currentTarget) { onSelect(null); setBandPin(null); } }}>
+      {/* 盘体组: 法达/小限盘时绕中心整体缩小, 让出外圈双环带 (爸爸: 整体外径不变) */}
+      <g transform={bandOn ? `translate(${C} ${C}) scale(${kDisk}) translate(${-C} ${-C})` : undefined}>
       {/* 盘沿 (无刻度带) */}
-      <circle cx={C} cy={C} r={R_OUT} fill={P.bg} stroke={P.ring} strokeWidth="1.2" onClick={() => onSelect(null)} />
+      <circle cx={C} cy={C} r={R_OUT} fill={P.bg} stroke={P.ring} strokeWidth="1.2" onClick={() => { onSelect(null); setBandPin(null) }} />
       <circle cx={C} cy={C} r={R_ASPECT} fill="none" stroke={P.ring} strokeWidth="1" />
       {/* 星座环淡彩底 (扇区=真实星座边界, 30°倍数锚定) */}
       {Array.from({ length: 12 }, (_, si) => (
@@ -307,50 +318,67 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
       ) : (
         renderRing(glyphs, R_PLANET, 'single')
       )}
-
-      {/* ---- 外圈信息带: 法达环 (12点=0岁, 顺时针, 75年=360°; 子段=行数据上色, 悬停出信息, 点击跳转, 爱星盘同款) ---- */}
-      {outerBand === 'firdaria' && firRows && firMains && (() => {
-        const yearA = (age: number) => Math.PI / 2 - (age / 75) * Math.PI * 2;   // 12点起顺时针
+      </g>
+      {/* ---- 法达双环 (爸爸定稿): 内圈大运环=9主段(符号+年龄段), 外圈小运环=61子段(上色); 从外到里 小运环→大运环→星座→宫位 ---- */}
+      {outerBand === 'firdaria' && firRows && firMains && firPeriods && (() => {
+        const yearA = (age: number) => Math.PI / 2 - (age / 75) * Math.PI * 2;   // 12点起顺时针, 75年一圈
         const curAgeD = (Date.now() - Date.UTC(chart.input.year, chart.input.month - 1, chart.input.day)) / (365.2425 * 86400000);
         const SYM_OF: Record<string, string> = { Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀', Mars: '♂', Jupiter: '♃', Saturn: '♄', NorthNode: '☊', SouthNode: '☋' };
         const arcCw = (rIn: number, rOut: number, a0: number, a1: number) => {
           const [x1, y1] = xy(rOut, a0), [x2, y2] = xy(rOut, a1), [x3, y3] = xy(rIn, a1), [x4, y4] = xy(rIn, a0);
           return `M ${x1} ${y1} A ${rOut} ${rOut} 0 0 1 ${x2} ${y2} L ${x3} ${y3} A ${rIn} ${rIn} 0 0 0 ${x4} ${y4} Z`;
         };
-        const mainStarts = new Set(firMains.map((m) => m.startAge));
+        const R_MAIN_MID = (R_MAIN_IN + R_MAIN_OUT) / 2;   // 396
         return (
           <>
+            {/* 大运环 (内, 新增): 9主段 —— 主星符号 + 年龄阶段; 当前大运玫红高亮 */}
+            {firPeriods.map((m, i) => {
+              const a0 = yearA(m.startAge), a1 = yearA(m.endAge);
+              const isNow = curAgeD >= m.startAge && curAgeD < m.endAge;
+              const hov = mainHover === i || (bandPin?.kind === 'main' && bandPin.idx === i);
+              const c = LORD_HEX_OF(m.lord);
+              const mid = (a0 + a1) / 2;
+              const [gx, gy] = xy(R_MAIN_MID + 6, mid);
+              const [tx, ty] = xy(R_MAIN_MID - 9, mid);
+              return (
+                <g key={`main-${i}`}
+                  onMouseEnter={() => setMainHover(i)} onMouseLeave={() => setMainHover(null)}
+                  style={{ cursor: 'pointer' }}
+                  onClick={(e) => { e.stopPropagation(); setBandPin({ kind: 'main', idx: i }); }}
+                >
+                  <path d={arcCw(R_MAIN_IN, R_MAIN_OUT, a0, a1)}
+                    fill={c} fillOpacity={isNow ? (hov ? 0.66 : 0.5) : (hov ? 0.5 : 0.26)}
+                    stroke={isNow ? '#d9a8b8' : P.ring} strokeWidth={isNow ? 1.4 : 0.8} strokeOpacity={isNow ? 1 : 0.6} />
+                  <GlyphPath name={SYMBOL_TO_GLYPH[SYM_OF[m.lord]] ?? ''} cx={gx} cy={gy} color={isNow ? '#ffd75e' : P.ink} bg={P.bg} size={hov ? 17 : 15} />
+                  <text x={tx} y={ty + 3.5} textAnchor="middle" fontSize="9.5" fontWeight={isNow ? 700 : 500} fill={isNow ? '#ffd75e' : P.ink} opacity={isNow ? 1 : 0.75} stroke={P.bg} strokeWidth="2.4" paintOrder="stroke">{Math.round(m.startAge)}–{Math.round(m.endAge)}</text>
+                </g>
+              );
+            })}
+            {/* 小运环 (外): 61子段上色 + 符号, 悬停高亮, 点击只弹窗 */}
             {firRows.map((r, i) => {
               const a0 = yearA(r.startAge), a1 = yearA(r.endAge);
               const isNow = curAgeD >= r.startAge && curAgeD < r.endAge;
-              const lord = r.sub ?? r.lord
-              const c = LORD_HEX_OF(lord)
-              const hov = bandHover === i
-              const isMainStart = mainStarts.has(r.startAge)
-              const spanYears = (r.endAge - r.startAge)
+              const lord = r.sub ?? r.lord;
+              const c = LORD_HEX_OF(lord);
+              const hov = bandHover === i || (bandPin?.kind === 'sub' && bandPin.idx === i);
+              const isMainStart = firPeriods.some((m) => m.startAge === r.startAge);
+              const spanYears = r.endAge - r.startAge;
               return (
-                <g key={`fir-${i}`}
-                  onMouseEnter={() => setBandHover(i)}
-                  onMouseLeave={() => setBandHover(null)}
+                <g key={`sub-${i}`}
+                  onMouseEnter={() => setBandHover(i)} onMouseLeave={() => setBandHover(null)}
                   style={{ cursor: 'pointer' }}
-                  onClick={() => onBandDate?.(r.y, r.m, r.d)}
+                  onClick={(e) => { e.stopPropagation(); setBandPin({ kind: 'sub', idx: i }); }}
                 >
-                  <path d={arcCw(R_BAND_IN, R_BAND_OUT, a0, a1)}
+                  <path d={arcCw(R_SUB_IN, R_SUB_OUT, a0, a1)}
                     fill={c} fillOpacity={isNow ? (hov ? 0.62 : 0.45) : (hov ? 0.5 : 0.22)}
-                    stroke={P.ring} strokeWidth={isMainStart ? 1 : 0.5} strokeOpacity={isMainStart ? 0.9 : 0.5} />
-                  {/* 符号: 子段中央 (跨度不足1.2岁的窄段省略, 防粘连) */}
+                    stroke={isMainStart ? '#d9a8b8' : P.ring} strokeWidth={isMainStart ? 1 : 0.5} strokeOpacity={isMainStart ? 0.9 : 0.5} />
                   {spanYears > 1.2 && (
                     <GlyphPath name={SYMBOL_TO_GLYPH[SYM_OF[lord]] ?? ''}
-                      cx={xy(R_BAND_MID, (a0 + a1) / 2)[0]} cy={xy(R_BAND_MID, (a0 + a1) / 2)[1]}
+                      cx={xy((R_SUB_IN + R_SUB_OUT) / 2, (a0 + a1) / 2)[0]} cy={xy((R_SUB_IN + R_SUB_OUT) / 2, (a0 + a1) / 2)[1]}
                       color={P.ink} bg={P.bg} size={hov ? 15 : 12} />
                   )}
-                  {/* 大运起始年龄标注 (仅主段界处) */}
-                  {isMainStart && (() => {
-                    const [lx, ly] = xy(R_BAND_IN + 14, a0);
-                    return <text x={lx} y={ly + 4} textAnchor="middle" fontSize="10.5" fontWeight={600} fill={isNow ? '#d9a8b8' : P.ink} stroke={P.bg} strokeWidth="2" paintOrder="stroke">{Math.round(r.startAge)}岁</text>
-                  })()}
                 </g>
-              )
+              );
             })}
           </>
         )
@@ -365,33 +393,54 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
         const curAge = Math.max(0, Math.floor((Date.now() - Date.UTC(chart.input.year, chart.input.month - 1, chart.input.day)) / (365.2425 * 86400000)));
         const curHouse = (curAge % 12) + 1;
         const isNow = curHouse === h + 1;
-        const [tx, ty] = xy(R_BAND_MID, (a0 + a1) / 2);
+        const [tx, ty] = xy((R_SUB_IN + R_SUB_OUT) / 2, (a0 + a1) / 2);
         return (
           <g key={`prof-${h}`}>
-            <path d={sector(R_BAND_OUT, R_BAND_IN, a0, a1)} fill={isNow ? 'rgba(217,168,184,0.20)' : (h % 2 ? 'rgba(255,255,255,0.035)' : 'rgba(255,255,255,0.06)')} stroke={P.ring} strokeWidth="0.8" />
+            <path d={sector(R_SUB_OUT, R_SUB_IN, a0, a1)} fill={isNow ? 'rgba(217,168,184,0.20)' : (h % 2 ? 'rgba(255,255,255,0.035)' : 'rgba(255,255,255,0.06)')} stroke={P.ring} strokeWidth="0.8" />
             <text x={tx} y={ty + 5} textAnchor="middle" fontSize="15" fontWeight={600} fill={isNow ? '#d9a8b8' : P.ink} opacity={isNow ? 1 : 0.8}>{LORD_ZH[lord] ?? '?'}</text>
           </g>
         );
       })}
       </svg>
-      {/* 法达环悬停信息 (爱星盘同款交互: 段上不堆字, 悬停出详情) */}
-      {outerBand === 'firdaria' && bandHover !== null && firRows && (() => {
-        const r = firRows[bandHover]
-        if (!r) return null
+      {/* 法达环信息浮层: 悬停显示; 点击钉住 (爸爸: 点击只弹窗不跳转, 防误触; 弹窗内按钮才跳) */}
+      {outerBand === 'firdaria' && (() => {
+        const act = bandPin ?? (mainHover !== null ? { kind: 'main' as const, idx: mainHover } : bandHover !== null ? { kind: 'sub' as const, idx: bandHover } : null)
+        if (!act || !firRows || !firPeriods) return null
         const LORD_ZH: Record<string, string> = { Sun: '太阳', Moon: '月亮', Mercury: '水星', Venus: '金星', Mars: '火星', Jupiter: '木星', Saturn: '土星', NorthNode: '北交点', SouthNode: '南交点' }
-        const c = LORD_HEX_OF(r.sub ?? r.lord)
-        const end = r.endAge
-        const endDate = new Date(Date.UTC(chart.input.year, chart.input.month - 1, chart.input.day) + Math.round(end * 365.2425 * 86400000))
+        const birthMs = Date.UTC(chart.input.year, chart.input.month - 1, chart.input.day)
+        const toDate = (age: number) => new Date(birthMs + Math.round(age * 365.2425 * 86400000))
+        const fmt = (d: Date) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`
+        let lord = '', sub = '', sAge = 0, eAge = 0, jy = 0, jm = 1, jd = 1, c = '#8cc0ff'
+        if (act.kind === 'main') {
+          const m = firPeriods[act.idx]; if (!m) return null
+          lord = m.lord; sAge = m.startAge; eAge = m.endAge
+          const row = firRows.find((r) => Math.abs(r.startAge - m.startAge) < 1e-6)
+          jy = row?.y ?? chart.input.year; jm = row?.m ?? chart.input.month; jd = row?.d ?? chart.input.day
+          c = LORD_HEX_OF(m.lord)
+        } else {
+          const r = firRows[act.idx]; if (!r) return null
+          lord = r.lord; sub = r.sub && r.sub !== r.lord ? r.sub : ''
+          sAge = r.startAge; eAge = r.endAge; jy = r.y; jm = r.m; jd = r.d
+          c = LORD_HEX_OF(r.sub ?? r.lord)
+        }
+        const pinned = !!bandPin && bandPin.kind === act.kind && bandPin.idx === act.idx
         return (
-          <div className="pointer-events-none absolute left-1/2 top-2 z-20 -translate-x-1/2 rounded-xl border px-3.5 py-2 text-[11.5px] shadow-[0_8px_24px_rgba(0,0,0,0.5)]"
+          <div className={`absolute left-1/2 top-2 z-20 -translate-x-1/2 rounded-xl border px-3.5 py-2 text-[11.5px] shadow-[0_8px_24px_rgba(0,0,0,0.5)] ${pinned ? '' : 'pointer-events-none'}`}
             style={{ borderColor: c + '66', background: 'rgba(10,14,25,0.96)', color: '#dbe4f5' }}>
             <span style={{ color: c }} className="font-semibold">
-              {zhMode ? `${LORD_ZH[r.lord] ?? r.lord}大运` : `${r.lord} period`}
-              {r.sub && r.sub !== r.lord && (zhMode ? ` · ${LORD_ZH[r.sub] ?? r.sub}子段` : ` · ${r.sub} sub`)}
+              {zhMode ? `${LORD_ZH[lord] ?? lord}大运` : `${lord} period`}
+              {sub && (zhMode ? ` · ${LORD_ZH[sub] ?? sub}小运` : ` · ${sub} sub`)}
             </span>
-            <span className="ml-2 tabular-nums text-muted">{r.y}-{String(r.m).padStart(2, '0')}-{String(r.d).padStart(2, '0')} → {endDate.getUTCFullYear()}-{String(endDate.getUTCMonth() + 1).padStart(2, '0')}-{String(endDate.getUTCDate()).padStart(2, '0')}</span>
-            <span className="ml-2 text-muted/60">{Math.round(r.startAge)}-{Math.round(r.endAge)}{zhMode ? '岁' : 'y'}</span>
-            <span className="ml-2 text-accent/70">{zhMode ? '点击→跳转此时起排盘' : 'click→jump'}</span>
+            <span className="ml-2 tabular-nums text-muted">{jy}-{String(jm).padStart(2, '0')}-{String(jd).padStart(2, '0')} → {fmt(toDate(eAge))}</span>
+            <span className="ml-2 text-muted/60">{Math.round(sAge)}–{Math.round(eAge)}{zhMode ? '岁' : 'y'}</span>
+            {pinned ? (
+              <span className="ml-2 inline-flex gap-1.5">
+                <button className="rounded-md border border-accent/40 bg-accent/10 px-2 py-0.5 text-accent hover:bg-accent/25"
+                  onClick={() => { onBandDate?.(jy, jm, jd); setBandPin(null) }}>{zhMode ? '跳转此时起排盘' : 'jump chart'}</button>
+                <button className="rounded-md border border-white/15 px-2 py-0.5 text-muted hover:text-foreground"
+                  onClick={() => setBandPin(null)}>✕</button>
+              </span>
+            ) : <span className="ml-2 text-accent/60">{zhMode ? '点击可钉住·防误触' : 'click to pin'}</span>}
           </div>
         )
       })()}
