@@ -1181,7 +1181,8 @@ export class TarotMcpServer {
         if (!response.ok) return { error: { code: -32001, message: 'AI 解读失败：' + (data?.error?.message || '服务暂不可用') } };
         const msg = data?.choices?.[0]?.message;
         if (!msg) continue;
-        lastRaw = (msg.content && msg.content.trim()) || msg.reasoning_content || '';
+        // 只取正文：reasoning_content 是模型内部推理链，绝不能当结果返回给用户
+        lastRaw = (msg.content || '').trim();
         const parsed = parseLooseJSON(lastRaw);
         if (parsed) {
           const norm = normalizeStructured(parsed, ctx.n);

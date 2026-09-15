@@ -290,8 +290,8 @@ ${
     }
 
     const msg = data.choices[0].message;
-    // 推理模型可能把内容放进 reasoning_content；正文为空时兜底取思考内容
-    let answer = (msg.content && msg.content.trim()) || msg.reasoning_content || '';
+    // 只取正文：reasoning_content 是模型内部推理链，绝不能当答案返回给用户
+    let answer = (msg.content || '').trim();
     if (!answer.trim()) {
       return NextResponse.json({ error: 'AI 追问失败：未获取到有效响应' }, { status: 500 });
     }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 export default function StarsCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -12,6 +12,8 @@ export default function StarsCanvas() {
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    let raf = 0;
 
     const resize = () => {
       canvas.width = document.documentElement.clientWidth || window.innerWidth;
@@ -39,19 +41,26 @@ export default function StarsCanvas() {
         ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha * 0.6})`;
         ctx.fill();
       });
-      requestAnimationFrame(draw);
+      raf = requestAnimationFrame(draw);
+    };
+
+    const onResize = () => {
+      resize();
+      initStars();
     };
 
     resize();
     initStars();
     draw();
 
-    window.addEventListener('resize', () => {
-      resize();
-      initStars();
-    });
+    window.addEventListener('resize', onResize);
 
-    return () => window.removeEventListener('resize', () => {});
+    // 卸载时必须停掉 RAF 并摘掉同一个函数引用，否则动画循环会继续跑、
+    // 反复挂载还会叠加出多个循环（原实现 removeEventListener 传的是另一个空函数，永远摘不掉）
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', onResize);
+    };
   }, []);
 
   return (
