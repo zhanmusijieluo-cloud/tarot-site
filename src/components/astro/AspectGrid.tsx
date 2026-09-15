@@ -89,10 +89,8 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
     const symFs = 17
     const numFs = 10
 
-  // 爸爸定稿 (宫神星/astro.com 三角网格式): 无顶部行头 — 星体符号放在对角线上倾斜45°,
-  // 行头保持左列正立; 全格 1px 网格线 (不再"看错行列"); 对角格画斜线 (经典三角网格)
+  // 爸爸定稿: 无顶部行头 — 星体符号放在对角格正中 (与左列行头一一对应); 全格 1px 网格线 (不再"看错行列")
   const GRID = '1px solid rgba(255,255,255,0.07)'
-  const DIAG_BG = 'linear-gradient(135deg, transparent 46.5%, rgba(255,255,255,0.12) 49.25%, rgba(255,255,255,0.12) 50.75%, transparent 53.5%)'
 
   return (
     <div className={bare ? '' : 'rounded-2xl border border-white/[0.07] bg-white/[0.015] p-3'}>
@@ -116,21 +114,17 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
                 </button>
               </td>
               {cols.map((col, ci) => {
-                // 对角格: 斜线 + 星体符号正立坐在斜线上方拐角 (只位置斜、字形不歪 — 爸爸定稿)
+                // 对角格: 星体符号居中正立 (爸爸定稿: 无斜线、无角落摆放 — 干净, 与行头列头一一对应)
                 if (ci === ri) return (
-                  <td key={col.name} className="p-0" style={{ height: gs, border: GRID, background: DIAG_BG }}>
+                  <td key={col.name} className="p-0" style={{ height: gs, border: GRID }}>
                     <button
                       onClick={() => onPick?.(selected === col.name ? null : col.name)}
-                      className={`relative h-full w-full rounded-[4px] transition-colors ${
-                        selected === col.name ? 'bg-accent/20' : 'hover:bg-white/[0.06]'
+                      className={`flex h-full w-full items-center justify-center rounded-[4px] leading-none transition-colors ${
+                        selected === col.name ? 'bg-accent/20 text-accent' : 'text-frost/70 hover:bg-white/[0.06]'
                       }`}
                       title={col.zh}
                     >
-                      <span
-                        className={`absolute left-[4px] top-[1px] inline-block leading-none ${
-                          selected === col.name ? 'text-accent' : 'text-frost/70'
-                        } ${col.name === 'Ascendant' || col.name === 'Midheaven' || col.name === 'Descendant' || col.name === 'IC' ? 'text-[10px] font-medium' : 'text-[15px]'}`}
-                      >
+                      <span className={col.name === 'Ascendant' || col.name === 'Midheaven' || col.name === 'Descendant' || col.name === 'IC' ? 'text-[10px] font-medium' : 'text-[15px]'}>
                         {col.symbol}{col.retrograde && <sup style={{ fontSize: 8 }} className="text-[#e8a08a]">R</sup>}
                       </span>
                     </button>
