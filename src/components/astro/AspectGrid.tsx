@@ -8,6 +8,7 @@
 // ============================================================
 
 import type { VAspect, VChart, VPlanet } from '@/components/astro/ChartWheel';
+import { useI18n } from '@/i18n';
 
 // 相位配色: 红=困难(刑冲) 绿/蓝=和谐(拱/六合) 金=合 紫=梅花
 import { ASPECT_HEX } from '@/lib/astro/aspect-colors';
@@ -31,9 +32,9 @@ export function aspectMatrixPoints(chart: VChart): string[] {
 }
 // 图例用固定符号表 (不依赖当前盘是否恰好含该相位)
 const legendItems = (zhMode: boolean): [string, string][] => [
-  ['conjunction', zhMode ? '合' : 'Conj'], ['opposition', zhMode ? '冲' : 'Opp'],
-  ['square', zhMode ? '刑' : 'Sqt'], ['trine', zhMode ? '拱' : 'Tri'],
-  ['sextile', zhMode ? '六合' : 'Sxt'], ['quincunx', zhMode ? '梅花' : 'Qnx'],
+  ['conjunction', lang === 'ja' ? 'Conj' : zhMode ? '合' : 'Conj'], ['opposition', lang === 'ja' ? 'Opp' : zhMode ? '冲' : 'Opp'],
+  ['square', lang === 'ja' ? 'Sqt' : zhMode ? '刑' : 'Sqt'], ['trine', lang === 'ja' ? 'Tri' : zhMode ? '拱' : 'Tri'],
+  ['sextile', lang === 'ja' ? 'Sxt' : zhMode ? '六合' : 'Sxt'], ['quincunx', lang === 'ja' ? 'Qnx' : zhMode ? '梅花' : 'Qnx'],
 ];
 
 /** 图例行 (可独立复用于星盘下方) */
@@ -45,7 +46,7 @@ export function AspectLegend({ zhMode }: { zhMode: boolean }) {
           <span style={{ color: ASPECT_COLOR[k] }}>{SYM[k]}</span>{label}
         </span>
       ))}
-      <span className="text-muted/50">{zhMode ? 'A=入相 S=出相 · 数字=偏差°′' : 'A=applying S=separating · orb°′'}</span>
+      <span className="text-muted/50">{lang === 'ja' ? 'A=アプライ S=セパレート · 数字=偏差°′' : zhMode ? 'A=入相 S=出相 · 数字=偏差°′' : 'A=applying S=separating · orb°′'}</span>
     </span>
   );
 }
@@ -69,13 +70,14 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
   /** 空间不足场景隐藏图例 */
   hideLegend?: boolean;
 }) {
+  const { lang } = useI18n();
   // 列 = 盘上天体 + 四轴 (宫神星同款: 网格含 ASC/DSC/MC/IC 行列); 数量大时限 14 保证可读
   const axisCols: { name: string; symbol: string; zh: string; retrograde?: boolean }[] = [];
   if (chart.angles.ascendant) {
-    axisCols.push({ name: 'Ascendant', symbol: 'ASC', zh: zhMode ? '上升' : 'ASC', retrograde: false });
-    axisCols.push({ name: 'Descendant', symbol: 'DSC', zh: zhMode ? '下降' : 'DSC', retrograde: false });
+    axisCols.push({ name: 'Ascendant', symbol: 'ASC', zh: lang === 'ja' ? 'アセンダント' : zhMode ? '上升' : 'ASC', retrograde: false });
+    axisCols.push({ name: 'Descendant', symbol: 'DSC', zh: lang === 'ja' ? 'ディセンダント' : zhMode ? '下降' : 'DSC', retrograde: false });
     axisCols.push({ name: 'Midheaven', symbol: 'MC', zh: zhMode ? '中天' : 'MC', retrograde: false });
-    axisCols.push({ name: 'IC', symbol: 'IC', zh: zhMode ? '天底' : 'IC', retrograde: false });
+    axisCols.push({ name: 'IC', symbol: 'IC', zh: lang === 'ja' ? 'IC' : zhMode ? '天底' : 'IC', retrograde: false });
   }
   // 星体重要度 (同弹窗: 七大→三王→4轴; 只用于排行列, 相位判据不依赖) — 导出供清单同源
   const IMP = ASPECT_IMP
@@ -114,7 +116,7 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
                   className={`flex h-full w-full items-center justify-center rounded-[4px] leading-none transition-colors ${
                     selected === row.name ? 'bg-accent/20 text-accent' : 'text-frost/70 hover:bg-white/[0.06]'
                   } ${row.name === 'Ascendant' || row.name === 'Midheaven' || row.name === 'Descendant' || row.name === 'IC' ? 'text-[10px] tracking-[0.1em]' : 'text-[15px]'}`}
-                  title={zhMode ? row.zh : row.name}
+                  title={lang === 'ja' ? row.zh : zhMode ? row.zh : row.name}
                 >
                   {row.symbol}{row.retrograde && <sup style={{ fontSize: 8 }} className="text-[#e8a08a]">R</sup>}
                 </button>
@@ -128,7 +130,7 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
                       className={`flex h-full w-full items-center justify-center rounded-[4px] leading-none transition-colors ${
                         selected === col.name ? 'bg-accent/20 text-accent' : 'text-frost/70 hover:bg-white/[0.06]'
                       }`}
-                      title={zhMode ? col.zh : col.name}
+                      title={lang === 'ja' ? col.zh : zhMode ? col.zh : col.name}
                     >
                       <span className={col.name === 'Ascendant' || col.name === 'Midheaven' || col.name === 'Descendant' || col.name === 'IC' ? 'text-[10px] font-medium' : 'text-[15px]'}>
                         {col.symbol}{col.retrograde && <sup style={{ fontSize: 8 }} className="text-[#e8a08a]">R</sup>}
@@ -143,7 +145,7 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
                 const color = ASPECT_COLOR[a.type] ?? '#9aa3b5';
                 return (
                   <td key={col.name} className="p-0" style={{ height: gs, border: GRID }}
-                    title={`${zhMode ? row.zh : row.name} ${zhMode ? col.zh : col.name} ${zhMode ? a.typeZh : a.type} ±${fmtOrbDms(a.orb)}`}>
+                    title={`${lang === 'ja' ? row.zh : zhMode ? row.zh : row.name} ${lang === 'ja' ? col.zh : zhMode ? col.zh : col.name} ${lang === 'ja' ? a.type : zhMode ? a.typeZh : a.type} ±${fmtOrbDms(a.orb)}`}>
                     <div className="relative flex h-full w-full items-center justify-center leading-none"
                       style={{ background: `${color}33`, color }}>
                       <span style={{ fontSize: symFs }}>{a.symbol}</span>
@@ -166,7 +168,7 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
               <span style={{ color: ASPECT_COLOR[k] }}>{SYM[k]}</span>{label}
             </span>
           ))}
-          <span className="ml-auto">{zhMode ? 'A=入相 S=出相 · 数字=偏差°′' : 'A=applying S=separating · orb°′'}</span>
+          <span className="ml-auto">{lang === 'ja' ? 'A=アプライ S=セパレート · 数字=偏差°′' : zhMode ? 'A=入相 S=出相 · 数字=偏差°′' : 'A=applying S=separating · orb°′'}</span>
         </div>
       )}
     </div>
