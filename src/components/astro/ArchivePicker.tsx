@@ -59,7 +59,7 @@ export default function ArchivePicker({ onPick }: { onPick: (a: Archive) => void
         className="flex w-full items-center justify-center gap-2.5 rounded-full border border-accent/50 bg-accent/[0.1] px-5 py-2.5 text-[12.5px] tracking-[0.08em] text-accent transition-colors hover:border-accent/80 hover:bg-accent/[0.18]"
       >
         <span className="inline-block h-3.5 w-3.5 shrink-0 rounded-[4px] border border-[#c9a961]/70 bg-[#c9a961]/10" aria-hidden />
-        {zhMode ? '从我的档案选择' : 'Pick from archives'}
+        {lang === 'ja' ? 'プロフィールから選択' : zhMode ? '从我的档案选择' : 'Pick from archives'}
         <span className={`text-[10px] transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden>
           ▾
         </span>
@@ -72,10 +72,10 @@ export default function ArchivePicker({ onPick }: { onPick: (a: Archive) => void
         >
           <div className="flex items-baseline gap-2.5 border-b border-accent/15 px-5 py-3.5">
             <span className="font-display text-[15px] tracking-[0.14em] text-[#c9a961]">
-              {zhMode ? '选择档案' : 'Pick archive'}
+              {lang === 'ja' ? 'プロフィール選択' : zhMode ? '选择档案' : 'Pick archive'}
             </span>
             <span className="text-[11.5px] text-muted/65">
-              {zhMode ? (mode === 'cloud' ? '已登录 · 云端档案' : '本机档案（登录后跨设备）') : 'Stored locally'}
+              {lang === 'ja' ? (mode === 'cloud' ? 'ログイン済み · クラウド' : 'この端末内') : zhMode ? (mode === 'cloud' ? '已登录 · 云端档案' : '本机档案（登录后跨设备）') : 'Stored locally'}
             </span>
           </div>
 
@@ -84,7 +84,7 @@ export default function ArchivePicker({ onPick }: { onPick: (a: Archive) => void
               <p className="py-8 text-center text-[12.5px] text-muted/60">…</p>
             ) : list.length === 0 ? (
               <p className="px-2 py-7 text-center text-[12.5px] text-muted/60">
-                {zhMode ? '还没有档案' : 'No archives yet'}
+                {lang === 'ja' ? 'プロフィールなし' : zhMode ? '还没有档案' : 'No archives yet'}
               </p>
             ) : (
               <div className="space-y-1.5">
@@ -111,7 +111,7 @@ export default function ArchivePicker({ onPick }: { onPick: (a: Archive) => void
                     </span>
                     {x.cloud && (
                       <span className="shrink-0 rounded-full border border-[#84e89e]/30 px-2 py-0.5 text-[10.5px] text-[#84e89e]/80">
-                        {zhMode ? '云端' : 'Cloud'}
+                        {lang === 'ja' ? 'クラウド' : zhMode ? '云端' : 'Cloud'}
                       </span>
                     )}
                   </button>
@@ -124,7 +124,7 @@ export default function ArchivePicker({ onPick }: { onPick: (a: Archive) => void
             href="/archives"
             className="block border-t border-accent/15 px-5 py-3 text-center text-[12px] text-accent/85 transition-colors hover:bg-accent/[0.08]"
           >
-            {zhMode ? '没有想要的？去「我的档案」新建' : 'Manage archives'}
+            {lang === 'ja' ? '見つからない場合は新規作成' : zhMode ? '没有想要的？去「我的档案」新建' : 'Manage archives'}
           </a>
         </div>
       )}

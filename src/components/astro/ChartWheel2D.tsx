@@ -8,6 +8,7 @@
 // ============================================================
 
 import { useMemo, useState } from 'react';
+import { useI18n } from '@/i18n';
 import type { VChart, VPlanet } from '@/components/astro/ChartWheel';
 import { aspectHex } from '@/lib/astro/aspect-colors';
 import { GLYPH_PATHS, SYMBOL_TO_GLYPH, ZODIAC_GLYPH_NAMES } from '@/lib/astro/glyph-paths';
@@ -101,6 +102,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
   /** 外环分段点击 → 跳转排盘到该段起始日 (爱星盘同款交互) */
   onBandDate?: (year: number, month: number, day: number) => void;
 }) {
+  const { lang } = useI18n();
   const [paper, setPaper] = useState(true);
   const [bandHover, setBandHover] = useState<number | null>(null);   // 小运环段悬停
   const [mainHover, setMainHover] = useState<number | null>(null);    // 大运环段悬停
@@ -213,7 +215,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
         className="absolute right-2 top-2 z-10 rounded-full border px-2.5 py-1 text-[11px]"
         style={{ borderColor: P.ring, color: P.ink, background: P.bg }}
       >
-        {paper ? (zhMode ? '墨黑' : 'Dark') : (zhMode ? '纸白' : 'Paper')}
+        {paper ? (lang === 'ja' ? '墨黒' : zhMode ? '墨黑' : 'Dark') : (lang === 'ja' ? '白紙' : zhMode ? '纸白' : 'Paper')}
       </button>
       <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="h-full w-full select-none" onClick={(e) => { if (e.target === e.currentTarget) { onSelect(null); setBandPin(null); } }}>
       {/* 盘体组: 法达/小限盘时绕中心整体缩小, 让出外圈双环带 (爸爸: 整体外径不变) */}
@@ -439,19 +441,19 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
           <div className={`absolute left-1/2 top-2 z-20 -translate-x-1/2 rounded-xl border px-3.5 py-2 text-[11.5px] shadow-[0_8px_24px_rgba(0,0,0,0.5)] ${pinned ? '' : 'pointer-events-none'}`}
             style={{ borderColor: c + '66', background: 'rgba(10,14,25,0.96)', color: '#dbe4f5' }}>
             <span style={{ color: c }} className="font-semibold">
-              {zhMode ? `${LORD_ZH[lord] ?? lord}大运` : `${lord} period`}
-              {sub && (zhMode ? ` · ${LORD_ZH[sub] ?? sub}小运` : ` · ${sub} sub`)}
+              {lang === 'ja' ? `${LORD_ZH[lord] ?? lord}大運` : zhMode ? `${LORD_ZH[lord] ?? lord}大运` : `${lord} period`}
+              {sub && (lang === 'ja' ? ` · ${LORD_ZH[sub] ?? sub}小運` : zhMode ? ` · ${LORD_ZH[sub] ?? sub}小运` : ` · ${sub} sub`)}
             </span>
             <span className="ml-2 tabular-nums text-muted">{jy}-{String(jm).padStart(2, '0')}-{String(jd).padStart(2, '0')} → {fmt(toDate(eAge))}</span>
-            <span className="ml-2 text-muted/60">{Math.round(sAge)}–{Math.round(eAge)}{zhMode ? '岁' : 'y'}</span>
+            <span className="ml-2 text-muted/60">{Math.round(sAge)}–{Math.round(eAge)}{lang === 'ja' ? '歳' : zhMode ? '岁' : 'y'}</span>
             {pinned ? (
               <span className="ml-2 inline-flex gap-1.5">
                 <button className="rounded-md border border-accent/40 bg-accent/10 px-2 py-0.5 text-accent hover:bg-accent/25"
-                  onClick={() => { onBandDate?.(jy, jm, jd); setBandPin(null) }}>{zhMode ? '跳转此时起排盘' : 'jump chart'}</button>
+                  onClick={() => { onBandDate?.(jy, jm, jd); setBandPin(null) }}>{lang === 'ja' ? 'この日時でチャート' : zhMode ? '跳转此时起排盘' : 'jump chart'}</button>
                 <button className="rounded-md border border-white/15 px-2 py-0.5 text-muted hover:text-foreground"
                   onClick={() => setBandPin(null)}>✕</button>
               </span>
-            ) : <span className="ml-2 text-accent/60">{zhMode ? '点击可钉住·防误触' : 'click to pin'}</span>}
+            ) : <span className="ml-2 text-accent/60">{lang === 'ja' ? 'クリックで固定' : zhMode ? '点击可钉住·防误触' : 'click to pin'}</span>}
           </div>
         )
       })()}
