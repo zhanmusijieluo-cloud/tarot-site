@@ -21,6 +21,27 @@ export interface ArchiveExtra { note?: string; contact?: string }
 const KEY = 'astro-archives-v1';
 const TABLE = 'user_archives';
 
+/** 坏档案兜底: 缺 birth / 关键字段非法的条目丢弃 (脏数据/旧版本残留不能炸页面);
+ *  字段尽力修复 (数字化), 修不了的才丢 */
+function sanitizeArchive(x: unknown): Archive | null {
+  if (!x || typeof x !== 'object') return null;
+  const o = x as Record<string, unknown>;
+  const b = o.birth;
+  if (!b || typeof b !== 'object') return null;
+  const bo = b as Record<string, unknown>;
+  const y = Number(bo.year), m = Number(bo.month), d = Number(bo.day);
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return null;
+  return {
+    id: String(o.id ?? `a${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`),
+    label: String(o.label ?? '未命名'),
+    birth: { ...(bo as unknown as BirthData), year: y, month: m, day: d },
+    note: String(o.note ?? ''),
+    contact: String(o.contact ?? ''),
+    savedAt: Number(o.savedAt) || Date.now(),
+    cloud: o.cloud === true ? true : undefined,
+  };
+}
+
 // supabase-js 未带数据库泛型时 .from() 推断为 never; 此地按行操作放宽 (RLS 才是权限边界)
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type AnyClient = { from: (t: string) => any };
@@ -33,7 +54,8 @@ export function listArchives(): Archive[] {
   try {
     const raw = window.localStorage.getItem(KEY);
     const arr = raw ? JSON.parse(raw) : [];
-    return Array.isArray(arr) ? arr.map((x: Archive) => ({ ...x, note: x.note ?? '', contact: x.contact ?? '' })) : [];
+    if (!Array.isArray(arr)) return [];
+    return arr.map(sanitizeArchive).filter((x): x is Archive => x !== null);
   } catch {
     return [];
   }
@@ -98,7 +120,7 @@ export async function loadArchivesSmart(): Promise<{ list: Archive[]; mode: 'clo
   if (s) {
     const sb = sbAny()!;
     const { data, error } = await sb.from(TABLE).select('id,label,birth,note,contact,created_at').order('created_at', { ascending: false }).limit(300);
-    if (!error && data) return { list: (data as Record<string, unknown>[]).map(rowToArchive), mode: 'cloud' };
+    if (!error && data) return { list: (data as Record<string, unknown>[]).map(rowToArchive).map(sanitizeArchive).filter((x): x is Archive => x !== null), mode: 'cloud' };
     return { list: listArchives(), mode: 'local', error: error?.message };
   }
   return { list: listArchives(), mode: 'local' };
