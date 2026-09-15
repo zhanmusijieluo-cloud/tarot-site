@@ -12,8 +12,10 @@ import NatalCard from '@/components/astro/NatalCard';
 import { firdariaTable, SIGN_RULER } from '@/lib/astro/timing';
 
 const LORD_ZH: Record<string, string> = { Sun: '太阳', Moon: '月亮', Mercury: '水星', Venus: '金星', Mars: '火星', Jupiter: '木星', Saturn: '土星', NorthNode: '北交', SouthNode: '南交' };
+const LORD_JA: Record<string, string> = { Sun: '太陽', Moon: '月', Mercury: '水星', Venus: '金星', Mars: '火星', Jupiter: '木星', Saturn: '土星', NorthNode: 'ドラゴンヘッド', SouthNode: 'ドラゴンテイル' };
 const LORD_SYM: Record<string, string> = { Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀', Mars: '♂', Jupiter: '♃', Saturn: '♄', NorthNode: '☊', SouthNode: '☋' };
 const SIGN_ZH: Record<string, string> = { Aries: '白羊', Taurus: '金牛', Gemini: '双子', Cancer: '巨蟹', Leo: '狮子', Virgo: '处女', Libra: '天秤', Scorpio: '天蝎', Sagittarius: '射手', Capricorn: '摩羯', Aquarius: '水瓶', Pisces: '双鱼' };
+const SIGN_JA: Record<string, string> = { Aries: '牡羊座', Taurus: '牡牛座', Gemini: '双子座', Cancer: '蟹座', Leo: '獅子座', Virgo: '乙女座', Libra: '天秤座', Scorpio: '蠍座', Sagittarius: '射手座', Capricorn: '山羊座', Aquarius: '水瓶座', Pisces: '魚座' };
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -51,7 +53,7 @@ export default function BandResult({ chart, zhMode, kind, cornerActions, onBandD
         <div className="flex items-center gap-2 text-frost/85">
           <span className="text-muted/70">{lang === 'ja' ? '現在の大運' : zhMode ? '当前大运' : 'Period'}</span>
           <span className="text-[15px] text-accent">{LORD_SYM[curMain?.lord ?? ''] ?? ''}</span>
-          {LORD_ZH[curMain?.lord ?? ''] ?? '—'}
+          {lang === 'ja' ? (LORD_JA[curMain?.lord ?? ''] ?? '—') : (LORD_ZH[curMain?.lord ?? ''] ?? '—')}
           <span className="text-muted">{curMain ? `${curMain.startAge}–${curMain.endAge} ${lang === 'ja' ? '歳' : zhMode ? '岁' : 'y'}` : ''}</span>
         </div>
         <div className="flex items-center gap-2 text-frost/85">
@@ -79,7 +81,7 @@ export default function BandResult({ chart, zhMode, kind, cornerActions, onBandD
         </div>
         <div className="flex items-center gap-2 text-frost/85">
           <span className="text-muted/70">{lang === 'ja' ? '年のハウス' : zhMode ? '当前年宫' : 'House'}</span>
-          <span className="tabular-nums text-accent">{house} {lang === 'ja' ? 'ハウス' : zhMode ? '宫' : ''} · {SIGN_ZH[signName]} · {LORD_SYM[lord] ?? ''} {LORD_ZH[lord]}</span>
+          <span className="tabular-nums text-accent">{house} {lang === 'ja' ? 'ハウス' : zhMode ? '宫' : ''} · {lang === 'ja' ? (SIGN_JA[signName] ?? signName)} · {LORD_SYM[lord] ?? ''} {lang === 'ja' ? (LORD_JA[lord] ?? LORD_ZH[lord])}</span>
         </div>
       </div>
     );
