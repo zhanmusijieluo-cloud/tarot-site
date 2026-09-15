@@ -49,6 +49,12 @@ function ChartPageInner() {
   // 访客本地时区 (爸爸: 同步当地时间, 别人进来=各自当下; 行运/天象瞬时按此换算)
   const tzLocal = -nowD.getTimezoneOffset() / 60;
   const backToNow = () => patchParams((p) => { p.delete('dpy'); p.delete('dpm'); p.delete('dpd'); p.delete('dph'); p.delete('dpmi'); });
+  /** 外环分段点击 (法达/小限): 切到行运盘并定位该段起始日 (爱星盘同款交互; 段首=起运当日正午) */
+  const jumpToDate = (year: number, month: number, day: number) => patchParams((p) => {
+    p.set('dp', 'tr');
+    p.set('dpy', String(year)); p.set('dpm', String(month)); p.set('dpd', String(day));
+    p.set('dph', '12'); p.set('dpmi', '0');
+  });
   const [dyn, setDyn] = useState<DynamicChart | null>(null);
   const [dynErr, setDynErr] = useState('');
 
@@ -427,7 +433,7 @@ function ChartPageInner() {
             <p className="py-20 text-center text-[12px] tracking-[0.3em] text-muted">{t('astro.form.casting')}</p>
           )
         ) : bandKind ? (
-          data && <BandResult chart={data} zhMode={zhMode} kind={bandKind} cornerActions={cornerActions} />
+          data && <BandResult chart={data} zhMode={zhMode} kind={bandKind} cornerActions={cornerActions} onBandDate={jumpToDate} />
         ) : (
           data && <ChartResult chart={data} zhMode={zhMode} aspectMode={aspectMode} onAspectMode={(m) => patchParams((p) => { if (m === 'list') p.set('ag', 'list'); else p.delete('ag'); })} cornerActions={cornerActions} />
         )}

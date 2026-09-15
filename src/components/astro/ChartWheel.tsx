@@ -876,7 +876,7 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual, sel }: {
 }
 
 // ---------- 对外入口 ----------
-export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect, gridSlot, cornerSlot, actions, dualRing, onDualToggle, outerBand }: {
+export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect, gridSlot, cornerSlot, actions, dualRing, onDualToggle, outerBand, onBandDate }: {
   chart: VChart; zhMode: boolean;
   /** 受控选中 (相位网格行头共用): 不传则内部自管 */
   selected?: string | null; onSelect?: (name: string | null) => void;
@@ -892,6 +892,8 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
   onDualToggle?: () => void;
   /** 外圈信息带 (法达环/小限环; 爸爸: 盘外圈挂环) */
   outerBand?: 'firdaria' | 'profection' | null;
+  /** 外环分段点击 → 跳转排盘到该段起始日 (爱星盘同款交互) */
+  onBandDate?: (year: number, month: number, day: number) => void;
 }) {
   // VChart.extraPoints 由 chart 自带 (推运盘: 本命端黄经)
 
@@ -996,7 +998,7 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
         </div>
       ) : view === 'classic' ? (
         <div className="mx-auto aspect-square w-full max-w-[min(84vh,880px)]" onDoubleClick={onDualToggle ? () => onDualToggle() : undefined}>
-          <ChartWheel2D chart={chart} zhMode={zhMode} selected={selected} onSelect={setSelected} dualRing={dualRing} outerBand={outerBand} extraPoints={chart.extraPoints} />
+          <ChartWheel2D chart={chart} zhMode={zhMode} selected={selected} onSelect={setSelected} dualRing={dualRing} outerBand={outerBand} extraPoints={chart.extraPoints} onBandDate={onBandDate} />
         </div>
       ) : (
         <ChartScene chart={chart} zhMode={zhMode} view={view} disp={chart.settings?.display} sceneApi={sceneApiRef} selected={selected} onSelect={setSelected} />

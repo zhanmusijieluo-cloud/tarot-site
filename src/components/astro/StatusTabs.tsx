@@ -9,12 +9,8 @@ import type { VChart, VPlanet } from '@/components/astro/ChartWheel';
 import { SIGN_RULER, SIGN_EXALT, firdariaTable, profections, zodiacalReleasing } from '@/lib/astro/timing';
 import { FIXED_STARS, starConjunctions, starLonAt } from '@/lib/astro/fixed-stars';
 import SignGlyph, { signColor } from '@/components/astro/SignGlyph';
-// 法达大运主星色 (段首行上色, 区分大运阶段; 爸爸:「可以上点色」)
-const LORD_HEX: Record<string, string> = {
-  Sun: '#f0c470', Moon: '#c8d8f0', Mercury: '#8fd8c0', Venus: '#e8a0b8',
-  Mars: '#ff9c90', Jupiter: '#8cc0ff', Saturn: '#b8a8d0',
-  NorthNode: '#d8c090', SouthNode: '#8898a8',
-};
+// 法达大运主星色 (段首行上色; 单一来源 lib/astro/lord-colors.ts, 外环共用)
+import { LORD_HEX } from '@/lib/astro/lord-colors'
 
 const SIGNS_ZH: Record<string, string> = {
   Aries: '白羊', Taurus: '金牛', Gemini: '双子', Cancer: '巨蟹', Leo: '狮子', Virgo: '处女',

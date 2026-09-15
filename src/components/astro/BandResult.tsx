@@ -23,9 +23,11 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-export default function BandResult({ chart, zhMode, kind, cornerActions }: {
+export default function BandResult({ chart, zhMode, kind, cornerActions, onBandDate }: {
   chart: VChart; zhMode: boolean; kind: 'firdaria' | 'profection';
   cornerActions?: React.ReactNode;
+  /** 外环分段点击 → 跳转排盘到该段起始日 (爱星盘同款交互) */
+  onBandDate?: (year: number, month: number, day: number) => void;
 }) {
   const curAgeD = (Date.now() - Date.UTC(chart.input.year, chart.input.month - 1, chart.input.day)) / (365.2425 * 86400000);
   const curAge = Math.max(0, Math.floor(curAgeD));
@@ -87,6 +89,7 @@ export default function BandResult({ chart, zhMode, kind, cornerActions }: {
         chart={chart}
         zhMode={zhMode}
         outerBand={kind}
+        onBandDate={onBandDate}
         cornerSlot={
           <div className="pointer-events-auto flex w-[248px] flex-col gap-1.5">
             <NatalCard chart={chart} zhMode={zhMode} />
