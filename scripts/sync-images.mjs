@@ -28,6 +28,8 @@ const EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.avif',
  */
 const PYTHON = [
   process.env.IMAGE_PYTHON,
+  // 带 Pillow 的专用环境（PNG→WebP 需要 PIL；managed 基础环境不含）
+  'C:/Users/99192/.workbuddy/binaries/python/envs/default/Scripts/python.exe',
   'C:/Users/99192/.workbuddy/binaries/python/versions/3.13.12/python.exe',
   'python',
 ].filter(Boolean).find((p) => p === 'python' || existsSync(p)) || 'python';
