@@ -243,7 +243,8 @@ export function castSolarReturnChart(birth: BirthData, settings: CastSettings, r
   let prev = getPosition('Sun' as never, jdStart).longitude
   for (let d = 1; d <= 367; d++) {
     const cur = getPosition('Sun' as never, jdStart + d).longitude
-    let a = prev, b = cur
+    const a = prev
+    let b = cur
     if (b < a) b += 360
     const t = targetLon < a ? targetLon + 360 : targetLon
     if (t >= a && t < b) { bracket = [jdStart + d - 1, jdStart + d]; break }
@@ -253,7 +254,8 @@ export function castSolarReturnChart(birth: BirthData, settings: CastSettings, r
   let [lo, hi] = bracket
   for (let i = 0; i < 45; i++) {
     const mid = (lo + hi) / 2
-    let lm = getPosition('Sun' as never, mid).longitude, la = getPosition('Sun' as never, lo).longitude
+    let lm = getPosition('Sun' as never, mid).longitude
+    const la = getPosition('Sun' as never, lo).longitude
     if (lm < la) lm += 360
     const t = targetLon < la ? targetLon + 360 : targetLon
     if (t >= la && t < lm) hi = mid; else lo = mid
@@ -286,7 +288,8 @@ export function castLunarReturnChart(birth: BirthData, settings: CastSettings, f
   let prev = getPosition('Moon' as never, jdStart).longitude
   for (let d = 0.5; d <= 35; d += 0.5) {
     const cur = getPosition('Moon' as never, jdStart + d).longitude
-    let a = prev, b = cur
+    const a = prev
+    let b = cur
     if (b < a) b += 360
     const t = targetLon < a ? targetLon + 360 : targetLon
     if (t >= a && t < b) { bracket = [jdStart + d - 0.5, jdStart + d]; break }
@@ -296,7 +299,8 @@ export function castLunarReturnChart(birth: BirthData, settings: CastSettings, f
   let [lo, hi] = bracket
   for (let i = 0; i < 40; i++) {
     const mid = (lo + hi) / 2
-    let lm = getPosition('Moon' as never, mid).longitude, la = getPosition('Moon' as never, lo).longitude
+    let lm = getPosition('Moon' as never, mid).longitude
+    const la = getPosition('Moon' as never, lo).longitude
     if (lm < la) lm += 360
     const t = targetLon < la ? targetLon + 360 : targetLon
     if (t >= la && t < lm) hi = mid; else lo = mid

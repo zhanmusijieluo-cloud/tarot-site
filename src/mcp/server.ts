@@ -270,7 +270,7 @@ async function recallSimilarCases(ids: number[], limit = 3, lang: 'zh' | 'en' | 
       .select('card1,card2,card3,reading_en,reading_zh')
       .ilike('card1', names[0])
       .limit(limit);
-    let rows = (q1.data || []) as any[];
+    const rows = (q1.data || []) as any[];
     if (rows.length < limit && names[1]) {
       const q2 = await client
         .from('tarot_case_log')
@@ -1141,7 +1141,7 @@ export class TarotMcpServer {
         let raw = '';
         for await (const delta of upstreamContentDeltas(response.body)) {
           raw += delta;
-          let md = emitter.feed(raw);
+          const md = emitter.feed(raw);
           // 骨架先行模式：feed 输出的卡头/牌性已由骨架推送，这里直接下发 AI 增量（无需去重拼接）
           if (md) yield { type: 'delta', text: md };
         }

@@ -196,7 +196,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
     camera.position.set(0, 10.6, 3.1);
     camera.lookAt(0, 0, 0);
-    let viewHalfH = 5.86; // 默认视高半径(世界单位), resize 时按画布比例算
+    const viewHalfH = 5.86; // 默认视高半径(世界单位), resize 时按画布比例算
 
     const root = new THREE.Group();
     root.rotation.order = 'YXZ';
@@ -555,7 +555,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
 
     // ---------- 拖拽旋转(惯性) + 滚轮变焦 + 点击 ----------
     let dragging = false, movedPx = 0, lastX = 0, lastY = 0;
-    let yawV = 0, spinY = 0, fov = 42; // fov 在正交下仅作滚轮档位累加器
+    let yawV = 0, spinY = 0;
     // A方案: 松手静止一会儿后自动弹回 ASC朝左(最近一圈基准); ⟳键立即快回
     let idleT = 0, fastReturn = false;
     const el = renderer.domElement;
