@@ -93,8 +93,8 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
   )
   if (sun) features.push({ el: placeLine(sun, ''), tone: 'gold' })
   if (moon) features.push({ el: placeLine(moon, ''), tone: 'gold' })
-  if (asc) features.push({ el: placeLine(asc, zhMode ? '上升' : 'ASC'), tone: 'gold' })
-  if (mc) features.push({ el: placeLine(mc, zhMode ? '中天' : 'MC'), tone: 'gold' })
+  if (asc) features.push({ el: placeLine(asc, zhMode ? '上升' : ''), tone: 'gold' })
+  if (mc) features.push({ el: placeLine(mc, zhMode ? '中天' : ''), tone: 'gold' })
   // 互容 · 接纳 (宫神星判词句式): ☉ 被 ♀ 接纳 (本垣♉) / ♀ 与 ♂ 互容 (♎/♈ 本垣)
   const recepFeats: Feat[] = []
   // 爸爸定标: 尊贵档 — 本垣/曜升对技法权重最高, 三分/界/面次之 (特征面板判词排序用)
