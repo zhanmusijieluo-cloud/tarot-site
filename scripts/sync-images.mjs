@@ -1,17 +1,18 @@
 /**
  * 全站图片素材同步脚本
  *
- * 把 Q:\图片 目录下的所有图片镜像同步到 public/images/，
+ * 把素材源目录（默认 D:\网站\塔罗\图片素材）下的所有图片镜像同步到 public/images/，
  * 供网站任何页面 / 板块引用（src="/images/xxx.jpg"）。
  *
  * 在 package.json 的 build 里自动执行：每次构建部署都会自动同步，
- * 所以用户往 Q:\图片 放新图后，重新构建部署即可全站生效。
+ * 所以往源目录放新图后，重新构建部署即可全站生效。
+ * （2026-09-15: 源目录从已不存在的 Q:\图片 迁到 D 盘 —— 该项目早期在 Q 盘开发。）
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, extname, join, relative, sep } from 'node:path';
 import { execFileSync } from 'node:child_process';
 
-const SRC = process.env.IMAGE_SRC || 'Q:/图片';
+const SRC = process.env.IMAGE_SRC || 'D:/网站/塔罗/图片素材';
 const DST = join(process.cwd(), 'public', 'images');
 
 const EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.avif', '.bmp', '.ico']);
