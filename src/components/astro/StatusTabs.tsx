@@ -35,6 +35,12 @@ export interface StatusTabsProps {
   onSelect: (n: string | null) => void;
 }
 
+const PLANET_JA: Record<string, string> = {
+  Sun: '太陽', Moon: '月', Mercury: '水星', Venus: '金星', Mars: '火星',
+  Jupiter: '木星', Saturn: '土星', Uranus: '天王星', Neptune: '海王星', Pluto: '冥王星',
+  NorthNode: 'ドラゴンヘッド', SouthNode: 'ドラゴンテイル',
+  Ascendant: 'アセンダント', Descendant: 'ディセンダント', Midheaven: 'MC', IC: 'IC',
+};
 export default function StatusTabs({ chart, zhMode, selected, onSelect }: StatusTabsProps) {
   const [tab, setTab] = useState<'ecliptic' | 'ecliptic2' | 'firdaria' | 'profection' | 'aphesisF' | 'aphesisS'>('ecliptic');
   const { lang } = useI18n();
@@ -170,13 +176,13 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
           <table className="w-full min-w-[980px] text-left text-[13px]">
             <thead>
               <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
-                <th className={thCls}>{T('星体', 'Body')}</th>
-                <th className={thCls}>{T('黄经度数', 'Longitude')}</th>
-                <th className={thCls}>{T('落宫', 'House')}</th>
-                <th className={thCls}>{T('守护宫', 'Rules')}</th>
-                <th className={thCls}>{T('曜升宫', 'Exalts')}</th>
-                <th className={`${thCls} text-center`} colSpan={8}>{T('先天黄道状态', 'Essential Dignities')}</th>
-                <th className={thCls}>{T('附属状态', 'Accidental')}</th>
+                <th className={thCls}>{T('星体', 'Body', '星体')}</th>
+                <th className={thCls}>{T('黄经度数', 'Longitude', '黄経度数')}</th>
+                <th className={thCls}>{T('落宫', 'House', 'ハウス')}</th>
+                <th className={thCls}>{T('守护宫', 'Rules', '支配宮')}</th>
+                <th className={thCls}>{T('曜升宫', 'Exalts', 'エグザルテーション宮')}</th>
+                <th className={`${thCls} text-center`} colSpan={8}>{T('先天黄道状态', 'Essential Dignities', '先天ディグニティ')}</th>
+                <th className={thCls}>{T('附属状态', 'Accidental', 'アクシデンタル')}</th>
               </tr>
               <tr className="border-b border-white/[0.06] bg-white/[0.02] text-[10px] tracking-[0.12em] text-muted/80 uppercase">
                 <th className={thCls} colSpan={5} />
@@ -204,7 +210,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                     onClick={() => onSelect(isSel ? null : p.name)}
                     className={`cursor-pointer border-b border-white/[0.04] transition-colors last:border-0 ${isSel ? 'bg-accent/[0.07]' : 'hover:bg-white/[0.03]'}`}
                   >
-                    <td className={`${tdCls} text-frost/90`}><span className="mr-1.5 text-accent/80">{p.symbol}</span>{lang === 'ja' ? p.zh : zhMode ? p.zh : p.name}</td>
+                    <td className={`${tdCls} text-frost/90`}><span className="mr-1.5 text-accent/80">{p.symbol}</span>{lang === 'ja' ? (PLANET_JA[p.name] ?? p.zh) : zhMode ? p.zh : p.name}</td>
                     <td className={`${tdCls} text-muted tabular-nums`}><span className="inline-block w-[3.5em] text-right">{dms(p.degInSign)}</span><SignGlyph si={si} color={signColor(si)} className="ml-1.5" /></td>
                     <td className={`${tdCls} text-muted`}>{p.house ?? '—'}</td>
                     <td className={`${tdCls} text-muted`}>{(() => { const h = rulingHouses(p.name, SIGN_RULER); return h.length ? h.join(' ') : '—' })()}</td>
@@ -243,7 +249,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
               <thead>
                 <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
                   <th className={thCls}>{T('宫', 'House')}</th>
-                  <th className={thCls}>{T('黄经度数', 'Longitude')}</th>
+                  <th className={thCls}>{T('黄经度数', 'Longitude', '黄経度数')}</th>
                   <th className={`${thCls} text-center`}>{T('本垣', 'Dom')}</th>
                   <th className={`${thCls} text-center`}>{T('曜升', 'Exa')}</th>
                   <th className={`${thCls} text-center`}>{T('宫神星', 'Almuten')}</th>
@@ -274,7 +280,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                 <thead>
                   <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
                     <th className={thCls}>{T('阿拉伯点', 'Arabic Lot')}</th>
-                    <th className={thCls}>{T('黄经度数', 'Longitude')}</th>
+                    <th className={thCls}>{T('黄经度数', 'Longitude', '黄経度数')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -296,7 +302,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                 <thead>
                   <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
                     <th className={thCls}>{T('恒星', 'Fixed Star')}</th>
-                    <th className={thCls}>{T('黄经度数', 'Longitude')}</th>
+                    <th className={thCls}>{T('黄经度数', 'Longitude', '黄経度数')}</th>
                     <th className={thCls}>{T('合相', 'Conj')}</th>
                   </tr>
                 </thead>
