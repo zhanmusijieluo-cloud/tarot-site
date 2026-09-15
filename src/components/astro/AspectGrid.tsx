@@ -32,9 +32,9 @@ export function aspectMatrixPoints(chart: VChart): string[] {
 }
 // 图例用固定符号表 (不依赖当前盘是否恰好含该相位)
 const legendItems = (zhMode: boolean): [string, string][] => [
-  ['conjunction', lang === 'ja' ? 'Conj' : zhMode ? '合' : 'Conj'], ['opposition', lang === 'ja' ? 'Opp' : zhMode ? '冲' : 'Opp'],
-  ['square', lang === 'ja' ? 'Sqt' : zhMode ? '刑' : 'Sqt'], ['trine', lang === 'ja' ? 'Tri' : zhMode ? '拱' : 'Tri'],
-  ['sextile', lang === 'ja' ? 'Sxt' : zhMode ? '六合' : 'Sxt'], ['quincunx', lang === 'ja' ? 'Qnx' : zhMode ? '梅花' : 'Qnx'],
+  ['conjunction', zhMode ? '合' : 'Conj'], ['opposition', zhMode ? '冲' : 'Opp'],
+  ['square', zhMode ? '刑' : 'Sqt'], ['trine', zhMode ? '拱' : 'Tri'],
+  ['sextile', zhMode ? '六合' : 'Sxt'], ['quincunx', zhMode ? '梅花' : 'Qnx'],
 ];
 
 /** 图例行 (可独立复用于星盘下方) */
@@ -46,7 +46,7 @@ export function AspectLegend({ zhMode }: { zhMode: boolean }) {
           <span style={{ color: ASPECT_COLOR[k] }}>{SYM[k]}</span>{label}
         </span>
       ))}
-      <span className="text-muted/50">{lang === 'ja' ? 'A=アプライ S=セパレート · 数字=偏差°′' : zhMode ? 'A=入相 S=出相 · 数字=偏差°′' : 'A=applying S=separating · orb°′'}</span>
+      <span className="text-muted/50">{zhMode ? 'A=入相 S=出相 · 数字=偏差°′' : 'A=applying S=separating · orb°′'}</span>
     </span>
   );
 }
