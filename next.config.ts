@@ -1,10 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // 类型检查由独立 tsc 步骤把关（CI 已跑 tsc --noEmit），避免构建时重复检查卡住
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  // 2026-09-15: 移除 typescript.ignoreBuildErrors —— 原注释称"CI 已跑 tsc --noEmit"，
+  // 但项目并无 CI，等于构建时完全不校验类型。当前 tsc 0 错误，交给构建把关。
   // 开启 gzip/brotli 压缩（Vercel 边缘默认支持，这里显式声明）
   compress: true,
   // 图片优化：本地 public 图片用 Next 内置优化器（自动转 WebP/AVIF + 响应式尺寸）
