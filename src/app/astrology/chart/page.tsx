@@ -148,7 +148,7 @@ function ChartPageInner() {
       ...birth,
       year: dtB.getUTCFullYear(), month: dtB.getUTCMonth() + 1, day: dtB.getUTCDate(),
       hour: dtB.getUTCHours(), minute: dtB.getUTCMinutes(), timeKnown: true,
-      label: zhMode ? '天象盘' : 'Sky chart',
+      label: lang === 'ja' ? 'トランシット' : zhMode ? '天象盘' : 'Sky chart',
     };
   }, [birth, skyMode, dpy, dpm, dpd, dpHour, dpMin, tzLocal, zhMode]);
   useEffect(() => {
@@ -239,7 +239,7 @@ function ChartPageInner() {
         title={t('astro.set.houseHint')}
         className="flex w-full items-center gap-2 rounded-xl border border-white/[0.1] bg-[#0a0e19]/90 px-3.5 py-[9px] text-left text-[11.5px] text-frost/75 shadow-[0_6px_18px_rgba(0,0,0,0.35)] backdrop-blur-sm transition-colors hover:border-accent/40 hover:text-accent"
       >
-        <span className="text-[12px]">⬡</span> {zhMode ? '宫位设置' : 'Houses'}
+        <span className="text-[12px]">⬡</span> {lang === 'ja' ? 'ハウス' : zhMode ? '宫位设置' : 'Houses'}
         <span className="ml-auto text-[10px] text-muted/70">{zhMode ? (SYS_ZH[data?.houseSystemUsed ?? birth.houseSystem ?? 'placidus'] ?? data?.houseSystemUsed ?? '普拉西德') : (data?.houseSystemUsed ?? birth.houseSystem ?? 'placidus')} ▾</span>
       </button>
       <ChartSettings
@@ -281,10 +281,10 @@ function ChartPageInner() {
         <div className={`mb-3 flex flex-wrap items-center justify-center gap-1.5${syncId ? ' hidden' : ''}`}>
           <button
             onClick={() => setSynOpen(true)}
-            title={zhMode ? '选择档案与当下本命盘合盘' : 'Synastry with an archive'}
+            title={lang === 'ja' ? 'アーカイブと現在のネイタルをシナストリー' : zhMode ? '选择档案与当下本命盘合盘' : 'Synastry with an archive'}
             className={`rounded-full border px-3 py-1.5 text-[11px] tracking-[0.12em] transition-colors ${syncId ? 'border-accent/50 bg-accent/[0.08] text-accent' : 'border-white/[0.1] text-muted hover:border-white/25'}`}
           >
-            ☍ {zhMode ? '合盘' : 'Synastry'}
+            ☍ {lang === 'ja' ? 'シナストリー' : zhMode ? '合盘' : 'Synastry'}
           </button>
           <span className="mx-1 h-4 w-px bg-white/[0.12]" aria-hidden />
           {([
@@ -305,7 +305,7 @@ function ChartPageInner() {
               <button
                 key={key || 'natal'}
                 aria-disabled={disabled || undefined}
-                title={disabled ? `${label} · ${zhMode ? '开发中, 敬请期待' : 'in development'}` : undefined}
+                title={disabled ? `${label} · ${lang === 'ja' ? '開発中' : zhMode ? '开发中, 敬请期待' : 'in development'}` : undefined}
                 onClick={() => {
                   if (disabled) return;
                   patchParams((p) => {
@@ -330,7 +330,7 @@ function ChartPageInner() {
             className="rounded-full border border-white/[0.12] px-2.5 py-0.5 text-[10.5px] text-frost/75 transition-colors hover:border-accent/40 hover:text-accent"
             title={t('astro.set.houseHint')}
           >
-            {zhMode ? '宫位设置 · ' : 'Houses · '}{zhMode ? (SYS_ZH[data?.houseSystemUsed ?? birth.houseSystem ?? 'placidus'] ?? data?.houseSystemUsed ?? '普拉西德') : (data?.houseSystemUsed ?? birth.houseSystem ?? 'placidus')}
+            {lang === 'ja' ? 'ハウス · ' : zhMode ? '宫位设置 · ' : 'Houses · '}{zhMode ? (SYS_ZH[data?.houseSystemUsed ?? birth.houseSystem ?? 'placidus'] ?? data?.houseSystemUsed ?? '普拉西德') : (data?.houseSystemUsed ?? birth.houseSystem ?? 'placidus')}
             <span className="ml-1 text-[8px] text-muted/60">▾</span>
           </button>
           <button
@@ -360,14 +360,14 @@ function ChartPageInner() {
         <EditBirth birth={birth} open={editOpen} onClose={() => setEditOpen(false)} onSave={saveBirth} />
         {syncId ? (
           !arc ? (
-            <p className="py-20 text-center text-[12px] text-muted">{zhMode ? '档案不存在 (可能已删除) — 请重新选择' : 'Archive not found'}</p>
+            <p className="py-20 text-center text-[12px] text-muted">{lang === 'ja' ? 'アーカイブが見つかりません（削除された可能性）' : zhMode ? '档案不存在 (可能已删除) — 请重新选择' : 'Archive not found'}</p>
           ) : syn ? (
             <SynastryResult
               syn={syn}
               zhMode={zhMode}
               tab={stab}
               onTab={(tt) => patchParams((p) => p.set('stab', tt))}
-              aLabel={birth?.label ?? (zhMode ? '主盘' : 'Main')}
+              aLabel={birth?.label ?? (lang === 'ja' ? 'メイン' : zhMode ? '主盘' : 'Main')}
               bLabel={arc.label}
               onExit={() => patchParams((p) => { p.delete('sync'); p.delete('stab'); })}
               cornerActions={cornerActionsNoEdit}
@@ -380,7 +380,7 @@ function ChartPageInner() {
         ) : skyMode ? (
           <div className="space-y-3">
             <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-[11.5px] text-muted">
-              <span>{zhMode ? '天象时刻' : 'Sky time'}</span>
+              <span>{lang === 'ja' ? '天象時刻' : zhMode ? '天象时刻' : 'Sky time'}</span>
               <input
                 type="date"
                 value={`${dpy}-${String(dpm).padStart(2, '0')}-${String(dpd).padStart(2, '0')}`}
@@ -401,7 +401,7 @@ function ChartPageInner() {
                 }}
                 className="rounded-lg border border-white/[0.12] bg-white/[0.04] px-2 py-1 text-[11.5px] text-frost [color-scheme:dark]"
               />
-              <span className="text-muted/60">{zhMode ? '纯天象盘 (地点沿用本命; 不含本命对照)' : 'Pure sky chart (birth location; no natal overlay)'}</span>
+              <span className="text-muted/60">{lang === 'ja' ? '純粋な天象図（出生地を使用; ネイタル重ね合わせなし）' : zhMode ? '纯天象盘 (地点沿用本命; 不含本命对照)' : 'Pure sky chart (birth location; no natal overlay)'}</span>
             </div>
             <div className="mx-auto w-full max-w-[340px]">
               <TimeStepper
@@ -442,8 +442,8 @@ function ChartPageInner() {
           <div className="fixed inset-0 z-[80] flex items-center justify-center p-4" onClick={() => setSynOpen(false)}>
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             <div className="relative max-h-[80vh] w-full max-w-md overflow-y-auto rounded-2xl border border-white/[0.1] bg-[#0b0e17]/[0.97] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.6)]" onClick={(e) => e.stopPropagation()}>
-              <p className="mb-1 font-display text-[15px] tracking-[0.15em] text-accent">{zhMode ? '合盘 · 选择档案' : 'Synastry · archives'}</p>
-              <p className="mb-3 text-[11px] leading-relaxed text-muted/70">{zhMode ? '选择一份档案与当下本命盘合盘 (档案保存在本机浏览器)' : 'Pick an archive; stored in this browser'}</p>
+              <p className="mb-1 font-display text-[15px] tracking-[0.15em] text-accent">{lang === 'ja' ? 'シナストリー · アーカイブ' : zhMode ? '合盘 · 选择档案' : 'Synastry · archives'}</p>
+              <p className="mb-3 text-[11px] leading-relaxed text-muted/70">{lang === 'ja' ? 'アーカイブを1つ選んでシナストリー（このブラウザに保存）' : zhMode ? '选择一份档案与当下本命盘合盘 (档案保存在本机浏览器)' : 'Pick an archive; stored in this browser'}</p>
               <div className="space-y-1.5">
                 {arcList.map((x) => (
                   <div
@@ -459,17 +459,17 @@ function ChartPageInner() {
                       onClick={(e) => { e.stopPropagation(); deleteArchiveSmart(x.id).then(() => loadArchivesSmart().then((r) => setArcList(r.list))); }}
                       className="ml-2 shrink-0 text-[10.5px] text-muted/50 transition-colors hover:text-[#e8a08a]"
                     >
-                      {zhMode ? '删除' : 'Del'}
+                      {lang === 'ja' ? '削除' : zhMode ? '删除' : 'Del'}
                     </button>
                   </div>
                 ))}
-                {arcList.length === 0 && <p className="py-5 text-center text-[11.5px] text-muted/60">{zhMode ? '暂无档案 — 点下方「新增档案」' : 'No archives yet'}</p>}
+                {arcList.length === 0 && <p className="py-5 text-center text-[11.5px] text-muted/60">{lang === 'ja' ? 'アーカイブなし — 下の「新規アーカイブ」から' : zhMode ? '暂无档案 — 点下方「新增档案」' : 'No archives yet'}</p>}
               </div>
               <button
                 onClick={() => { setSynOpen(false); setNewArcOpen(true); }}
                 className="mt-4 w-full rounded-xl border border-accent/40 py-2 text-[12px] tracking-[0.1em] text-accent transition-colors hover:bg-accent/[0.08]"
               >
-                {zhMode ? '+ 新增档案' : '+ New archive'}
+                {lang === 'ja' ? '＋ 新規アーカイブ' : zhMode ? '+ 新增档案' : '+ New archive'}
               </button>
             </div>
           </div>
