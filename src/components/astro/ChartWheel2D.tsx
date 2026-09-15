@@ -9,7 +9,7 @@
 
 import { useMemo, useState } from 'react';
 import type { VChart, VPlanet } from '@/components/astro/ChartWheel';
-import { aspectHex } from '@/lib/astro/aspect-colors';
+
 import { GLYPH_PATHS, SYMBOL_TO_GLYPH, ZODIAC_GLYPH_NAMES } from '@/lib/astro/glyph-paths';
 import { firdariaTable, firdaria, SIGN_RULER } from '@/lib/astro/timing';
 
@@ -146,9 +146,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [dualRing?.inner, dualRing?.outer]);
 
-  const aspList = chart.aspects;
   const stripRing = (x: string) => x.replace(/·(?:[APTRB]|in|out)$/, '');
-  const rel = (a: { a: string; b: string }) => !selected || a.a === selected || a.b === selected || stripRing(a.a) === selected || stripRing(a.b) === selected;
 
   // 扇区环带 path
   const sector = (rOut: number, rIn: number, a0: number, a1: number) => {
@@ -268,36 +266,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
         );
       })}
       {/* 角标在盘体组外 (下面单独渲染): 法达盘挂最外环之外 (爸爸: ASC标到最外面) */}
-      {/* 相位弦线: 端点=真实度数落在内圆边界, 四色细线 */}
-      {aspList.map((a, i) => {
-        // 四轴端点: 轴点黄经(ASC/MC直取, DSC/IC=对宫) → 与角标同位置; glyphs 只有行星
-        const AX_ANGLE: Record<string, number> = {
-          Ascendant: chart.angles.ascendant?.longitude ?? NaN,
-          Midheaven: chart.angles.midheaven?.longitude ?? NaN,
-          Descendant: chart.angles.ascendant ? wrap(chart.angles.ascendant.longitude + 180) : NaN,
-          IC: chart.angles.midheaven ? wrap(chart.angles.midheaven.longitude + 180) : NaN,
-        };
-        const nmStrip = (x: string) => x.replace(/·(?:[APTRB]|in|out)$/, '');   // ·P/·T/·R/·A/·B/·in/·out
-        const angOf = (n: string) => {
-          // 合盘 内环端 (·in / ·A): 内环盘的点表 (extraPoints)
-          if (n.endsWith('·in') || n.endsWith('·A')) {
-            const bareA = nmStrip(n);
-            return extraPoints && extraPoints[bareA] !== undefined ? la(extraPoints[bareA]) : null;
-          }
-          const hasSfx = n !== nmStrip(n);
-          if (!hasSfx && extraPoints && extraPoints[n] !== undefined) return la(extraPoints[n]);   // 原名 → 本命点优先
-          const bare = nmStrip(n);
-          const g = glyphs.find((x) => x.p.name === bare);
-          if (g) return g.realA;                       // 盘上符号 (后缀名剥后也查: 推运星)
-          const ax = AX_ANGLE[bare] ?? (bare === 'ASC' && chart.angles.ascendant ? chart.angles.ascendant.longitude : undefined) ?? (bare === 'MC' && chart.angles.midheaven ? chart.angles.midheaven.longitude : undefined) ?? (bare === 'DSC' && chart.angles.ascendant ? wrap(chart.angles.ascendant.longitude + 180) : undefined) ?? (bare === 'IC' && chart.angles.midheaven ? wrap(chart.angles.midheaven.longitude + 180) : undefined);
-          return ax === undefined || Number.isNaN(ax) ? null : la(ax);
-        };
-        const ra = angOf(a.a), rb = angOf(a.b);
-        if (ra === null || rb === null) return null;
-        const [x1, y1] = xy(R_ASPECT, ra), [x2, y2] = xy(R_ASPECT, rb);
-        const hot = rel(a);
-        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={aspectHex(a.type)} strokeWidth={selected && hot ? 1.8 : 0.9} opacity={selected ? (hot ? 0.95 : 0.06) : 0.38} style={{ transition: 'opacity 0.25s' }} />;
-      })}
+      {/* 相位弦线已删 (爸爸定稿: 盘面保持干净, 相位信息收进行星弹窗/清单/网格) */}
       {/* 行星符号环: 单环(次限)/双环(内=本命@256, 外=次限@300); 严格等距; 滑移>3°画引线+内圆真度刻度 */}
       {dualRing && dualGlyphs ? (
         <>
