@@ -162,10 +162,10 @@ async function worker(wid) {
   }
 }
 
-process.on('SIGINT', () => { saveProgress(); console.log('\n已保存进度，退出。'); process.exit(0); });
+process.on('SIGINT', () => { if (MODE === 'upsert') saveProgress(); console.log('\n已保存进度，退出。'); process.exit(0); });
 
 await Promise.all(Array.from({ length: CONC }, (_, i) => worker(i + 1)));
-saveProgress();
+if (MODE === 'upsert') saveProgress();
 
 const mins = (Date.now() - t0) / 60000;
 console.log(`\n完成: 成功 ${ok} / 失败 ${fail} | 耗时 ${mins.toFixed(1)} 分钟 | ${(ok / Math.max(mins, 0.01)).toFixed(1)} 条/分钟`);
