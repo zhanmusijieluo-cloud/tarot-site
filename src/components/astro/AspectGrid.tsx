@@ -116,7 +116,7 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
                 </button>
               </td>
               {cols.map((col, ci) => {
-                // 对角格: 斜线 + 星体符号倾斜45°坐在拐角 (同时是本列的"列头"— 顶上不再另排一行)
+                // 对角格: 斜线 + 星体符号正立坐在斜线上方拐角 (只位置斜、字形不歪 — 爸爸定稿)
                 if (ci === ri) return (
                   <td key={col.name} className="p-0" style={{ height: gs, border: GRID, background: DIAG_BG }}>
                     <button
@@ -127,10 +127,9 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
                       title={col.zh}
                     >
                       <span
-                        className={`absolute bottom-[2px] right-[2px] inline-block leading-none ${
+                        className={`absolute left-[4px] top-[1px] inline-block leading-none ${
                           selected === col.name ? 'text-accent' : 'text-frost/70'
                         } ${col.name === 'Ascendant' || col.name === 'Midheaven' || col.name === 'Descendant' || col.name === 'IC' ? 'text-[10px] font-medium' : 'text-[15px]'}`}
-                        style={{ transform: 'rotate(-45deg)' }}
                       >
                         {col.symbol}{col.retrograde && <sup style={{ fontSize: 8 }} className="text-[#e8a08a]">R</sup>}
                       </span>
