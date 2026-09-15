@@ -14,10 +14,6 @@ import { LORD_HEX } from '@/lib/astro/lord-colors'
 
 const SIGN_ZH_BY_IDX = ['白羊', '金牛', '双子', '巨蟹', '狮子', '处女', '天秤', '天蝎', '射手', '摩羯', '水瓶', '双鱼'];
 
-const PLANET_ZH: Record<string, string> = {
-  Sun: '太阳', Moon: '月亮', Mercury: '水星', Venus: '金星', Mars: '火星', Jupiter: '木星', Saturn: '土星',
-  NorthNode: '北交', SouthNode: '南交', Uranus: '天王星', Neptune: '海王星', Pluto: '冥王星',
-};
 const FALLBACK_SYM: Record<string, string> = {
   Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀', Mars: '♂', Jupiter: '♃', Saturn: '♄',
   Uranus: '♅', Neptune: '♆', Pluto: '♇', NorthNode: '☊', SouthNode: '☋',

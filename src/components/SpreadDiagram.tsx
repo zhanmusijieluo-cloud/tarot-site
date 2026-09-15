@@ -14,8 +14,6 @@ interface Props {
 export default function SpreadDiagram({ spread }: Props) {
   const count = spread.count;
 
-  const blocks = useMemo(() => Array.from({ length: count }, (_, i) => i), [count]);
-
   const cardSize = count >= 7 ? 28 : count >= 4 ? 34 : 42;
 
   const layout = useMemo(() => {
@@ -64,7 +62,6 @@ export default function SpreadDiagram({ spread }: Props) {
         ];
       default:
         // 横排
-        const w = 180;
         const startX = (200 - (cardSize * count) - (count - 1) * 6) / 2;
         return Array.from({ length: count }, (_, i) => ({ x: startX + i * (cardSize + 6), y: 100 }));
     }

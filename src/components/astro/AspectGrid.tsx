@@ -82,7 +82,6 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
   const impOf = (x: { name: string }) => IMP[x.name] ?? 0
   // 行星取前10 (重要度), 四轴必在 → 最多14列 (宫神星同款: 盘面可读不爆)
   const cols: (VPlanet | { name: string; symbol: string; zh: string; retrograde?: boolean })[] = [...[...chart.planets].sort((a, b) => impOf(b) - impOf(a)).slice(0, 10), ...axisCols];
-  const n = cols.length;
 
   // 相位查表: "a|b" 双向 (aspects 已含四轴相位 — engine 层 AxisBodies)
   const byPair = new Map<string, VAspect>();
