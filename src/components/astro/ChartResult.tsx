@@ -13,9 +13,6 @@ import AspectGrid, { AspectLegend, ASPECT_COLOR, fmtOrbDms, aspectMatrixPoints }
 import NatalCard from '@/components/astro/NatalCard';
 import StatusTabs from '@/components/astro/StatusTabs';
 
-const DIGNITY_ZH: Record<string, string> = {
-  Domicile: '入庙', Exalted: '耀升', Exaltation: '耀升', Detriment: '失势', Fall: '落陷', Peregrine: '游走',
-};
 const RECEPTION_KIND_ZH: Record<string, string> = {
   domicile: '本垣', exaltation: '曜升', triplicity: '三分', detriment: '失势', fall: '落陷',
 };
@@ -23,11 +20,6 @@ const SIGNS_ZH_MINI: Record<string, string> = {
   Aries: '白羊', Taurus: '金牛', Gemini: '双子', Cancer: '巨蟹', Leo: '狮子', Virgo: '处女',
   Libra: '天秤', Scorpio: '天蝎', Scorpius: '天蝎', Sagittarius: '射手', Capricorn: '摩羯',
   Capricornus: '摩羯', Aquarius: '水瓶', Pisces: '双鱼',
-};
-const ELEMENT_ZH: Record<string, string> = { 火: '火象', 土: '土象', 风: '风象', 水: '水象' };
-const signElement = (sign: string): string => {
-  const i = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'].indexOf(sign);
-  return ['火', '土', '风', '水'][i < 0 ? 0 : i % 4];
 };
 
 // 度°分′ 显示 (学宫神星: 精确到分)
@@ -75,11 +67,6 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
   const asc = chart.angles.ascendant, mc = chart.angles.midheaven;
 
   // ---- 左列行星竖列 ----
-  const rows: VPlanet[] = [...chart.planets, asc, mc].filter(Boolean) as VPlanet[];
-  // 先天尊贵徽标单字符 (三分/界/面用)
-  const DIGN_ZH: Record<string, string> = { Sun: '日', Moon: '月', Mercury: '水', Venus: '金', Mars: '火', Jupiter: '木', Saturn: '土', Uranus: '天', Neptune: '海', Pluto: '冥' }
-  const dz = (n: string) => DIGN_ZH[n] ?? n[0]
-
   // ---- 右侧特征面板 (宫神星格式: 判词全保留, 行星/星座用符号) ----
   type Feat = { el: React.ReactNode; tone: 'gold' | 'soft' | 'warn' | 'hot'; tip?: string; main?: number; rank?: number }
   // 星体重要度 (爸爸定标同弹窗: 七大行星→三王星→4轴→其他) — 与 ChartWheel 的 BODY_IMP 同口径

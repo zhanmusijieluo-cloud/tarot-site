@@ -12,12 +12,6 @@ import SignGlyph, { signColor } from '@/components/astro/SignGlyph';
 // 法达大运主星色 (段首行上色; 单一来源 lib/astro/lord-colors.ts, 外环共用)
 import { LORD_HEX } from '@/lib/astro/lord-colors'
 
-const SIGNS_ZH: Record<string, string> = {
-  Aries: '白羊', Taurus: '金牛', Gemini: '双子', Cancer: '巨蟹', Leo: '狮子', Virgo: '处女',
-  Libra: '天秤', Scorpio: '天蝎', Scorpius: '天蝎', Sagittarius: '射手', Capricorn: '摩羯',
-  Aquarius: '水瓶', Pisces: '双鱼',
-};
-const SIGN_SYM = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
 const SIGN_ZH_BY_IDX = ['白羊', '金牛', '双子', '巨蟹', '狮子', '处女', '天秤', '天蝎', '射手', '摩羯', '水瓶', '双鱼'];
 
 const PLANET_ZH: Record<string, string> = {
@@ -53,7 +47,6 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
     const p = chart.planets.find((x) => x.name === name);
     return p?.symbol ?? FALLBACK_SYM[name] ?? ({ Ascendant: 'ASC', Descendant: 'DSC', Midheaven: 'MC', IC: 'IC' } as Record<string, string>)[name] ?? name.slice(0, 2);
   };
-  const zhOf = (name: string): string => PLANET_ZH[name] ?? name;
 
   // 昼盘判定: 太阳落 7~12 宫 = 昼盘 (与引擎同口径)
   const sun = chart.planets.find((x) => x.name === 'Sun');
