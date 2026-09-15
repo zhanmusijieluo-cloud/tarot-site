@@ -7,7 +7,7 @@
 // 比较盘: 内环=主盘方, 外环=档案方; 弦=A×B 跨盘相位 (·A/·B 端)
 // ============================================================
 import React from 'react';
-import ChartWheel, { type VChart, type VPlanet } from '@/components/astro/ChartWheel';
+import ChartWheel, { type VChart } from '@/components/astro/ChartWheel';
 import { ASPECT_COLOR } from '@/components/astro/AspectGrid';
 import type { ChartAspect } from '@/lib/astro/chart';
 

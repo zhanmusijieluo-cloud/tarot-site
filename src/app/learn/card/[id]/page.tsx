@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import PageShell, { Reveal, SectionHead } from '@/components/PageShell';
+import PageShell, { Reveal } from '@/components/PageShell';
 import { TAROT_DECK, getCardImage } from '@/lib/tarot';
 import { localizedCardName } from '@/lib/card-names';
 import { useI18n } from '@/i18n';

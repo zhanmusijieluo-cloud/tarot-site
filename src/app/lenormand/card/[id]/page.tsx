@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import PageShell, { Reveal } from '@/components/PageShell';
 import { useI18n } from '@/i18n';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { LN_CARDS, lnCard, lnImage } from '@/lib/lenormand';
+import { lnCard, lnImage } from '@/lib/lenormand';
 
 /** 雷诺曼单牌详解数据（与 public/data/ln-details.json 一致） */
 interface LnLangContent {

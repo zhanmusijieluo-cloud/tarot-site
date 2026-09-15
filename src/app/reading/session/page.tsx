@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Brain, ChevronRight, CornerDownRight, Gem, Loader2, MessageCircleQuestion, RotateCcw, SendHorizontal, Sparkles, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { Brain, ChevronRight, CornerDownRight, Gem, MessageCircleQuestion, RotateCcw, SendHorizontal, Sparkles, ThumbsDown, ThumbsUp } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import PageShell, { Reveal } from '@/components/PageShell';
 import TarotScene from '@/components/TarotScene';
@@ -11,7 +11,7 @@ import { type DrawnCard, getCardImage, CARD_EN_NAMES, TAROT_DECK, SPREADS } from
 import { LN_DECK, lnImage, LN_SPREADS } from '@/lib/lenormand';
 import { localizedCardName, CARD_JA_NAMES } from '@/lib/card-names';
 import { spreadPositions } from '@/lib/spread-i18n';
-import { getSpreadCoords, getCrossIdx, solveSpreadLayout, solveCustomGridLayout, CARD_H_RATIO, cardWClassToPx } from '@/lib/spread-layout';
+import { getCrossIdx, solveSpreadLayout, solveCustomGridLayout, CARD_H_RATIO, cardWClassToPx } from '@/lib/spread-layout';
 import { supabaseBrowser } from '@/lib/supabase';
 import { getMcpClient } from '@/mcp/client';
 import { useI18n } from '@/i18n';

@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useMemo, useRef, useState } from 'react';
-import { ChevronRight, Compass, Gem, Lightbulb, RotateCcw, Sparkles } from 'lucide-react';
+import { ChevronRight, RotateCcw, Sparkles } from 'lucide-react';
 import PageShell, { Reveal } from '@/components/PageShell';
 import { useRouter, useSearchParams } from 'next/navigation';
 import TarotScene from '@/components/TarotScene';

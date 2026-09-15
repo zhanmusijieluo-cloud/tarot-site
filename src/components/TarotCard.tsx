@@ -1,7 +1,5 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-
 import { type DrawnCard } from '@/lib/tarot';
 
 interface CardProps {

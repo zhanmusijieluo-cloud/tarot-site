@@ -9,7 +9,6 @@
 import React, { useState } from 'react';
 import { useI18n } from '@/i18n';
 import ChartWheel, { type VChart, type VPlanet } from '@/components/astro/ChartWheel';
-import { HOUSE_SYSTEM_ZH } from '@/lib/astro/chart';
 import AspectGrid, { AspectLegend, ASPECT_COLOR, fmtOrbDms, aspectMatrixPoints } from '@/components/astro/AspectGrid';
 import NatalCard from '@/components/astro/NatalCard';
 import StatusTabs from '@/components/astro/StatusTabs';

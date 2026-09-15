@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import PageShell, { Reveal, SectionHead } from '@/components/PageShell';
-import { SPREADS, SPREAD_THEMES, type Spread } from '@/lib/tarot';
+import PageShell, { Reveal } from '@/components/PageShell';
+import { SPREADS, SPREAD_THEMES } from '@/lib/tarot';
 import { spreadSubtitle, spreadDescription, spreadPositions } from '@/lib/spread-i18n';
 import { useI18n } from '@/i18n';
 
