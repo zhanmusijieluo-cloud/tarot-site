@@ -68,7 +68,7 @@ export default function ArchivePicker({ onPick }: { onPick: (a: Archive) => void
       {open && (
         <div
           role="listbox"
-          className="absolute left-0 top-[calc(100%+10px)] z-[70] w-[520px] overflow-hidden rounded-2xl border border-accent/30 bg-[#11141d] shadow-[0_24px_60px_rgba(0,0,0,0.65)]"
+          className="absolute left-1/2 top-[calc(100%+10px)] z-[70] w-[520px] max-w-[calc(100vw-2rem)] -translate-x-1/2 overflow-hidden rounded-2xl border border-accent/30 bg-[#11141d] shadow-[0_24px_60px_rgba(0,0,0,0.65)]"
         >
           <div className="flex items-baseline gap-2.5 border-b border-accent/15 px-5 py-3.5">
             <span className="font-display text-[15px] tracking-[0.14em] text-[#c9a961]">
