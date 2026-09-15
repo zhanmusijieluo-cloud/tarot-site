@@ -27,11 +27,11 @@ await page.goto(BASE, { waitUntil: 'networkidle0', timeout: 60000 })
 if (ZH) { await page.evaluate(() => localStorage.setItem('oracle-lang', 'zh')); await page.reload({ waitUntil: 'networkidle0' }) }
 await sleep(1200)
 
-// 相位区定稿: 左矩阵 + 右清单 同屏并排, 无空白 (旧列表/网格切换已废除)
-const tablesOf = () => page.$$eval('table.border-separate', (ts) => ts.length)
+// 相位区定稿: 左矩阵(阶梯下三角) + 右清单 同屏并排, 无空白 (旧列表/网格切换已废除)
+const tablesOf = () => page.$$eval('table[data-testid="aspect-matrix"]', (ts) => ts.length)
 check((await tablesOf()) === 1, `矩阵在页 (1张)`)
 const duo = await page.evaluate(() => {
-  const g = document.querySelector('table.border-separate')
+  const g = document.querySelector('table[data-testid="aspect-matrix"]')
   const sec = g?.closest('section')
   if (!sec) return null
   const list = [...sec.querySelectorAll('ul li button')].filter((x) => x.textContent.includes('\u2013') && x.textContent.includes('\u00b0'))
@@ -42,8 +42,8 @@ check(!!duo && duo.listCount > 5, `相位清单与矩阵同屏 (${duo?.listCount
 check(!!duo && !duo.hasToggle, `无列表/网格切换钮 (同屏后多余)`)
 // 空白消除: 矩阵右侧紧邻清单 (水平间距 < 面板宽30%)
 const fill = await page.evaluate(() => {
-  const g = document.querySelector('table.border-separate').getBoundingClientRect()
-  const ul = document.querySelector('table.border-separate').closest('div.grid')?.querySelector('ul')
+  const g = document.querySelector('table[data-testid="aspect-matrix"]').getBoundingClientRect()
+  const ul = document.querySelector('table[data-testid="aspect-matrix"]').closest('section')?.querySelector('ul')
   if (!ul) return 9999
   return Math.round(ul.getBoundingClientRect().left - g.right)
 })
@@ -56,7 +56,7 @@ await sleep(900)
 await page.evaluate(() => { [...document.querySelectorAll('button')].find((x) => ['俯视', 'Top'].some((k) => x.textContent.trim().startsWith(k)))?.click() })
 await sleep(900)
 const gridFit = await page.evaluate(() => {
-  const g = document.querySelector('table.border-separate')
+  const g = document.querySelector('table[data-testid="aspect-matrix"]')
   const wrap = g?.parentElement
   return wrap ? { oy: wrap.scrollHeight - wrap.clientHeight, ox: wrap.scrollWidth - wrap.clientWidth } : null
 })
@@ -117,14 +117,14 @@ check(detailShown, `弹窗小窗含尊贵+接纳判词 (替代已删星体列/�
 // T8 新分布: 星图放大+网格垫底重叠 / 特征保留 / 状态大表保留 / 星体列已删
 const zones = await page.evaluate(() => {
   const t = document.body.innerText
-  const grid = document.querySelector('table.border-separate')
+  const grid = document.querySelector('table[data-testid="aspect-matrix"]')
     return {
     birthLine: /GMT ?[+−+-]?\d|回归黄道|tropical/i.test(t),
     features: /特征|features/i.test(t),
     recep: /⇄|↦|互容|mutual/i.test(t),
     statusTable: /黄道状态|ecliptic status/i.test(t),
     gridUnderWheel: (() => {
-          const g = document.querySelector('table.border-separate')
+          const g = document.querySelector('table[data-testid="aspect-matrix"]')
           // 盘=3D画布(.cursor-grab canvas)或线条盘大SVG(viewBox 920); 默认视图已是线条盘
           const c = document.querySelector('.cursor-grab canvas')
             || [...document.querySelectorAll('svg')].find((x) => (x.getAttribute('viewBox') || '').startsWith('0 0 920'))
@@ -133,7 +133,7 @@ const zones = await page.evaluate(() => {
           return g.getBoundingClientRect().top > c.getBoundingClientRect().bottom - 5 // 网格在盘下方(全宽放大)
         })(),
     gridBigCells: (() => {
-      const td = [...document.querySelectorAll('table.border-separate tbody td')].find((x) => x.querySelector('[title]'))
+      const td = [...document.querySelectorAll('table[data-testid="aspect-matrix"] tbody td')].find((x) => x.querySelector('[title]'))
       return !!td && td.getBoundingClientRect().width >= 40 // 格子≥40px (爸爸: 太小看不清)
     })(),
     legendVisible: /A=入相|A=applying/i.test(t),

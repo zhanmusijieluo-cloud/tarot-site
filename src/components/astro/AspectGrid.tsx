@@ -94,7 +94,7 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
 
   return (
     <div className={bare ? '' : 'rounded-2xl border border-white/[0.07] bg-white/[0.015] p-3'}>
-      <table className="mx-auto" style={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+      <table data-testid="aspect-matrix" className="mx-auto" style={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
         <colgroup>
           <col style={{ width: gs }} />
           {cols.map((c) => <col key={c.name} style={{ width: gs }} />)}
