@@ -255,35 +255,37 @@ function traitsFor(card: any, ctx: ReadingCtx): string {
  * 找历史真实解读案例。卡对卡匹配优先，命中不足时降级为匹配任意两张。
  * 检索失败/无库 → 返回空数组，调用方直接跳过附注（管线零阻断）。
  */
-async function recallSimilarCases(ids: number[], limit = 3): Promise<{ cards: string; reading: string }[]> {
+async function recallSimilarCases(ids: number[], limit = 3, lang: 'zh' | 'en' | 'ja' = 'zh'): Promise<{ cards: string; reading: string }[]> {
   const client = getSupabaseClient();
   if (!client || !ids.length) return [];
   const deck = TAROT_DECK_GLOBAL();
   const names = ids.map((id) => deck[id]?.name_en || '').filter(Boolean);
   if (!names.length) return [];
+  // 中文解读优先用补译后的 reading_zh，缺失时回退英文——补译是渐进进行的，逐条生效
+  const pick = (r: any): string => ((lang === 'zh' ? r.reading_zh : '') || r.reading_en || '');
   try {
     // 卡1精确命中优先
     const q1 = await client
       .from('tarot_case_log')
-      .select('card1,card2,card3,reading_en')
+      .select('card1,card2,card3,reading_en,reading_zh')
       .ilike('card1', names[0])
       .limit(limit);
     let rows = (q1.data || []) as any[];
     if (rows.length < limit && names[1]) {
       const q2 = await client
         .from('tarot_case_log')
-        .select('card1,card2,card3,reading_en')
+        .select('card1,card2,card3,reading_en,reading_zh')
         .ilike('card2', names[1])
         .limit(limit);
-      const seen = new Set(rows.map(r => r.id ?? r.reading_en));
+      const seen = new Set(rows.map((r) => pick(r)));
       for (const r of (q2.data || []) as any[]) {
         if (rows.length >= limit) break;
-        if (!seen.has(r.reading_en)) rows.push(r);
+        if (!seen.has(pick(r))) rows.push(r);
       }
     }
     return rows.map((r) => ({
       cards: `${r.card1} | ${r.card2} | ${r.card3}`,
-      reading: (r.reading_en || '').slice(0, 700),
+      reading: pick(r).slice(0, 700),
     }));
   } catch {
     return [];
@@ -335,7 +337,7 @@ async function buildReadingInputs(args: TarotReadingRequest): Promise<ReadingCtx
   const ids = args.cards.map((c: any) => (typeof c?.id === 'number' ? c.id : -1)).filter((i: number) => i >= 0);
   const dbMeanings = await loadDbMeanings(ids, lang);
   // 案例经验召回: 真实历史解读作 few-shot 参考(失败静默跳过)
-  const recalledCases = await recallSimilarCases(ids, 3);
+  const recalledCases = await recallSimilarCases(ids, 3, lang);
   // 咱家韦特原图实测朝向表; 逆位时画面左右镜像(上=未来/过去侧翻转)
   const dirsMap = loadCardDirections();
   const faceNote = (id: number, rev: boolean): string => {
