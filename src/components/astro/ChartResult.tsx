@@ -347,14 +347,14 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
                             <li key={i}>
                               <button
                                 onClick={() => setSelected(selected === a2.a ? null : a2.a)}
-                                className={`flex w-full items-center gap-1.5 rounded-lg border-l-2 px-2 py-[5px] text-left text-[11.5px] transition-colors hover:bg-white/[0.04] ${selected === a2.a || selected === a2.b ? 'bg-white/[0.05]' : ''}`}
+                                className={`flex w-fit items-center gap-1.5 rounded-lg border-l-2 px-2 py-[5px] text-left text-[11.5px] transition-colors hover:bg-white/[0.04] ${selected === a2.a || selected === a2.b ? 'bg-white/[0.05]' : ''}`}
                                 style={{ borderColor: col }}
                               >
                                 <span className="w-4 shrink-0 text-center text-[12px]" style={{ color: col }}>{a2.symbol}</span>
                                 <span className="shrink-0 text-[13px] text-frost/90" title={zhMode ? `${zhOf(a2.a)}–${zhOf(a2.b)}` : undefined}>{sSym(a2.a)}<span className="mx-0.5 text-muted/50">–</span>{sSym(a2.b)}</span>
                                 <span className="shrink-0 text-[10px]" style={{ color: col }}>{a2.typeZh}</span>
-                                {/* 实际夹角 + 偏差°′ (爸爸: 列表也要标夹角; 宫神星同款精确到分; 合相两者同值不重复显示) */}
-                                <span className="ml-auto shrink-0 text-right tabular-nums" style={{ color: col }}>
+                                {/* 实际夹角 + 偏差°′ (爸爸: 数字紧跟相位名, 不再推到行尾留大空档) */}
+                                <span className="shrink-0 tabular-nums" style={{ color: col }}>
                                   {a2.actualAngle !== undefined && Math.abs(a2.actualAngle - a2.orb) > 0.01 && <span className="text-frost/80">{fmtOrbDms(a2.actualAngle)}</span>}
                                   {' '}±{fmtOrbDms(a2.orb)}{a2.applying === true ? 'A' : a2.applying === false ? 'S' : ''}
                                 </span>
