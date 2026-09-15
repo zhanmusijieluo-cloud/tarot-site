@@ -321,17 +321,17 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
               const g = groups.find((x) => x.main === main);
               if (g) g.items.push(a2); else groups.push({ main, items: [a2] });
             }
-            // ② 贪心分列: 每列等高(≈矩阵高), 装不下时整组移到下一列 — 组永不切断
-            const COL_H = 630; // 与左侧矩阵高度对齐 (14行×42px+表头)
-            const cols: typeof groups[] = [];
+            // ② 平衡分列: 先算总高, 再按"目标列高=总高/列数"均分 — 两列内容均衡 (爸爸: 一列挤爆一列空=乱)
+            const COL_H = 630; // 与左侧矩阵高度对齐 (14行×42px)
+            const totalH = groups.reduce((acc, g) => acc + 24 + g.items.length * 26, 0)
+            const nCols = Math.max(1, Math.ceil(totalH / COL_H))
+            const target = totalH / nCols
+            const cols: typeof groups[] = [[]]
+            let h = 0
             for (const g of groups) {
-              const gh = 24 + g.items.length * 26;   // 组头24 + 每条26
-              const cur = cols[cols.length - 1];
-              if (!cur) cols.push([g]);
-              else {
-                const curH = cur.reduce((a, x) => a + 24 + x.items.length * 26, 0);
-                if (curH + gh > COL_H) cols.push([g]); else cur.push(g);
-              }
+              const gh = 24 + g.items.length * 26
+              if (h > 0 && h + gh > target * 1.12 && cols.length < nCols) { cols.push([g]); h = gh }
+              else { cols[cols.length - 1].push(g); h += gh }
             }
             return (
               <div className="flex w-full items-start gap-4 overflow-x-auto">
