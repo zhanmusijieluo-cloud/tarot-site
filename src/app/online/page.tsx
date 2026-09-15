@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import TarotScene from '@/components/TarotScene';
 import OfflineInterpretSection from '@/components/OfflineInterpretSection';
 import { TAROT_DECK, SPREADS, type DrawnCard, type Spread } from '@/lib/tarot';
-import { spreadSubtitle, spreadPositions } from '@/lib/spread-i18n';
+import { spreadPositions } from '@/lib/spread-i18n';
 import { useI18n } from '@/i18n';
 
 type Stage = 'catalogue' | 'draw';
@@ -21,13 +21,6 @@ interface CustomCell {
 }
 
 const CARD_BACK = '/cards/card-back-new.webp';
-
-const SPREAD_OPTIONS = [
-  { id: 'single', nameKey: 'online.spread.single', count: 1, subtitleKey: 'online.spread.singleSub', theme: 'general' },
-  { id: 'three', nameKey: 'online.spread.three', count: 3, subtitleKey: 'online.spread.threeSub', theme: 'general' },
-  { id: 'situation', nameKey: 'online.spread.situation', count: 5, subtitleKey: 'online.spread.situationSub', theme: 'general' },
-  { id: 'horseshoe', nameKey: 'online.spread.horseshoe', count: 7, subtitleKey: 'online.spread.horseshoeSub', theme: 'general' },
-];
 
 function OnlineInner() {
   const router = useRouter();

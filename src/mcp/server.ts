@@ -1,6 +1,6 @@
 import { TarotReadingRequest } from './types';
 import { shuffleDraw, SPREADS, CARD_EN_NAMES } from '@/lib/tarot';
-import { getCardTraits, CARD_TRAITS } from '@/lib/card-traits';
+import { getCardTraits } from '@/lib/card-traits';
 import { CARD_MYSTIC } from '@/lib/card-mystic';
 import { localizedCardName } from '@/lib/card-names';
 import { createClient } from '@supabase/supabase-js';
@@ -1113,8 +1113,6 @@ export class TarotMcpServer {
       const ctx = await buildReadingInputs(args);
       const emitter = createIncrementalEmitter(ctx, args.cards);
       let lastRaw = '';
-      /** 骨架先行标记：AI 首个 delta 到达前是否已推送过预拼装框架 */
-      let skeletonSent = false;
 
       for (let attempt = 0; attempt < 2; attempt++) {
         if (attempt > 0) {
@@ -1122,13 +1120,11 @@ export class TarotMcpServer {
           if (Date.now() - startedAt > 230000) break;
           yield { type: 'retry' };
           // 重试时重置解析器并重发全骨架（前端收到 retry 会清空旧文本）
-          skeletonSent = true;
           const sk = emitter.resetForRetry();
           if (sk) yield { type: 'delta', text: sk };
         } else {
           // 骨架先行：立刻推送板块1框架（标题+卡头+图片+牌性），用户0等待看到所有牌面
           // feed 内部用 emittedHeaders 保证不重复输出骨架已有的卡头/牌性
-          skeletonSent = true;
           const sk = emitter.skeleton();
           if (sk) yield { type: 'delta', text: sk };
         }

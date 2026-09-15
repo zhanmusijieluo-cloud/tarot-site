@@ -83,7 +83,6 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
   // 行星取前10 (重要度), 四轴必在 → 最多14列 (宫神星同款: 盘面可读不爆)
   const cols: (VPlanet | { name: string; symbol: string; zh: string; retrograde?: boolean })[] = [...[...chart.planets].sort((a, b) => impOf(b) - impOf(a)).slice(0, 10), ...axisCols];
   const n = cols.length;
-  const dense = n >= 13; // 天体多时符号/数字缩小, 但仍是完整正方格矩阵
 
   // 相位查表: "a|b" 双向 (aspects 已含四轴相位 — engine 层 AxisBodies)
   const byPair = new Map<string, VAspect>();
@@ -91,7 +90,6 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
     byPair.set(`${a.a}|${a.b}`, a);
     byPair.set(`${a.b}|${a.a}`, a);
   }
-  const cellOf = (x: string, y: string) => (x === y ? null : byPair.get(`${x}|${y}`) ?? null);
 
   // 定稿: 下三角矩阵, 上三角纯空白 (宫神星式), 固定大格 42px (密则38)
   const gs = 42 // 固定大格 42px (宫神星同款; 14列×42+间距≈650px 放得下, 不缩)
