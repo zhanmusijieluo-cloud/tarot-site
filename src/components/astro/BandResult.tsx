@@ -81,7 +81,7 @@ export default function BandResult({ chart, zhMode, kind, cornerActions, onBandD
         </div>
         <div className="flex items-center gap-2 text-frost/85">
           <span className="text-muted/70">{lang === 'ja' ? '年のハウス' : zhMode ? '当前年宫' : 'House'}</span>
-          <span className="tabular-nums text-accent">{house} {lang === 'ja' ? 'ハウス' : zhMode ? '宫' : ''} · {lang === 'ja' ? (SIGN_JA[signName] ?? signName)} · {LORD_SYM[lord] ?? ''} {lang === 'ja' ? (LORD_JA[lord] ?? LORD_ZH[lord])}</span>
+          <span className="tabular-nums text-accent">{house} {lang === 'ja' ? 'ハウス' : zhMode ? '宫' : ''} · {lang === 'ja' ? (SIGN_JA[signName] ?? signName) : (SIGN_ZH[signName] ?? signName)} · {LORD_SYM[lord] ?? ''} {lang === 'ja' ? (LORD_JA[lord] ?? LORD_ZH[lord] ?? lord)}
         </div>
       </div>
     );
