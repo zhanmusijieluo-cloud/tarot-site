@@ -89,38 +89,25 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
     const symFs = 17
     const numFs = 10
 
+  // 爸爸定稿 (宫神星/astro.com 三角网格式): 无顶部行头 — 星体符号放在对角线上倾斜45°,
+  // 行头保持左列正立; 全格 1px 网格线 (不再"看错行列"); 对角格画斜线 (经典三角网格)
+  const GRID = '1px solid rgba(255,255,255,0.07)'
+  const DIAG_BG = 'linear-gradient(135deg, transparent 46.5%, rgba(255,255,255,0.12) 49.25%, rgba(255,255,255,0.12) 50.75%, transparent 53.5%)'
+
   return (
     <div className={bare ? '' : 'rounded-2xl border border-white/[0.07] bg-white/[0.015] p-3'}>
-      <table className="mx-auto border-separate" style={{ borderSpacing: 3, tableLayout: 'fixed' }}>
+      <table className="mx-auto" style={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
         <colgroup>
           <col style={{ width: gs }} />
           {cols.map((c) => <col key={c.name} style={{ width: gs }} />)}
         </colgroup>
-        <thead>
-          <tr>
-            <th />
-            {cols.map((c) => (
-              <th key={c.name} className="p-0" style={{ height: gs }}>
-                <button
-                  onClick={() => onPick?.(selected === c.name ? null : c.name)}
-                  className={`w-full rounded-[6px] leading-none transition-colors ${
-                    selected === c.name ? 'bg-accent/20 text-accent' : 'text-frost/70 hover:bg-white/[0.06]'
-                  } ${c.name === 'Ascendant' || c.name === 'Midheaven' || c.name === 'Descendant' || c.name === 'IC' ? 'text-[10px] tracking-[0.1em]' : 'text-[15px]'}`}
-                  title={c.zh}
-                >
-                  {c.symbol}{c.retrograde && <sup style={{ fontSize: 8 }} className="text-[#e8a08a]">R</sup>}
-                </button>
-              </th>
-            ))}
-          </tr>
-        </thead>
         <tbody>
           {cols.map((row, ri) => (
             <tr key={row.name}>
-              <td className="p-0" style={{ height: gs }}>
+              <td className="p-0" style={{ height: gs, border: GRID }}>
                 <button
                   onClick={() => onPick?.(selected === row.name ? null : row.name)}
-                  className={`w-full rounded-[6px] leading-none transition-colors ${
+                  className={`flex h-full w-full items-center justify-center rounded-[4px] leading-none transition-colors ${
                     selected === row.name ? 'bg-accent/20 text-accent' : 'text-frost/70 hover:bg-white/[0.06]'
                   } ${row.name === 'Ascendant' || row.name === 'Midheaven' || row.name === 'Descendant' || row.name === 'IC' ? 'text-[10px] tracking-[0.1em]' : 'text-[15px]'}`}
                   title={row.zh}
@@ -129,15 +116,36 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
                 </button>
               </td>
               {cols.map((col, ci) => {
-                // 上三角/对角: 纯空白, 什么都不画 (不乱的关键)
-                if (ci >= ri) return <td key={col.name} style={{ height: '10px' }} />;
+                // 对角格: 斜线 + 星体符号倾斜45°坐在拐角 (同时是本列的"列头"— 顶上不再另排一行)
+                if (ci === ri) return (
+                  <td key={col.name} className="p-0" style={{ height: gs, border: GRID, background: DIAG_BG }}>
+                    <button
+                      onClick={() => onPick?.(selected === col.name ? null : col.name)}
+                      className={`relative h-full w-full rounded-[4px] transition-colors ${
+                        selected === col.name ? 'bg-accent/20' : 'hover:bg-white/[0.06]'
+                      }`}
+                      title={col.zh}
+                    >
+                      <span
+                        className={`absolute bottom-[2px] right-[2px] inline-block leading-none ${
+                          selected === col.name ? 'text-accent' : 'text-frost/70'
+                        } ${col.name === 'Ascendant' || col.name === 'Midheaven' || col.name === 'Descendant' || col.name === 'IC' ? 'text-[10px] font-medium' : 'text-[15px]'}`}
+                        style={{ transform: 'rotate(-45deg)' }}
+                      >
+                        {col.symbol}{col.retrograde && <sup style={{ fontSize: 8 }} className="text-[#e8a08a]">R</sup>}
+                      </span>
+                    </button>
+                  </td>
+                );
+                // 上三角: 空格 (保留网格线, 结构可见)
+                if (ci > ri) return <td key={col.name} style={{ height: gs, border: GRID }} />;
                 const a = byPair.get(`${row.name}|${col.name}`);
-                if (!a) return <td key={col.name} style={{ height: gs }} />;
+                if (!a) return <td key={col.name} style={{ height: gs, border: GRID }} />;
                 const color = ASPECT_COLOR[a.type] ?? '#9aa3b5';
                 return (
-                  <td key={col.name} className="p-0" style={{ height: gs }}
+                  <td key={col.name} className="p-0" style={{ height: gs, border: GRID }}
                     title={`${row.zh} ${col.zh} ${a.typeZh} ±${fmtOrbDms(a.orb)}`}>
-                    <div className="relative flex h-full w-full items-center justify-center rounded-[6px] leading-none"
+                    <div className="relative flex h-full w-full items-center justify-center leading-none"
                       style={{ background: `${color}33`, color }}>
                       <span style={{ fontSize: symFs }}>{a.symbol}</span>
                       <span className="absolute inset-x-0 bottom-[7%] text-center" style={{ fontSize: numFs, letterSpacing: '-0.2px' }}>
