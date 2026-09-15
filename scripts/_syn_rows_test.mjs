@@ -22,7 +22,7 @@ await new Promise((r) => setTimeout(r, 3000))
 const rows = await page.evaluate(() => {
   const lis = [...document.querySelectorAll('li')].filter((l) => {
     const t = l.innerText
-    return /[□△⚹☍☌]/.test(t) && /°/.test(t) && l.querySelectorAll('span').length >= 5
+    return /[□△⚹☍☌]/.test(t) && /°/.test(t) && l.querySelectorAll("span").length >= 6
   })
   return lis.slice(0, 6).map((l) => [...l.querySelectorAll('span')].map((s) => {
     const r = s.getBoundingClientRect()
