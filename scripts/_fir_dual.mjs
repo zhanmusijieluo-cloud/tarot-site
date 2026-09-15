@@ -26,8 +26,8 @@ const geo = await page.evaluate(() => {
     const r = Math.hypot(x - 460, y - 460)
     const st = getComputedStyle(p)
     if (parseFloat(st.opacity) === 0 || st.display === 'none') continue
-    if (r > 350 && r < 400) main.push(Math.round(r))
-    else if (r >= 400 && r < 440) sub.push(Math.round(r))
+    if (r >= 336 && r <= 356) main.push(Math.round(r))
+    else if (r > 356 && r < 400) sub.push(Math.round(r))
   }
   return { main: main.length, sub: sub.length, mainR: main[0], subR: sub[0] }
 })

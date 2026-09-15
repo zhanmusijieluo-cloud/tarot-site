@@ -12,7 +12,7 @@ import type { VChart, VPlanet } from '@/components/astro/ChartWheel';
 import { aspectHex } from '@/lib/astro/aspect-colors';
 import { GLYPH_PATHS, SYMBOL_TO_GLYPH, ZODIAC_GLYPH_NAMES } from '@/lib/astro/glyph-paths';
 import { firdariaTable, firdaria, SIGN_RULER } from '@/lib/astro/timing';
-import { LORD_HEX_OF } from '@/lib/astro/lord-colors';
+
 
 // 矢量符号渲染: 统一描边粗细 + 双层(白色防粘底+彩色笔画) (爸爸: 像宫神星那样, 系统字体的Unicode符号天然粗细不一)
 const GLYPH_SIZE = 24;   // 目标视觉高度 (px) — 爸爸: 再稍微缩小一点点 (26→24)
@@ -52,10 +52,10 @@ const R_DUAL_IN = 256;         // 双环: 内圈(本命) — 本命+次限对比
 const R_DUAL_OUT = 300;        // 双环: 外圈(次限)
 const R_ASPECT = 228;          // 内圆 = 相位弦边界
 // —— 外圈双环带 (绝对半径, 不随盘体缩放): 从外到里 小运环→大运环→星座→宫位 (爸爸定稿) ——
-const R_SUB_OUT = 430;         // 小运环 (法达子段/小限) 外缘 (整盘最大外径, 与其他盘+角标的观感一致)
-const R_SUB_IN = 398;          // 小运环内缘
-const R_MAIN_OUT = 394;        // 大运环外缘 (新增: 主星符号+年龄阶段)
-const R_MAIN_IN = 362;         // 大运环内缘
+const R_SUB_OUT = 384;         // 小运环 (法达子段/小限) 外缘
+const R_SUB_IN = 352;          // 小运环内缘
+const R_MAIN_OUT = 348;        // 大运环外缘 (主星符号+年龄段, 环内旋转弧排)
+const R_MAIN_IN = 316;         // 大运环内缘 (盘体缩到 0.80 刚好贴住, 无缝隙黑圈 — 爸爸: 中间黑环不好看)
 const xy = (r: number, a: number) => [C + r * Math.cos(a), C - r * Math.sin(a)] as const;
 const wrap = (lon: number) => ((lon % 360) + 360) % 360;
 const fmtDeg = (lon: number) => {
@@ -108,13 +108,13 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
     ? !!chart.planets.find((x) => x.name === 'Sun')?.house && (chart.planets.find((x) => x.name === 'Sun')!.house! >= 7)
     : false;
   const firRows = outerBand === 'firdaria' ? firdariaTable(firDay, chart.input.year, chart.input.month, chart.input.day, 1) : null;
-  const firMains = firRows ? firRows.filter((r) => r.sub === r.lord || r.sub === null) : null;
+
   // 大运主段 (内圈大运环用): 9段含起止年龄
   const firPeriods = outerBand === 'firdaria' ? firdaria(firDay) : null;
   const ascLon = chart.angles.ascendant?.longitude ?? 0;
   // 法达/小限盘: 内盘整体缩小 16% 给外圈大运/小运环腾位, 整盘最大外径仍与普通盘一致 (爸爸: 整体大小相同, 加了环所以原环缩小)
   const bandOn = outerBand === 'firdaria' || outerBand === 'profection';
-  const kDisk = bandOn ? 0.84 : 1;
+  const kDisk = bandOn ? 0.80 : 1;   // 盘沿 392*0.80=314 ≈ R_MAIN_IN 贴合无黑缝
   const DIR = chart.settings?.display?.dir ?? 'ccw';
   const ASCP = chart.settings?.display?.ascPos ?? 'left';
   const la = (lon: number) => lonToAngle(lon, ascLon, DIR, ASCP);
@@ -265,20 +265,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
           </g>
         );
       })}
-      {/* 角标 (盘沿外, 带轴点度分) */}
-      {hasHouses && [cusps![0], cusps![3], cusps![6], cusps![9]].map((lon, i) => {
-        const lab = ['ASC', 'IC', 'DSC', 'MC'][i];
-        const a = la(lon);
-        const [bx, by] = xy(R_OUT + 15, a);
-        const [dx, dy] = xy(R_OUT + 29, a);
-        const [dg1, dg2] = fmtDeg(lon);
-        return (
-          <g key={i}>
-            <text x={bx} y={by + 4.5} textAnchor="middle" fontSize="13.5" fontWeight={700} fill={paper ? '#c25d84' : '#d9a8b8'}>{lab}</text>
-            <text x={dx} y={dy + 4} textAnchor="middle" fontSize="9.5" fill={P.ink} opacity="0.8">{dg1}{dg2}</text>
-          </g>
-        );
-      })}
+      {/* 角标在盘体组外 (下面单独渲染): 法达盘挂最外环之外 (爸爸: ASC标到最外面) */}
       {/* 相位弦线: 端点=真实度数落在内圆边界, 四色细线 */}
       {aspList.map((a, i) => {
         // 四轴端点: 轴点黄经(ASC/MC直取, DSC/IC=对宫) → 与角标同位置; glyphs 只有行星
@@ -319,8 +306,24 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
         renderRing(glyphs, R_PLANET, 'single')
       )}
       </g>
-      {/* ---- 法达双环 (爸爸定稿): 内圈大运环=9主段(符号+年龄段), 外圈小运环=61子段(上色); 从外到里 小运环→大运环→星座→宫位 ---- */}
-      {outerBand === 'firdaria' && firRows && firMains && firPeriods && (() => {
+      {/* 角标 (缩放组外·绝对坐标): 普通盘=盘沿外15/29 不变; 法达/小限盘=挂最外环之外 (爸爸: ASC标到最外面, 别夹在中间黑环) */}
+      {hasHouses && [cusps![0], cusps![3], cusps![6], cusps![9]].map((lon, i) => {
+        const lab = ['ASC', 'IC', 'DSC', 'MC'][i];
+        const a = la(lon);
+        const off1 = bandOn ? 24 : 15, off2 = bandOn ? 38 : 29;
+        const base = bandOn ? R_SUB_OUT : R_OUT;
+        const [bx, by] = xy(base + off1, a);
+        const [dx, dy] = xy(base + off2, a);
+        const [dg1, dg2] = fmtDeg(lon);
+        return (
+          <g key={i}>
+            <text x={bx} y={by + 4.5} textAnchor="middle" fontSize="13.5" fontWeight={700} fill={paper ? '#c25d84' : '#d9a8b8'}>{lab}</text>
+            <text x={dx} y={dy + 4} textAnchor="middle" fontSize="9.5" fill={P.ink} opacity="0.8">{dg1}{dg2}</text>
+          </g>
+        );
+      })}
+      {/* ---- 法达双环 (爸爸定稿 v2, 测测同款): 只保持一种色 — 已走过=无色, 未走过=主题色; 符号旋转沿弧全量显示; 年纪在环内 ---- */}
+      {outerBand === 'firdaria' && firRows && firPeriods && (() => {
         const yearA = (age: number) => Math.PI / 2 - (age / 75) * Math.PI * 2;   // 12点起顺时针, 75年一圈
         const curAgeD = (Date.now() - Date.UTC(chart.input.year, chart.input.month - 1, chart.input.day)) / (365.2425 * 86400000);
         const SYM_OF: Record<string, string> = { Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀', Mars: '♂', Jupiter: '♃', Saturn: '♄', NorthNode: '☊', SouthNode: '☋' };
@@ -328,18 +331,22 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
           const [x1, y1] = xy(rOut, a0), [x2, y2] = xy(rOut, a1), [x3, y3] = xy(rIn, a1), [x4, y4] = xy(rIn, a0);
           return `M ${x1} ${y1} A ${rOut} ${rOut} 0 0 1 ${x2} ${y2} L ${x3} ${y3} A ${rIn} ${rIn} 0 0 0 ${x4} ${y4} Z`;
         };
-        const R_MAIN_MID = (R_MAIN_IN + R_MAIN_OUT) / 2;   // 396
+        const THEME = paper ? '#c25d84' : '#d9a8b8';               // 主题色 (未走过)
+        const PASTC = paper ? '#9aa3af' : '#8a93a3';               // 无色档 (已走过)
+        const rotAt = (a: number) => { let d = 90 - a * 180 / Math.PI; d = ((d % 360) + 360) % 360; return d > 180 ? d - 360 : d; };  // 符号顶朝外沿弧旋转
+        const R_MAIN_MID = (R_MAIN_IN + R_MAIN_OUT) / 2;
+        const R_SUB_MID = (R_SUB_IN + R_SUB_OUT) / 2;
         return (
           <>
-            {/* 大运环 (内, 新增): 9主段 —— 主星符号 + 年龄阶段; 当前大运玫红高亮 */}
+            {/* 大运环 (内): 9主段 — 符号居中旋转沿弧 + 起运年纪在环内边界; 当前段高亮 */}
             {firPeriods.map((m, i) => {
               const a0 = yearA(m.startAge), a1 = yearA(m.endAge);
               const isNow = curAgeD >= m.startAge && curAgeD < m.endAge;
+              const isPast = curAgeD >= m.endAge;
               const hov = mainHover === i || (bandPin?.kind === 'main' && bandPin.idx === i);
-              const c = LORD_HEX_OF(m.lord);
               const mid = (a0 + a1) / 2;
-              const [gx, gy] = xy(R_MAIN_MID + 6, mid);
-              const [tx, ty] = xy(R_MAIN_MID - 9, mid);
+              const [gx, gy] = xy(R_MAIN_MID + 8, mid);
+              const [tx, ty] = xy(R_MAIN_MID - 2, a0);
               return (
                 <g key={`main-${i}`}
                   onMouseEnter={() => setMainHover(i)} onMouseLeave={() => setMainHover(null)}
@@ -347,22 +354,28 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
                   onClick={(e) => { e.stopPropagation(); setBandPin({ kind: 'main', idx: i }); }}
                 >
                   <path d={arcCw(R_MAIN_IN, R_MAIN_OUT, a0, a1)}
-                    fill={c} fillOpacity={isNow ? (hov ? 0.66 : 0.5) : (hov ? 0.5 : 0.26)}
-                    stroke={isNow ? '#d9a8b8' : P.ring} strokeWidth={isNow ? 1.4 : 0.8} strokeOpacity={isNow ? 1 : 0.6} />
-                  <GlyphPath name={SYMBOL_TO_GLYPH[SYM_OF[m.lord]] ?? ''} cx={gx} cy={gy} color={isNow ? '#ffd75e' : P.ink} bg={P.bg} size={hov ? 17 : 15} />
-                  <text x={tx} y={ty + 3.5} textAnchor="middle" fontSize="9.5" fontWeight={isNow ? 700 : 500} fill={isNow ? '#ffd75e' : P.ink} opacity={isNow ? 1 : 0.75} stroke={P.bg} strokeWidth="2.4" paintOrder="stroke">{Math.round(m.startAge)}–{Math.round(m.endAge)}</text>
+                    fill={isPast ? (paper ? 'rgba(120,130,145,0.10)' : 'rgba(148,163,184,0.07)') : THEME}
+                    fillOpacity={isPast ? 1 : (isNow ? (hov ? 0.66 : 0.5) : (hov ? 0.44 : 0.26))}
+                    stroke={isNow ? THEME : P.ring} strokeWidth={isNow ? 1.4 : 0.8} strokeOpacity={isNow ? 1 : 0.6} />
+                  <g transform={`rotate(${rotAt(mid)} ${gx} ${gy})`}>
+                    <GlyphPath name={SYMBOL_TO_GLYPH[SYM_OF[m.lord]] ?? ''} cx={gx} cy={gy} color={isPast ? PASTC : (isNow ? '#ffd75e' : THEME)} bg={P.bg} size={hov ? 19 : 17} />
+                  </g>
+                  <g transform={`rotate(${rotAt(a0)} ${tx} ${ty})`}>
+                    <text x={tx} y={ty + 3.5} textAnchor="middle" fontSize="10" fontWeight={600} fill={isPast ? PASTC : THEME} stroke={P.bg} strokeWidth="2.4" paintOrder="stroke">{Math.round(m.startAge)}岁</text>
+                  </g>
                 </g>
               );
             })}
-            {/* 小运环 (外): 61子段上色 + 符号, 悬停高亮, 点击只弹窗 */}
+            {/* 小运环 (外): 61子段 — 符号旋转沿弧全量显示 (不再省略窄段, 爸爸: 有空白) */}
             {firRows.map((r, i) => {
               const a0 = yearA(r.startAge), a1 = yearA(r.endAge);
               const isNow = curAgeD >= r.startAge && curAgeD < r.endAge;
+              const isPast = curAgeD >= r.endAge;
               const lord = r.sub ?? r.lord;
-              const c = LORD_HEX_OF(lord);
               const hov = bandHover === i || (bandPin?.kind === 'sub' && bandPin.idx === i);
               const isMainStart = firPeriods.some((m) => m.startAge === r.startAge);
-              const spanYears = r.endAge - r.startAge;
+              const mid = (a0 + a1) / 2;
+              const [sx, sy] = xy(R_SUB_MID, mid);
               return (
                 <g key={`sub-${i}`}
                   onMouseEnter={() => setBandHover(i)} onMouseLeave={() => setBandHover(null)}
@@ -370,13 +383,13 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
                   onClick={(e) => { e.stopPropagation(); setBandPin({ kind: 'sub', idx: i }); }}
                 >
                   <path d={arcCw(R_SUB_IN, R_SUB_OUT, a0, a1)}
-                    fill={c} fillOpacity={isNow ? (hov ? 0.62 : 0.45) : (hov ? 0.5 : 0.22)}
-                    stroke={isMainStart ? '#d9a8b8' : P.ring} strokeWidth={isMainStart ? 1 : 0.5} strokeOpacity={isMainStart ? 0.9 : 0.5} />
-                  {spanYears > 1.2 && (
-                    <GlyphPath name={SYMBOL_TO_GLYPH[SYM_OF[lord]] ?? ''}
-                      cx={xy((R_SUB_IN + R_SUB_OUT) / 2, (a0 + a1) / 2)[0]} cy={xy((R_SUB_IN + R_SUB_OUT) / 2, (a0 + a1) / 2)[1]}
-                      color={P.ink} bg={P.bg} size={hov ? 15 : 12} />
-                  )}
+                    fill={isPast ? (paper ? 'rgba(120,130,145,0.10)' : 'rgba(148,163,184,0.07)') : THEME}
+                    fillOpacity={isPast ? 1 : (isNow ? (hov ? 0.62 : 0.45) : (hov ? 0.42 : 0.24))}
+                    stroke={isMainStart ? THEME : P.ring} strokeWidth={isMainStart ? 1 : 0.5} strokeOpacity={isMainStart ? 0.9 : 0.5} />
+                  <g transform={`rotate(${rotAt(mid)} ${sx} ${sy})`}>
+                    <GlyphPath name={SYMBOL_TO_GLYPH[SYM_OF[lord]] ?? ''} cx={sx} cy={sy}
+                      color={isPast ? PASTC : (isNow ? '#ffd75e' : THEME)} bg={P.bg} size={hov ? 16 : 13.5} />
+                  </g>
                 </g>
               );
             })}
@@ -410,18 +423,17 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
         const birthMs = Date.UTC(chart.input.year, chart.input.month - 1, chart.input.day)
         const toDate = (age: number) => new Date(birthMs + Math.round(age * 365.2425 * 86400000))
         const fmt = (d: Date) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`
-        let lord = '', sub = '', sAge = 0, eAge = 0, jy = 0, jm = 1, jd = 1, c = '#8cc0ff'
+        let lord = '', sub = '', sAge = 0, eAge = 0, jy = 0, jm = 1, jd = 1
+        const c = paper ? '#c25d84' : '#d9a8b8'   // 爸爸: 法达只保持一种主题色 (浮层同源)
         if (act.kind === 'main') {
           const m = firPeriods[act.idx]; if (!m) return null
           lord = m.lord; sAge = m.startAge; eAge = m.endAge
           const row = firRows.find((r) => Math.abs(r.startAge - m.startAge) < 1e-6)
           jy = row?.y ?? chart.input.year; jm = row?.m ?? chart.input.month; jd = row?.d ?? chart.input.day
-          c = LORD_HEX_OF(m.lord)
         } else {
           const r = firRows[act.idx]; if (!r) return null
           lord = r.lord; sub = r.sub && r.sub !== r.lord ? r.sub : ''
           sAge = r.startAge; eAge = r.endAge; jy = r.y; jm = r.m; jd = r.d
-          c = LORD_HEX_OF(r.sub ?? r.lord)
         }
         const pinned = !!bandPin && bandPin.kind === act.kind && bandPin.idx === act.idx
         return (
