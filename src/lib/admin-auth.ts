@@ -22,11 +22,12 @@ function serverClient(): SupabaseClient | null {
 }
 
 export async function getAdminFromRequest(request: Request, minimum: AdminRole = 'support') {
-  const sb = serverClient();
-  if (!sb) return { ok: false as const, status: 503, error: 'Admin service is not configured' };
   const auth = request.headers.get('authorization') ?? '';
   const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
   if (!token) return { ok: false as const, status: 401, error: 'Missing authorization token' };
+
+  const sb = serverClient();
+  if (!sb) return { ok: false as const, status: 503, error: 'Admin service is not configured' };
 
   const { data: userData, error: userError } = await sb.auth.getUser(token);
   if (userError || !userData.user) return { ok: false as const, status: 401, error: 'Invalid session' };
