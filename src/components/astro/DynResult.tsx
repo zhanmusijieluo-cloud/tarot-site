@@ -12,6 +12,7 @@ import { useI18n } from '@/i18n';
 import ChartWheel, { type VChart, type VPlanet } from '@/components/astro/ChartWheel';
 import { ASPECT_COLOR } from '@/components/astro/AspectGrid';
 import type { DynamicChart } from '@/lib/astro/dynamic';
+import { PLANET_JA } from '@/lib/astro/i18n';
 import TimeStepper from '@/components/astro/TimeStepper';
 
 const IMP: Record<string, number> = {
@@ -20,6 +21,7 @@ const IMP: Record<string, number> = {
 };
 const ASPECT_ORDER: Record<string, number> = { conjunction: 0, sextile: 1, square: 2, trine: 3, opposition: 4, quincunx: 5 };
 const AX_ZH: Record<string, string> = { ASC: '上升', DSC: '下降', MC: '天顶', IC: '天底' };
+const AX_JA: Record<string, string> = { ASC: 'ASC', DSC: 'DSC', MC: 'MC', IC: 'IC' };
 
 // 盘种文案 (按 dyn.type 切换; 爸爸盘种条: 本命/三限/次限/行运/日返/月返/日弧)
 const KIND: Record<string, { zh: string; en: string; ja?: string; note: string; noteEn: string; noteJa?: string }> = {
@@ -71,8 +73,8 @@ export default function DynResult({ dyn, zhMode, target, onDate, onNow, cornerAc
   };
   const zhOf = (raw: string) => {
     const n = nameOf(raw);
-    if (AX_ZH[n]) return AX_ZH[n];
-    return zhMode ? (natal.planets.find((p) => p.name === n)?.zh ?? n) : n;
+    if (AX_ZH[n]) return lang === 'ja' ? (AX_JA[n] ?? n) : AX_ZH[n];
+    return lang === 'ja' ? (PLANET_JA[n] ?? n) : zhMode ? (natal.planets.find((p) => p.name === n)?.zh ?? n) : n;
   };
 
   // 本命点黄经表 (爸爸: 推运盘中心要有相位线 — 画 推运星→本命位置 的 cross 弦)

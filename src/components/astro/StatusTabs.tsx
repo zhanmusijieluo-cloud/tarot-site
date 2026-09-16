@@ -12,7 +12,7 @@ import { FIXED_STARS, starConjunctions, starLonAt } from '@/lib/astro/fixed-star
 import SignGlyph, { signColor } from '@/components/astro/SignGlyph';
 // 法达大运主星色 (段首行上色; 单一来源 lib/astro/lord-colors.ts, 外环共用)
 import { LORD_HEX } from '@/lib/astro/lord-colors'
-import { PLANET_JA } from '@/lib/astro/i18n';
+import { PLANET_JA, JA } from '@/lib/astro/i18n';
 
 const SIGN_ZH_BY_IDX = ['白羊', '金牛', '双子', '巨蟹', '狮子', '处女', '天秤', '天蝎', '射手', '摩羯', '水瓶', '双鱼'];
 
@@ -181,14 +181,14 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
               </tr>
               <tr className="border-b border-white/[0.06] bg-white/[0.02] text-[10px] tracking-[0.12em] text-muted/80 uppercase">
                 <th className={thCls} colSpan={5} />
-                <th className={`${thCls} text-center`}>{T('本垣', 'Dom', '本垣')}</th>
-                <th className={`${thCls} text-center`}>{T('曜昇', 'Exa', '曜昇')}</th>
-                <th className={`${thCls} text-center`}>{T('三分', 'Tri', '三分')}</th>
-                <th className={`${thCls} text-center`}>{T('界', 'Bnd', '界')}</th>
-                <th className={`${thCls} text-center`}>{T('十度', 'Dec', '十度')}</th>
-                <th className={`${thCls} text-center`}>{T('陷', 'Det', '陷')}</th>
-                <th className={`${thCls} text-center`}>{T('落', 'Fal', '落')}</th>
-                <th className={`${thCls} text-center`}>{T('分数', 'Score', '分数')}</th>
+                <th className={`${thCls} text-center`}>{T('本垣', 'Dom', JA.domicile)}</th>
+                <th className={`${thCls} text-center`}>{T('曜昇', 'Exa', JA.exaltation)}</th>
+                <th className={`${thCls} text-center`}>{T('三分', 'Tri', JA.triplicity)}</th>
+                <th className={`${thCls} text-center`}>{T('界', 'Bnd', JA.term)}</th>
+                <th className={`${thCls} text-center`}>{T('十度', 'Dec', JA.face)}</th>
+                <th className={`${thCls} text-center`}>{T('陷', 'Det', JA.detriment)}</th>
+                <th className={`${thCls} text-center`}>{T('落', 'Fal', JA.fall)}</th>
+                <th className={`${thCls} text-center`}>{T('分数', 'Score', JA.score)}</th>
                 <th className={thCls} />
               </tr>
             </thead>
@@ -245,8 +245,8 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                 <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
                   <th className={thCls}>{T('宮', 'House', '宮')}</th>
                   <th className={thCls}>{T('黄经度数', 'Longitude', '黄経度数')}</th>
-                  <th className={`${thCls} text-center`}>{T('本垣', 'Dom', '本垣')}</th>
-                  <th className={`${thCls} text-center`}>{T('曜昇', 'Exa', '曜昇')}</th>
+                  <th className={`${thCls} text-center`}>{T('本垣', 'Dom', JA.domicile)}</th>
+                  <th className={`${thCls} text-center`}>{T('曜昇', 'Exa', JA.exaltation)}</th>
                   <th className={`${thCls} text-center`}>{T('宫神星', 'Almuten', '宮神星')}</th>
                 </tr>
               </thead>

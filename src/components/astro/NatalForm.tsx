@@ -36,6 +36,10 @@ export default function NatalForm() {
   const [houseSystem, setHouseSystem] = useState<HouseSystem>('placidus');
   const [error, setError] = useState('');
 
+  // 默认出生地「北京」: 英文模式回显 Beijing (派生渲染, 不碰 state, 避免级联渲染)
+  const isDefaultBj = place.cnCode === '北京~北京~北京' && Math.abs(place.lat - 39.9042) < 1e-6;
+  const displayPlace: BirthPlace = isDefaultBj && lang === 'en' ? { ...place, label: 'Beijing' } : place;
+
   // 爸爸: 选档案 = 资料早已确认 → 直接跳转星盘 (不回填表单逗留)
   const pickAndCast = (a: Archive) => {
     const raw = a.birth;
@@ -106,7 +110,7 @@ export default function NatalForm() {
       </div>
 
       <div className="mt-3">
-        <BirthplacePicker value={place} onChange={setPlace} />
+        <BirthplacePicker value={displayPlace} onChange={setPlace} />
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">

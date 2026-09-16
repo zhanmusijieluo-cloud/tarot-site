@@ -422,6 +422,8 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
         const act = bandPin ?? (mainHover !== null ? { kind: 'main' as const, idx: mainHover } : bandHover !== null ? { kind: 'sub' as const, idx: bandHover } : null)
         if (!act || !firRows || !firPeriods) return null
         const LORD_ZH: Record<string, string> = { Sun: '太阳', Moon: '月亮', Mercury: '水星', Venus: '金星', Mars: '火星', Jupiter: '木星', Saturn: '土星', NorthNode: '北交点', SouthNode: '南交点' }
+        const LORD_JA: Record<string, string> = { Sun: '太陽', Moon: '月', Mercury: '水星', Venus: '金星', Mars: '火星', Jupiter: '木星', Saturn: '土星', NorthNode: 'ドラゴンヘッド', SouthNode: 'ドラゴンテイル' }
+        const lordName = (n: string) => (lang === 'ja' ? (LORD_JA[n] ?? n) : (LORD_ZH[n] ?? n));
         const birthMs = Date.UTC(chart.input.year, chart.input.month - 1, chart.input.day)
         const toDate = (age: number) => new Date(birthMs + Math.round(age * 365.2425 * 86400000))
         const fmt = (d: Date) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`
@@ -442,8 +444,8 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
           <div className={`absolute left-1/2 top-2 z-20 -translate-x-1/2 rounded-xl border px-3.5 py-2 text-[11.5px] shadow-[0_8px_24px_rgba(0,0,0,0.5)] ${pinned ? '' : 'pointer-events-none'}`}
             style={{ borderColor: c + '66', background: 'rgba(10,14,25,0.96)', color: '#dbe4f5' }}>
             <span style={{ color: c }} className="font-semibold">
-              {lang === 'ja' ? `${LORD_ZH[lord] ?? lord}大運` : zhMode ? `${LORD_ZH[lord] ?? lord}大运` : `${lord} period`}
-              {sub && (lang === 'ja' ? ` · ${LORD_ZH[sub] ?? sub}小運` : zhMode ? ` · ${LORD_ZH[sub] ?? sub}小运` : ` · ${sub} sub`)}
+              {lang === 'ja' ? `${lordName(lord)}大運` : zhMode ? `${lordName(lord)}大运` : `${lord} period`}
+              {sub && (lang === 'ja' ? ` · ${lordName(sub)}小運` : zhMode ? ` · ${lordName(sub)}小运` : ` · ${sub} sub`)}
             </span>
             <span className="ml-2 tabular-nums text-muted">{jy}-{String(jm).padStart(2, '0')}-{String(jd).padStart(2, '0')} → {fmt(toDate(eAge))}</span>
             <span className="ml-2 text-muted/60">{Math.round(sAge)}–{Math.round(eAge)}{lang === 'ja' ? '歳' : zhMode ? '岁' : 'y'}</span>

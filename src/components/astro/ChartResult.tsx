@@ -132,7 +132,9 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
           tone: 'soft',
           main: impMax,
           rank: Math.min(DIGNITY_RANK[r.kind] ?? 2, rev ? DIGNITY_RANK[rev.kind] ?? 2 : 2),
-          tip: zhMode
+          tip: lang === 'ja'
+            ? `${zhOf(r.a)} と ${zhOf(r.b)} ミューチュアルレセプション${r.aspected ? '＋レセプション（アスペクトあり、エネルギー互通）' : '（アスペクトなしでも成立、エネルギー共有）'}: お互いの${kind}のサイン ${sz(r.bySign)}/${sz(rev?.bySign ?? '')}`
+            : zhMode
             ? `${pa?.zh ?? r.a} 与 ${pb?.zh ?? r.b} 互容${r.aspected ? '+接纳（有相位，能量互通）' : '（无相位仍成立，能量共享）'}: 互居对方${kind}之座 ${sz(r.bySign)}/${sz(rev?.bySign ?? '')}`
             : `${r.a} & ${r.b} mutual reception${r.aspected ? ' + reception' : ''}: ${sz(r.bySign)} / ${sz(rev?.bySign ?? '')}`,
           el: (
@@ -140,10 +142,10 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
               <b className="font-normal text-frost">{psym(r.a)}</b><span className="mx-1">{lang === 'ja' ? 'と' : zhMode ? '与' : '&'}</span><b className="font-normal text-frost">{psym(r.b)}</b>
               <span className="ml-1 text-[#cdb88a]">{r.aspected ? (lang === 'ja' ? 'MR＋レセプション' : zhMode ? '互容·接纳' : 'MR + reception') : (lang === 'ja' ? 'MR' : zhMode ? '互容' : 'MR')}</span>
               <span className="ml-1 text-muted/80">(</span>
-              <span className="text-frost/90">{psym(r.a)}{lang === 'ja' ? 'の' : zhMode ? '居' : ' in '}{sz(r.bySign)}=</span><span className="text-accent/95">{zhMode ? (pb?.zh ?? r.b) : r.b}{kind}</span>
+              <span className="text-frost/90">{psym(r.a)}{lang === 'ja' ? 'の' : zhMode ? '居' : ' in '}{sz(r.bySign)}=</span><span className="text-accent/95">{lang === 'ja' ? zhOf(r.b) : zhMode ? (pb?.zh ?? r.b) : r.b}{kind}</span>
               {rev && <>
                 <span className="mx-1 text-muted/60">·</span>
-                <span className="text-frost/90">{psym(r.b)}{lang === 'ja' ? 'の' : zhMode ? '居' : ' in '}{sz(rev.bySign)}=</span><span className="text-accent/95">{zhMode ? (pa?.zh ?? r.a) : r.a}{zhMode ? (RECEPTION_KIND_ZH[rev.kind] ?? rev.kind) : rev.kind}</span>
+                <span className="text-frost/90">{psym(r.b)}{lang === 'ja' ? 'の' : zhMode ? '居' : ' in '}{sz(rev.bySign)}=</span><span className="text-accent/95">{lang === 'ja' ? zhOf(r.a) : zhMode ? (pa?.zh ?? r.a) : r.a}{lang === 'ja' ? (RECEPTION_KIND_JA[rev.kind] ?? rev.kind) : zhMode ? (RECEPTION_KIND_ZH[rev.kind] ?? rev.kind) : rev.kind}</span>
               </>}
               <span className="text-muted/80">)</span>
             </span>
@@ -154,7 +156,9 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
           tone: 'soft',
           main: impMax,
           rank: DIGNITY_RANK[r.kind] ?? 2,
-          tip: zhMode
+          tip: lang === 'ja'
+            ? `${zhOf(r.b)} が ${zhOf(r.a)} をレセプション（${zhOf(r.a)}は${kind}の${sz(r.bySign)}に在室）`
+            : zhMode
             ? `${pa?.zh ?? r.a} 被 ${pb?.zh ?? r.b} 接纳（居其${kind}·${sz(r.bySign)}）`
             : `${r.a} received by ${r.b} (in its ${kind} · ${sz(r.bySign)})`,
           el: (

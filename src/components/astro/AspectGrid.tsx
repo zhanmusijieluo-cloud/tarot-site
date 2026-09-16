@@ -12,7 +12,7 @@ import { useI18n } from '@/i18n';
 
 // 相位配色: 红=困难(刑冲) 绿/蓝=和谐(拱/六合) 金=合 紫=梅花
 import { ASPECT_HEX } from '@/lib/astro/aspect-colors';
-import { PLANET_JA } from '@/lib/astro/i18n';
+import { PLANET_JA, JA, type AstroLang } from '@/lib/astro/i18n';
 /** 相位配色 (唯一定义在 aspect-colors.ts, 盘线同源) */
 export const ASPECT_COLOR = ASPECT_HEX;
 const SYM: Record<string, string> = { conjunction: '☌', opposition: '☍', square: '□', trine: '△', sextile: '⚹', quincunx: '⚻' };
@@ -32,22 +32,27 @@ export function aspectMatrixPoints(chart: VChart): string[] {
   return pts
 }
 // 图例用固定符号表 (不依赖当前盘是否恰好含该相位)
-const legendItems = (zhMode: boolean): [string, string][] => [
-  ['conjunction', zhMode ? '合' : 'Conj'], ['opposition', zhMode ? '冲' : 'Opp'],
-  ['square', zhMode ? '刑' : 'Sqt'], ['trine', zhMode ? '拱' : 'Tri'],
-  ['sextile', zhMode ? '六合' : 'Sxt'], ['quincunx', zhMode ? '梅花' : 'Qnx'],
+// 日文: 日本占星圈通用片假名译名 (コンジャンクション等), 不用中文的 合/冲/刑/拱/六合
+const legendItems = (lang: AstroLang): [string, string][] => [
+  ['conjunction', lang === 'ja' ? JA.conjunction : lang === 'en' ? 'Conj' : '合'],
+  ['opposition', lang === 'ja' ? JA.opposition : lang === 'en' ? 'Opp' : '冲'],
+  ['square', lang === 'ja' ? JA.square : lang === 'en' ? 'Sqt' : '刑'],
+  ['trine', lang === 'ja' ? JA.trine : lang === 'en' ? 'Tri' : '拱'],
+  ['sextile', lang === 'ja' ? JA.sextile : lang === 'en' ? 'Sxt' : '六合'],
+  ['quincunx', lang === 'ja' ? JA.quincunx : lang === 'en' ? 'Qnx' : '梅花'],
 ];
 
 /** 图例行 (可独立复用于星盘下方) */
-export function AspectLegend({ zhMode }: { zhMode: boolean }) {
+export function AspectLegend(_props?: { zhMode?: boolean }) {
+  const { lang } = useI18n();
   return (
     <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
-      {legendItems(zhMode).map(([k, label]) => (
+      {legendItems(lang as AstroLang).map(([k, label]) => (
         <span key={k} className="flex items-center gap-1">
           <span style={{ color: ASPECT_COLOR[k] }}>{SYM[k]}</span>{label}
         </span>
       ))}
-      <span className="text-muted/50">{zhMode ? 'A=入相 S=出相 · 数字=偏差°′' : 'A=applying S=separating · orb°′'}</span>
+      <span className="text-muted/50">{lang === 'ja' ? 'A=アプライイング S=セパレーティング · 数字=偏差°′' : lang !== 'en' ? 'A=入相 S=出相 · 数字=偏差°′' : 'A=applying S=separating · orb°′'}</span>
     </span>
   );
 }
@@ -164,7 +169,7 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
       {/* 图例 */}
       {!hideLegend && (
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 px-1 text-[10px] text-muted/70">
-          {legendItems(zhMode).map(([k, label]) => (
+          {legendItems(lang as AstroLang).map(([k, label]) => (
             <span key={k} className="flex items-center gap-1">
               <span style={{ color: ASPECT_COLOR[k] }}>{SYM[k]}</span>{label}
             </span>

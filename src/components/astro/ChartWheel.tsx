@@ -11,7 +11,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useI18n } from '@/i18n';
-import { PLANET_JA } from '@/lib/astro/i18n';
+import { PLANET_JA, JA } from '@/lib/astro/i18n';
 import { AspectLegend } from '@/components/astro/AspectGrid';
 import ChartWheel2D from '@/components/astro/ChartWheel2D';
 
@@ -114,6 +114,11 @@ const SIGNS_ZH_MINI: Record<string, string> = {
   Aries: '白羊', Taurus: '金牛', Gemini: '双子', Cancer: '巨蟹', Leo: '狮子', Virgo: '处女',
   Libra: '天秤', Scorpio: '天蝎', Scorpius: '天蝎', Sagittarius: '射手', Capricorn: '摩羯',
   Capricornus: '摩羯', Aquarius: '水瓶', Pisces: '双鱼', Ophiuchus: '蛇夫',
+};
+const SIGNS_JA_MINI: Record<string, string> = {
+  Aries: '牡羊', Taurus: '牡牛', Gemini: '双子', Cancer: '蟹', Leo: '獅子', Virgo: '乙女',
+  Libra: '天秤', Scorpio: '蠍', Scorpius: '蠍', Sagittarius: '射手', Capricorn: '山羊',
+  Capricornus: '山羊', Aquarius: '水瓶', Pisces: '魚', Ophiuchus: '蛇遣い',
 };
 
 // 真实星球贴图 (NASA Solar System Scope)
@@ -752,7 +757,7 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual, sel }: {
     g.dir!.push({ host: r.b, guest: r.a, kind: r.kind, sign: r.bySign })
   }
   const myRecep = [...recepPairs.values()].sort((a, b) => Number(b.mutual) - Number(a.mutual) || impOf(b.other) - impOf(a.other))
-  const signZh = (s: string) => SIGNS_ZH_MINI[s] ?? s;
+  const signZh = (s: string) => (lang === 'ja' ? (SIGNS_JA_MINI[s] ?? s) : (SIGNS_ZH_MINI[s] ?? s));
   const zhOf = (n: string) => (lang === 'ja' ? jaOf(n) : zhMode ? (chart.planets.find((x) => x.name === n)?.zh ?? PLANET_ZH_OF(n)) : n);
   // 落宫: 简盘=该星自己盘的宫位; 双环合盘=按盘面宫区重算 (爸爸: 盘上画在6宫, 弹窗也要说6宫)
   const houseShown = (() => {
@@ -808,7 +813,7 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual, sel }: {
               const other = nmS(otherRaw);
               const AX_SYM: Record<string, string> = { Ascendant: 'ASC', Midheaven: 'MC', Descendant: 'DSC', IC: 'IC', ASC: 'ASC', DSC: 'DSC', MC: 'MC' };
               const otherSym = chart.planets.find((x) => x.name === other)?.symbol ?? ASPECT_SYMBOL_OF(other);  // 点位/四轴兜底: ⊖⊕ ASC/MC
-              const app = a.applying === true ? (zhMode ? '入相' : 'applying') : a.applying === false ? (zhMode ? '出相' : 'separating') : '';
+              const app = a.applying === true ? (lang === 'ja' ? JA.applying : zhMode ? '入相' : 'applying') : a.applying === false ? (lang === 'ja' ? JA.separating : zhMode ? '出相' : 'separating') : '';
               return (
                 <p key={i} className="flex flex-wrap items-baseline gap-x-1.5 text-[13.5px] text-muted">
                   <span className="text-accent/80">{a.symbol}</span>
@@ -839,12 +844,14 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual, sel }: {
               <p key={i} className="text-[13.5px] text-muted">
                 {rp.mutual && <span className="mr-1 rounded bg-[#cdb88a]/10 px-1 py-px text-[9px] text-[#cdb88a]/90">{rp.aspected ? (lang === 'ja' ? 'MR＋レセプション' : zhMode ? '互容+接纳' : 'MR+reception') : (lang === 'ja' ? 'MR・アスペクトなし' : zhMode ? '互容·无相位' : 'MR, no aspect')}</span>}
                 {rp.mutual
-                  ? (zhMode
+                  ? (lang === 'ja'
+                    ? `⇄ ${zhOf(rp.other)}と互容${rp.aspected ? '＋レセプション' : ''}: ${rp.dir!.map((d) => `${d.guest === p.name ? 'この星' : zhOf(d.guest)}は${signZh(d.sign)}に在室＝${d.host === p.name ? 'この星' : zhOf(d.host)}の${RECEPTION_KIND_JA[d.kind] ?? d.kind}`).join('、')}`
+                    : zhMode
                     ? `⇄ ${zhOf(rp.other)}与它互容${rp.aspected ? '+接纳' : ''}: ${rp.dir!.map((d) => `${d.guest === p.name ? '此星' : zhOf(d.guest)}居${signZh(d.sign)}为${d.host === p.name ? '它' : zhOf(d.host)}之${RECEPTION_KIND_ZH[d.kind] ?? d.kind}`).join(', ')}`
                     : `⇄ mutual reception with ${rp.other}: ${rp.dir!.map((d) => `${d.guest} in ${d.sign} (home of ${d.host}, ${d.kind})`).join('; ')}`)
                   : rp.dir!.map((d) => d.guest === p.name
-                    ? (zhMode ? `↦ ${zhOf(d.host)} 接纳此星 (此星居其${RECEPTION_KIND_ZH[d.kind] ?? d.kind}·${signZh(d.sign)})` : `↦ received by ${d.host} (in its ${d.kind} · ${d.sign})`)
-                    : (zhMode ? `⊤ 此星接纳 ${zhOf(d.guest)} (${zhOf(d.guest)}居${signZh(d.sign)}为此星${RECEPTION_KIND_ZH[d.kind] ?? d.kind})` : `⊤ receives ${d.guest} (in own ${d.kind} · ${d.sign})`)).join(zhMode ? '；' : '; ')}
+                    ? (lang === 'ja' ? `↦ ${zhOf(d.host)} にレセプション（この星は${RECEPTION_KIND_JA[d.kind] ?? d.kind}の${signZh(d.sign)}に在室）` : zhMode ? `↦ ${zhOf(d.host)} 接纳此星 (此星居其${RECEPTION_KIND_ZH[d.kind] ?? d.kind}·${signZh(d.sign)})` : `↦ received by ${d.host} (in its ${d.kind} · ${d.sign})`)
+                    : (lang === 'ja' ? `⊤ この星が ${zhOf(d.guest)} をレセプション（${zhOf(d.guest)}は${signZh(d.sign)}に在室＝この星の${RECEPTION_KIND_JA[d.kind] ?? d.kind}）` : zhMode ? `⊤ 此星接纳 ${zhOf(d.guest)} (${zhOf(d.guest)}居${signZh(d.sign)}为此星${RECEPTION_KIND_ZH[d.kind] ?? d.kind})` : `⊤ receives ${d.guest} (in own ${d.kind} · ${d.sign})`)).join(lang === 'ja' ? '、' : zhMode ? '；' : '; ')}
               </p>
             ))}
           </div>
