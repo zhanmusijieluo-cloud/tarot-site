@@ -73,7 +73,8 @@ export async function POST(req: NextRequest) {
     if (!birthA) return bad('主盘资料无效')
     if (!birthB) return bad('合盘档案资料无效')
     const settings = parseSettings(body?.settings)
-    const chart = castSynastry(birthA, birthB, settings)
+    const lang = (body?.lang === 'en' || body?.lang === 'ja') ? body.lang : 'zh'
+    const chart = castSynastry(birthA, birthB, settings, lang)
     return NextResponse.json({ chart })
   } catch (e) {
     return bad(`合盘计算失败: ${e instanceof Error ? e.message : String(e)}`)

@@ -124,12 +124,13 @@ export async function POST(req: NextRequest) {
     }
 
     let chart
-    if (type === 'transit') chart = castTransitChart(birth, settings, target)
-    else if (type === 'progression') chart = castProgressionChart(birth, settings, target, 'secondary')
-    else if (type === 'tertiary') chart = castProgressionChart(birth, settings, target, 'tertiary')
-    else if (type === 'solar-arc') chart = castProgressionChart(birth, settings, target, 'solar-arc')
-    else if (type === 'lunar-return') chart = castLunarReturnChart(birth, settings, target, location)
-    else chart = castSolarReturnChart(birth, settings, target.year, location)
+    const lang = (body?.lang === 'en' || body?.lang === 'ja') ? body.lang : 'zh'
+    if (type === 'transit') chart = castTransitChart(birth, settings, target, lang)
+    else if (type === 'progression') chart = castProgressionChart(birth, settings, target, 'secondary', lang)
+    else if (type === 'tertiary') chart = castProgressionChart(birth, settings, target, 'tertiary', lang)
+    else if (type === 'solar-arc') chart = castProgressionChart(birth, settings, target, 'solar-arc', lang)
+    else if (type === 'lunar-return') chart = castLunarReturnChart(birth, settings, target, location, lang)
+    else chart = castSolarReturnChart(birth, settings, target.year, location, lang)
 
     return NextResponse.json({ chart })
   } catch (e) {

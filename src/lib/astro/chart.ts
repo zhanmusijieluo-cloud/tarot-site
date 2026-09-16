@@ -6,6 +6,7 @@
 // 纪律: 引擎算盘, 模型解读 — 本文件输出即"证据", AI 不得增删行星位置
 // ============================================================
 import { calculateChart, calculateAspects, AspectType, getSignInfo } from 'celestine'
+import { L, type AstroLang } from '@/lib/astro/i18n'
 
 export type HouseSystem =
   | 'placidus' | 'koch' | 'equal' | 'whole-sign'
@@ -355,7 +356,7 @@ function equationOfTimeMinutes(jd: number): number {
 }
 const DEG2R = Math.PI / 180
 
-function applyTrueSolar(birth: BirthData, timeKnown: boolean, warnings: string[]): BirthData {
+function applyTrueSolar(birth: BirthData, timeKnown: boolean, warnings: string[], lang: AstroLang = 'zh'): BirthData {
   if (!timeKnown) return birth
   // 先以钟表时粗算 JD 求均时差 (EoT 日变化<30s, 一次迭代足够)
   const jd0 = Date.UTC(birth.year, birth.month - 1, birth.day, birth.hour, birth.minute) / 86400000
@@ -368,7 +369,17 @@ function applyTrueSolar(birth: BirthData, timeKnown: boolean, warnings: string[]
   const wrapped = ((total % 1440) + 1440) % 1440
   const dayShift = Math.floor(total / 1440) // 跨日(如时差+经度差把子时推到前一日)
   const d = new Date(Date.UTC(birth.year, birth.month - 1, birth.day + dayShift))
-  warnings.push(`真太阳时校正: 钟表时${birth.hour}:${String(birth.minute).padStart(2, '0')} → 视太阳时${Math.floor(wrapped / 60)}:${String(Math.round(wrapped % 60)).padStart(2, '0')} (经度${lonCorrection >= 0 ? '+' : ''}${lonCorrection.toFixed(1)}m + 均时差${eot >= 0 ? '+' : ''}${eot.toFixed(1)}m)`)
+  const hh = String(birth.hour).padStart(2, '0')
+  const mm = String(birth.minute).padStart(2, '0')
+  const h2 = Math.floor(wrapped / 60)
+  const m2 = String(Math.round(wrapped % 60)).padStart(2, '0')
+  const lonStr = `${lonCorrection >= 0 ? '+' : ''}${lonCorrection.toFixed(1)}m`
+  const eotStr = `${eot >= 0 ? '+' : ''}${eot.toFixed(1)}m`
+  warnings.push(L(lang,
+    `真太阳时校正: 钟表时${hh}:${mm} → 视太阳时${h2}:${m2} (经度${lonStr} + 均时差${eotStr})`,
+    `True solar time correction: clock ${hh}:${mm} → apparent ${h2}:${m2} (longitude ${lonStr} + EoT ${eotStr})`,
+    `真太陽時補正: 時計時 ${hh}:${mm} → 視太陽時 ${h2}:${m2} (経度 ${lonStr} + 均時差 ${eotStr})`
+  ))
   return {
     ...birth,
     year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate(),
@@ -592,7 +603,7 @@ export function hourRulerOf(y: number, mo: number, d: number, hour: number): str
 }
 
 // ---------- 主入口: 排盘 ----------
-export function castNatalChart(birth: BirthData, settings: CastSettings = {}): NatalChart {
+export function castNatalChart(birth: BirthData, settings: CastSettings = {}, lang: AstroLang = 'zh'): NatalChart {
   const warnings: string[] = []
   const timeKnown = birth.timeKnown !== false
   let system: HouseSystem = birth.houseSystem ?? 'placidus'
@@ -600,16 +611,25 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
   // 高纬度处理: Placidus/Koch 在极区无解 → 明示降级波菲里
   if (Math.abs(birth.latitude) >= HIGH_LAT) {
     if (system === 'placidus' || system === 'koch') {
-      warnings.push(`出生地纬度 ${birth.latitude}° 超出 ${system} 制可算范围, 已改用波菲里(Porphyry)制 — 宫位为近似`)
+      const sysName = lang === 'ja' ? (HOUSE_SYSTEM_JA[system] ?? system) : lang === 'en' ? (HOUSE_SYSTEM_EN[system] ?? system) : (HOUSE_SYSTEM_ZH[system] ?? system)
+      warnings.push(L(lang,
+        `出生地纬度 ${birth.latitude}° 超出 ${sysName} 制可算范围, 已改用波菲里(Porphyry)制 — 宫位为近似`,
+        `Birth latitude ${birth.latitude}° exceeds ${sysName} system's computable range; switched to Porphyry — houses approximate`,
+        `出生緯度 ${birth.latitude}° は ${sysName} の計算範囲外; ポルフィリオス(Porphyry) に切替 — ハウス近似`
+      ))
       system = 'porphyry'
     }
   }
   if (!timeKnown) {
-    warnings.push('未提供出生时间: 上升与宫位不可算, 月亮位置为当地正午近似(误差可达±6°)')
+    warnings.push(L(lang,
+      '未提供出生时间: 上升与宫位不可算, 月亮位置为当地正午近似(误差可达±6°)',
+      'No birth time: ASC and houses cannot be calculated; Moon position uses local-noon approximation (error up to ±6°)',
+      '出生時刻未入力: ASCとハウスは算出不可; 月位置は地方正午近似（誤差最大±6°）'
+    ))
   }
 
   // 真太阳时校正 (可选): 钟表时 → 视太阳时
-  const effBirth = settings.trueSolar ? applyTrueSolar(birth, timeKnown, warnings) : birth
+  const effBirth = settings.trueSolar ? applyTrueSolar(birth, timeKnown, warnings, lang) : birth
 
   // 天体分组开关 (默认只开十主星, 与旧行为一致)
   const B = settings.bodies ?? {}
@@ -699,7 +719,12 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
         selfCusps = selfHouseCusps(system, ramc, effBirth.latitude, eps, asc0, mc0)
         if (selfCusps === null) {
           // 极圈/病态几何: SE 同款降级波菲里并明示
-          warnings.push(`${HOUSE_SYSTEM_ZH[system] ?? system}制在此纬度不可算, 已改用波菲里(Porphyry)制 — 宫位为近似`)
+          const sysName = lang === 'ja' ? (HOUSE_SYSTEM_JA[system] ?? system) : lang === 'en' ? (HOUSE_SYSTEM_EN[system] ?? system) : (HOUSE_SYSTEM_ZH[system] ?? system)
+          warnings.push(L(lang,
+            `${sysName}制在此纬度不可算, 已改用波菲里(Porphyry)制 — 宫位为近似`,
+            `${sysName} system not computable at this latitude; switched to Porphyry — houses approximate`,
+            `${sysName} はこの緯度で計算不可; ポルフィリオス(Porphyry) に切替 — ハウス近似`
+          ))
           selfCusps = cuspsFor('porphyry', asc0, mc0)
           system = 'porphyry'
         }

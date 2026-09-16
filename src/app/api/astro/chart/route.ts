@@ -90,7 +90,8 @@ export async function POST(request: NextRequest) {
       timeKnown,
     }
 
-    const chart = castNatalChart(birth, settings)
+    const lang = (body?.lang === 'en' || body?.lang === 'ja') ? body.lang : 'zh'
+    const chart = castNatalChart(birth, settings, lang)
     return NextResponse.json({ chart, evidence: chartEvidence(chart) })
   } catch (e) {
     console.error('[astro/chart] error:', e)

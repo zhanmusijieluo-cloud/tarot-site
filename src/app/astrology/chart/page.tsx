@@ -72,7 +72,7 @@ function ChartPageInner() {
     fetch('/api/astro/chart', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ birth: { ...birth, houseSystem: sys }, settings: s }),
+      body: JSON.stringify({ birth: { ...birth, houseSystem: sys }, settings: s, lang }),
     })
       .then(async (r) => {
         const j = await r.json();
@@ -128,7 +128,7 @@ function ChartPageInner() {
     fetch('/api/astro/chart/dynamic', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ birth: { ...birth, houseSystem: birth.houseSystem ?? 'placidus' }, settings, type: dynType, target: { year: dpy, month: dpm, day: dpd, hour: dpHour, minute: dpMin, tzOffset: tzLocal } }),
+      body: JSON.stringify({ birth: { ...birth, houseSystem: birth.houseSystem ?? 'placidus' }, settings, type: dynType, target: { year: dpy, month: dpm, day: dpd, hour: dpHour, minute: dpMin, tzOffset: tzLocal }, lang }),
     })
       .then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.error || 'failed'); if (alive) setDyn(j.chart as DynamicChart); })
       .catch((e) => { if (alive) setDynErr(e instanceof Error ? e.message : t('astro.form.failed')); });
@@ -189,7 +189,7 @@ function ChartPageInner() {
     fetch('/api/astro/chart/synastry', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ birthA: { ...birth, houseSystem: birth.houseSystem ?? 'placidus' }, birthB: arc.birth, settings }),
+      body: JSON.stringify({ birthA: { ...birth, houseSystem: birth.houseSystem ?? 'placidus' }, birthB: arc.birth, settings, lang }),
     })
       .then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.error || 'failed'); if (alive) setSyn(j.chart as SynData); })
       .catch((e) => { if (alive) setSynErr(e instanceof Error ? e.message : t('astro.form.failed')); });

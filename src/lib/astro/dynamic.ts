@@ -11,6 +11,7 @@ import {
   castNatalChart, PLANET_ZH_OF, ASPECT_SYMBOL_OF, ASPECT_ZH_OF,
   type BirthData, type CastSettings, type ChartPlanet, type ChartAspect, type NatalChart,
 } from '@/lib/astro/chart'
+import { L, type AstroLang } from '@/lib/astro/i18n'
 
 export type DynamicType = 'natal' | 'transit' | 'solar-return' | 'lunar-return' | 'progression' | 'tertiary' | 'solar-arc'
 
@@ -177,8 +178,8 @@ function selfCrossAspects(natal: NatalChart, outerPlanets: ChartPlanet[], settin
 }
 
 // ---------- 行运盘 ----------
-export function castTransitChart(birth: BirthData, settings: CastSettings, target: DynDate): DynamicChart {
-  const natal = castNatalChart(birth, settings)
+export function castTransitChart(birth: BirthData, settings: CastSettings, target: DynDate, lang: AstroLang = 'zh'): DynamicChart {
+  const natal = castNatalChart(birth, settings, lang)
   const warnings = [...natal.warnings]
   // 行运时刻: 访客本地时分+本地时区 → 瞬时 (爸爸: 同步访客当地, 跨时区看也准); 缺省回退出生地时区
   const jd = toJD({ ...target, hour: target.hour ?? 12, minute: target.minute ?? 0 }, target.tzOffset ?? birth.timezone)
@@ -191,8 +192,8 @@ export function castTransitChart(birth: BirthData, settings: CastSettings, targe
 }
 
 // ---------- 推运盘 (次限/三限/太阳弧) ----------
-export function castProgressionChart(birth: BirthData, settings: CastSettings, target: DynDate, mode: 'secondary' | 'tertiary' | 'solar-arc' = 'secondary'): DynamicChart {
-  const natal = castNatalChart(birth, settings)
+export function castProgressionChart(birth: BirthData, settings: CastSettings, target: DynDate, mode: 'secondary' | 'tertiary' | 'solar-arc' = 'secondary', lang: AstroLang = 'zh'): DynamicChart {
+  const natal = castNatalChart(birth, settings, lang)
   const warnings = [...natal.warnings]
   // 三限: 行业口径 = 1天=1恒星月(27.321582天), 每年推进 365.25/27.321582=13.368天
   // (celestine 内置 tertiary 是每年 12 天, 偏小 11% → 爸爸对照测测/爱占星核出对不上; 此地自算对齐行业)
@@ -232,11 +233,11 @@ export function castProgressionChart(birth: BirthData, settings: CastSettings, t
 
 // ---------- 太阳返照盘 ----------
 // 太阳回到本命黄经的时刻, 以该时刻+地点(默认沿用出生地)排一张新本命盘作为外盘
-export function castSolarReturnChart(birth: BirthData, settings: CastSettings, returnYear: number, location?: { latitude: number; longitude: number; timezone: number }): DynamicChart {
-  const natal = castNatalChart(birth, settings)
+export function castSolarReturnChart(birth: BirthData, settings: CastSettings, returnYear: number, location?: { latitude: number; longitude: number; timezone: number }, lang: AstroLang = 'zh'): DynamicChart {
+  const natal = castNatalChart(birth, settings, lang)
   const warnings = [...natal.warnings]
   const targetLon = natal.planets.find((p) => p.name === 'Sun')?.longitude
-  if (targetLon === undefined) return { type: 'solar-return', natal, crossAspects: [], warnings: [...warnings, '本命太阳位置缺失'], outer: null }
+  if (targetLon === undefined) return { type: 'solar-return', natal, crossAspects: [], warnings: [...warnings, L(lang, '本命太阳位置缺失', 'Natal Sun position missing', '出生時の太陽位置が欠落')], outer: null }
   // 全年粗扫太阳黄经穿越 → 二分精修
   const jdStart = toJD({ year: returnYear, month: 1, day: 1 }, 0)
   let bracket: [number, number] | null = null
@@ -250,7 +251,7 @@ export function castSolarReturnChart(birth: BirthData, settings: CastSettings, r
     if (t >= a && t < b) { bracket = [jdStart + d - 1, jdStart + d]; break }
     prev = cur
   }
-  if (!bracket) return { type: 'solar-return', natal, crossAspects: [], warnings: [...warnings, `未在 ${returnYear} 年内找到太阳返照时刻`], outer: null }
+  if (!bracket) return { type: 'solar-return', natal, crossAspects: [], warnings: [...warnings, L(lang, `未在 ${returnYear} 年内找到太阳返照时刻`, `Solar return moment not found within year ${returnYear}`, `${returnYear} 年内に太陽回帰点が見つかりません`)], outer: null }
   let [lo, hi] = bracket
   for (let i = 0; i < 45; i++) {
     const mid = (lo + hi) / 2
@@ -268,7 +269,7 @@ export function castSolarReturnChart(birth: BirthData, settings: CastSettings, r
     year: srDate.year, month: srDate.month, day: srDate.day, hour: srDate.hour!, minute: srDate.minute!,
     ...(location ? { latitude: location.latitude, longitude: location.longitude, timezone: location.timezone } : {}),
   }
-  const sr = castNatalChart(srBirth, settings)
+  const sr = castNatalChart(srBirth, settings, lang)
   const cross = selfCrossAspects(natal, sr.planets, settings, '·R')
   return {
     type: 'solar-return', natal, crossAspects: cross, warnings: [...warnings, ...sr.warnings.filter((w) => !warnings.includes(w))],
@@ -277,11 +278,11 @@ export function castSolarReturnChart(birth: BirthData, settings: CastSettings, r
 }
 
 // ---------- 月亮返照盘 (月返): 月亮回到本命黄经的时刻起盘 (周期约 27.3 天) ----------
-export function castLunarReturnChart(birth: BirthData, settings: CastSettings, from: DynDate, location?: { latitude: number; longitude: number; timezone: number }): DynamicChart {
-  const natal = castNatalChart(birth, settings)
+export function castLunarReturnChart(birth: BirthData, settings: CastSettings, from: DynDate, location?: { latitude: number; longitude: number; timezone: number }, lang: AstroLang = 'zh'): DynamicChart {
+  const natal = castNatalChart(birth, settings, lang)
   const warnings = [...natal.warnings]
   const targetLon = natal.planets.find((p) => p.name === 'Moon')?.longitude
-  if (targetLon === undefined) return { type: 'lunar-return', natal, crossAspects: [], warnings: [...warnings, '本命月亮位置缺失'], outer: null }
+  if (targetLon === undefined) return { type: 'lunar-return', natal, crossAspects: [], warnings: [...warnings, L(lang, '本命月亮位置缺失', 'Natal Moon position missing', '出生時の月位置が欠落')], outer: null }
   // from 起 35 天内粗扫 (0.5 天步长, 月亮日均 ~13°) → 二分精修
   const jdStart = toJD({ ...from, hour: 0 }, 0)
   let bracket: [number, number] | null = null
@@ -295,7 +296,7 @@ export function castLunarReturnChart(birth: BirthData, settings: CastSettings, f
     if (t >= a && t < b) { bracket = [jdStart + d - 0.5, jdStart + d]; break }
     prev = cur
   }
-  if (!bracket) return { type: 'lunar-return', natal, crossAspects: [], warnings: [...warnings, '未在 35 天内找到月亮返照时刻'], outer: null }
+  if (!bracket) return { type: 'lunar-return', natal, crossAspects: [], warnings: [...warnings, L(lang, '未在 35 天内找到月亮返照时刻', 'Lunar return moment not found within 35 days', '35日以内に月帰点が見つかりません')], outer: null }
   let [lo, hi] = bracket
   for (let i = 0; i < 40; i++) {
     const mid = (lo + hi) / 2
@@ -313,7 +314,7 @@ export function castLunarReturnChart(birth: BirthData, settings: CastSettings, f
     year: lrDate.year, month: lrDate.month, day: lrDate.day, hour: lrDate.hour!, minute: lrDate.minute!,
     ...(location ? { latitude: location.latitude, longitude: location.longitude, timezone: location.timezone } : {}),
   }
-  const lr = castNatalChart(lrBirth, settings)
+  const lr = castNatalChart(lrBirth, settings, lang)
   const cross = selfCrossAspects(natal, lr.planets, settings, '·R')
   return {
     type: 'lunar-return', natal, crossAspects: cross, warnings: [...warnings, ...lr.warnings.filter((w) => !warnings.includes(w))],
@@ -576,9 +577,9 @@ function chartFromPlanets(base: NatalChart, planets: ChartPlanet[], settings: Ca
   return { ...base, planets: pl, aspects: aspectsOut, cusps, angles: { ascendant: mkAng('ASC', ascLon), midheaven: mkAng('MC', mcLon) } }
 }
 
-export function castSynastry(birthA: BirthData, birthB: BirthData, settings: CastSettings): SynastryChart {
-  const a = castNatalChart(birthA, settings)
-  const b = castNatalChart(birthB, settings)
+export function castSynastry(birthA: BirthData, birthB: BirthData, settings: CastSettings, lang: AstroLang = 'zh'): SynastryChart {
+  const a = castNatalChart(birthA, settings, lang)
+  const b = castNatalChart(birthB, settings, lang)
   const warnings = [...new Set([...a.warnings, ...b.warnings])]
   const ptsOf = (c: NatalChart, sfx: string) => {
     const out: { name: string; longitude: number; longitudeSpeed: number }[] = c.planets.map((p) => ({ name: p.name + sfx, longitude: p.longitude, longitudeSpeed: p.speed ?? 0 }))
@@ -634,7 +635,7 @@ export function castSynastry(birthA: BirthData, birthB: BirthData, settings: Cas
     })
   const composite = castComposite(a, b, settings)
   const davisonIn = davisonBirth(birthA, birthB)
-  const davisonChart = castNatalChart(davisonIn, settings)
+  const davisonChart = castNatalChart(davisonIn, settings, lang)
   // ---- 衍生盘补齐 (爸爸 16 盘): 马盘 A/B + 组合/马盘/时空 各自次限三限 (当前时刻) ----
   const now = new Date()
   const todayTarget: DynDate = { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() }
@@ -668,8 +669,8 @@ export function castSynastry(birthA: BirthData, birthB: BirthData, settings: Cas
     chartFromPlanets(chart, progOf(birth, mode), settings, advAxes(chart, birth, mode))
   const marksAIn = marksBirth(birthA, davisonIn)
   const marksBIn = marksBirth(birthB, davisonIn)
-  const marksA = castNatalChart(marksAIn, settings)
-  const marksB = castNatalChart(marksBIn, settings)
+  const marksA = castNatalChart(marksAIn, settings, lang)
+  const marksB = castNatalChart(marksBIn, settings, lang)
   const davS = progChart(davisonChart, davisonIn, 'secondary')
   const davT = progChart(davisonChart, davisonIn, 'tertiary')
   const marksAS = progChart(marksA, marksAIn, 'secondary')
