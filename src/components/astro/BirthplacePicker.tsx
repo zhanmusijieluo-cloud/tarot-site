@@ -8,7 +8,7 @@
 // 输出: BirthPlace → 组装进 BirthData
 // ============================================================
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useI18n } from '@/i18n';
 import { CITIES_WORLD } from '@/lib/astro/cities';
 import { loadCnCities, type CnProvince } from '@/lib/astro/cn-cities';
@@ -53,6 +53,17 @@ export default function BirthplacePicker({ value, onChange }: {
   const prov = useMemo(() => provs.find((p) => p.name === provName), [provs, provName]);
   const city = useMemo(() => prov?.cities.find((c) => c.name === cityName), [prov, cityName]);
   const isFlat = !!prov && prov.cities.length === 1 && prov.cities[0].name === prov.name; // 直辖市
+  const displayCnName = useCallback((item: { name: string; py: string; ja: string }) =>
+    lang === 'en' ? item.py : lang === 'ja' ? item.ja : item.name, [lang]);
+  const currentCnLabel = useMemo(() => {
+    if (!value.cnCode) return value.label;
+    const [pn, cn, dn] = value.cnCode.split('~');
+    const p = provs.find((item) => item.name === pn);
+    const c = p?.cities.find((item) => item.name === cn);
+    const d = c?.districts.find((item) => item.name === dn);
+    if (!p || !d) return value.label;
+    return p.name === d.name ? displayCnName(p) : `${displayCnName(p)}·${displayCnName(d)}`;
+  }, [displayCnName, provs, value.cnCode, value.label]);
 
   const pickProv = (name: string) => {
     setProvName(name);
@@ -76,25 +87,19 @@ export default function BirthplacePicker({ value, onChange }: {
     if (d) emitCn(provName, cityName, d.name);
   };
   const emitCn = (pn: string, cn: string, dn: string) => {
-    const d = provs.find((p) => p.name === pn)?.cities.find((c) => c.name === cn)?.districts.find((x) => x.name === dn);
-    if (!d) return;
-    const cityLabel = pn === dn ? pn : `${pn}·${dn}`;
+    const p = provs.find((item) => item.name === pn);
+    const c = p?.cities.find((item) => item.name === cn);
+    const d = c?.districts.find((item) => item.name === dn);
+    if (!p || !c || !d) return;
+    const cityLabel = p.name === d.name
+      ? displayCnName(p)
+      : `${displayCnName(p)}·${displayCnName(d)}`;
     onChange({
       lat: d.lat, lng: d.lng, tz: 8,
-      label: lang === 'ja' ? cityLabel : zhMode ? cityLabel : `${pn} ${dn}`,
+      label: cityLabel,
       cnCode: `${pn}~${cn}~${dn}`,
     });
   };
-  // 初始中国值 = 北京 (与默认 value 一致, 不覆盖用户切走的手动/海外选择)
-  useEffect(() => {
-    if (!provs.length || mode !== 'cn' || value.cnCode) return;
-    const bj = provs.find((p) => p.name === '北京');
-    const c = bj?.cities[0], d = c?.districts[0];
-    if (bj && c && d && c.name === '北京' && d.name === '北京') {
-      setProvName('北京'); setCityName('北京'); setDistName('北京');
-    }
-  }, [provs]); // eslint-disable-line react-hooks/exhaustive-deps
-
   // ---- 海外 ----
   const pickWorld = (id: string) => {
     const c = CITIES_WORLD.find((x) => x.id === id);
@@ -152,21 +157,21 @@ export default function BirthplacePicker({ value, onChange }: {
             <label className={labelCls}>{t('astro.place.province')}</label>
             <select value={provName} onChange={(e) => pickProv(e.target.value)} className={selCls}>
               {!provs.length && <option className="bg-[#0b0e17]">{t('astro.place.loading')}</option>}
-              {provs.map((p) => <option key={p.name} value={p.name} className="bg-[#0b0e17]">{p.name}</option>)}
+              {provs.map((p) => <option key={p.name} value={p.name} className="bg-[#0b0e17]">{displayCnName(p)}</option>)}
             </select>
           </div>
           {!isFlat && (
             <div>
               <label className={labelCls}>{t('astro.place.city')}</label>
               <select value={cityName} onChange={(e) => pickCity(e.target.value)} className={selCls}>
-                {prov?.cities.map((c) => <option key={c.name} value={c.name} className="bg-[#0b0e17]">{c.name}</option>)}
+                {prov?.cities.map((c) => <option key={c.name} value={c.name} className="bg-[#0b0e17]">{displayCnName(c)}</option>)}
               </select>
             </div>
           )}
           <div className={isFlat ? 'sm:col-span-2' : ''}>
             <label className={labelCls}>{isFlat ? t('astro.place.city') : t('astro.place.district')}</label>
             <select value={distName} onChange={(e) => pickDist(e.target.value)} className={selCls}>
-              {city?.districts.map((d) => <option key={d.name} value={d.name} className="bg-[#0b0e17]">{d.name}</option>)}
+              {city?.districts.map((d) => <option key={d.name} value={d.name} className="bg-[#0b0e17]">{displayCnName(d)}</option>)}
             </select>
           </div>
         </div>
@@ -221,7 +226,7 @@ export default function BirthplacePicker({ value, onChange }: {
 
       {/* 当前地点回显 */}
       <p className="mt-2 text-[11px] text-muted/70">
-        {t('astro.place.current')}: <span className="text-frost/80">{value.label}</span>
+        {t('astro.place.current')}: <span className="text-frost/80">{currentCnLabel}</span>
         <span className="ml-2 text-muted/50">{value.lat.toFixed(3)}, {value.lng.toFixed(3)} · UTC{value.tz >= 0 ? '+' : ''}{value.tz}</span>
       </p>
     </div>
