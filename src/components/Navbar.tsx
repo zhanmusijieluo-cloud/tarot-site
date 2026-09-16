@@ -182,8 +182,8 @@ export default function Navbar() {
           </div>
 
           {mail ? (
-            <button onClick={() => go('/archives')} title={mail} className="btn-text px-4 py-2 text-sm">
-              {mail.split('@')[0]} · {lang === 'en' ? 'Archives' : '我的档案'}
+            <button onClick={() => go('/account')} title={mail} className="btn-text px-4 py-2 text-sm">
+              {mail.split('@')[0]} · {lang === 'en' ? 'Account' : lang === 'ja' ? 'アカウント' : '账户'}
             </button>
           ) : (
             <>
@@ -240,8 +240,8 @@ export default function Navbar() {
                 {t('nav.home')}
               </button>
               {mail ? (
-                <button onClick={() => go('/archives')} className="btn-ghost flex-1 py-2.5 text-sm">
-                  {mail.split('@')[0]} · {lang === 'en' ? 'Archives' : '我的档案'}
+                <button onClick={() => go('/account')} className="btn-ghost flex-1 py-2.5 text-sm">
+                  {mail.split('@')[0]} · {lang === 'en' ? 'Account' : lang === 'ja' ? 'アカウント' : '账户'}
                 </button>
               ) : (
                 <>
