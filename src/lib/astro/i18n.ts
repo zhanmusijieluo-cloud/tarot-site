@@ -93,3 +93,15 @@ export const JA = {
   classicWheel: 'クラシックホイール',
   tropical: 'トロピカル',
 } as const;
+
+/**
+ * 日文行星名（简体中文名 → 日文）。
+ * 日文与中文多数同形，主要差异：太阳→太陽、月亮→月、北交→ドラゴンヘッド。
+ * 各占星组件统一从这里导入，避免多处重复定义。
+ */
+export const PLANET_JA: Record<string, string> = {
+  Sun: '太陽', Moon: '月', Mercury: '水星', Venus: '金星', Mars: '火星',
+  Jupiter: '木星', Saturn: '土星', Uranus: '天王星', Neptune: '海王星', Pluto: '冥王星',
+  NorthNode: 'ドラゴンヘッド', SouthNode: 'ドラゴンテイル',
+  Ascendant: 'アセンダント', Descendant: 'ディセンダント', Midheaven: 'MC', IC: 'IC',
+};

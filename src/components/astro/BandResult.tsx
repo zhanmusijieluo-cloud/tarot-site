@@ -45,7 +45,9 @@ export default function BandResult({ chart, zhMode, kind, cornerActions, onBandD
     const mains = all.filter((r) => r.sub === r.lord || r.sub === null);
     const curMain = mains.find((m) => curAgeD >= m.startAge && curAgeD < m.endAge);
     const curSub = all.find((r) => curAgeD >= r.startAge && curAgeD < r.endAge);
-    note = zhMode
+    note = lang === 'ja'
+      ? `ファルダリア（${dayChart ? '昼生盤' : '夜生盤'}序）— 外環: 12時=0歳から時計回り, 75年で1周; 各区=1大運 (開始年併記), 区内記号=7つの子期主星 (第1子期=主星自身, カルデアン順で輪転); 交点区は細分せず`
+      : zhMode
       ? `法达星限 (${dayChart ? '昼生盘' : '夜生盘'}序) — 外环: 12点=0岁起顺时针, 75 年一周; 每段=一个大运 (标注起年), 段内符号=7 个子段主星 (第1子段=主星自己, 迦勒底序轮转); 交点段不细分`
       : `Firdaria (${dayChart ? 'diurnal' : 'nocturnal'}) — outer ring: 0 at 12 o'clock, clockwise, 75-year cycle; each arc = one period (with start age), glyphs = 7 sub-periods`;
     body = (
@@ -53,7 +55,7 @@ export default function BandResult({ chart, zhMode, kind, cornerActions, onBandD
         <div className="flex items-center gap-2 text-frost/85">
           <span className="text-muted/70">{lang === 'ja' ? '現在の大運' : zhMode ? '当前大运' : 'Period'}</span>
           <span className="text-[15px] text-accent">{LORD_SYM[curMain?.lord ?? ''] ?? ''}</span>
-          {lang === 'ja' ? (LORD_JA[curMain?.lord ?? ''] ?? '—') : (LORD_ZH[curMain?.lord ?? ''] ?? '—')}
+          {lang === 'ja' ? (LORD_JA[curMain?.lord ?? ''] ?? '—') : zhMode ? (LORD_ZH[curMain?.lord ?? ''] ?? '—') : (curMain?.lord ?? '—')}
           <span className="text-muted">{curMain ? `${curMain.startAge}–${curMain.endAge} ${lang === 'ja' ? '歳' : zhMode ? '岁' : 'y'}` : ''}</span>
         </div>
         <div className="flex items-center gap-2 text-frost/85">
@@ -70,7 +72,9 @@ export default function BandResult({ chart, zhMode, kind, cornerActions, onBandD
     const signIdx = (ascSignIdx + curAge) % 12;
     const lord = SIGN_RULER[signIdx];
     const signName = Object.keys(SIGN_ZH)[signIdx];
-    note = zhMode
+    note = lang === 'ja'
+      ? `プロフェクション — 外環: 各区=1ハウス (実際のハウス幅), 区内1文字=そのハウス頭サインのドミサイル主星; 出生年=1ハウス, 毎年誕生日に1ハウス進む; 現在の年ハウスを強調`
+      : zhMode
       ? `小限法 — 外环: 每段=一宫 (按宫位实际跨度), 段内单字=该宫宫头星座的庙主星; 出生年=1宫, 每年生日推一宫; 当前年宫位高亮`
       : `Annual profections — outer ring: one arc per house; single character = domicile ruler of the house sign; current year highlighted`;
     body = (
@@ -81,7 +85,7 @@ export default function BandResult({ chart, zhMode, kind, cornerActions, onBandD
         </div>
         <div className="flex items-center gap-2 text-frost/85">
           <span className="text-muted/70">{lang === 'ja' ? '年のハウス' : zhMode ? '当前年宫' : 'House'}</span>
-          <span className="tabular-nums text-accent">{house} {lang === 'ja' ? 'ハウス' : zhMode ? '宫' : ''} · {lang === 'ja' ? (SIGN_JA[signName] ?? signName) : (SIGN_ZH[signName] ?? signName)} · {LORD_SYM[lord] ?? ''} {lang === 'ja' ? (LORD_JA[lord] ?? LORD_ZH[lord] ?? lord) : (LORD_ZH[lord] ?? lord)}</span>
+          <span className="tabular-nums text-accent">{house} {lang === 'ja' ? 'ハウス' : zhMode ? '宫' : ''} · {lang === 'ja' ? (SIGN_JA[signName] ?? signName) : zhMode ? (SIGN_ZH[signName] ?? signName) : signName} · {LORD_SYM[lord] ?? ''} {lang === 'ja' ? (LORD_JA[lord] ?? lord) : zhMode ? (LORD_ZH[lord] ?? lord) : lord}</span>
         </div>
       </div>
     );

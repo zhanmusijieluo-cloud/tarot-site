@@ -365,7 +365,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
                     fillOpacity={isPast ? 1 : (isNow ? (hov ? 0.66 : 0.5) : (hov ? 0.44 : 0.26))}
                     stroke={isNow ? THEME : P.ring} strokeWidth={isNow ? 1.4 : 0.8} strokeOpacity={isNow ? 1 : 0.6} />
                   <GlyphPath name={SYMBOL_TO_GLYPH[SYM_OF[m.lord]] ?? ''} cx={gx} cy={gy} color={isPast ? PASTC : (isNow ? '#ffd75e' : THEME)} bg={P.bg} size={hov ? 23 : 20} />
-                  {subMid !== null && <text x={tx} y={ty + 3.5} textAnchor="middle" fontSize="10.5" fontWeight={600} fill={isPast ? PASTC : THEME} stroke={P.bg} strokeWidth="2.4" paintOrder="stroke">{Math.round(m.startAge)}岁</text>}
+                  {subMid !== null && <text x={tx} y={ty + 3.5} textAnchor="middle" fontSize="10.5" fontWeight={600} fill={isPast ? PASTC : THEME} stroke={P.bg} strokeWidth="2.4" paintOrder="stroke">{Math.round(m.startAge)}{lang === 'ja' ? '歳' : zhMode ? '岁' : 'y'}</text>}
                 </g>
               );
             })}
@@ -404,6 +404,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
         const a0 = la(c0), a1 = la(c1);
         const lord = SIGN_RULER[signIdx(c0)];
         const LORD_ZH: Record<string, string> = { Sun: '日', Moon: '月', Mercury: '水', Venus: '金', Mars: '火', Jupiter: '木', Saturn: '土' };
+        const LORD_SYM: Record<string, string> = { Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀', Mars: '♂', Jupiter: '♃', Saturn: '♄' };
         const curAge = Math.max(0, Math.floor((Date.now() - Date.UTC(chart.input.year, chart.input.month - 1, chart.input.day)) / (365.2425 * 86400000)));
         const curHouse = (curAge % 12) + 1;
         const isNow = curHouse === h + 1;
@@ -411,7 +412,7 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
         return (
           <g key={`prof-${h}`}>
             <path d={sector(R_SUB_OUT, R_SUB_IN, a0, a1)} fill={isNow ? 'rgba(217,168,184,0.20)' : (h % 2 ? 'rgba(255,255,255,0.035)' : 'rgba(255,255,255,0.06)')} stroke={P.ring} strokeWidth="0.8" />
-            <text x={tx} y={ty + 5} textAnchor="middle" fontSize="15" fontWeight={600} fill={isNow ? '#d9a8b8' : P.ink} opacity={isNow ? 1 : 0.8}>{LORD_ZH[lord] ?? '?'}</text>
+            <text x={tx} y={ty + 5} textAnchor="middle" fontSize="15" fontWeight={600} fill={isNow ? '#d9a8b8' : P.ink} opacity={isNow ? 1 : 0.8}>{lang === 'en' ? (LORD_SYM[lord] ?? '?') : (LORD_ZH[lord] ?? '?')}</text>
           </g>
         );
       })}

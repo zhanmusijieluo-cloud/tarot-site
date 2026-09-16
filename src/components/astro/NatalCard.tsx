@@ -19,9 +19,9 @@ export default function NatalCard({ chart, zhMode }: { chart: VChart; zhMode: bo
   if (placeName) infoRows.push([lang === 'ja' ? '場所' : zhMode ? '地点' : 'Place', placeName]);
   if (chart.input.latitude !== undefined && chart.input.longitude !== undefined)
     infoRows.push([lang === 'ja' ? '緯度/経度' : zhMode ? '经纬' : 'Lat/Lon', (
-      <>{fmtDeg(chart.input.latitude!, zhMode ? '北' : 'N', zhMode ? '南' : 'S')} {fmtDeg(chart.input.longitude!, zhMode ? '东' : 'E', zhMode ? '西' : 'W')}</>
+      <>{fmtDeg(chart.input.latitude!, lang === 'ja' ? 'N' : zhMode ? '北' : 'N', lang === 'ja' ? 'S' : zhMode ? '南' : 'S')} {fmtDeg(chart.input.longitude!, lang === 'ja' ? 'E' : zhMode ? '东' : 'E', lang === 'ja' ? 'W' : zhMode ? '西' : 'W')}</>
     )]);
-  if (chart.input.timezone !== undefined) infoRows.push([lang === 'ja' ? 'タイムゾーン' : '时区' + (zhMode ? '' : '/TZ'), `GMT ${chart.input.timezone >= 0 ? '+' : ''}${chart.input.timezone.toFixed(2)}`]);
+  if (chart.input.timezone !== undefined) infoRows.push([lang === 'ja' ? 'タイムゾーン' : zhMode ? '时区' : 'Timezone/TZ', `GMT ${chart.input.timezone >= 0 ? '+' : ''}${chart.input.timezone.toFixed(2)}`]);
   infoRows.push([lang === 'ja' ? '黄道' : zhMode ? '黄道' : 'Zodiac', lang === 'ja' ? 'トロピカル' : zhMode ? '回归黄道' : 'Tropical']);
   infoRows.push([lang === 'ja' ? 'ハウスシステム' : zhMode ? '宫制' : 'Houses', `${zhMode ? (HOUSE_SYSTEM_ZH[chart.houseSystemUsed] ?? chart.houseSystemUsed) : chart.houseSystemUsed}`]);
   if (hr) infoRows.push([lang === 'ja' ? '時間の支配星' : zhMode ? '时主星' : 'Hour ruler', <span key="hr" title={zhMode ? `时主星: ${hr.zh} — 零点起算, 加尔迪亚序 (流派众多, 此为通行法)` : `Hour ruler: ${hr.name} (Chaldean, from midnight)`}>{hr.symbol}</span>]);

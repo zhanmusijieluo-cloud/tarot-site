@@ -12,6 +12,7 @@ import { FIXED_STARS, starConjunctions, starLonAt } from '@/lib/astro/fixed-star
 import SignGlyph, { signColor } from '@/components/astro/SignGlyph';
 // 法达大运主星色 (段首行上色; 单一来源 lib/astro/lord-colors.ts, 外环共用)
 import { LORD_HEX } from '@/lib/astro/lord-colors'
+import { PLANET_JA } from '@/lib/astro/i18n';
 
 const SIGN_ZH_BY_IDX = ['白羊', '金牛', '双子', '巨蟹', '狮子', '处女', '天秤', '天蝎', '射手', '摩羯', '水瓶', '双鱼'];
 
@@ -35,12 +36,6 @@ export interface StatusTabsProps {
   onSelect: (n: string | null) => void;
 }
 
-const PLANET_JA: Record<string, string> = {
-  Sun: '太陽', Moon: '月', Mercury: '水星', Venus: '金星', Mars: '火星',
-  Jupiter: '木星', Saturn: '土星', Uranus: '天王星', Neptune: '海王星', Pluto: '冥王星',
-  NorthNode: 'ドラゴンヘッド', SouthNode: 'ドラゴンテイル',
-  Ascendant: 'アセンダント', Descendant: 'ディセンダント', Midheaven: 'MC', IC: 'IC',
-};
 export default function StatusTabs({ chart, zhMode, selected, onSelect }: StatusTabsProps) {
   const [tab, setTab] = useState<'ecliptic' | 'ecliptic2' | 'firdaria' | 'profection' | 'aphesisF' | 'aphesisS'>('ecliptic');
   const { lang } = useI18n();
@@ -88,8 +83,8 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
       const avg = AVG_SPEED[p.name];
       if (avg && p.speed !== undefined) {
         const r = Math.abs(p.speed) / avg;
-        if (r > 1.2) bits.push(T('快行', 'fast'));
-        else if (r < 0.8) bits.push(T('慢行', 'slow'));
+        if (r > 1.2) bits.push(T('快行', 'fast', '速い'));
+        else if (r < 0.8) bits.push(T('慢行', 'slow', '遅い'));
         else bits.push(T('平均', 'avg'));
       }
     }
@@ -98,16 +93,16 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
     const nightParty = p.name === 'Moon' || p.name === 'Venus' || p.name === 'Mars';
     const dayParty = p.name === 'Sun' || p.name === 'Jupiter' || p.name === 'Saturn';
     if (p.house) {
-      if (p.name === 'Mercury') { if (above) bits.push(T('得时', 'hayz')); else bits.push(T('失时', 'out')); }
-      else if (dayParty) { if (dayChart === above) bits.push(T('得时', 'hayz')); else bits.push(T('失时', 'out')); }
-      else if (nightParty) { if (dayChart !== above) bits.push(T('得时', 'hayz')); else bits.push(T('失时', 'out')); }
+      if (p.name === 'Mercury') { if (above) bits.push(T('得时', 'hayz', '順時')); else bits.push(T('失时', 'out', '逆時')); }
+      else if (dayParty) { if (dayChart === above) bits.push(T('得时', 'hayz', '順時')); else bits.push(T('失时', 'out', '逆時')); }
+      else if (nightParty) { if (dayChart !== above) bits.push(T('得时', 'hayz', '順時')); else bits.push(T('失时', 'out', '逆時')); }
     }
     // 东出(晨星, 黄经落后太阳) / 西入(昏星); 太阳自身不标
     if (sun && p.name !== 'Sun' && (p.kind === 'planet' || AVG_SPEED[p.name])) {
       const d = norm(sun.longitude - p.longitude);
-      if (d < 180) bits.push(T('东出', 'E')); else bits.push(T('西入', 'W'));
+      if (d < 180) bits.push(T('东出', 'E', '東出')); else bits.push(T('西入', 'W', '西入'));
     }
-    if ((chart.underBeams ?? []).includes(p.name)) bits.push(T('在日光下', 'beams'));
+    if ((chart.underBeams ?? []).includes(p.name)) bits.push(T('在日光下', 'beams', '太陽下'));
     if (p.retrograde) bits.push(T('逆行', 'Rx'));
     return bits;
   };
@@ -234,7 +229,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
             </tbody>
           </table>
           <p className="mt-1.5 text-[10px] text-muted/50">
-            {T('守护宫/曜升宫=该星作为(庙/曜升)主星管辖的宫头宫位; 分数: 庙+5 旺+4 三分+3 界+2 面+1, 失势-5 落陷-4, 0分游走=0 P; 得时/失时=简化判定(星派×半球)', 'Rules/Exalted=house cusps this planet rules; Score: dom+5 exa+4 tri+3 bnd+2 dec+1, detr-5 fall-4; 0 P=peregrine')}
+            {T('守护宫/曜升宫=该星作为(庙/曜升)主星管辖的宫头宫位; 分数: 庙+5 旺+4 三分+3 界+2 面+1, 失势-5 落陷-4, 0分游走=0 P; 得时/失时=简化判定(星派×半球)', 'Rules/Exalted=house cusps this planet rules; Score: dom+5 exa+4 tri+3 bnd+2 dec+1, detr-5 fall-4; 0 P=peregrine', 'ルーラー/エグザルト=その星が(ドミサイル/エグザルテーションとして)支配するハウスのカスプ; スコア: ドミサイル+5 エグザルテーション+4 トリプリシティ+3 ターム+2 フェイス+1, デトリメント-5 フォール-4, 0点=ペレグリン; 順時/逆時=簡易判定(星派×半球)')}
           </p>
         </div>
       )}
@@ -329,7 +324,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
       {tab === 'firdaria' && (
         <div>
           <p className="mb-2 text-[11px] text-muted/70">
-            {T(`法达星限 (${dayChart ? '昼生盘' : '夜生盘'}序) — 每主段平分 7 个子段, 第 1 子段=主星自己, 之后按迦勒底序轮转; 交点不细分; 75 年一轮, 循环 2 轮`, `Firdaria (${dayChart ? 'diurnal' : 'nocturnal'}) — each period splits into 7 equal sub-periods starting from the lord itself; nodes do not subdivide; 75-year cycle repeated`)}
+            {T(`法达星限 (${dayChart ? '昼生盘' : '夜生盘'}序) — 每主段平分 7 个子段, 第 1 子段=主星自己, 之后按迦勒底序轮转; 交点不细分; 75 年一轮, 循环 2 轮`, `Firdaria (${dayChart ? 'diurnal' : 'nocturnal'}) — each period splits into 7 equal sub-periods starting from the lord itself; nodes do not subdivide; 75-year cycle repeated`, `ファルダリア（${dayChart ? '昼生盤' : '夜生盤'}序）— 各主期は7つの等しい子期に分割, 第1子期=主星自身, 以降はカルデアン順で輪転; 交点は細分せず; 75年で1巡, 2巡繰り返し`)}
           </p>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1180px] text-left text-[13px]">
@@ -386,7 +381,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
       {tab === 'profection' && (
         <div>
           <p className="mb-2 text-[11px] text-muted/70">
-            {T('小限法（该年生日起限）— 出生年为 1 宫, 每年生日推进一宫, 12 年一循环; 「主星」=该宫宫头星座的庙主星', 'Annual profections — 1st house at birth, advancing one house each birthday; Lord = domicile ruler of the profected sign')}
+            {T('小限法（该年生日起限）— 出生年为 1 宫, 每年生日推进一宫, 12 年一循环; 「主星」=该宫宫头星座的庙主星', 'Annual profections — 1st house at birth, advancing one house each birthday; Lord = domicile ruler of the profected sign', 'プロフェクション（生年誕生日から起算）— 出生年を1ハウスとし, 毎年誕生日に1ハウス進む, 12年で1巡; 「主星」=そのハウス頭サインのドミサイル主星')}
           </p>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1180px] text-left text-[13px]">

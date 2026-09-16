@@ -186,7 +186,7 @@ export function castTransitChart(birth: BirthData, settings: CastSettings, targe
   const cross = selfCrossAspects(natal, outerPlanets, settings, '·T')
   return {
     type: 'transit', natal, crossAspects: cross, warnings,
-    outer: { planets: outerPlanets, jd, date: { ...target, hour: 12 }, label: `${target.year}-${target.month}-${target.day} 天象` },
+    outer: { planets: outerPlanets, jd, date: { ...target, hour: 12 }, label: `${target.year}-${target.month}-${target.day}` },
   }
 }
 
@@ -224,7 +224,7 @@ export function castProgressionChart(birth: BirthData, settings: CastSettings, t
     natal, crossAspects: cross, warnings,
     outer: {
       planets: outerPlanets, jd: pr.dates.targetJD, date: fromJD(pr.dates.targetJD, birth.timezone),
-      label: `${target.year}-${target.month}-${target.day} ${mode === 'solar-arc' ? '太阳弧' : '次限'}盘`,
+      label: `${target.year}-${target.month}-${target.day}`,
       solarArc: toPct(pr.solarArc),
     },
   }
@@ -272,7 +272,7 @@ export function castSolarReturnChart(birth: BirthData, settings: CastSettings, r
   const cross = selfCrossAspects(natal, sr.planets, settings, '·R')
   return {
     type: 'solar-return', natal, crossAspects: cross, warnings: [...warnings, ...sr.warnings.filter((w) => !warnings.includes(w))],
-    outer: { planets: sr.planets, jd: jdSR, date: srDate, label: `${returnYear} 年日返 ${srDate.month}-${srDate.day} ${String(srDate.hour).padStart(2, '0')}:${String(srDate.minute).padStart(2, '0')}` },
+    outer: { planets: sr.planets, jd: jdSR, date: srDate, label: `${srDate.year}-${srDate.month}-${srDate.day} ${String(srDate.hour).padStart(2, '0')}:${String(srDate.minute).padStart(2, '0')}` },
   }
 }
 
@@ -319,7 +319,7 @@ export function castLunarReturnChart(birth: BirthData, settings: CastSettings, f
     type: 'lunar-return', natal, crossAspects: cross, warnings: [...warnings, ...lr.warnings.filter((w) => !warnings.includes(w))],
     outer: {
       planets: lr.planets, jd: jdLR, date: lrDate,
-      label: `月返 ${lrDate.year}-${lrDate.month}-${lrDate.day} ${String(lrDate.hour).padStart(2, '0')}:${String(lrDate.minute).padStart(2, '0')}`,
+      label: `${lrDate.year}-${lrDate.month}-${lrDate.day} ${String(lrDate.hour).padStart(2, '0')}:${String(lrDate.minute).padStart(2, '0')}`,
     },
   }
 }

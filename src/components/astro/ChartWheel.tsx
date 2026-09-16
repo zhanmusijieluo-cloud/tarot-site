@@ -11,6 +11,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useI18n } from '@/i18n';
+import { PLANET_JA } from '@/lib/astro/i18n';
 import { AspectLegend } from '@/components/astro/AspectGrid';
 import ChartWheel2D from '@/components/astro/ChartWheel2D';
 
@@ -101,12 +102,6 @@ const DIGNITY_JA: Record<string, string> = {
 const RECEPTION_KIND_JA: Record<string, string> = {
   domicile: 'ドミサイル', exaltation: 'エグザルテーション', triplicity: 'トリプリシティ',
   detriment: 'デトリメント', fall: 'フォール', term: 'ターム', face: 'フェイス',
-};
-const PLANET_JA: Record<string, string> = {
-  Sun: '太陽', Moon: '月', Mercury: '水星', Venus: '金星', Mars: '火星',
-  Jupiter: '木星', Saturn: '土星', Uranus: '天王星', Neptune: '海王星', Pluto: '冥王星',
-  NorthNode: 'ドラゴンヘッド', SouthNode: 'ドラゴンテイル',
-  Ascendant: 'アセンダント', Descendant: 'ディセンダント', Midheaven: 'MC', IC: 'IC',
 };
 const jaOf = (n: string) => PLANET_JA[n] ?? n;
 export const DIGNITY_ZH: Record<string, string> = {

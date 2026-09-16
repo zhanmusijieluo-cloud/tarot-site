@@ -8,7 +8,7 @@
 // ============================================================
 import React, { useState } from 'react';
 import { useI18n } from '@/i18n';
-import { L } from '@/lib/astro/i18n';
+import { L, PLANET_JA } from '@/lib/astro/i18n';
 import ChartWheel, { type VChart, type VPlanet } from '@/components/astro/ChartWheel';
 import AspectGrid, { AspectLegend, ASPECT_COLOR, fmtOrbDms, aspectMatrixPoints } from '@/components/astro/AspectGrid';
 import NatalCard from '@/components/astro/NatalCard';
@@ -64,7 +64,11 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
   const [selected, setSelected] = useState<string | null>(null);
   void modeProp; void onAspectMode; // 矩阵与清单同屏后不再需要切换 (URL ag 参数保留兼容旧链接)
   const zhOf = (name: string) =>
-    zhMode
+    lang === 'ja'
+      ? (PLANET_JA[name]
+         ?? chart.planets.find((p) => p.name === name)?.zh
+         ?? name)
+      : zhMode
       ? (chart.planets.find((p) => p.name === name)?.zh
          ?? ({ Ascendant: '上升', Descendant: '下降', Midheaven: '中天', IC: '天底' } as Record<string, string>)[name]
          ?? name)
@@ -176,11 +180,20 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
       const dist = p && sunP ? Math.abs(((p.longitude - sunP.longitude + 540) % 360) - 180) : 0
       const caz = (chart.Cazimi ?? []).includes(cn)
       const beams = (chart.underBeams ?? []).includes(cn)
-      const label = caz ? '日核Cazimi' : beams ? '在日光下' : '焦身·燃烧'
+      const label = caz
+        ? (lang === 'ja' ? 'カジミ' : '日核Cazimi')
+        : beams
+        ? (lang === 'ja' ? '太陽下' : '在日光下')
+        : (lang === 'ja' ? '燃焼' : '焦身·燃烧')
       const tone = caz ? 'gold' : beams ? 'soft' : 'warn'
+      const pname = zhOf(cn)
       features.push({
         tone,
-        tip: caz ? `${p?.zh ?? cn} 日核Cazimi (距日≤0°17′, 如皇帝内臣, 反强)` : beams ? `${p?.zh ?? cn} 在日光下 (距日8°30′~17°, 影响轻, 兼近贵)` : `${p?.zh ?? cn} 焦身·燃烧 (距日17′~8°30′, 星性难发挥)`,
+        tip: caz
+          ? `${pname} ${lang === 'ja' ? 'カジミ' : '日核Cazimi'} (距日≤0°17′, ${lang === 'ja' ? '帝王の内臣の如く、逆に強し' : '如皇帝内臣, 反强'})`
+          : beams
+          ? `${pname} ${lang === 'ja' ? '太陽下' : '在日光下'} (距日8°30′~17°, ${lang === 'ja' ? '影響軽く、貴人に近し' : '影响轻, 兼近贵'})`
+          : `${pname} ${lang === 'ja' ? '燃焼' : '焦身·燃烧'} (距日17′~8°30′, ${lang === 'ja' ? '星の性質が発揮され難い' : '星性难发挥'})`,
         el: (
           <span>
             <b className="font-normal text-frost">{psym(cn)}</b><span className={`ml-1.5 ${caz ? 'text-[#cdb88a]' : beams ? 'text-muted' : 'text-[#e07f7f]'}`}>{label}</span>
@@ -196,12 +209,12 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
     if (!p2) continue
     features.push({
       tone: 'warn',
-      tip: zhMode ? `${p2.zh} 位于燃烧之路 (天秤14°55′—天蝎14°55′, 秋分点之暗区)` : undefined,
+      tip: lang === 'ja' ? `${zhOf(n)} 燃焼の道 (天秤14°55′—天蝎14°55′, 秋分点の暗域)` : zhMode ? `${p2.zh} 位于燃烧之路 (天秤14°55′—天蝎14°55′, 秋分点之暗区)` : undefined,
       el: (
         <span>
           <b className="font-normal text-frost">{p2.symbol}</b>
           <span className="mx-1 text-accent/95">{lang === 'ja' ? (SIGNS_JA[p2.sign] ?? p2.sign) : zhMode ? p2.signZh : p2.sign}</span>
-          <span className="text-[#e8a08a]">在燃烧之路</span>
+          <span className="text-[#e8a08a]">{lang === 'ja' ? '燃焼の道' : zhMode ? '在燃烧之路' : 'Via Combusta'}</span>
         </span>
       ),
     })
@@ -210,7 +223,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
   if (chart.moonVoid) {
     features.push({
       tone: 'warn',
-      tip: zhMode ? '月亮空亡 (Void of Course): 从出生位到出座前, 不再与任何七政精确成相 — 事项悬置、推进类易空转 (古典凶兆之一)' : undefined,
+      tip: lang === 'ja' ? 'ムーン・ヴォイド (Void of Course): 出生位置からサイン移動まで、他の七政と正確なアスペクトを結ばず — 事項は宙吊り、推進系は空回りしやすい (古典の凶兆の一つ)' : zhMode ? '月亮空亡 (Void of Course): 从出生位到出座前, 不再与任何七政精确成相 — 事项悬置、推进类易空转 (古典凶兆之一)' : undefined,
       el: (
         <span>
           <b className="font-normal text-frost">☽</b>
@@ -235,7 +248,7 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
           seenA.add(key)
           features.push({
             tone: 'soft',
-            tip: zhMode ? `${pa.zh} 与 ${pb.zh} 成映点 (Antiscia, 关于巨蟹-摩羯轴镜像重合)` : undefined,
+            tip: lang === 'ja' ? `${zhOf(pa.name)} と ${zhOf(pb.name)} 成映点 (Antiscia, 蟹座-山羊座軸に関する鏡像一致)` : zhMode ? `${pa.zh} 与 ${pb.zh} 成映点 (Antiscia, 关于巨蟹-摩羯轴镜像重合)` : undefined,
             el: (
               <span>
                 <b className="font-normal text-frost">{pa.symbol}</b>

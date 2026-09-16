@@ -12,6 +12,7 @@ export type StepUnit = 'y' | 'mo' | 'd' | 'h' | 'mi';
 export interface TimeParts { y: number; m: number; d: number; h: number; mi: number }
 
 const UNIT_ZH: Record<StepUnit, string> = { y: '年', mo: '月', d: '日', h: '时', mi: '分' };
+const UNIT_JA: Record<StepUnit, string> = { y: '年', mo: '月', d: '日', h: '時', mi: '分' };
 const UNIT_EN: Record<StepUnit, string> = { y: 'Y', mo: 'M', d: 'D', h: 'h', mi: 'm' };
 
 const daysInMonth = (y: number, m: number) => new Date(Date.UTC(y, m, 0)).getUTCDate();
@@ -74,7 +75,7 @@ export default function TimeStepper({ value, units, zhMode, onChange, onNow }: {
             onClick={() => setUnit(u)}
             className={`rounded-full border px-2.5 py-0.5 text-[10.5px] transition-colors ${active === u ? 'border-accent/50 bg-accent/[0.08] text-accent' : 'border-white/[0.08] text-muted/70 hover:border-white/25'}`}
           >
-            {lang === 'ja' ? UNIT_ZH[u] : zhMode ? UNIT_ZH[u] : UNIT_EN[u]}
+            {lang === 'ja' ? UNIT_JA[u] : zhMode ? UNIT_ZH[u] : UNIT_EN[u]}
           </button>
         ))}
         {onNow && (
