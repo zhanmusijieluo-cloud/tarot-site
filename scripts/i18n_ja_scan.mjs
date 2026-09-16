@@ -31,6 +31,46 @@ const TABS = [
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// 在 page.evaluate 里抓取当前文档所有文本节点中命中正则的内容
+function scanEval(reSrc) {
+  const re = new RegExp(reSrc);
+  const out = [];
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+  let n;
+  while ((n = walker.nextNode())) {
+    const txt = n.nodeValue || '';
+    let p = n.parentElement;
+    let inHead = false;
+    while (p) { if (p.tagName === 'SCRIPT' || p.tagName === 'STYLE') { inHead = true; break; } p = p.parentElement; }
+    if (inHead) continue;
+    if (re.test(txt)) {
+      let el = n.parentElement;
+      let sel = '';
+      while (el && !sel) {
+        if (el.id) { sel = '#' + el.id; break; }
+        if (el.className && typeof el.className === 'string') {
+          const cls = el.className.trim().split(/\s+/).slice(0, 2).join('.');
+          if (cls) { sel = el.tagName.toLowerCase() + '.' + cls; break; }
+        }
+        el = el.parentElement;
+      }
+      out.push({ text: txt.trim(), loc: sel || 'body' });
+    }
+  }
+  return out;
+}
+
+// 点击匹配标题/文本的按钮 (返回是否点到)
+function clickByText(text) {
+  const btns = Array.from(document.querySelectorAll('button'));
+  const hit = btns.find((b) => {
+    const t = (b.getAttribute('title') || '') + ' ' + (b.textContent || '');
+    return t.includes(text);
+  });
+  if (hit) { hit.click(); return true; }
+  return false;
+}
+
 (async () => {
   const browser = await puppeteer.launch({
     executablePath: EXE,
@@ -41,56 +81,83 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await page.setViewport({ width: 1400, height: 1000 });
 
   const findings = [];
+  const pushHits = (scope, hits) => {
+    const seen = new Set();
+    for (const h of hits) {
+      const key = h.loc + '|' + h.text;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      findings.push({ tab: scope, ...h });
+    }
+  };
+
   for (const [name, dp] of TABS) {
     const url = `${BASE}?${BIRTH}${dp ? `&dp=${dp}` : ''}`;
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
     await page.evaluate((l) => localStorage.setItem('oracle-lang', l), MODE);
     await page.reload({ waitUntil: 'networkidle2', timeout: 30000 });
     await sleep(1800); // 等排盘 API + 渲染
+    pushHits(name, await page.evaluate(scanEval, RE.source));
+  }
 
-    const hits = await page.evaluate((reSrc) => {
-      const re = new RegExp(reSrc);
-      const out = [];
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
-      let n;
-      while ((n = walker.nextNode())) {
-        const txt = n.nodeValue || '';
-        // 跳过 <script>/<style> 内文本 (如 Next.js __next_f RSC 载荷)
-        let p = n.parentElement;
-        let inHead = false;
-        while (p) { if (p.tagName === 'SCRIPT' || p.tagName === 'STYLE') { inHead = true; break; } p = p.parentElement; }
-        if (inHead) continue;
-        if (re.test(txt)) {
-          // 向上找一个可定位的祖先标签
-          let el = n.parentElement;
-          let sel = '';
-          while (el && !sel) {
-            if (el.id) { sel = '#' + el.id; break; }
-            if (el.className && typeof el.className === 'string') {
-              const cls = el.className.trim().split(/\s+/).slice(0, 2).join('.');
-              if (cls) { sel = el.tagName.toLowerCase() + '.' + cls; break; }
-            }
-            el = el.parentElement;
-          }
-          out.push({ text: txt.trim(), loc: sel || 'body' });
-        }
-      }
-      return out;
-    }, RE.source);
+  // ---- StatusTabs 子表覆盖: 法达/小限/福点·精神点 Aphesis (默认 ecliptic 已在主循环覆盖) ----
+  const STATUS_TABS = [
+    ['firdaria', ['法达星限', 'Firdaria', 'ファルダリア']],
+    ['profection', ['小限法', 'Profections', 'プロフェクション']],
+    ['aphesisF', ['福点 Aphesis', 'Fortune Aphesis', 'フォーチュン・アフェシス']],
+    ['aphesisS', ['精神点 Aphesis', 'Spirit Aphesis', 'スピリット・アフェシス']],
+  ];
+  function clickTabByText(cands) {
+    const btns = Array.from(document.querySelectorAll('button'));
+    for (const c of cands) {
+      const hit = btns.find((b) => (b.textContent || '').includes(c));
+      if (hit) { hit.click(); return c; }
+    }
+    return null;
+  }
+  await page.goto(`${BASE}?${BIRTH}`, { waitUntil: 'networkidle2', timeout: 30000 });
+  await page.evaluate((l) => localStorage.setItem('oracle-lang', l), MODE);
+  await page.reload({ waitUntil: 'networkidle2', timeout: 30000 });
+  await sleep(1800);
+  for (const [id, cands] of STATUS_TABS) {
+    const clicked = await page.evaluate(clickTabByText, cands);
+    await sleep(700);
+    pushHits('status-' + id + (clicked ? '' : '(未点击)'), await page.evaluate(scanEval, RE.source));
+  }
 
-    // 去重（同标签同文本只报一次）
-    const seen = new Set();
-    for (const h of hits) {
-      const key = h.loc + '|' + h.text;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      findings.push({ tab: name, ...h });
+  // ---- 弹层覆盖: 合盘窗口 + 排盘设置抽屉 (仅本命盘视图) ----
+  if (process.env.POPUP) {
+    await page.goto(`${BASE}?${BIRTH}`, { waitUntil: 'networkidle2', timeout: 30000 });
+    await page.evaluate((l) => localStorage.setItem('oracle-lang', l), MODE);
+    await page.reload({ waitUntil: 'networkidle2', timeout: 30000 });
+    await sleep(1800);
+
+    // 合盘窗口 (☍ 按钮 — 用图标匹配, 跨语言稳定)
+    const openedSyn = await page.evaluate(clickByText, '☍');
+    if (openedSyn) {
+      await sleep(900);
+      pushHits('popup-synastry', await page.evaluate(scanEval, RE.source));
+      await page.keyboard.press('Escape');
+      await sleep(400);
+    } else {
+      findings.push({ tab: 'popup-synastry', loc: 'button', text: '(未找到合盘按钮)' });
+    }
+
+    // 排盘设置抽屉 (⚙ 按钮 — 用图标匹配, 跨语言稳定)
+    const openedSet = await page.evaluate(clickByText, '⚙');
+    if (openedSet) {
+      await sleep(900);
+      pushHits('popup-settings', await page.evaluate(scanEval, RE.source));
+      await page.keyboard.press('Escape');
+      await sleep(400);
+    } else {
+      findings.push({ tab: 'popup-settings', loc: 'button', text: '(未找到设置按钮)' });
     }
   }
 
   await browser.close();
 
-  console.log(`\n===== 日文模式简体中文残留扫描 (共 ${findings.length} 处) =====`);
+  console.log(`\n===== 三语残留扫描 (${MODE} 模式, 共 ${findings.length} 处) =====`);
   if (findings.length === 0) {
     console.log('✅ 0 残留 — 通过');
   } else {

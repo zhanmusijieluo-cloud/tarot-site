@@ -85,7 +85,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
         const r = Math.abs(p.speed) / avg;
         if (r > 1.2) bits.push(T('快行', 'fast', '速い'));
         else if (r < 0.8) bits.push(T('慢行', 'slow', '遅い'));
-        else bits.push(T('平均', 'avg'));
+        else bits.push(T('平均', 'avg', '平均'));
       }
     }
     // 得时/失时 (简化: 星派 × 盘 × 地平线上)
@@ -103,7 +103,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
       if (d < 180) bits.push(T('东出', 'E', '東出')); else bits.push(T('西入', 'W', '西入'));
     }
     if ((chart.underBeams ?? []).includes(p.name)) bits.push(T('在日光下', 'beams', '太陽下'));
-    if (p.retrograde) bits.push(T('逆行', 'Rx'));
+    if (p.retrograde) bits.push(T('逆行', 'Rx', '逆行'));
     return bits;
   };
 
@@ -181,14 +181,14 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
               </tr>
               <tr className="border-b border-white/[0.06] bg-white/[0.02] text-[10px] tracking-[0.12em] text-muted/80 uppercase">
                 <th className={thCls} colSpan={5} />
-                <th className={`${thCls} text-center`}>{T('本垣', 'Dom')}</th>
-                <th className={`${thCls} text-center`}>{T('曜升', 'Exa')}</th>
-                <th className={`${thCls} text-center`}>{T('三分', 'Tri')}</th>
-                <th className={`${thCls} text-center`}>{T('界', 'Bnd')}</th>
-                <th className={`${thCls} text-center`}>{T('十度', 'Dec')}</th>
-                <th className={`${thCls} text-center`}>{T('陷', 'Det')}</th>
-                <th className={`${thCls} text-center`}>{T('落', 'Fal')}</th>
-                <th className={`${thCls} text-center`}>{T('分数', 'Score')}</th>
+                <th className={`${thCls} text-center`}>{T('本垣', 'Dom', '本垣')}</th>
+                <th className={`${thCls} text-center`}>{T('曜昇', 'Exa', '曜昇')}</th>
+                <th className={`${thCls} text-center`}>{T('三分', 'Tri', '三分')}</th>
+                <th className={`${thCls} text-center`}>{T('界', 'Bnd', '界')}</th>
+                <th className={`${thCls} text-center`}>{T('十度', 'Dec', '十度')}</th>
+                <th className={`${thCls} text-center`}>{T('陷', 'Det', '陷')}</th>
+                <th className={`${thCls} text-center`}>{T('落', 'Fal', '落')}</th>
+                <th className={`${thCls} text-center`}>{T('分数', 'Score', '分数')}</th>
                 <th className={thCls} />
               </tr>
             </thead>
@@ -239,20 +239,20 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
         <div className="grid items-start gap-x-8 gap-y-6 md:grid-cols-2 xl:grid-cols-3">
           {/* 宫位表 */}
           <div>
-            <p className="mb-1.5 text-[11px] tracking-[0.2em] text-muted/75">{T('宫位表', 'HOUSES')}</p>
+            <p className="mb-1.5 text-[11px] tracking-[0.2em] text-muted/75">{T('宫位表', 'HOUSES', '宮位表')}</p>
             <table className="w-full text-left text-[13px]">
               <thead>
                 <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
-                  <th className={thCls}>{T('宫', 'House')}</th>
+                  <th className={thCls}>{T('宮', 'House', '宮')}</th>
                   <th className={thCls}>{T('黄经度数', 'Longitude', '黄経度数')}</th>
-                  <th className={`${thCls} text-center`}>{T('本垣', 'Dom')}</th>
-                  <th className={`${thCls} text-center`}>{T('曜升', 'Exa')}</th>
-                  <th className={`${thCls} text-center`}>{T('宫神星', 'Almuten')}</th>
+                  <th className={`${thCls} text-center`}>{T('本垣', 'Dom', '本垣')}</th>
+                  <th className={`${thCls} text-center`}>{T('曜昇', 'Exa', '曜昇')}</th>
+                  <th className={`${thCls} text-center`}>{T('宫神星', 'Almuten', '宮神星')}</th>
                 </tr>
               </thead>
               <tbody>
                 {cuspRows.length === 0 ? (
-                  <tr><td className={`${tdCls} text-muted/60`} colSpan={5}>{T('时间未知, 无宫位', 'No houses (unknown time)')}</td></tr>
+                  <tr><td className={`${tdCls} text-muted/60`} colSpan={5}>{T('时间未知, 无宫位', 'No houses (unknown time)', '時間不明、ハウスなし')}</td></tr>
                 ) : cuspRows.map((r) => (
                   <tr key={r.house} className="border-b border-white/[0.04] last:border-0">
                     <td className={`${tdCls} text-muted`}>{r.house}</td>
@@ -265,22 +265,22 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
               </tbody>
             </table>
             <p className="mt-1.5 max-w-[380px] text-[10px] text-muted/50">
-              {T('宫神星 = 宫头度数的尊贵计分最强主星 (庙5 旺4 三分3 界2 面1, 平分取高类别)', 'Almuten = strongest essential-dignity ruler of the cusp degree (5/4/3/2/1)')}
+              {T('宫神星 = 宫头度数的尊贵计分最强主星 (庙5 旺4 三分3 界2 面1, 平分取高类别)', 'Almuten = strongest essential-dignity ruler of the cusp degree (5/4/3/2/1)', 'アルムテン = カスプ度数の本質的尊貴で最も強い主星（ドミサイル5 エグザルテーション4 トリプリシティ3 ターム2 フェイス1、同点は上位カテゴリを採用）')}
             </p>
           </div>
           {/* 阿拉伯点表 */}
           <div>
-            <p className="mb-1.5 text-[11px] tracking-[0.2em] text-muted/75">{T('阿拉伯点', 'ARABIC LOTS')}</p>
+            <p className="mb-1.5 text-[11px] tracking-[0.2em] text-muted/75">{T('阿拉伯点', 'ARABIC LOTS', 'アラビック・ロッツ')}</p>
             <table className="w-full text-left text-[13px]">
                 <thead>
                   <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
-                    <th className={thCls}>{T('阿拉伯点', 'Arabic Lot')}</th>
+                    <th className={thCls}>{T('阿拉伯点', 'Arabic Lot', 'アラビック・ロット')}</th>
                     <th className={thCls}>{T('黄经度数', 'Longitude', '黄経度数')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {lots.length === 0 ? (
-                    <tr><td className={`${tdCls} text-muted/60`} colSpan={2}>{T('时间未知, 无法计算', 'Requires birth time')}</td></tr>
+                    <tr><td className={`${tdCls} text-muted/60`} colSpan={2}>{T('时间未知, 无法计算', 'Requires birth time', '時間不明、計算不可')}</td></tr>
                   ) : lots.map((l) => (
                     <tr key={l.key} className="border-b border-white/[0.04] last:border-0">
                       <td className={`${tdCls} text-frost/85`}>{lang === 'ja' ? l.zh : zhMode ? l.zh : l.en}</td>
@@ -292,18 +292,18 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
             </div>
           {/* 恒星表 */}
           <div>
-            <p className="mb-1.5 text-[11px] tracking-[0.2em] text-muted/75">{T('恒星', 'FIXED STARS')}</p>
+            <p className="mb-1.5 text-[11px] tracking-[0.2em] text-muted/75">{T('恒星', 'FIXED STARS', '恒星')}</p>
             <table className="w-full text-left text-[13px]">
                 <thead>
                   <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
-                    <th className={thCls}>{T('恒星', 'Fixed Star')}</th>
+                    <th className={thCls}>{T('恒星', 'Fixed Star', '恒星')}</th>
                     <th className={thCls}>{T('黄经度数', 'Longitude', '黄経度数')}</th>
-                    <th className={thCls}>{T('合相', 'Conj')}</th>
+                    <th className={thCls}>{T('合相', 'Conj', '合')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {starRows.length === 0 ? (
-                    <tr><td className={`${tdCls} text-muted/60`} colSpan={3}>{T('本盘无明显恒星合相 (±2°)', 'No notable star conjunctions (±2°)')}</td></tr>
+                    <tr><td className={`${tdCls} text-muted/60`} colSpan={3}>{T('本盘无明显恒星合相 (±2°)', 'No notable star conjunctions (±2°)', '本図に顕著な恒星合（±2°）なし')}</td></tr>
                   ) : starRows.map(({ s, lon, conj }) => (
                     <tr key={s.en} className="border-b border-white/[0.04] last:border-0">
                       <td className={`${tdCls} text-frost/85`} title={s.en}>{lang === 'ja' ? s.zh : zhMode ? s.zh : s.en}</td>
@@ -314,7 +314,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                 </tbody>
               </table>
               <p className="mt-1.5 max-w-[420px] text-[10px] text-muted/50">
-                {T('恒星黄经含出生年岁差; 列出与星体/四轴合相 ≤2° 的传统亮星 (共 17 颗库)', 'Star longitudes include precession to birth year; conjunctions within 2° with bodies/axes')}
+                {T('恒星黄经含出生年岁差; 列出与星体/四轴合相 ≤2° 的传统亮星 (共 17 颗库)', 'Star longitudes include precession to birth year; conjunctions within 2° with bodies/axes', '恒星の黄経は出生年の歳差を含む; 星体・4軸と2°以内に合する伝統的亮星を列挙（計17星）')}
               </p>
           </div>
         </div>
@@ -332,9 +332,9 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                 <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
                   {Array.from({ length: FIRD_COLS }, (_, c) => (
                     <React.Fragment key={c}>
-                      <th className={`${thCls} text-center ${c > 0 ? 'border-l border-dashed border-white/[0.12]' : ''}`}>{T('主', 'Lord')}</th>
-                      <th className={`${thCls} text-center`}>{T('次', 'Sub')}</th>
-                      <th className={thCls}>{T('起始日期', 'Start')}</th>
+                      <th className={`${thCls} text-center ${c > 0 ? 'border-l border-dashed border-white/[0.12]' : ''}`}>{T('主', 'Lord', '主')}</th>
+                      <th className={`${thCls} text-center`}>{T('次', 'Sub', '次')}</th>
+                      <th className={thCls}>{T('起始日期', 'Start', '開始日')}</th>
                     </React.Fragment>
                   ))}
                 </tr>
@@ -361,7 +361,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                           <td colSpan={isStart ? 2 : undefined} style={cellStyle} className={`${tdCls} text-center text-[15px] ${isNow ? 'text-accent' : isStart ? 'font-semibold text-frost' : 'text-frost/90'} ${c > 0 ? 'border-l border-dashed border-white/[0.12]' : ''}`}>{symOf(item.lord)}</td>
                           {!isStart && <td style={cellStyle} className={`${tdCls} text-center text-[15px] text-frost/75`}>{symOf(item.sub!)}</td>}
                           <td style={dateStyle} className={`${tdCls} tabular-nums ${isNow ? 'text-accent' : isStart ? '' : 'text-muted'}`}>
-                            {dateStr}{isNow ? <span className="ml-1.5 text-[10px] text-accent">{T('当前', 'now')}</span> : null}
+                            {dateStr}{isNow ? <span className="ml-1.5 text-[10px] text-accent">{T('当前', 'now', '現在')}</span> : null}
                           </td>
                         </React.Fragment>
                       );
@@ -372,7 +372,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
             </table>
           </div>
           <p className="mt-1.5 text-[10px] text-muted/50">
-            {T('「主」=一级掌限 75 年序; 「次」=主段内 7 等分子段 (Abu Ma\'shar 法: 第 1 子段=主星自己, 其余按迦勒底序); 日期按真实年 365.2425 天自出生推算; 每栏自上往下、栏间自左往右顺序阅读', 'Lord=level-1 period lord (75-year cycle); Sub=equal seventh sub-period (Abu Ma\'shar: first sub = lord itself, then Chaldean order); dates at real years 365.2425 days')}
+            {T('「主」=一级掌限 75 年序; 「次」=主段内 7 等分子段 (Abu Ma\'shar 法: 第 1 子段=主星自己, 其余按迦勒底序); 日期按真实年 365.2425 天自出生推算; 每栏自上往下、栏间自左往右顺序阅读', 'Lord=level-1 period lord (75-year cycle); Sub=equal seventh sub-period (Abu Ma\'shar: first sub = lord itself, then Chaldean order); dates at real years 365.2425 days', '「主」=第1級の期主（75年周期）; 「次」=主期を7等分した子期（Abu Ma\'shar 法: 第1子期=主星自身, 以降はカルデアン順）; 日付は実年365.2425日で出生から推算; 各欄は上から下へ、欄間は左から右へ読む')}
           </p>
         </div>
       )}
@@ -389,9 +389,9 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                 <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
                   {Array.from({ length: PROF_COLS }, (_, c) => (
                     <React.Fragment key={c}>
-                      <th className={`${thCls} ${c > 0 ? 'border-l border-dashed border-white/[0.12]' : ''}`}>{T('年', 'Year')}</th>
-                      <th className={`${thCls} text-center`}>{T('宫', 'House')}</th>
-                      <th className={`${thCls} text-center`}>{T('主星', 'Lord')}</th>
+                      <th className={`${thCls} ${c > 0 ? 'border-l border-dashed border-white/[0.12]' : ''}`}>{T('年', 'Year', '年')}</th>
+                      <th className={`${thCls} text-center`}>{T('宮', 'House', '宮')}</th>
+                      <th className={`${thCls} text-center`}>{T('主星', 'Lord', '主星')}</th>
                     </React.Fragment>
                   ))}
                 </tr>
@@ -408,7 +408,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                       return (
                         <React.Fragment key={c}>
                           <td style={bg} className={`${tdCls} tabular-nums ${isNow ? 'text-accent' : 'text-muted'} ${c > 0 ? 'border-l border-dashed border-white/[0.12]' : ''}`}>
-                            {yearStr}{isNow ? <span className="ml-1.5 text-[10px] text-accent">{T('当前', 'now')}</span> : null}
+                            {yearStr}{isNow ? <span className="ml-1.5 text-[10px] text-accent">{T('当前', 'now', '現在')}</span> : null}
                           </td>
                           <td style={bg} className={`${tdCls} text-center tabular-nums ${isNow ? 'text-accent' : 'text-frost/85'}`}>{item.house}</td>
                           <td style={bg} className={`${tdCls} text-center text-[15px] ${isNow ? 'text-accent' : 'text-frost/90'}`}>{symOf(item.lord)}</td>
@@ -427,17 +427,17 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
       {(tab === 'aphesisF' || tab === 'aphesisS') && (() => {
         const lot = tab === 'aphesisF' ? lotF : lotS;
         const segs = tab === 'aphesisF' ? zrF : zrS;
-        const lotName = tab === 'aphesisF' ? T('福点', 'Fortune') : T('精神点', 'Spirit');
+        const lotName = tab === 'aphesisF' ? T('福点', 'Fortune', 'フォーチュン') : T('精神点', 'Spirit', 'スピリット');
         if (!lot || !segs) {
-          return <p className="py-4 text-center text-[12px] text-muted/70">{T('此盘未包含点位 — 请在排盘设置「天体」中开启「点位」后重排', 'Lots not included in this chart — enable "Lots" in settings to cast')}</p>;
+          return <p className="py-4 text-center text-[12px] text-muted/70">{T('此盘未包含点位 — 请在排盘设置「天体」中开启「点位」后重排', 'Lots not included in this chart — enable "Lots" in settings to cast', '本図はロットを含まず — 設定の「天体」で「ロット」を有効にして再作成してください')}</p>;
         }
         const perCol = Math.ceil(segs.length / ZR_COLS);
         return (
           <div>
             <p className="mb-2 text-[11px] text-muted/70">
-              {T(`${lotName} Aphesis（黄道释放）— 主段自${lotName}星座起按黄道推进, 每段=主星小年(360天年); 子段按「月」推进(30天), 走满12星座后解链 LB 跳对宫`, `${lotName} Aphesis (zodiacal releasing) — L1 by minor years (360-day), L2 in months; LB after 12 signs`)}
+              {T(`${lotName} Aphesis（黄道释放）— 主段自${lotName}星座起按黄道推进, 每段=主星小年(360天年); 子段按「月」推进(30天), 走满12星座后解链 LB 跳对宫`, `${lotName} Aphesis (zodiacal releasing) — L1 by minor years (360-day), L2 in months; LB after 12 signs`, `${lotName} アフェシス（黄道解放）— 主段は${lotName}の星座から黄道に沿って進行, 各段=主星の小年（360日年）; 子段は「月」で進行（30日）, 12星座を満たした後は解鎖 LB で向かい宮へ跳ぶ`)}
               <span className="ml-2 text-muted/60">
-                {T('起点', 'Start')}: <SignGlyph si={signIdxOf(lot.longitude)} color={signColor(signIdxOf(lot.longitude))} /> {SIGN_ZH_BY_IDX[signIdxOf(lot.longitude)]}
+                {T('起点', 'Start', '起点')}: <SignGlyph si={signIdxOf(lot.longitude)} color={signColor(signIdxOf(lot.longitude))} /> {SIGN_ZH_BY_IDX[signIdxOf(lot.longitude)]}
               </span>
             </p>
             <div className="overflow-x-auto">
@@ -446,9 +446,9 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                   <tr className="border-b border-white/[0.06] bg-white/[0.03] text-[10px] tracking-[0.15em] text-muted uppercase">
                     {Array.from({ length: ZR_COLS }, (_, c) => (
                       <React.Fragment key={c}>
-                        <th className={`${thCls} text-center ${c > 0 ? 'border-l border-dashed border-white/[0.12]' : ''}`}>{T('主', 'L1')}</th>
-                        <th className={`${thCls} text-center`}>{T('次', 'L2')}</th>
-                        <th className={thCls}>{T('起始日期', 'Date')}</th>
+                        <th className={`${thCls} text-center ${c > 0 ? 'border-l border-dashed border-white/[0.12]' : ''}`}>{T('主', 'L1', '主')}</th>
+                        <th className={`${thCls} text-center`}>{T('次', 'L2', '次')}</th>
+                        <th className={thCls}>{T('起始日期', 'Date', '開始日')}</th>
                       </React.Fragment>
                     ))}
                   </tr>
@@ -480,7 +480,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                             <td style={isNow ? { background: 'rgba(217,168,184,0.13)', color: '#d9a8b8' } : isStart ? { background: lordC + '14', color: lordC } : undefined} className={`${tdCls} tabular-nums ${isNow ? 'text-accent' : isStart ? '' : 'text-muted'}`}>
                               {dateStr}
                               {item.lb ? <span className="ml-1.5 text-[10px] text-[#cdb88a]">LB</span> : null}
-                              {isNow ? <span className="ml-1.5 text-[10px] text-accent">{T('当前', 'now')}</span> : null}
+                              {isNow ? <span className="ml-1.5 text-[10px] text-accent">{T('当前', 'now', '現在')}</span> : null}
                             </td>
                           </React.Fragment>
                         );

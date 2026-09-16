@@ -14,12 +14,12 @@ import { DEFAULT_ORBS } from '@/lib/astro/chart-url';
 
 const HOUSE_LIST = HOUSE_SYSTEM_LIST;
 
-const GROUPS: { key: BodyGroup; zh: string; en: string; ja: string; hint: string }[] = [
-  { key: 'asteroids', zh: '小行星', en: 'Asteroids', ja: '小惑星', hint: '谷神⚳ 智神⚴ 婚神⚵ 灶神⚶' },
-  { key: 'chiron', zh: '凯龙星', en: 'Chiron', ja: 'キロン', hint: '⚷ 疗愈者' },
-  { key: 'nodes', zh: '月亮交点', en: 'Lunar Nodes', ja: 'ノード', hint: '☊☋ 南北交' },
-  { key: 'lilith', zh: '莉莉丝', en: 'Lilith', ja: 'リリス', hint: '⚸ 暗月' },
-  { key: 'lots', zh: '阿拉伯点位', en: 'Arabic Lots', ja: 'アラビックパーツ', hint: '⊕福点 ⊖精神点' },
+const GROUPS: { key: BodyGroup; zh: string; en: string; ja: string; hintZh: string; hintEn: string; hintJa: string }[] = [
+  { key: 'asteroids', zh: '小行星', en: 'Asteroids', ja: '小惑星', hintZh: '谷神⚳ 智神⚴ 婚神⚵ 灶神⚶', hintEn: 'Ceres⚳ Pallas⚴ Juno⚵ Vesta⚶', hintJa: 'ケレス⚳ パラス⚴ ユノ⚵ ウェスタ⚶' },
+  { key: 'chiron', zh: '凯龙星', en: 'Chiron', ja: 'キロン', hintZh: '⚷ 疗愈者', hintEn: '⚷ Chiron', hintJa: '⚷ キロン' },
+  { key: 'nodes', zh: '月亮交点', en: 'Lunar Nodes', ja: 'ノード', hintZh: '☊☋ 南北交', hintEn: '☊☋ Lunar Nodes', hintJa: '☊☋ ノード' },
+  { key: 'lilith', zh: '莉莉丝', en: 'Lilith', ja: 'リリス', hintZh: '⚸ 暗月', hintEn: '⚸ Lilith', hintJa: '⚸ リリス' },
+  { key: 'lots', zh: '阿拉伯点位', en: 'Arabic Lots', ja: 'アラビックパーツ', hintZh: '⊕福点 ⊖精神点', hintEn: '⊕Fortune ⊖Spirit', hintJa: '⊕フォーチュン ⊖スピリット' },
 ];
 
 const MAJOR = [
@@ -201,7 +201,7 @@ export default function ChartSettings({ value, onChange, sys, onSysChange, tabSi
                 <>
                   <div className="space-y-1.5">
                     {GROUPS.map((g) => (
-                      <Toggle key={g.key} on={!!bodies[g.key]} label={L(lang, g.zh, g.en, g.ja)} hint={g.hint} onClick={() => toggleGroup(g.key)} />
+                      <Toggle key={g.key} on={!!bodies[g.key]} label={L(lang, g.zh, g.en, g.ja)} hint={lang === 'ja' ? g.hintJa : zhMode ? g.hintZh : g.hintEn} onClick={() => toggleGroup(g.key)} />
                     ))}
                   </div>
                   <p className="text-[10px] leading-relaxed text-muted/60">{t('astro.set.bodiesHint')}</p>

@@ -104,4 +104,8 @@ export const PLANET_JA: Record<string, string> = {
   Jupiter: '木星', Saturn: '土星', Uranus: '天王星', Neptune: '海王星', Pluto: '冥王星',
   NorthNode: 'ドラゴンヘッド', SouthNode: 'ドラゴンテイル',
   Ascendant: 'アセンダント', Descendant: 'ディセンダント', Midheaven: 'MC', IC: 'IC',
+  // 小行星 / 虚点 (启用时也会走 zhOf)
+  Chiron: 'キロン', Ceres: 'ケレス', Pallas: 'パラス', Juno: 'ユノ', Vesta: 'ウェスタ',
+  'Mean Lilith': 'リリス', 'True Lilith': 'リリス', Lilith: 'リリス',
+  'Part of Fortune': 'フォーチュン', 'Part of Spirit': 'スピリット', Vertex: 'ヴァーテックス',
 };
