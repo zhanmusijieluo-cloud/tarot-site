@@ -109,7 +109,7 @@ export default function PageShell({
 
       {/* Hero — 大留白居中（compact 模式下隐藏，内容直接顶上来） */}
       {!compact && (
-        <section className="relative overflow-hidden px-5 pt-[max(9rem,calc(env(safe-area-inset-top)+7rem))] pb-8">
+        <section className="page-hero-padding relative overflow-hidden px-5 pb-8">
           <div
             className="pointer-events-none absolute left-1/2 top-[-20%] h-[min(60vw,520px)] w-[min(60vw,520px)] -translate-x-1/2 rounded-full blur-[120px] opacity-40"
             style={{ background: 'var(--glow-primary)' }}
@@ -133,9 +133,7 @@ export default function PageShell({
       )}
 
       {/* 内容 */}
-      <main className={`relative ${
-        compact ? 'pt-[max(4.5rem,calc(env(safe-area-inset-top)+3.5rem))]' : ''
-      } mx-auto w-[92%] max-w-[106.25rem] min-w-0 px-0 pb-28`}>
+      <main className={`relative ${compact ? 'page-main-compact' : ''} mx-auto w-[92%] max-w-[106.25rem] min-w-0 px-0 pb-28`}>
         {children}
       </main>
 

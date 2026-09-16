@@ -1373,6 +1373,14 @@ body {
   color: var(--muted);
 }
 
+.page-hero-padding {
+  padding-top: max(9rem, calc(env(safe-area-inset-top) + 7rem));
+}
+
+.page-main-compact {
+  padding-top: max(4.5rem, calc(env(safe-area-inset-top) + 3.5rem));
+}
+
 /* ===== 进度条 ===== */
 .draw-progress-bar {
   width: 120px;

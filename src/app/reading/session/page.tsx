@@ -1223,7 +1223,7 @@ function MarkdownBlock({ text }: { text: string }) {
   // 防泄漏：骨架锚点若意外残留于此段（如分组边界计算偏差），从可见文本剔除
   const safe = text.replace(/<!--card:\d+:[01]-->/g, '');
   return (
-    <div className="[&_h1]:mb-4 [&_h1]:font-display [&_h1]:text-xl [&_h1]:text-frost [&_h2]:mb-4 [&_h2]:mt-8 [&_h2]:font-display [&_h2]:text-lg [&_h2]:tracking-wide [&_h2]:text-frost [&_h3]:mb-2.5 [&_h3]:mt-6 [&_h3]:font-display [&_h3]:text-base [&_h3]:text-frost [&_h4]:mb-3 [&_h4]:mt-7 [&_h4]:flex [&_h4]:items-center [&_h4]:gap-2.5 [&_h4]:font-display [&_h4]:text-sm [&_h4]:font-normal [&_h4]:tracking-[0.15em] [&_h4]:text-accent [&_li]:ml-5 [&_li]:mb-1.5 [&_li]:list-disc [&_p]:mb-4 [&_p]:leading-[1.9] [&_strong]:text-frost">
+    <div className="[&_h1]:mb-4 [&_h1]:font-display [&_h1]:text-xl [&_h1]:text-frost [&_h2]:mb-4 [&_h2]:mt-8 [&_h2]:font-display [&_h2]:text-lg [&_h2]:tracking-wide [&_h2]:text-frost [&_h3]:mb-2.5 [&_h3]:mt-6 [&_h3]:font-display [&_h3]:text-base [&_h3]:text-frost [&_h4]:mb-3 [&_h4]:mt-7 [&_h4]:flex [&_h4]:items-center [&_h4]:gap-2.5 [&_h4]:font-display [&_h4]:text-sm [&_h4]:font-normal [&_h4]:tracking-[0.15em] [&_h4]:text-accent [&_li]:ml-5 [&_li]:mb-1.5 [&_li]:list-disc [&_p]:mb-4 [&_p]:leading-relaxed [&_strong]:text-frost">
       <ReactMarkdown>{safe}</ReactMarkdown>
     </div>
   );
