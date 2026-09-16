@@ -283,7 +283,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                     <tr><td className={`${tdCls} text-muted/60`} colSpan={2}>{T('时间未知, 无法计算', 'Requires birth time', '時間不明、計算不可')}</td></tr>
                   ) : lots.map((l) => (
                     <tr key={l.key} className="border-b border-white/[0.04] last:border-0">
-                      <td className={`${tdCls} text-frost/85`}>{lang === 'ja' ? l.zh : zhMode ? l.zh : l.en}</td>
+                      <td className={`${tdCls} text-frost/85`}>{lang === 'ja' ? (l.ja ?? l.en) : zhMode ? l.zh : l.en}</td>
                       <td className={`${tdCls} text-muted tabular-nums`}><span className="inline-block w-[3.5em] text-right">{dms(l.longitude % 30)}</span><SignGlyph si={signIdxOf(l.longitude)} color={signColor(signIdxOf(l.longitude))} className="ml-1.5" /><span className="ml-2 text-muted/50">({l.longitude.toFixed(2)}°)</span></td>
                     </tr>
                   ))}
@@ -306,7 +306,7 @@ export default function StatusTabs({ chart, zhMode, selected, onSelect }: Status
                     <tr><td className={`${tdCls} text-muted/60`} colSpan={3}>{T('本盘无明显恒星合相 (±2°)', 'No notable star conjunctions (±2°)', '本図に顕著な恒星合（±2°）なし')}</td></tr>
                   ) : starRows.map(({ s, lon, conj }) => (
                     <tr key={s.en} className="border-b border-white/[0.04] last:border-0">
-                      <td className={`${tdCls} text-frost/85`} title={s.en}>{lang === 'ja' ? s.zh : zhMode ? s.zh : s.en}</td>
+                      <td className={`${tdCls} text-frost/85`} title={s.en}>{lang === 'ja' ? s.ja : zhMode ? s.zh : s.en}</td>
                       <td className={`${tdCls} text-muted tabular-nums`}><span className="inline-block w-[3.5em] text-right">{dms(lon % 30)}</span><SignGlyph si={signIdxOf(lon)} color={signColor(signIdxOf(lon))} className="ml-1.5" /></td>
                       <td className={`${tdCls} text-frost/85`}>{conj.map((n) => symOf(n)).join(' ')}</td>
                     </tr>

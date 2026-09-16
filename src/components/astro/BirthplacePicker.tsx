@@ -99,7 +99,7 @@ export default function BirthplacePicker({ value, onChange }: {
   const pickWorld = (id: string) => {
     const c = CITIES_WORLD.find((x) => x.id === id);
     if (!c) return;
-    onChange({ lat: c.lat, lng: c.lng, tz: c.tz, label: lang === 'ja' ? c.zh : zhMode ? c.zh : c.en });
+    onChange({ lat: c.lat, lng: c.lng, tz: c.tz, label: lang === 'ja' ? (c.ja ?? c.en) : zhMode ? c.zh : c.en });
   };
 
   // ---- 手动 ----
@@ -180,7 +180,7 @@ export default function BirthplacePicker({ value, onChange }: {
               onChange={(e) => pickWorld(e.target.value)} className={selCls}>
               {CITIES_WORLD.map((c) => (
                 <option key={c.id} value={c.id} className="bg-[#0b0e17]">
-                  {lang === 'ja' ? c.zh : zhMode ? c.zh : c.en}
+                  {lang === 'ja' ? (c.ja ?? c.en) : zhMode ? c.zh : c.en}
                 </option>
               ))}
             </select>

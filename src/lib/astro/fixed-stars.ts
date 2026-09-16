@@ -7,29 +7,30 @@
 export interface FixedStar {
   zh: string          // 中文星名 (宫神星同款命名)
   en: string          // 西名
+  ja: string          // 日文星名 (片假名西名)
   lon: number         // J2000 黄经 (度)
   lat: number         // J2000 黄纬 (度, 验证用)
   mag: number         // 视星等
 }
 
 export const FIXED_STARS: FixedStar[] = [
-  { zh: '土司空', en: 'Diphda', lon: 2.58, lat: -20.78, mag: 2.0 },
-  { zh: '毕宿五', en: 'Aldebaran', lon: 69.79, lat: -5.47, mag: 0.9 },
-  { zh: '参宿七', en: 'Rigel', lon: 76.83, lat: -31.12, mag: 0.2 },
-  { zh: '五车二', en: 'Capella', lon: 81.86, lat: 22.86, mag: 0.1 },
-  { zh: '参宿四', en: 'Betelgeuse', lon: 88.75, lat: -16.03, mag: 0.5 },
-  { zh: '天狼', en: 'Sirius', lon: 104.08, lat: -39.61, mag: -1.4 },
-  { zh: '北河二', en: 'Castor', lon: 110.24, lat: 10.1, mag: 1.6 },
-  { zh: '天枢', en: 'Dubhe', lon: 135.2, lat: 49.68, mag: 1.8 },
-  { zh: '轩辕十四', en: 'Regulus', lon: 149.83, lat: 0.46, mag: 1.4 },
-  { zh: '五帝座一', en: 'Denebola', lon: 171.62, lat: 12.27, mag: 2.1 },
-  { zh: '太微左垣一', en: 'Zaniah', lon: 184.83, lat: 1.37, mag: 3.9 },
-  { zh: '角宿一', en: 'Spica', lon: 203.84, lat: -2.05, mag: 1.0 },
-  { zh: '大角', en: 'Arcturus', lon: 204.23, lat: 30.74, mag: -0.1 },
-  { zh: '心宿二', en: 'Antares', lon: 249.76, lat: -4.57, mag: 1.1 },
-  { zh: '织女一', en: 'Vega', lon: 285.32, lat: 61.73, mag: 0.0 },
-  { zh: '天市右垣七', en: 'Serpens VII', lon: 292.56, lat: -20.66, mag: 4.1 },
-  { zh: '北落师门', en: 'Fomalhaut', lon: 333.86, lat: -21.14, mag: 1.2 },
+  { zh: '土司空', en: 'Diphda', ja: 'ディフダ', lon: 2.58, lat: -20.78, mag: 2.0 },
+  { zh: '毕宿五', en: 'Aldebaran', ja: 'アルデバラン', lon: 69.79, lat: -5.47, mag: 0.9 },
+  { zh: '参宿七', en: 'Rigel', ja: 'リゲル', lon: 76.83, lat: -31.12, mag: 0.2 },
+  { zh: '五车二', en: 'Capella', ja: 'カペラ', lon: 81.86, lat: 22.86, mag: 0.1 },
+  { zh: '参宿四', en: 'Betelgeuse', ja: 'ベテルギウス', lon: 88.75, lat: -16.03, mag: 0.5 },
+  { zh: '天狼', en: 'Sirius', ja: 'シリウス', lon: 104.08, lat: -39.61, mag: -1.4 },
+  { zh: '北河二', en: 'Castor', ja: 'カストル', lon: 110.24, lat: 10.1, mag: 1.6 },
+  { zh: '天枢', en: 'Dubhe', ja: 'デュブヘ', lon: 135.2, lat: 49.68, mag: 1.8 },
+  { zh: '轩辕十四', en: 'Regulus', ja: 'レグルス', lon: 149.83, lat: 0.46, mag: 1.4 },
+  { zh: '五帝座一', en: 'Denebola', ja: 'デネボラ', lon: 171.62, lat: 12.27, mag: 2.1 },
+  { zh: '太微左垣一', en: 'Zaniah', ja: 'ザニア', lon: 184.83, lat: 1.37, mag: 3.9 },
+  { zh: '角宿一', en: 'Spica', ja: 'スピカ', lon: 203.84, lat: -2.05, mag: 1.0 },
+  { zh: '大角', en: 'Arcturus', ja: 'アルクトゥルス', lon: 204.23, lat: 30.74, mag: -0.1 },
+  { zh: '心宿二', en: 'Antares', ja: 'アンタレス', lon: 249.76, lat: -4.57, mag: 1.1 },
+  { zh: '织女一', en: 'Vega', ja: 'ベガ', lon: 285.32, lat: 61.73, mag: 0.0 },
+  { zh: '天市右垣七', en: 'Serpens VII', ja: 'セルペンスVII', lon: 292.56, lat: -20.66, mag: 4.1 },
+  { zh: '北落师门', en: 'Fomalhaut', ja: 'フォーマルハウト', lon: 333.86, lat: -21.14, mag: 1.2 },
 ]
 
 const norm = (d: number) => ((d % 360) + 360) % 360

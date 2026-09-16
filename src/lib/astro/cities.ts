@@ -4,6 +4,7 @@ export interface City {
   id: string
   zh: string
   en: string
+  ja?: string // 日文名 (缺省则界面沿用英文地名)
   lat: number
   lng: number
   tz: number // UTC 偏移(小时)

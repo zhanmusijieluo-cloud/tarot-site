@@ -33,6 +33,8 @@ export const HOUSE_SYSTEM_LIST: { id: HouseSystem; zh: string; en: string; ja: s
   { id: 'vettius', zh: '维提乌斯', en: 'Vettius' , ja: 'ウェッティウス' },
 ]
 export const HOUSE_SYSTEM_ZH: Record<string, string> = Object.fromEntries(HOUSE_SYSTEM_LIST.map((h) => [h.id, h.zh]))
+export const HOUSE_SYSTEM_EN: Record<string, string> = Object.fromEntries(HOUSE_SYSTEM_LIST.map((h) => [h.id, h.en]))
+export const HOUSE_SYSTEM_JA: Record<string, string> = Object.fromEntries(HOUSE_SYSTEM_LIST.map((h) => [h.id, h.ja]))
 
 export interface BirthData {
   year: number
@@ -175,7 +177,7 @@ export interface NatalChart {
   underBeams?: string[]    // 在日光下: 距日 8°30′~17° (PPT33) 受影响程度轻, 兼有"近贵" 
   viaCombusta: string[]    // 燃烧之路 (巨蟹14°55′—摩羯14°55′ 之间)
   /** 阿拉伯点 (宫神星"阿拉伯点"表): 福/精/物质/婚姻(男/女)/子女 */
-  arabicLots?: { key: string; zh: string; en: string; longitude: number }[]
+  arabicLots?: { key: string; zh: string; en: string; ja: string; longitude: number }[]
   /** 每宫宫头宫神星 (almuten: 庙5旺4三分3界2面1 计分最高者, 12项; 宫头未知=[]) */
   cuspAlmuten?: string[]
   /** 月亮空亡 (出座前不再与其他七政精确成相) */
@@ -803,7 +805,7 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
   }
 
   // ---------- 阿拉伯点 (宫神星"阿拉伯点"表; Al-Biruni/阿拉伯传承六点) ----------
-  const arabicLots: { key: string; zh: string; en: string; longitude: number }[] = []
+  const arabicLots: { key: string; zh: string; en: string; ja: string; longitude: number }[] = []
   if (timeKnown && angles.ascendant) {
     const ascL = angles.ascendant.longitude
     const lonOf = (n: string) => planets.find((p) => p.name === n)?.longitude
@@ -811,15 +813,15 @@ export function castNatalChart(birth: BirthData, settings: CastSettings = {}): N
       merL = lonOf('Mercury'), venL = lonOf('Venus'), satL = lonOf('Saturn')
     if ([sunL, moonL, jupL, merL, venL, satL].every((x) => x !== undefined)) {
       // 福/精: 日盘 福=Asc+月-日 精=Asc+日-月; 夜盘互换 (与 celestine lots 同式)
-      arabicLots.push({ key: 'fortune', zh: '福点', en: 'Fortune', longitude: dayChart ? norm(ascL + moonL! - sunL!) : norm(ascL + sunL! - moonL!) })
-      arabicLots.push({ key: 'spirit', zh: '精神点', en: 'Spirit', longitude: dayChart ? norm(ascL + sunL! - moonL!) : norm(ascL + moonL! - sunL!) })
+      arabicLots.push({ key: 'fortune', zh: '福点', en: 'Fortune', ja: 'フォーチュン', longitude: dayChart ? norm(ascL + moonL! - sunL!) : norm(ascL + sunL! - moonL!) })
+      arabicLots.push({ key: 'spirit', zh: '精神点', en: 'Spirit', ja: 'スピリット', longitude: dayChart ? norm(ascL + sunL! - moonL!) : norm(ascL + moonL! - sunL!) })
       // 物质点: Asc+木-水 (Firmicus 传承, 日夜同式)
-      arabicLots.push({ key: 'substance', zh: '物质点', en: 'Substance', longitude: norm(ascL + jupL! - merL!) })
+      arabicLots.push({ key: 'substance', zh: '物质点', en: 'Substance', ja: 'サブスタンス', longitude: norm(ascL + jupL! - merL!) })
       // 婚姻点: 男=Asc+金-土 女=Asc+土-金 (Dorotheus/Hermes, 日夜同式)
-      arabicLots.push({ key: 'marriage_m', zh: '婚姻点(男)', en: 'Marriage (M)', longitude: norm(ascL + venL! - satL!) })
-      arabicLots.push({ key: 'marriage_f', zh: '婚姻点(女)', en: 'Marriage (F)', longitude: norm(ascL + satL! - venL!) })
+      arabicLots.push({ key: 'marriage_m', zh: '婚姻点(男)', en: 'Marriage (M)', ja: '結婚点（男）', longitude: norm(ascL + venL! - satL!) })
+      arabicLots.push({ key: 'marriage_f', zh: '婚姻点(女)', en: 'Marriage (F)', ja: '結婚点（女）', longitude: norm(ascL + satL! - venL!) })
       // 子女点: 日盘 Asc+土-木; 夜盘反转 (Al-Biruni 5宫条)
-      arabicLots.push({ key: 'children', zh: '子女点', en: 'Children', longitude: dayChart ? norm(ascL + satL! - jupL!) : norm(ascL + jupL! - satL!) })
+      arabicLots.push({ key: 'children', zh: '子女点', en: 'Children', ja: '子女点', longitude: dayChart ? norm(ascL + satL! - jupL!) : norm(ascL + jupL! - satL!) })
     }
   }
 

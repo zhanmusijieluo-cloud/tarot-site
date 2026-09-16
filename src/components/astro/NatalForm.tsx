@@ -13,25 +13,7 @@ import BirthplacePicker, { type BirthPlace } from '@/components/astro/Birthplace
 import { paramsFromBirth } from '@/lib/astro/chart-url';
 import ArchivePicker from '@/components/astro/ArchivePicker';
 import type { Archive } from '@/lib/astro/archives';
-import type { BirthData, HouseSystem } from '@/lib/astro/chart';
-
-const HOUSE_SYSTEMS: { value: HouseSystem; zh: string }[] = [
-  { value: 'placidus', zh: '普拉西德' },
-  { value: 'koch', zh: '科赫' },
-  { value: 'equal', zh: '等宫' },
-  { value: 'whole-sign', zh: '整宫' },
-  { value: 'porphyry', zh: '波菲里' },
-  { value: 'regiomontanus', zh: '雷吉奥蒙塔努斯' },
-  { value: 'campanus', zh: '坎帕努斯' },
-  { value: 'alcabitiuses', zh: '阿卡比特' },
-  { value: 'sripati', zh: '斯里帕蒂' },
-  { value: 'vehlow', zh: '维洛等宫' },
-  { value: 'pullen', zh: '普伦SD' },
-  { value: 'morinus', zh: '莫里努斯' },
-  { value: 'polich-page', zh: '波利奇-佩奇' },
-  { value: 'krusinski', zh: '克鲁辛斯基' },
-  { value: 'carter', zh: '卡特赤经' },
-];
+import { HOUSE_SYSTEM_LIST, type BirthData, type HouseSystem } from '@/lib/astro/chart';
 
 const inputCls =
   'w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm text-frost ' +
@@ -156,18 +138,18 @@ export default function NatalForm() {
       <div className="mt-3">
         <label className={labelCls}>{t('astro.form.system')}</label>
         <div className="flex flex-wrap gap-2">
-          {HOUSE_SYSTEMS.map((s) => (
+          {HOUSE_SYSTEM_LIST.map((s) => (
             <button
-              key={s.value}
+              key={s.id}
               type="button"
-              onClick={() => setHouseSystem(s.value)}
+              onClick={() => setHouseSystem(s.id)}
               className={`rounded-full border px-3.5 py-1.5 text-[11px] tracking-[0.12em] transition-colors ${
-                houseSystem === s.value
+                houseSystem === s.id
                   ? 'border-accent/50 bg-accent/[0.08] text-accent'
                   : 'border-white/[0.1] text-muted hover:border-white/25'
               }`}
             >
-              {lang === 'ja' ? s.zh : zhMode ? s.zh : s.value}
+              {lang === 'ja' ? s.ja : zhMode ? s.zh : s.en}
             </button>
           ))}
         </div>

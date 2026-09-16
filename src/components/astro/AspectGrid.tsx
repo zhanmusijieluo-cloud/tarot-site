@@ -12,6 +12,7 @@ import { useI18n } from '@/i18n';
 
 // 相位配色: 红=困难(刑冲) 绿/蓝=和谐(拱/六合) 金=合 紫=梅花
 import { ASPECT_HEX } from '@/lib/astro/aspect-colors';
+import { PLANET_JA } from '@/lib/astro/i18n';
 /** 相位配色 (唯一定义在 aspect-colors.ts, 盘线同源) */
 export const ASPECT_COLOR = ASPECT_HEX;
 const SYM: Record<string, string> = { conjunction: '☌', opposition: '☍', square: '□', trine: '△', sextile: '⚹', quincunx: '⚻' };
@@ -116,7 +117,7 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
                   className={`flex h-full w-full items-center justify-center rounded-[4px] leading-none transition-colors ${
                     selected === row.name ? 'bg-accent/20 text-accent' : 'text-frost/70 hover:bg-white/[0.06]'
                   } ${row.name === 'Ascendant' || row.name === 'Midheaven' || row.name === 'Descendant' || row.name === 'IC' ? 'text-[10px] tracking-[0.1em]' : 'text-[15px]'}`}
-                  title={lang === 'ja' ? row.zh : zhMode ? row.zh : row.name}
+                  title={lang === 'ja' ? (PLANET_JA[row.name] ?? row.name) : zhMode ? row.zh : row.name}
                 >
                   {row.symbol}{row.retrograde && <sup style={{ fontSize: 8 }} className="text-[#e8a08a]">R</sup>}
                 </button>
@@ -130,7 +131,7 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
                       className={`flex h-full w-full items-center justify-center rounded-[4px] leading-none transition-colors ${
                         selected === col.name ? 'bg-accent/20 text-accent' : 'text-frost/70 hover:bg-white/[0.06]'
                       }`}
-                      title={lang === 'ja' ? col.zh : zhMode ? col.zh : col.name}
+                      title={lang === 'ja' ? (PLANET_JA[col.name] ?? col.name) : zhMode ? col.zh : col.name}
                     >
                       <span className={col.name === 'Ascendant' || col.name === 'Midheaven' || col.name === 'Descendant' || col.name === 'IC' ? 'text-[10px] font-medium' : 'text-[15px]'}>
                         {col.symbol}{col.retrograde && <sup style={{ fontSize: 8 }} className="text-[#e8a08a]">R</sup>}
@@ -145,7 +146,7 @@ export default function AspectGrid({ chart, zhMode, onPick, selected, bare, cell
                 const color = ASPECT_COLOR[a.type] ?? '#9aa3b5';
                 return (
                   <td key={col.name} className="p-0" style={{ height: gs, border: GRID }}
-                    title={`${lang === 'ja' ? row.zh : zhMode ? row.zh : row.name} ${lang === 'ja' ? col.zh : zhMode ? col.zh : col.name} ${lang === 'ja' ? a.type : zhMode ? a.typeZh : a.type} ±${fmtOrbDms(a.orb)}`}>
+                    title={`${lang === 'ja' ? (PLANET_JA[row.name] ?? row.name) : zhMode ? row.zh : row.name} ${lang === 'ja' ? (PLANET_JA[col.name] ?? col.name) : zhMode ? col.zh : col.name} ${lang === 'ja' ? a.type : zhMode ? a.typeZh : a.type} ±${fmtOrbDms(a.orb)}`}>
                     <div className="relative flex h-full w-full items-center justify-center leading-none"
                       style={{ background: `${color}33`, color }}>
                       <span style={{ fontSize: symFs }}>{a.symbol}</span>

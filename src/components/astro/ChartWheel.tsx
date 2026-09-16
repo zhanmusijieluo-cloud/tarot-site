@@ -49,7 +49,7 @@ export interface VChart {
   aspects: VAspect[];
   receptions: VReception[];
   /** 阿拉伯点 (福/精/物质/婚姻男女/子女) */
-  arabicLots?: { key: string; zh: string; en: string; longitude: number }[];
+  arabicLots?: { key: string; zh: string; en: string; ja: string; longitude: number }[];
   /** 本命点黄经表 (推运盘 cross 相位线用) */
   extraPoints?: Record<string, number>;
   /** 每宫宫头宫神星 (almuten) */

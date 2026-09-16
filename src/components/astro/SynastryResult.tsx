@@ -11,6 +11,7 @@ import { useI18n } from '@/i18n';
 import ChartWheel, { type VChart } from '@/components/astro/ChartWheel';
 import { ASPECT_COLOR } from '@/components/astro/AspectGrid';
 import type { ChartAspect } from '@/lib/astro/chart';
+import { PLANET_JA } from '@/lib/astro/i18n';
 
 export interface SynData {
   a: VChart;
@@ -87,7 +88,7 @@ function CrossTable({ cross, a, b, zhMode, title }: { cross: ChartAspect[]; a: V
   const nameEnd = (end: string) => {
     const bare = nmS(end);
     const c = end.endsWith('·A') ? a : b;
-    return lang === 'ja' ? (c.planets.find((p) => p.name === bare)?.zh ?? AX_SYM[bare] ?? bare) : zhMode ? (c.planets.find((p) => p.name === bare)?.zh ?? AX_SYM[bare] ?? bare) : (AX_SYM[bare] ?? bare);
+    return lang === 'ja' ? (PLANET_JA[c.planets.find((p) => p.name === bare)?.name ?? ''] ?? c.planets.find((p) => p.name === bare)?.name ?? AX_SYM[bare] ?? bare) : zhMode ? (c.planets.find((p) => p.name === bare)?.zh ?? AX_SYM[bare] ?? bare) : (AX_SYM[bare] ?? bare);
   };
   return (
     <Panel title={`${title} — ${rows.length}`}>
