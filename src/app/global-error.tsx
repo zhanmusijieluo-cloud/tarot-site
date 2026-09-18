@@ -33,7 +33,9 @@ export default function GlobalError({
       /* 忽略 */
     }
     // 部署切换类错误 → 自动硬刷新一次 (冷却窗口内不再重复)
+    // 冷却窗口要读 sessionStorage, 渲染期做会和 SSR 不一致, 只能在 effect 里判。
     try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (shouldStaleAssetRecover(error)) setHealing(true);
     } catch {
       /* 忽略: 兜底逻辑自身绝不能把白屏搞得更白 */
@@ -226,6 +228,8 @@ export default function GlobalError({
             <button onClick={() => reset()} style={btn}>
               重新加载
             </button>
+            {/* global-error 替换了根布局, 没有 router context, 只能用 <a> 硬导航 */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a href="/" style={{ ...btn, border: '1px solid rgba(255,255,255,0.14)', background: 'transparent', color: 'rgba(232,230,240,0.62)' }}>
               回首页
             </a>

@@ -70,6 +70,8 @@ export default function Error({
   const [healing, setHealing] = useState(false);
 
   useEffect(() => {
+    // 语言要从 localStorage / <html lang> 读 —— 渲染期读会和 SSR 结果不一致, 只能放 effect。
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLang(detectLang());
   }, []);
 
@@ -77,6 +79,9 @@ export default function Error({
     // 留一份现场, 便于线上定位
     console.error('[route-error]', error?.name, error?.message, error?.digest, error?.stack);
     // 部署切换类错误 → 自动硬刷新一次 (冷却窗口内不再重复, 真故障会落到错误页)
+    // 同上: 冷却窗口要读 sessionStorage, 只能在 effect 里判。
+    // 错误页本身只渲染一次, 不存在"级联渲染"的性能问题。
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (shouldStaleAssetRecover(error)) setHealing(true);
   }, [error]);
 
@@ -151,6 +156,8 @@ export default function Error({
           >
             {s.retry}
           </button>
+          {/* 错误状态下客户端 router 未必可靠, 这里刻意用 <a> 硬导航 */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a
             href="/"
             className="rounded-full border border-white/[0.12] px-5 py-2 text-xs tracking-[0.15em] text-muted transition-colors hover:border-white/30 hover:text-frost"
