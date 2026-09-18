@@ -86,10 +86,19 @@ export default function DynResult({ dyn, zhMode, target, onDate, onNow, cornerAc
     return m;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dyn]);
+  // 盘面相位线 = 外盘「自身」相位 (推运星两两之间); 「推运 × 本命」的 cross 表仍在下方独立渲染
+  // 宫位圈/四轴: 日返/月返 = 独立全盘 → 用外盘自己的宫位与四轴 (太阳落在返照盘自己的宫位里);
+  //             次限/三限/日弧/行运 = 沿用本命宫位 (推运盘标准画法, 四轴不动)
+  const outerOwnHouses = !!outer?.cusps && outer.cusps.length >= 12;
   const viewChart: VChart = outer ? {
     ...natal,
     planets: outer.planets as unknown as VPlanet[],
-    aspects: dyn.crossAspects as unknown as VChart['aspects'],
+    aspects: (dyn.outerAspects ?? dyn.crossAspects) as unknown as VChart['aspects'],
+    ...(outerOwnHouses ? {
+      cusps: outer.cusps as number[],
+      angles: outer.angles as unknown as VChart['angles'],
+      timeKnown: true,
+    } : {}),
     receptions: [],
     extraPoints,
   } : natal;

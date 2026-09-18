@@ -81,7 +81,8 @@ export async function POST(req: NextRequest) {
     if (!['transit', 'progression', 'tertiary', 'solar-arc', 'solar-return', 'lunar-return'].includes(type)) return bad('盘型无效')
     let target = { year: 0, month: 1, day: 1 }
     if (type === 'solar-return') {
-      const ry = Number(body?.returnYear ?? new Date().getFullYear())
+      // 返照年份: 优先 returnYear; 回退 target.year (页面把目标年统一放在 target 里, 不再锁死当前年)
+      const ry = Number(body?.returnYear ?? body?.target?.year ?? new Date().getFullYear())
       if (!Number.isInteger(ry) || ry < 1901 || ry > 2100) return bad('返照年份需在 1901-2100')
       target = { year: ry, month: 1, day: 1 }
     } else {
