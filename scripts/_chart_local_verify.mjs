@@ -1,15 +1,18 @@
-// 本地验证：确认本轮「星盘稳定性」修复在本地 dev server 上生效且无回归。
+// 本地/线上星盘页稳定性回归。
 //
 // 覆盖:
 //   A. 10 个盘种逐个加载 → 无 pageerror / 无 4xx / 盘面确实画出来 (非空壳)
-//   B. WebGL 上下文churn: 经典↔俯视↔侧视 快速来回切 12 次 → 无标签页崩溃
+//   B. WebGL 上下文 churn: 经典↔俯视↔侧视 快速来回切 12 次 → 无标签页崩溃 + canvas 不堆积
 //   C. 点星体 → 弹窗出现
 //
 // 用法: node scripts/_chart_local_verify.mjs [baseUrl]
+//
+// ⚠️ 必须轮询等就绪, 不能用固定 sleep —— 线上(CDN 冷启动)要 ~12s 才水合,
+//    本地 dev 只要 ~3s。固定 sleep 会把「慢」误判成「坏」。
 import puppeteer from 'puppeteer-core'
 
 const CHROME = 'C:/Users/99192/AppData/Local/Google/Chrome/Application/chrome.exe'
-const BASE = (process.argv[2] || 'http://localhost:3021').replace(/\/$/, '')
+const BASE = (process.argv[2] || 'http://localhost:3000').replace(/\/$/, '')
 const Q = '?y=1995&mo=6&d=15&h=14&mi=30&cn=%E5%8C%97%E4%BA%AC~%E5%8C%97%E4%BA%AC&lat=39.9042&lng=116.4074&sys=placidus'
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
@@ -46,17 +49,39 @@ page.on('error', (e) => { crashed = true; console.log('💥 标签页崩溃:', S
 
 const reset = () => { pageErrors = []; consoleErrors = []; badResponses = []; crashed = false }
 
-// 盘面是否真的画出来了: 线条盘 = svg.select-none 里有 g[data-ring][data-name];
-// 3D = 有 canvas 且宽高非 0。
-// ⚠️ 别用 `svg[viewBox]` —— 会先撞上导航 logo / 图标, 误判成"已渲染"。
-const wheelRendered = () => page.evaluate(() => {
+// 盘面状态快照。⚠️ 别用 `svg[viewBox]` —— 会先撞上导航 logo/图标, 误判"已渲染"。
+const snap = () => page.evaluate(() => {
   const svg = document.querySelector('svg.select-none')
-  const svgPaths = svg ? svg.querySelectorAll('path').length : 0
-  const planetGs = document.querySelectorAll('g[data-ring][data-name]').length
-  const canvas = document.querySelector('canvas')
-  const canvasOk = !!canvas && canvas.width > 0 && canvas.height > 0
-  return { svgPaths, planetGs, canvasOk, hasError: !!document.body.innerText.includes('页面出了点问题') }
+  return {
+    svgPaths: svg ? svg.querySelectorAll('path').length : 0,
+    planetGs: document.querySelectorAll('g[data-ring][data-name]').length,
+    buttons: document.querySelectorAll('button').length,
+    canvases: document.querySelectorAll('canvas').length,
+    hasError: !!document.body.innerText.includes('页面出了点问题'),
+  }
 })
+
+// 轮询等「控制条 + 盘面」都就绪; 线上冷启动可能要十几秒
+const waitReady = async (timeoutMs = 45000) => {
+  const t0 = Date.now()
+  let last = null
+  while (Date.now() - t0 < timeoutMs) {
+    last = await snap()
+    if (last.buttons > 20 && (last.planetGs > 0 || last.canvases > 1)) return last
+    await sleep(700)
+  }
+  return last
+}
+
+// 等 URL 落到目标盘种 (确认导航真的发生了, 避免拿旧盘面当新盘面)
+const waitUrl = async (dp, timeoutMs = 15000) => {
+  const t0 = Date.now()
+  while (Date.now() - t0 < timeoutMs) {
+    if (page.url().includes(`dp=${dp}`)) return true
+    await sleep(300)
+  }
+  return false
+}
 
 const clickBtn = (label) => page.evaluate((l) => {
   const b = [...document.querySelectorAll('button')].find((x) => x.textContent?.trim().includes(l))
@@ -67,10 +92,12 @@ const clickBtn = (label) => page.evaluate((l) => {
 
 console.log(`\n=== 目标: ${BASE} ===\n`)
 
-await page.goto(BASE + '/', { waitUntil: 'domcontentloaded', timeout: 60000 })
+await page.goto(BASE + '/', { waitUntil: 'domcontentloaded', timeout: 90000 })
 await page.evaluate(() => localStorage.setItem('oracle-lang', 'zh'))
-await page.goto(BASE + '/astrology/chart' + Q, { waitUntil: 'domcontentloaded', timeout: 60000 })
-await sleep(4000)
+await page.goto(BASE + '/astrology/chart' + Q, { waitUntil: 'domcontentloaded', timeout: 90000 })
+
+const first = await waitReady()
+console.log(`首屏就绪: 按钮=${first.buttons} 行星组=${first.planetGs} 盘面path=${first.svgPaths} (冷启动轮询)\n`)
 
 // ---------- A. 盘种逐个 ----------
 console.log('— A. 10 个盘种 —')
@@ -79,27 +106,26 @@ for (const [label, dp] of TYPES) {
   if (label !== '本命盘') {
     const hit = await clickBtn(label)
     if (!hit) { ok(false, `${label} 切换按钮找不到`); continue }
-    await sleep(3200)
+    if (dp) await waitUrl(dp)
   }
-  const st = await wheelRendered()
+  const st = await waitReady()
   const urlOk = dp === null ? true : page.url().includes(`dp=${dp}`)
   const clean = pageErrors.length === 0 && !crashed
-  // 经典线条盘: 盘面 svg 里应有大量 path 且挂出了行星 <g>; 3D: canvas 有尺寸
-  const drawn = st.svgPaths > 20 && st.planetGs > 0 || st.canvasOk
+  const drawn = st.svgPaths > 20 && st.planetGs > 0 || st.canvases > 1
   ok(clean && !st.hasError && drawn,
     `${label}${urlOk ? '' : ' (URL 未带 dp!)'}`,
-    `svgPaths=${st.svgPaths} planetGs=${st.planetGs} canvas=${st.canvasOk} err=${pageErrors.length}${pageErrors[0] ? ' | ' + pageErrors[0] : ''}`)
+    `svgPaths=${st.svgPaths} planetGs=${st.planetGs} err=${pageErrors.length}${pageErrors[0] ? ' | ' + pageErrors[0] : ''}`)
   if (badResponses.length) console.log('   ⚠️ 4xx/5xx:', badResponses.slice(0, 3).join(' ; '))
 }
 
 // ---------- B. WebGL 上下文 churn ----------
 console.log('\n— B. 3D 视图反复切换 (压 WebGL 上下文回收) —')
 reset()
-await clickBtn('本命盘'); await sleep(2500)
+await clickBtn('本命盘'); await waitReady()
 for (let i = 0; i < 12; i++) {
-  await clickBtn('俯视'); await sleep(700)
-  await clickBtn('侧视'); await sleep(700)
-  await clickBtn('经典'); await sleep(500)
+  await clickBtn('俯视'); await sleep(900)
+  await clickBtn('侧视'); await sleep(900)
+  await clickBtn('经典'); await sleep(700)
 }
 await sleep(1500)
 const ctxLost = consoleErrors.filter((x) => /context lost|CONTEXT_LOST|Too many active WebGL/i.test(x))
