@@ -53,7 +53,7 @@ export default function OfflineInterpretSection({
   presetCustomCount?: number;
   presetCustomPositions?: string;
   hideCustomSettings?: boolean;
-  presetCustomCells?: { row: number; col: number; cols: number; name?: string }[];
+  presetCustomCells?: { row: number; col: number; cols: number; name?: string; hint?: string }[];
   customName?: string;
   /** 牌组: tarot=78张(默认, 行为与旧版完全一致) | lenormand=36张无逆位 */
   deck?: DeckKind;

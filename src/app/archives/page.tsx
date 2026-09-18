@@ -30,6 +30,8 @@ export default function ArchivesPage() {
   const [saving, setSaving] = useState(false);
   const [pending, setPending] = useState<Archive[]>([]);   // 本机有、云端没有的 (待搬)
   const [migrating, setMigrating] = useState(false);
+  /** 当前展开「排盘工具」菜单的档案 id（一次只开一个） */
+  const [menuId, setMenuId] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     const r = await loadArchivesSmart();
@@ -165,12 +167,42 @@ export default function ArchivesPage() {
                     mail ? null : <span className="rounded-full border border-white/[0.12] px-2 py-0.5 text-[9.5px] text-muted/60">{zhMode ? '本机' : 'Local'}</span>
                   )}
                   <span className="ml-auto flex items-center gap-3">
-                    <a
-                      href={`/astrology/chart?${paramsFromBirth({ ...x.birth, label: x.label })}`}
-                      className="text-[11px] text-accent/80 transition-colors hover:text-accent"
-                    >
-                      {zhMode ? '→ 星盘' : '→ Chart'}
-                    </a>
+                    {/* 排盘入口：以档案为中心，先选人再选工具（占星 / 八字 / 紫微 / 塔罗） */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setMenuId(menuId === x.id ? null : x.id)}
+                        aria-expanded={menuId === x.id}
+                        className="text-[11px] text-accent/80 transition-colors hover:text-accent"
+                      >
+                        {zhMode ? '排盘' : 'Cast'} <span className="text-[9px]">▾</span>
+                      </button>
+                      {menuId === x.id && (
+                        <>
+                          {/* 点空白处收起 */}
+                          <div className="fixed inset-0 z-10" onClick={() => setMenuId(null)} aria-hidden="true" />
+                          <div
+                            className="absolute right-0 top-full z-20 mt-1.5 w-32 overflow-hidden rounded-xl border border-white/[0.12] py-1"
+                            style={{ background: 'rgba(20,18,31,0.97)', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
+                          >
+                            <a
+                              href={`/astrology/chart?${paramsFromBirth({ ...x.birth, label: x.label })}`}
+                              className="block px-3.5 py-1.5 text-[11.5px] text-frost/85 transition-colors hover:bg-white/[0.07]"
+                            >
+                              {zhMode ? '占星盘' : 'Astrology'}
+                            </a>
+                            <a href="/bazi" className="block px-3.5 py-1.5 text-[11.5px] text-frost/85 transition-colors hover:bg-white/[0.07]">
+                              {zhMode ? '八字' : 'BaZi'}
+                            </a>
+                            <a href="/ziwei" className="block px-3.5 py-1.5 text-[11.5px] text-frost/85 transition-colors hover:bg-white/[0.07]">
+                              {zhMode ? '紫微' : 'ZiWei'}
+                            </a>
+                            <a href={`/online?archive=${encodeURIComponent(x.id)}`} className="block px-3.5 py-1.5 text-[11.5px] text-frost/85 transition-colors hover:bg-white/[0.07]">
+                              {zhMode ? '塔罗' : 'Tarot'}
+                            </a>
+                          </div>
+                        </>
+                      )}
+                    </div>
                     <button onClick={() => openEdit(x)} className="text-[11px] text-muted/70 transition-colors hover:text-accent">{zhMode ? '编辑' : 'Edit'}</button>
                     <button onClick={() => del(x.id)} className="text-[11px] text-muted/50 transition-colors hover:text-[#e8a08a]">{zhMode ? '删除' : 'Del'}</button>
                   </span>

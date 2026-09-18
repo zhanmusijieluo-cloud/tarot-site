@@ -4,7 +4,7 @@
  * 自定义牌阵 · 满铺网格布阵（塔罗/雷诺曼共用）
  * 画布竖向固定 8 行、横向按需扩展，点哪个格子哪张牌背出现，
  * 按点击顺序编号；点击牌背在旁边弹出该牌位内容面板（命名/定位/移除）；
- * 牌阵可命名保存到本地，下次一键载入复用。
+ * 牌阵可命名保存（登录 → 云端同步，未登录 → 本机浏览器），下次一键载入复用。
  * 确定牌阵后直接进对应牌组的抽牌系统；「线下抽牌」切到同页填牌解读。
  */
 import { useEffect, useMemo, useState } from 'react';
@@ -13,6 +13,12 @@ import { BookmarkPlus, RotateCcw, Trash2, Undo2, X } from 'lucide-react';
 import PageShell, { Reveal } from '@/components/PageShell';
 import OfflineInterpretSection from '@/components/OfflineInterpretSection';
 import { useI18n } from '@/i18n';
+import {
+  deleteSpreadSmart,
+  loadSpreadsSmart,
+  saveSpreadSmart,
+  type SavedSpread,
+} from '@/lib/account/spreads';
 
 /** 自定义牌阵格位（布阵页与解读室共用的数据结构） */
 export interface CustomCell {
@@ -20,13 +26,7 @@ export interface CustomCell {
   col: number; // 0~cols-1（自左而右）
   cols: number; // 画布总列数
   name?: string; // 客户命名的牌位名（可空）
-}
-
-/** 本地保存的自定义牌阵（localStorage，跨会话复用） */
-interface SavedSpread {
-  name: string;
-  cells: CustomCell[];
-  savedAt: number;
+  hint?: string; // 牌位解读提示：专业师自定的读法要点，解读时显示在牌位旁（可空）
 }
 
 /** 布阵阶段上限：8 行 × 12 列 = 96 格；单次解读最多 12 张 */
@@ -39,7 +39,6 @@ const CARD_BACK = '/cards/card-back-new.webp';
 
 export default function CustomSpreadBuilder({ deck }: { deck: 'tarot' | 'lenormand' }) {
   const isLn = deck === 'lenormand';
-  const SAVED_KEY = isLn ? 'lenormand-custom-spreads' : 'tarot-custom-spreads';
   const DRAW_HREF = isLn ? '/lenormand/draw' : '/online';
   const router = useRouter();
   const { t } = useI18n();
@@ -49,26 +48,24 @@ export default function CustomSpreadBuilder({ deck }: { deck: 'tarot' | 'lenorma
   const [background, setBackground] = useState('');
   const [activeIdx, setActiveIdx] = useState<number | null>(null); // 弹窗对应的牌序号
   const [nameDraft, setNameDraft] = useState('');
+  const [hintDraft, setHintDraft] = useState('');
   // 牌阵保存与复用
   const [spreadName, setSpreadName] = useState('');
+  const [spreadDesc, setSpreadDesc] = useState('');
   const [savedSpreads, setSavedSpreads] = useState<SavedSpread[]>([]);
   const [showSave, setShowSave] = useState(false);
   const [step, setStep] = useState<'build' | 'offline'>('build');
 
-  // 载入本地保存的牌阵列表
+  // 载入牌阵列表：登录 → 云端；未登录 → 本机（老 localStorage 数据无缝读取）
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(SAVED_KEY);
-      if (raw) setSavedSpreads(JSON.parse(raw) as SavedSpread[]);
-    } catch { /* ignore */ }
-  }, [SAVED_KEY]);
-
-  const persistSaved = (list: SavedSpread[]) => {
-    setSavedSpreads(list);
-    try {
-      window.localStorage.setItem(SAVED_KEY, JSON.stringify(list));
-    } catch { /* ignore */ }
-  };
+    let alive = true;
+    loadSpreadsSmart(deck).then((r) => {
+      if (alive) setSavedSpreads(r.list);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [deck]);
 
   // 点选一个空格 → 翻出牌背并编号
   const pick = (row: number, col: number) => {
@@ -93,13 +90,18 @@ export default function CustomSpreadBuilder({ deck }: { deck: 'tarot' | 'lenorma
   const openPanel = (idx: number) => {
     setActiveIdx(idx);
     setNameDraft(cells[idx]?.name ?? '');
+    setHintDraft(cells[idx]?.hint ?? '');
   };
 
-  // 保存牌位名（保存后自动关闭面板）
+  // 保存牌位名与解读提示（保存后自动关闭面板）
   const saveName = () => {
     if (activeIdx === null) return;
     const next = [...cells];
-    next[activeIdx] = { ...next[activeIdx], name: nameDraft.trim() || undefined };
+    next[activeIdx] = {
+      ...next[activeIdx],
+      name: nameDraft.trim() || undefined,
+      hint: hintDraft.trim() || undefined,
+    };
     setCells(next);
     setActiveIdx(null);
   };
@@ -110,24 +112,29 @@ export default function CustomSpreadBuilder({ deck }: { deck: 'tarot' | 'lenorma
     setActiveIdx(null);
   };
 
-  // 保存当前布阵为具名牌阵（同名覆盖）
-  const saveSpread = () => {
+  // 保存当前布阵为具名牌阵（同名覆盖；登录走云端，未登录存本机）
+  const saveSpread = async () => {
     const name = spreadName.trim();
     if (!name || !cells.length) return;
-    const entry: SavedSpread = { name, cells: cells.map((c) => ({ ...c })), savedAt: Date.now() };
-    persistSaved([...savedSpreads.filter((s) => s.name !== name), entry]);
+    const r = await saveSpreadSmart(deck, name, cells.map((c) => ({ ...c })), {
+      description: spreadDesc.trim(),
+    });
+    setSavedSpreads((prev) => [r.spread, ...prev.filter((s) => s.name !== name)]);
     setShowSave(false);
   };
 
-  // 载入一套已存牌阵
+  // 载入一套已存牌阵（同时带出名称与说明，便于改完直接覆盖保存）
   const loadSpread = (s: SavedSpread) => {
     setCells(s.cells.map((c) => ({ ...c, cols: MAX_COLS })));
     setCount(Math.min(Math.max(s.cells.length, 1), MAX_CARDS));
+    setSpreadName(s.name);
+    setSpreadDesc(s.description ?? '');
     setActiveIdx(null);
   };
 
-  const deleteSpread = (name: string) => {
-    persistSaved(savedSpreads.filter((s) => s.name !== name));
+  const deleteSpread = async (s: SavedSpread) => {
+    await deleteSpreadSmart(s);
+    setSavedSpreads((prev) => prev.filter((x) => x.id !== s.id));
   };
 
   // 开始占卜：直接进抽牌系统（问题/背景可不填）
@@ -241,7 +248,7 @@ export default function CustomSpreadBuilder({ deck }: { deck: 'tarot' | 'lenorma
                     <span className="ml-1.5 text-[10px] text-muted">{s.cells.length}</span>
                   </button>
                   <button
-                    onClick={() => deleteSpread(s.name)}
+                    onClick={() => void deleteSpread(s)}
                     aria-label={`${t('custom.deleteSpread')} ${s.name}`}
                     className="rounded-full p-0.5 text-muted/50 transition-colors hover:bg-red-500/15 hover:text-red-400"
                   >
@@ -346,6 +353,15 @@ export default function CustomSpreadBuilder({ deck }: { deck: 'tarot' | 'lenorma
                     placeholder={t('custom.namePlaceholder')}
                     className="w-full rounded-lg border border-white/[0.1] bg-black/25 px-2.5 py-1.5 text-xs text-frost placeholder:text-muted/40 focus:border-accent/40 focus:outline-none"
                   />
+                  {/* 牌位解读提示：专业师自定的读法要点，解读时随牌位显示 */}
+                  <textarea
+                    value={hintDraft}
+                    onChange={(e) => setHintDraft(e.target.value)}
+                    rows={2}
+                    maxLength={120}
+                    placeholder={t('custom.cellHintPlaceholder')}
+                    className="mt-1.5 w-full resize-none rounded-lg border border-white/[0.1] bg-black/25 px-2.5 py-1.5 text-[11px] leading-relaxed text-frost placeholder:text-muted/40 focus:border-accent/40 focus:outline-none"
+                  />
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <button
                       onClick={saveName}
@@ -376,7 +392,7 @@ export default function CustomSpreadBuilder({ deck }: { deck: 'tarot' | 'lenorma
               <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />{t('custom.reset')}
             </button>
             <button
-              onClick={() => { setShowSave(true); setSpreadName(''); }}
+              onClick={() => setShowSave(true)}
               disabled={!cells.length}
               className={`glass-btn ml-auto inline-flex h-9 items-center gap-1.5 px-4 text-xs ${!cells.length ? 'opacity-40' : ''}`}
             >
@@ -393,13 +409,13 @@ export default function CustomSpreadBuilder({ deck }: { deck: 'tarot' | 'lenorma
                   autoFocus
                   value={spreadName}
                   onChange={(e) => setSpreadName(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') saveSpread(); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') void saveSpread(); }}
                   maxLength={20}
                   placeholder={t('custom.spreadNamePlaceholder')}
                   className="min-w-0 flex-1 rounded-lg border border-white/[0.1] bg-black/20 px-3 py-2 text-sm text-frost placeholder:text-muted/40 focus:border-accent/40 focus:outline-none"
                 />
                 <button
-                  onClick={saveSpread}
+                  onClick={() => void saveSpread()}
                   disabled={!spreadName.trim()}
                   className={`inline-flex h-9 shrink-0 items-center justify-center whitespace-nowrap rounded-full border border-accent/40 bg-accent/15 px-4 text-xs font-medium leading-none text-frost transition-colors hover:bg-accent/25 ${!spreadName.trim() ? 'opacity-40' : ''}`}
                 >
@@ -409,6 +425,18 @@ export default function CustomSpreadBuilder({ deck }: { deck: 'tarot' | 'lenorma
                   <X className="h-3.5 w-3.5" aria-hidden="true" />
                 </button>
               </div>
+              {/* 牌阵说明：专业师会写这套牌阵怎么读、有什么讲究 */}
+              <label className="mb-1.5 mt-3 block text-[11px] text-muted/70">
+                {t('custom.spreadDescLabel')}
+              </label>
+              <textarea
+                value={spreadDesc}
+                onChange={(e) => setSpreadDesc(e.target.value)}
+                rows={3}
+                maxLength={300}
+                placeholder={t('custom.spreadDescPlaceholder')}
+                className="w-full resize-none rounded-lg border border-white/[0.1] bg-black/20 px-3 py-2 text-[12.5px] leading-relaxed text-frost placeholder:text-muted/40 focus:border-accent/40 focus:outline-none"
+              />
             </div>
           )}
 

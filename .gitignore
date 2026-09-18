@@ -48,3 +48,6 @@ scripts/enrich-progress.json
 
 # 案例库补译进度文件 (运行时产物)
 scripts/translate-case-progress.json
+
+# Supabase CLI 本地临时文件 (含项目链接信息, 不入 git)
+supabase/.temp/

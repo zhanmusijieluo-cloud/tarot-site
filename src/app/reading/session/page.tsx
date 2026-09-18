@@ -13,6 +13,7 @@ import { localizedCardName, CARD_JA_NAMES } from '@/lib/card-names';
 import { spreadPositions } from '@/lib/spread-i18n';
 import { getCrossIdx, solveSpreadLayout, solveCustomGridLayout, CARD_H_RATIO, cardWClassToPx } from '@/lib/spread-layout';
 import { supabaseBrowser } from '@/lib/supabase';
+import { upsertSessionSmart, rateSessionSmart } from '@/lib/account/sessions';
 import { getMcpClient } from '@/mcp/client';
 import { useI18n } from '@/i18n';
 
@@ -26,7 +27,7 @@ interface ReadingSession {
   spreadKey?: string | null;
   positions: string[];
   /** 自定义牌阵格位：解读室按 row/col 原样还原客户布阵时的摆放位置 */
-  customLayout?: { row: number; col: number; cols: number; name?: string }[];
+  customLayout?: { row: number; col: number; cols: number; name?: string; hint?: string }[];
   interpretation: string;
   /** 解读生成时的语言：语言切换时自动重新生成对应语言解读 */
   lang?: string;
@@ -124,6 +125,8 @@ export default function ReadingSessionPage() {
   const [allExtraCards, setAllExtraCards] = useState<DrawnCard[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  /** 解读历史的记录 id：首次保存后回填，后续追问/重生成回写同一条 */
+  const savedRecordIdRef = useRef<{ id: string; cloud?: boolean } | null>(null);
 
   useEffect(() => {
     const s = loadSession();
@@ -168,6 +171,42 @@ export default function ReadingSessionPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [checked, session, chat, allExtraCards]);
 
+  // 解读历史：正文稳定 3 秒后写入（登录 → 云端 reading_sessions；未登录 → 本机）。
+  // 追问 / 重新生成会回写同一条记录（savedRecordIdRef），不产生重复条目。
+  useEffect(() => {
+    if (!checked || !session) return;
+    const text = (session.interpretation ?? '').trim();
+    if (!text) return;
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        const r = await upsertSessionSmart(
+          {
+            deck: session.deck === 'lenormand' ? 'lenormand' : 'tarot',
+            spreadKey: session.spreadKey ?? null,
+            spreadName: session.spreadName,
+            question: session.question,
+            background: session.background,
+            positions: session.positions,
+            customLayout: session.customLayout ?? null,
+            cards: session.cards.map((c) => ({ id: c.id, name: c.name, reversed: !!c.isReversed })),
+            interpretation: session.interpretation,
+            chat: chat.map((m) => ({
+              role: m.role,
+              content: m.content,
+              cards: m.cards?.map((c) => ({ id: c.id, name: c.name, reversed: !!c.isReversed })),
+            })),
+            extraCards: allExtraCards.map((c) => ({ id: c.id, name: c.name, reversed: !!c.isReversed })),
+            lang: session.lang ?? 'zh',
+          },
+          savedRecordIdRef.current?.id
+        );
+        savedRecordIdRef.current = { id: r.record.id, cloud: r.mode === 'cloud' };
+      })();
+    }, 3000);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checked, session, chat, allExtraCards]);
+
   // 自动流式生成解读：①抽牌页直接跳转过来（正文为空）②会话语言与站点语言不一致
   useEffect(() => {
     if (!session || !checked) return;
@@ -198,7 +237,10 @@ export default function ReadingSessionPage() {
             question: session.question,
             background: session.background,
             spreadName: session.spreadName,
-            positions: session.positions ?? [],
+            // 牌位名附上专业师自定的解读提示，让 AI 遵守这套读法（只影响解读输入，不改 UI 显示）
+            positions: (session.positions ?? []).map((p, i) =>
+              session.customLayout?.[i]?.hint ? `${p}（${session.customLayout[i].hint}）` : p
+            ),
             lang,
             deck: session.deck,
             spreadKey: session.spreadKey ?? null,
@@ -441,6 +483,10 @@ export default function ReadingSessionPage() {
           note: fbNote.trim().slice(0, 200),
         });
       }
+      // 同步到「我的解读记录」，回看时也能看到当时的准/不准
+      if (savedRecordIdRef.current) {
+        await rateSessionSmart(savedRecordIdRef.current, vote === 'up' ? 1 : -1);
+      }
       setFbSent(true);
     } catch { /* 静默失败: 不打扰阅读, 按钮保持已选态 */ }
     setFbSaving(false);
@@ -503,7 +549,9 @@ export default function ReadingSessionPage() {
           question,
           background,
           spreadName,
-          positions: allPositions,
+          positions: allPositions.map((p, i) =>
+            session?.customLayout?.[i]?.hint ? `${p}（${session.customLayout[i].hint}）` : p
+          ),
           interpretation,
           history,
           followUp: prefix + q,
@@ -650,7 +698,10 @@ export default function ReadingSessionPage() {
                     </button>
                     {/* 牌位名称：绝对定位悬挂在牌下方，不占布局高度，保证同行各牌对齐 */}
                     {localizedPositions[idx] && (
-                      <p className="absolute left-1/2 top-full mt-1.5 w-[8.5rem] -translate-x-1/2 truncate text-center text-[10px] leading-tight text-accent/75">
+                      <p
+                        title={customLayoutCells[idx]?.hint || undefined}
+                        className="absolute left-1/2 top-full mt-1.5 w-[8.5rem] -translate-x-1/2 truncate text-center text-[10px] leading-tight text-accent/75"
+                      >
                         {localizedPositions[idx]}
                       </p>
                     )}
@@ -675,6 +726,12 @@ export default function ReadingSessionPage() {
               {localizedPositions[activeCard] && (
                 <p className="mt-0.5 text-xs text-accent/70">
                   {t('session.position')}: {localizedPositions[activeCard]}
+                </p>
+              )}
+              {/* 牌位解读提示：专业师布阵时自定的读法要点 */}
+              {customLayoutCells[activeCard]?.hint && (
+                <p className="mt-1.5 rounded-lg border border-accent/15 bg-accent/[0.04] px-2.5 py-1.5 text-[11.5px] leading-relaxed text-accent/80">
+                  {customLayoutCells[activeCard].hint}
                 </p>
               )}
               <p className="mt-1.5 text-xs leading-relaxed text-muted">

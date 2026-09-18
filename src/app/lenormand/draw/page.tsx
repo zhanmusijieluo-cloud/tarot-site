@@ -5,16 +5,19 @@
  * 复用塔罗链路的会话结构(tarot-reading-session), 以 arcana='lenormand' 标记牌组;
  * 雷诺曼无逆位: 翻牌只出正位, 牌意由「连线组合」决定。
  */
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { ChevronRight, HelpCircle, RotateCcw, Sparkles, User } from 'lucide-react';
 import PageShell, { Reveal } from '@/components/PageShell';
 import TarotScene from '@/components/TarotScene';
 import OfflineInterpretSection from '@/components/OfflineInterpretSection';
+import ArchiveSelect from '@/components/ArchiveSelect';
 import { LN_SPREADS, LN_SPREAD_KEYS, LN_DECK, type LnDrawnCard } from '@/lib/lenormand';
 import type { CustomCell } from '@/components/CustomSpreadBuilder';
 import { useI18n } from '@/i18n';
+import { loadArchivesSmart, type Archive } from '@/lib/astro/archives';
+import { archiveContext } from '@/lib/astro/birth-context';
 
 type Stage = 'question' | 'draw';
 
@@ -63,6 +66,23 @@ function LenormandDrawInner() {
   const [offline, setOffline] = useState(false);
   const offlineRef = useRef<HTMLDivElement>(null);
 
+  // 出生档案（可选）：带入出生信息与太阳星座，让解读贴合本人
+  const [archives, setArchives] = useState<Archive[]>([]);
+  const [archiveId, setArchiveId] = useState('');
+  useEffect(() => {
+    let alive = true;
+    loadArchivesSmart().then((r) => {
+      if (alive) setArchives(r.list);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const pickedArchive = archives.find((a) => a.id === archiveId) ?? null;
+  // 档案信息并入背景交给 AI；UI 上的「背景」输入框保持用户填写的内容不变
+  const bgWithArchive = [archiveContext(pickedArchive), background].filter(Boolean).join('\n');
+
   const spread = LN_SPREADS[spreadKey];
   const isCustom = !!customLayout?.length;
   const drawCount = isCustom ? customLayout!.length : (spread?.count ?? 3);
@@ -98,7 +118,7 @@ function LenormandDrawInner() {
           cards: drawn,
           deck: 'lenormand',
           question,
-          background,
+          background: bgWithArchive,
           spreadName: spreadLabel,
           spreadKey: isCustom ? null : spreadKey,
           positions: [...positionNames],
@@ -167,6 +187,14 @@ function LenormandDrawInner() {
               <p className="mt-2 text-right text-[11px] text-muted/60">{background.length} / 300</p>
             </div>
           </Reveal>
+
+          {/* 关联出生档案（可选）：带入出生信息与太阳星座，让解读贴合本人 */}
+          {archives.length > 0 && (
+            <Reveal delay={220}>
+              <ArchiveSelect archives={archives} value={archiveId} onChange={setArchiveId} />
+            </Reveal>
+          )}
+
           <Reveal delay={240}>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:items-stretch sm:justify-center">
               <button
@@ -206,7 +234,7 @@ function LenormandDrawInner() {
                     }
                   : { presetSpread: spreadKey })}
                 presetQuestion={question}
-                presetBackground={background}
+                presetBackground={bgWithArchive}
                 hideQuestionInput
                 onBack={() => { setOffline(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
               />

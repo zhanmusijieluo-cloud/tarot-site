@@ -1,14 +1,17 @@
 'use client';
 
-import { Suspense, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronRight, RotateCcw, Sparkles } from 'lucide-react';
 import PageShell, { Reveal } from '@/components/PageShell';
 import { useRouter, useSearchParams } from 'next/navigation';
 import TarotScene from '@/components/TarotScene';
 import OfflineInterpretSection from '@/components/OfflineInterpretSection';
+import ArchiveSelect from '@/components/ArchiveSelect';
 import { TAROT_DECK, SPREADS, type DrawnCard, type Spread } from '@/lib/tarot';
 import { spreadPositions } from '@/lib/spread-i18n';
 import { useI18n } from '@/i18n';
+import { loadArchivesSmart, type Archive } from '@/lib/astro/archives';
+import { archiveContext } from '@/lib/astro/birth-context';
 
 type Stage = 'catalogue' | 'draw';
 
@@ -18,6 +21,7 @@ interface CustomCell {
   col: number;
   cols: number;
   name?: string;
+  hint?: string;
 }
 
 const CARD_BACK = '/cards/card-back-new.webp';
@@ -58,6 +62,24 @@ function OnlineInner() {
   const [offline, setOffline] = useState(false);
   const deckRef = useRef<number[]>([]);
   const offlineRef = useRef<HTMLDivElement>(null);
+
+  // 出生档案（可选）：带入出生信息与太阳星座，让解读贴合本人
+  const [archives, setArchives] = useState<Archive[]>([]);
+  // 支持从档案页带 ?archive=<id> 过来时直接选中该档案
+  const [archiveId, setArchiveId] = useState(searchParams.get('archive') ?? '');
+  useEffect(() => {
+    let alive = true;
+    loadArchivesSmart().then((r) => {
+      if (alive) setArchives(r.list);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const pickedArchive = archives.find((a) => a.id === archiveId) ?? null;
+  // 档案信息并入背景交给 AI；UI 上的「背景」输入框保持用户填写的内容不变
+  const bgWithArchive = [archiveContext(pickedArchive), background].filter(Boolean).join('\n');
   const selectedRef = useRef<Set<number>>(new Set());
 
   const spread: Spread | null = useMemo(
@@ -154,7 +176,7 @@ function OnlineInner() {
             numeral: c.numeral,
           })),
           question,
-          background,
+          background: bgWithArchive,
           spreadName: spreadNameForResult,
           spreadKey: !isCustom && selectedSpread !== 'quick' && SPREADS[selectedSpread] ? selectedSpread : null,
           positions: isCustom ? customPositionNames : localizePositions(spread?.positions ?? []),
@@ -222,6 +244,13 @@ function OnlineInner() {
             </div>
           </Reveal>
 
+          {/* 关联出生档案（可选）：带入出生信息与太阳星座，让解读贴合本人 */}
+          {archives.length > 0 && (
+            <Reveal delay={160}>
+              <ArchiveSelect archives={archives} value={archiveId} onChange={setArchiveId} />
+            </Reveal>
+          )}
+
           {/* 在线 / 线下 */}
           <Reveal delay={200}>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:items-stretch sm:justify-center">
@@ -242,7 +271,7 @@ function OnlineInner() {
                 presetCustomPositions="第一张,第二张,第三张"
                 customName="三张无牌阵"
                 presetQuestion={question}
-                presetBackground={background}
+                presetBackground={bgWithArchive}
                 hideCustomSettings
                 hideQuestionInput
                 onBack={() => { setOffline(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
