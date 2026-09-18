@@ -1135,7 +1135,9 @@ export default function ChartWheel({ chart: chartRaw, zhMode, selected: selProp,
 
       {/* 点击标注: 宽屏浮动在盘旁小窗, 窄屏退回盘下 */}
       {selPlanet && (
-        <div className="mt-3 lg:absolute lg:right-3 lg:top-14 lg:z-30 lg:mt-0 lg:max-h-[calc(100%-5rem)] lg:w-[280px] lg:overflow-y-auto">
+        // 窄屏 (<lg) 原来是 mt-3 静态排在盘后, 而盘高 84vh → 弹窗落在页面 y≈890, 整个在视口外且不自动滚动,
+        // 用户以为「点了没弹窗」(木木 2026-09-18 实测 900x700 rect=[45,892,804,309]) → 窄屏改浮动贴底面板, 永远可见
+        <div className="fixed inset-x-3 bottom-3 z-[70] max-h-[58vh] overflow-y-auto lg:absolute lg:inset-x-auto lg:left-auto lg:bottom-auto lg:right-3 lg:top-14 lg:z-30 lg:w-[280px] lg:max-h-[min(calc(100%-5rem),calc(100vh-13rem))]">
           <PlanetDetail p={selPlanet} chart={chart} zhMode={zhMode} dual={!!dualRing} sel={selected} onClose={() => setSelected(null)} />
         </div>
       )}

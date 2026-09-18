@@ -196,6 +196,10 @@ export default function ChartWheel2D({ chart, zhMode, selected, onSelect, dualRi
       const [dg1, dg2] = fmtDeg(p.longitude);
       return (
         <g key={`${kind}-${p.name}`} data-ring={kind} data-name={p.name} onClick={(e) => { e.stopPropagation(); onSelect(isSel ? null : ringName); }} style={{ cursor: 'pointer', opacity: dim ? 0.55 : 1, transition: 'opacity 0.25s' }}>
+          {/* 命中垫 (木木 2026-09-18 抓 BUG: 符号是 fill="none" 空心描边, 点符号中心没有笔画 → 事件穿透到下面圆环,
+              行星 onClick 根本不触发, 表现为「点星体没有特征弹窗」; 换矢量符号库(20bf0c5)之前是 Unicode 实心字形, 命中面积大得多, 所以"之前是有的"。
+              fill="transparent" 非 none → 整圆可命中; 半径略大于符号, 覆盖手抖) */}
+          <circle cx={gx} cy={gy} r={compact ? 13.5 : 15} fill="transparent" />
           {withLead && <line x1={tk1x} y1={tk1y} x2={tk2x} y2={tk2y} stroke={col} strokeWidth="1.4" opacity="0.9" />}
           {withLead && slipped && <line x1={lx1} y1={ly1} x2={lx2} y2={ly2} stroke={P.houseLine} strokeWidth="0.7" opacity="0.5" />}
           {isSel && <circle cx={gx} cy={gy} r={compact ? 12 : 13.5} fill="none" stroke={P.sel} strokeWidth="1.4" />}
