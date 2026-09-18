@@ -308,6 +308,13 @@ export default function HeroCardRing({ onActiveChange }: { onActiveChange?: (act
       el.removeEventListener('click', onClick);
       window.removeEventListener('resize', onResize);
       renderer.dispose();
+      // ⚠️ dispose() 不会归还 GPU 上下文 —— 首页软导航离开后这个上下文会一直占着,
+      //    到星盘页 ChartWheel 再建一个就撞上 → webglcontextlost → glFail 降级
+      //    → React 替换容器 DOM → NotFoundError: removeChild。
+      //    (2026-09-18 木木报「第一次打开网站→排盘必崩、重载后正常」的根因)
+      try {
+        renderer.forceContextLoss();
+      } catch { /* 忽略 */ }
       scene.traverse((o) => {
         const m = o as THREE.Mesh;
         if (m.geometry) m.geometry.dispose();
