@@ -3,6 +3,9 @@
 // 路由级错误边界 — 兜住页面渲染期抛错, 避免整棵树被卸载成白屏。
 // ⚠️ 这里刻意不使用 useI18n(): 它无 Provider 时会 throw, 而错误页自己再抛错就彻底白屏。
 // 语言直接从 localStorage / <html lang> 探测, 任何一步失败都回落到中文。
+//
+// ⚠️ 2026-09-18: 为定位木木截图里的错误页, 这里把真实报错**显示出来** (原来只打 console)。
+//    一行 message + 可展开的堆栈。排查完可以收回 console-only。
 
 import { useEffect, useState } from 'react';
 
@@ -20,24 +23,27 @@ function detectLang(): Lang {
   return 'zh';
 }
 
-const TEXT: Record<Lang, { title: string; desc: string; retry: string; home: string }> = {
+const TEXT: Record<Lang, { title: string; desc: string; retry: string; home: string; detail: string }> = {
   zh: {
     title: '页面出了点问题',
     desc: '不是你的操作有问题，重新加载一下通常就能恢复。',
     retry: '重新加载',
     home: '回首页',
+    detail: '错误详情',
   },
   en: {
     title: 'Something went wrong',
     desc: 'Nothing you did — reloading usually fixes it.',
     retry: 'Reload',
     home: 'Home',
+    detail: 'Error detail',
   },
   ja: {
     title: 'ページで問題が発生しました',
     desc: '操作の問題ではありません。再読み込みで通常は復帰します。',
     retry: '再読み込み',
     home: 'ホーム',
+    detail: 'エラー詳細',
   },
 };
 
@@ -49,6 +55,7 @@ export default function Error({
   reset: () => void;
 }) {
   const [lang, setLang] = useState<Lang>('zh');
+  const [showDetail, setShowDetail] = useState(false);
 
   useEffect(() => {
     setLang(detectLang());
@@ -56,10 +63,26 @@ export default function Error({
 
   useEffect(() => {
     // 留一份现场, 便于线上定位
-    console.error('[route-error]', error?.message, error?.digest, error?.stack);
+    console.error('[route-error]', error?.name, error?.message, error?.digest, error?.stack);
   }, [error]);
 
   const s = TEXT[lang];
+  const msg = (() => {
+    try {
+      const name = error?.name || 'Error';
+      const m = error?.message || '';
+      return m ? `${name}: ${m}` : name;
+    } catch {
+      return 'Error';
+    }
+  })();
+  const stack = (() => {
+    try {
+      return String(error?.stack || '').split('\n').slice(0, 8).join('\n');
+    } catch {
+      return '';
+    }
+  })();
 
   return (
     <main className="flex min-h-[70vh] items-center justify-center px-6">
@@ -69,9 +92,26 @@ export default function Error({
         </div>
         <h1 className="font-serif text-xl text-frost">{s.title}</h1>
         <p className="mt-3 text-sm leading-relaxed text-muted">{s.desc}</p>
-        {error?.digest ? (
-          <p className="mt-3 font-mono text-[10px] tracking-wider text-muted/50">#{error.digest}</p>
+
+        {/* 报错摘要: 一行, 便于截图反馈。[route]=页面级边界, [root]=根级边界 */}
+        <p className="mt-4 break-words rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 font-mono text-[10.5px] leading-relaxed text-[#e8a08a]">
+          [route] {msg}
+          {error?.digest ? <span className="block text-muted/50">#{error.digest}</span> : null}
+        </p>
+        {stack ? (
+          <button
+            onClick={() => setShowDetail((v) => !v)}
+            className="mt-2 text-[10px] tracking-[0.15em] text-muted/50 underline transition-colors hover:text-muted"
+          >
+            {s.detail}
+          </button>
         ) : null}
+        {showDetail && stack ? (
+          <pre className="mt-2 max-h-40 overflow-auto rounded-lg border border-white/[0.08] bg-black/40 p-2 text-left font-mono text-[9.5px] leading-relaxed whitespace-pre-wrap text-muted/70">
+            {stack}
+          </pre>
+        ) : null}
+
         <div className="mt-7 flex items-center justify-center gap-3">
           <button
             onClick={() => reset()}

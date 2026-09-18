@@ -84,6 +84,8 @@ ok(!routeState.blank, '不是白屏')
 ok(/页面出了点问题/.test(routeState.text), '显示错误卡片文案', routeState.text.slice(0, 60))
 ok(routeState.hasRetry, '有「重新加载」按钮')
 ok(routeState.hasHome, '有「回首页」链接')
+// 自报错: 页面必须把真实报错显示出来 (否则线上出问题只能靠猜)
+ok(/__boundary_probe__/.test(routeState.text), '错误页显示真实报错内容', routeState.text.match(/\[route\][^ ]*[^\n]*/)?.[0]?.slice(0, 90) ?? '')
 
 // ---- 2. 组件级 ChartBoundary ----
 console.log('\n— 2. 组件级 ChartBoundary (仅子组件抛错) —')

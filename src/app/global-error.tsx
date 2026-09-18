@@ -42,6 +42,23 @@ export default function GlobalError({
     textDecoration: 'none',
   };
 
+  const msg = (() => {
+    try {
+      const name = error?.name || 'Error';
+      const m = error?.message || '';
+      return m ? `${name}: ${m}` : name;
+    } catch {
+      return 'Error';
+    }
+  })();
+  const stack = (() => {
+    try {
+      return String(error?.stack || '').split('\n').slice(0, 8).join('\n');
+    } catch {
+      return '';
+    }
+  })();
+
   return (
     <html lang="zh">
       <body
@@ -80,6 +97,62 @@ export default function GlobalError({
           <p style={{ fontSize: 13.5, lineHeight: 1.7, color: 'rgba(232,230,240,0.62)', margin: 0 }}>
             不是你的操作有问题，重新加载一下通常就能恢复。
           </p>
+
+          {/* 报错摘要 (排查用): 一行, 便于截图反馈 */}
+          <p
+            style={{
+              marginTop: 16,
+              marginBottom: 0,
+              wordBreak: 'break-word',
+              borderRadius: 8,
+              border: '1px solid rgba(255,255,255,0.08)',
+              background: 'rgba(255,255,255,0.03)',
+              padding: '8px 12px',
+              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+              fontSize: 10.5,
+              lineHeight: 1.6,
+              color: '#e8a08a',
+            }}
+          >
+            [root] {msg}
+            {error?.digest ? (
+              <span style={{ display: 'block', color: 'rgba(232,230,240,0.32)' }}>#{error.digest}</span>
+            ) : null}
+          </p>
+          {stack ? (
+            <details style={{ marginTop: 8 }}>
+              <summary
+                style={{
+                  cursor: 'pointer',
+                  fontSize: 10,
+                  letterSpacing: '0.15em',
+                  color: 'rgba(232,230,240,0.32)',
+                }}
+              >
+                错误详情
+              </summary>
+              <pre
+                style={{
+                  marginTop: 8,
+                  maxHeight: 160,
+                  overflow: 'auto',
+                  borderRadius: 8,
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  background: 'rgba(0,0,0,0.4)',
+                  padding: 8,
+                  textAlign: 'left',
+                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                  fontSize: 9.5,
+                  lineHeight: 1.6,
+                  whiteSpace: 'pre-wrap',
+                  color: 'rgba(232,230,240,0.5)',
+                }}
+              >
+                {stack}
+              </pre>
+            </details>
+          ) : null}
+
           {error?.digest ? (
             <p
               style={{

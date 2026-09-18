@@ -204,11 +204,15 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
   //    若直接拿 chart 当 effect 依赖, 父组件任何一次重渲染 (悬停、切双环、点按钮)
   //    都会把整个 WebGL 场景拆了重搭一遍 —— 连带重新上传全部 2K 行星贴图。
   //    这既是卡顿源, 也是显存堆积源。用数据指纹做依赖, 只有真换盘才重建。
+  //    ⚠️ 必须把显示设置 (settings.display) 也算进指纹 —— 场景里 disp 是直接吃它的,
+  //       漏掉就会出现"改了盘向/ASC位置/刻度但 3D 盘不动"。
   const chartKey = useMemo(() => {
     const p = chart.planets.map((x) => `${x.name}@${Number(x.longitude).toFixed(4)}`).join(',');
     const c = chart.cusps ? chart.cusps.map((x) => Number(x).toFixed(2)).join(',') : '-';
     const i = chart.input;
-    return `${i.year}-${i.month}-${i.day}-${i.hour}-${i.minute}|${chart.houseSystemUsed}|${chart.timeKnown ? 1 : 0}|${p}|${c}|${aspects.length}`;
+    const d = chart.settings?.display;
+    const dk = d ? `${d.dir ?? ''}/${d.ascPos ?? ''}/${d.aspects ? 1 : 0}${d.feet ? 1 : 0}${d.feetAlways ? 1 : 0}${d.nums ? 1 : 0}${d.ticks ? 1 : 0}` : '-';
+    return `${i.year}-${i.month}-${i.day}-${i.hour}-${i.minute}|${chart.houseSystemUsed}|${chart.timeKnown ? 1 : 0}|${p}|${c}|${aspects.length}|${dk}`;
   }, [chart, aspects]);
 
   useEffect(() => {
