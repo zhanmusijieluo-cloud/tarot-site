@@ -6,8 +6,13 @@
 //
 // ⚠️ 2026-09-18: 为定位木木截图里的错误页, 这里把真实报错**显示出来** (原来只打 console)。
 //    一行 message + 可展开的堆栈。排查完可以收回 console-only。
+//
+// ✅ 2026-09-18 晚: 根因已实测复现 —— 部署切换瞬间, 旧客户端懒加载 chunk 会
+//    ChunkLoadError (见 lib/chunk-recovery.ts)。这类错误刷新即好, 故自动恢复一次,
+//    用户看到的是「正在恢复…」而不是错误页。真故障 (第二次仍失败) 才显示错误页。
 
 import { useEffect, useState } from 'react';
+import { tryStaleAssetRecovery } from '@/lib/chunk-recovery';
 
 type Lang = 'zh' | 'en' | 'ja';
 
@@ -23,13 +28,15 @@ function detectLang(): Lang {
   return 'zh';
 }
 
-const TEXT: Record<Lang, { title: string; desc: string; retry: string; home: string; detail: string }> = {
+const TEXT: Record<Lang, { title: string; desc: string; retry: string; home: string; detail: string; healing: string; healingDesc: string }> = {
   zh: {
     title: '页面出了点问题',
     desc: '不是你的操作有问题，重新加载一下通常就能恢复。',
     retry: '重新加载',
     home: '回首页',
     detail: '错误详情',
+    healing: '正在恢复…',
+    healingDesc: '刚刚发布过新版本，正在载入最新内容。',
   },
   en: {
     title: 'Something went wrong',
@@ -37,6 +44,8 @@ const TEXT: Record<Lang, { title: string; desc: string; retry: string; home: str
     retry: 'Reload',
     home: 'Home',
     detail: 'Error detail',
+    healing: 'Restoring…',
+    healingDesc: 'A new version just shipped — loading the latest.',
   },
   ja: {
     title: 'ページで問題が発生しました',
@@ -44,6 +53,8 @@ const TEXT: Record<Lang, { title: string; desc: string; retry: string; home: str
     retry: '再読み込み',
     home: 'ホーム',
     detail: 'エラー詳細',
+    healing: '復帰中…',
+    healingDesc: '新バージョンが公開されたため、最新の内容を読み込んでいます。',
   },
 };
 
@@ -56,6 +67,7 @@ export default function Error({
 }) {
   const [lang, setLang] = useState<Lang>('zh');
   const [showDetail, setShowDetail] = useState(false);
+  const [healing, setHealing] = useState(false);
 
   useEffect(() => {
     setLang(detectLang());
@@ -64,6 +76,8 @@ export default function Error({
   useEffect(() => {
     // 留一份现场, 便于线上定位
     console.error('[route-error]', error?.name, error?.message, error?.digest, error?.stack);
+    // 部署切换类错误 → 自动硬刷新一次 (冷却窗口内不再重复, 真故障会落到错误页)
+    if (tryStaleAssetRecovery(error)) setHealing(true);
   }, [error]);
 
   const s = TEXT[lang];
@@ -83,6 +97,19 @@ export default function Error({
       return '';
     }
   })();
+
+  // 部署切换类错误: 正在自动重载, 给一个安静的过渡态, 不吓用户
+  if (healing) {
+    return (
+      <main className="flex min-h-[70vh] items-center justify-center px-6">
+        <div className="text-center">
+          <div className="mx-auto mb-4 size-8 animate-spin rounded-full border-2 border-accent/25 border-t-accent" />
+          <p className="font-serif text-base text-frost">{s.healing}</p>
+          <p className="mt-2 text-xs text-muted/70">{s.healingDesc}</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex min-h-[70vh] items-center justify-center px-6">

@@ -9,6 +9,7 @@ const PAGE = 'https://mustar.vip/astrology/chart?y=1995&mo=1&d=1&h=12&mi=0&lat=3
 const MARKERS = [
   ['error.tsx（路由级错误边界）', '不是你的操作有问题'],
   ['ChartBoundary（盘面级边界）', '换一个盘种或宫制通常就能恢复'],
+  ['错误页自报错 [route] 标记', '[route]'],
 ]
 
 const r = await fetch(PAGE, { signal: AbortSignal.timeout(25000) })

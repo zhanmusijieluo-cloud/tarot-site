@@ -9,9 +9,12 @@
 //   2. 必须自己输出 <html> / <body>。
 //   3. 任何 throw 都会让整站彻底白屏, 所以这里逻辑必须"不可能再抛错":
 //      不用 localStorage、不用 window、不读 document。
+//      (唯一例外是 chunk-recovery 的 sessionStorage 探测 —— 它整体包在 try/catch 里,
+//       且带冷却窗口, 失败即静默降级。2026-09-18 加: 部署切换会触发 ChunkLoadError。)
 // ============================================================
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { tryStaleAssetRecovery } from '@/lib/chunk-recovery';
 
 export default function GlobalError({
   error,
@@ -20,12 +23,20 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const [healing, setHealing] = useState(false);
+
   useEffect(() => {
     // 留现场, 便于线上定位 (Vercel 日志里能按 digest 捞)
     try {
       console.error('[global-error]', error?.message, error?.digest, error?.stack);
     } catch {
       /* 忽略 */
+    }
+    // 部署切换类错误 → 自动硬刷新一次 (冷却窗口内不再重复)
+    try {
+      if (tryStaleAssetRecovery(error)) setHealing(true);
+    } catch {
+      /* 忽略: 兜底逻辑自身绝不能把白屏搞得更白 */
     }
   }, [error]);
 
@@ -58,6 +69,46 @@ export default function GlobalError({
       return '';
     }
   })();
+
+  const shell: React.CSSProperties = {
+    margin: 0,
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: '#080709',
+    color: '#e8e6f0',
+    fontFamily: '"Noto Serif SC", "Songti SC", "PingFang SC", system-ui, -apple-system, sans-serif',
+    padding: 24,
+  };
+
+  // 部署切换类错误: 正在自动重载, 给一个安静的过渡态
+  if (healing) {
+    return (
+      <html lang="zh">
+        <body style={shell}>
+          <div style={{ textAlign: 'center' }}>
+            <div
+              style={{
+                margin: '0 auto 16px',
+                width: 40,
+                height: 40,
+                borderRadius: '50%',
+                border: '1px solid rgba(217,168,184,0.35)',
+                borderTopColor: '#d9a8b8',
+                animation: 'oracle-spin 0.9s linear infinite',
+              }}
+            />
+            <style>{'@keyframes oracle-spin{to{transform:rotate(360deg)}}'}</style>
+            <p style={{ fontSize: 15, margin: 0, color: '#e8e6f0' }}>正在恢复…</p>
+            <p style={{ marginTop: 8, fontSize: 12, margin: '8px 0 0', color: 'rgba(232,230,240,0.55)' }}>
+              刚刚发布过新版本，正在载入最新内容。
+            </p>
+          </div>
+        </body>
+      </html>
+    );
+  }
 
   return (
     <html lang="zh">
