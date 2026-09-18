@@ -56,6 +56,7 @@ for (const kind of ['次限盘', '三限盘', '行运盘', '日返盘', '月返�
   check(!v.includes('俯视') && !v.includes('侧视'), `${kind} 无「俯视/侧视」按钮`, JSON.stringify(v))
   check(!(await has3D()), `${kind} 未渲染 3D 盘`)
   check(await has2D(), `${kind} 渲染线条盘`)
+  if (kind === '次限盘') await page.screenshot({ path: 'C:/Users/99192/WorkBuddy AI/2026-09-18-17-12-50/视图档位-次限盘无3D.png' })
 }
 
 // ============ 3. 切回本命盘: 三档恢复 ============
