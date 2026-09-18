@@ -65,6 +65,13 @@ export default class ChartBoundary extends Component<Props, State> {
         <p className="mt-2 text-[12px] leading-relaxed text-muted">
           换一个盘种或宫制通常就能恢复；也可以刷新本页重试。
         </p>
+        {/* 真实报错: 这层边界以前只给通用文案, 线上出问题时完全不知道是哪一句炸的
+            (2026-09-18 三限盘降级卡排查踩的坑)。留着这一行, 下次截图就能定位。 */}
+        {this.state.message && (
+          <p className="mt-3 break-all rounded-lg border border-white/[0.06] bg-black/25 px-3 py-2 text-left font-mono text-[10px] leading-relaxed text-muted/55">
+            {this.state.message}
+          </p>
+        )}
         <div className="mt-6 flex items-center justify-center gap-3">
           <button
             onClick={() => this.setState({ hasError: false, message: '' })}

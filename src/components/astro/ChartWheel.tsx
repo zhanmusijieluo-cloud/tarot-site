@@ -678,11 +678,45 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
     el.addEventListener('wheel', onWheel, { passive: false });
 
     // ---------- 渲染循环 ----------
-    let raf = 0, last = performance.now();
+    let raf = 0, last = performance.now(), idleFrame = 0;
     const tick = () => {
       const now = performance.now();
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
+
+      // ⚠️ 空闲降频 (2026-09-18 木木反馈「切盘很慢、点快了没反应」的一半原因):
+      //    行星球有常驻自转 (po.mesh.rotation.y += dt*0.12), 所以不能整帧停掉;
+      //    但"什么都没在动"时每 4 帧画一次就够 —— 自转 0.12 rad/s, 15fps 肉眼无差别。
+      //    实测: 盘面静止时主线程占用 26% (3 秒里忙 764ms, 脚本 337ms) 全花在这条空转的循环上,
+      //    而 React 的软导航/状态更新是低优先级任务, 主线程一直被占 → 点盘种要等 200ms 才变色。
+      //    降频后主线程腾出来, 交互立刻跟手。
+      let busy = dragging || Math.abs(yawV) > 0.0015;
+      if (!busy) {
+        const tilt = view === 'side' ? 1.02 : 0;
+        busy = Math.abs(spinY - root.rotation.y) > 1e-3
+          || Math.abs(tilt - root.rotation.x) > 1e-3
+          || Math.abs(orthoT - orthoC) > 1e-3;
+      }
+      if (!busy) {
+        for (const po of planetObjs) {
+          if (Math.abs(po.tScale - po.cScale) > 1e-3 || Math.abs(po.tDim - po.cDim) > 1e-3 || Math.abs(po.tEmi - po.cEmi) > 1e-3) { busy = true; break; }
+        }
+      }
+      if (!busy) {
+        for (const al of aspectLines) {
+          if (Math.abs(al.tOp - (al.mesh.material as THREE.LineBasicMaterial).opacity) > 1e-3) { busy = true; break; }
+        }
+      }
+      if (!busy) {
+        for (const hs of houseSlices) {
+          const ud = hs.userData as { baseOpacity: number; tOpacity?: number; tMix?: number; cMix?: number };
+          const mo = hs.material as THREE.MeshBasicMaterial;
+          if (Math.abs((ud.tOpacity ?? ud.baseOpacity) - mo.opacity) > 1e-3 || Math.abs((ud.tMix ?? 0) - (ud.cMix ?? 0)) > 1e-3) { busy = true; break; }
+        }
+      }
+      if (busy) idleFrame = 0;
+      else if (++idleFrame % 4 !== 0) { raf = requestAnimationFrame(tick); return; }
+
       if (!dragging) {
         yawV *= 0.88; spinY += yawV;
         if (Math.abs(yawV) < 0.0015) {
@@ -748,6 +782,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
     const onResize = () => {
       const w = mount.clientWidth, h = mount.clientHeight;
       if (!w || !h) return;
+      idleFrame = 0;   // 尺寸变了要立刻重画, 别等空闲降频的下一拍
       fitOrtho();
       renderer.setSize(w, h);
     };

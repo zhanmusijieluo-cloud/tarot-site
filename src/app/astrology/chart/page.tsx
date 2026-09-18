@@ -27,6 +27,75 @@ import { HOUSE_SYSTEM_ZH, type BirthData, type CastSettings, type HouseSystem } 
 
 const SYS_ZH = HOUSE_SYSTEM_ZH;
 
+/** 盘种条 key → API 盘型 (提到模块级: 常量对象, 放组件里每次 render 都是新引用, 会污染 useCallback 依赖) */
+const DYN_TYPE: Record<string, string> = { t: 'tertiary', s: 'progression', tr: 'transit', sr: 'solar-return', lr: 'lunar-return', arc: 'solar-arc' };
+
+// ============================================================
+// 盘种结果缓存 (2026-09-18 木木反馈「切盘很慢很慢」的正面解法)
+//
+// 实测一次切盘种 = ① App Router 的 RSC 往返 ~200ms (searchParams 变了就要问服务端)
+//                ② POST /api/astro/chart/dynamic ~630ms (星历计算)
+//                → 点下去到画完 800~1300ms, 期间界面毫无反馈 = 「点快了都反应不出来」
+//
+// 盘种数据是纯函数结果 (生辰+设置+盘型+日期 完全决定), 同一份反复切不该重算。
+// 这里做进程内缓存 + 空闲预取: 进入某个盘种后把同一天其余盘种在后台排好队算完,
+// 之后来回切就是 0ms 出盘, 只剩 URL 那一步。
+//
+// 缓存只活在当前标签页内存里, 刷新即空 —— 不做持久化, 免得和排盘设置/宫制改动打架。
+// ============================================================
+type DynPayload = {
+  birth: Record<string, unknown>;
+  settings: unknown;
+  type: string;
+  target: Record<string, number>;
+  lang: string;
+};
+
+const DYN_CACHE = new Map<string, DynamicChart>();
+const DYN_CACHE_MAX = 32;
+
+const dynKey = (p: DynPayload) => JSON.stringify([p.type, p.target, p.birth, p.settings, p.lang]);
+
+function rememberDyn(key: string, chart: DynamicChart) {
+  if (DYN_CACHE.size >= DYN_CACHE_MAX) {
+    // 简单 FIFO 淘汰 (Map 保插入序): 切到很久以前的日期也不会无限涨
+    const oldest = DYN_CACHE.keys().next().value;
+    if (oldest !== undefined) DYN_CACHE.delete(oldest);
+  }
+  DYN_CACHE.set(key, chart);
+}
+
+/** 同一份盘正在飞的那个 Promise —— 悬停预取和真点击复用它, 不会打两遍 */
+const DYN_INFLIGHT = new Map<string, Promise<DynamicChart>>();
+
+/**
+ * 取一份动态盘: 缓存 → 在飞 → 真请求。
+ * ⚠️ 故意不带 AbortSignal: 悬停/空闲预取的请求随时可能被真点击复用,
+ *    中途 abort 会把真请求一起掐掉。过期结果由调用方用序号守卫丢弃。
+ */
+function loadDyn(p: DynPayload): Promise<DynamicChart> {
+  const key = dynKey(p);
+  const cached = DYN_CACHE.get(key);
+  if (cached) return Promise.resolve(cached);
+  const flying = DYN_INFLIGHT.get(key);
+  if (flying) return flying;
+  const pr = fetch('/api/astro/chart/dynamic', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(p),
+  })
+    .then(async (r) => {
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || 'failed');
+      const chart = j.chart as DynamicChart;
+      rememberDyn(key, chart);
+      return chart;
+    })
+    .finally(() => { DYN_INFLIGHT.delete(key); });
+  DYN_INFLIGHT.set(key, pr);
+  return pr;
+}
+
 function ChartPageInner() {
   const { t, lang } = useI18n();
   const zhMode = lang !== 'en';
@@ -38,7 +107,6 @@ function ChartPageInner() {
   const aspectMode = (sp.get('ag') === 'list' ? 'list' : 'grid') as 'list' | 'grid';
   // ---- 动态盘: 盘种 dp=t三限/s次限/tr行运/sr日返/lr月返/arc日弧 (天象/法达占位); 目标日期 dpy/dpm/dpd ----
   const dpKey = sp.get('dp') ?? '';
-  const DYN_TYPE: Record<string, string> = { t: 'tertiary', s: 'progression', tr: 'transit', sr: 'solar-return', lr: 'lunar-return', arc: 'solar-arc' };
   const dynType = DYN_TYPE[dpKey] ?? '';
   const dpMode = dynType !== '';
   const nowD = new Date();
@@ -121,20 +189,75 @@ function ChartPageInner() {
     setEditOpen(false);
   };
 
-  // 次限盘数据 (dp=s 时请求; 换日期/设置自动重算)
+  // ---- 动态盘数据 (行运/次限/三限/日返/月返/日弧) ----
+  // dynLoading 只在「这份还没算过」时亮 (缓存命中/预取完成时不会有这一下)
+  const [dynLoading, setDynLoading] = useState(false);
+  const dynSeq = useRef(0);
+
+  const dynPayloadFor = useCallback((dpk: string): DynPayload | null => {
+    const type = DYN_TYPE[dpk];
+    if (!birth || !type) return null;
+    return {
+      birth: { ...birth, houseSystem: birth.houseSystem ?? 'placidus' } as unknown as Record<string, unknown>,
+      settings, type,
+      target: { year: dpy, month: dpm, day: dpd, hour: dpHour, minute: dpMin, tzOffset: tzLocal },
+      lang,
+    };
+  }, [birth, settings, dpy, dpm, dpd, dpHour, dpMin, tzLocal, lang]);
+
+  const dynPayload = useMemo(() => dynPayloadFor(dpKey), [dynPayloadFor, dpKey]);
+
+  /** 悬停盘种条 → 先把这一份算起来。不点就白算一次, 点下去就是秒开。 */
+  const warmDyn = useCallback((dpk: string) => {
+    const p = dynPayloadFor(dpk);
+    if (p && !DYN_CACHE.has(dynKey(p))) void loadDyn(p).catch(() => {});
+  }, [dynPayloadFor]);
+
   useEffect(() => {
-    if (!birth || !dynType) { setDyn(null); setDynErr(''); return; }
-    let alive = true;
+    if (!dynPayload) { setDyn(null); setDynErr(''); setDynLoading(false); return; }
+    const key = dynKey(dynPayload);
+    const hit = DYN_CACHE.get(key);
+    if (hit) { setDyn(hit); setDynErr(''); setDynLoading(false); return; }
+    const seq = ++dynSeq.current;   // 序号守卫: 只有最后一次请求的结果能落地
     setDynErr('');
-    fetch('/api/astro/chart/dynamic', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ birth: { ...birth, houseSystem: birth.houseSystem ?? 'placidus' }, settings, type: dynType, target: { year: dpy, month: dpm, day: dpd, hour: dpHour, minute: dpMin, tzOffset: tzLocal }, lang }),
-    })
-      .then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.error || 'failed'); if (alive) setDyn(j.chart as DynamicChart); })
-      .catch((e) => { if (alive) setDynErr(e instanceof Error ? e.message : t('astro.form.failed')); });
-    return () => { alive = false; };
-  }, [birth, settings, dynType, dpy, dpm, dpd, dpHour, dpMin, tzLocal, t]);
+    setDynLoading(true);
+    loadDyn(dynPayload)
+      .then((c) => { if (seq !== dynSeq.current) return; setDyn(c); setDynLoading(false); })
+      .catch((e) => {
+        if (seq !== dynSeq.current) return;
+        setDynErr(e instanceof Error ? e.message : t('astro.form.failed'));
+        setDynLoading(false);
+      });
+  }, [dynPayload, t]);
+
+  // 空闲预取: 当前盘出来之后, 把「同一天的其他盘种」串行排好队算完。
+  // 之后点盘种条 = 缓存直出, 这才是"切盘快"的关键。
+  // ⚠️ 两条约束:
+  //   ① 停手 900ms 再开始 —— 连续点日期时计时器不断重置, 不会每步都放 5 个请求;
+  //   ② 严格串行 —— 不跟正在进行的真请求抢带宽和服务端 CPU。
+  useEffect(() => {
+    if (!birth || !dynType) return;
+    let stop = false;
+    const others = ['tr', 't', 's', 'lr', 'sr', 'arc'].filter((k) => DYN_TYPE[k] && DYN_TYPE[k] !== dynType);
+    const timer = window.setTimeout(async () => {
+      for (const k of others) {
+        if (stop) return;
+        // 已经有几条在飞就先让路 (连续点日期时别让预取和真请求挤在一起)
+        while (DYN_INFLIGHT.size >= 3 && !stop) await new Promise((r) => window.setTimeout(r, 200));
+        if (stop) return;
+        const p = dynPayloadFor(k);
+        if (!p || DYN_CACHE.has(dynKey(p))) continue;
+        try { await loadDyn(p); } catch { /* 预取失败无所谓, 真点的时候会重试 */ }
+        await new Promise((r) => window.setTimeout(r, 150));
+      }
+    }, 900);
+    return () => { stop = true; window.clearTimeout(timer); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [birth, settings, dynType, dpy, dpm, dpd, dpHour, dpMin, tzLocal, lang]);
+
+  // 盘种条即时高亮: 点下去先亮, URL 追上来再归位 (否则要等 RSC 那 200ms 才有反应)
+  const [pendingDp, setPendingDp] = useState<string | null>(null);
+  const shownDp = pendingDp !== null && pendingDp !== dpKey ? pendingDp : dpKey;
 
   // ---- 法达盘 / 小限盘 (纯前端: 盘+外环, 用本命数据) / 天象盘 (纯天象) ----
   const bandKind: 'firdaria' | 'profection' | null = dpKey === 'fir' ? 'firdaria' : dpKey === 'prof' ? 'profection' : null;
@@ -311,14 +434,17 @@ function ChartPageInner() {
             ['prof', L(lang, '小限', 'Profection', 'プロフェクション')],
           ] as [string, string][]).map(([key, label]) => {
             const disabled = false;
-            const active = dpKey === key;
+            const active = shownDp === key;
             return (
               <button
                 key={key || 'natal'}
                 aria-disabled={disabled || undefined}
                 title={disabled ? `${label} · ${lang === 'ja' ? '開発中' : zhMode ? '开发中, 敬请期待' : 'in development'}` : undefined}
+                onMouseEnter={() => warmDyn(key)}   // 悬停即预取: 鼠标移过去的那 200ms 里盘已经在算了
+                onFocus={() => warmDyn(key)}
                 onClick={() => {
                   if (disabled) return;
+                  setPendingDp(key);   // 先亮起来, 不等路由
                   patchParams((p) => {
                     p.delete('sync'); p.delete('stab');   // 点盘种=退出合盘视图
                     if (key) p.set('dp', key);
@@ -331,6 +457,12 @@ function ChartPageInner() {
               </button>
             );
           })}
+          {/* 只有「这个盘种/这一天还没算过」才亮; 缓存命中或预取完成时不会有这一下 */}
+          {dynLoading && (
+            <span className="ml-1 animate-pulse rounded-full border border-accent/30 bg-accent/[0.06] px-2.5 py-1 text-[10.5px] tracking-[0.1em] text-accent/80">
+              {t('astro.form.casting')}
+            </span>
+          )}
         </div>
 
         {/* 控制行(仅小屏): 大屏时三按钮已嵌入盘内资料卡下方竖排 (爸爸: 嵌入卡下)
