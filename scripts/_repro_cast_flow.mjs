@@ -39,13 +39,21 @@ for (let i = 1; i <= ROUNDS; i++) {
     await page.evaluate(() => localStorage.setItem('oracle-lang', 'zh'))
 
     if (FROM_HOME) {
-      // 首页 → 点「星盘」导航项
-      await page.evaluate(() => {
-        const a = [...document.querySelectorAll('a[href="/astrology"], a[href*="/astrology"]')]
-          .find((x) => /星盘|占星/.test(x.textContent || ''))
-        a?.click()
+      // 首页 → 点「Astrology」卡片（首页导航是 button, 不是 <a> —— 之前用 a 选择器一直是空点）
+      // ⚠️ 用 dispatchEvent 而不是 .click(): React 合成事件对 .click() 有时不响应
+      const clicked = await page.evaluate(() => {
+        const b = [...document.querySelectorAll('button')].find((x) => (x.textContent || '').trim().startsWith('Astrology'))
+        if (!b) return 'not-found'
+        b.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+        return 'dispatched'
       })
-      await sleep(1500)
+      // 等软导航真正落到 /astrology（固定 sleep 会漏, 线上 CDN 冷启动慢）
+      let landed = false
+      for (let k = 0; k < 40; k++) {
+        await sleep(700)
+        if (page.url().includes('/astrology')) { landed = true; break }
+      }
+      if (!landed) console.log(`  [诊断] 首页点击=${clicked} 但仍停在 ${page.url()}`)
     } else {
       await page.goto('https://mustar.vip/astrology', { waitUntil: 'domcontentloaded', timeout: 90000 })
     }
