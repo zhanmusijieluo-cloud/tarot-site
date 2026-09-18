@@ -207,11 +207,26 @@ function ChartPageInner() {
 
   const dynPayload = useMemo(() => dynPayloadFor(dpKey), [dynPayloadFor, dpKey]);
 
-  /** 悬停盘种条 → 先把这一份算起来。不点就白算一次, 点下去就是秒开。 */
+  /** 盘种条点击后要跳到的 URL (与 onClick 里的 patchParams 保持同一套规则) */
+  const urlForDp = useCallback((dpk: string) => {
+    const p = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search);
+    p.delete('sync'); p.delete('stab');
+    if (dpk) p.set('dp', dpk);
+    else { p.delete('dp'); p.delete('dpy'); p.delete('dpm'); p.delete('dpd'); }
+    return `/astrology/chart?${p.toString()}`;
+  }, []);
+
+  /**
+   * 悬停盘种条 → 两件事一起预热。不点就白算一次, 点下去就是秒开:
+   *   ① 预取这一份盘数据 (省掉 ~630ms 的星历计算)
+   *   ② router.prefetch 目标 URL (省掉 ~200ms 的 RSC 往返 —— searchParams 一变
+   *      App Router 就要回服务端拿一次 payload, 这是切盘第二大开销)
+   */
   const warmDyn = useCallback((dpk: string) => {
     const p = dynPayloadFor(dpk);
     if (p && !DYN_CACHE.has(dynKey(p))) void loadDyn(p).catch(() => {});
-  }, [dynPayloadFor]);
+    if (DYN_TYPE[dpk]) router.prefetch(urlForDp(dpk));
+  }, [dynPayloadFor, router, urlForDp]);
 
   useEffect(() => {
     if (!dynPayload) { setDyn(null); setDynErr(''); setDynLoading(false); return; }
@@ -245,6 +260,7 @@ function ChartPageInner() {
         // 已经有几条在飞就先让路 (连续点日期时别让预取和真请求挤在一起)
         while (DYN_INFLIGHT.size >= 3 && !stop) await new Promise((r) => window.setTimeout(r, 200));
         if (stop) return;
+        router.prefetch(urlForDp(k));   // 顺带把目标 URL 的 RSC payload 也预取掉
         const p = dynPayloadFor(k);
         if (!p || DYN_CACHE.has(dynKey(p))) continue;
         try { await loadDyn(p); } catch { /* 预取失败无所谓, 真点的时候会重试 */ }

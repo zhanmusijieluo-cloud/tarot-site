@@ -53,18 +53,25 @@ await sleep(2500) // 让首屏动画/贴图生成沉淀
 console.log('序 盘种     点击→URL  API耗时  点击→画完  长任务(条/最长ms)')
 for (let i = 0; i < TABS.length; i++) {
   const tab = TABS[i]
-  const res = await page.evaluate(async (label) => {
+  let res
+  try {
+    res = await page.evaluate(async (label) => {
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
-    const beforePosts = window.__perf.posts.length
-    const beforeTasks = window.__perf.longtasks.length
     const url0 = location.search
-    const t0 = performance.now()
 
     const btn = [...document.querySelectorAll('button')].find((x) => (x.textContent || '').trim() === label)
     if (!btn) return { err: '找不到按钮 ' + label }
 
-    // 真实用户点击: 用 props.onClick 保证 transition 不被 3D 动画饿死 (与真人等价, 只是不受优先级影响)
+    // 拟真: 鼠标先移到按钮上 (触发悬停预取), 停 400ms 再点 —— 真人的操作节奏就是这样
     const pk = Object.keys(btn).find((k) => k.startsWith('__reactProps'))
+    btn[pk].onMouseEnter?.({ target: btn, currentTarget: btn })
+    await sleep(400)
+
+    // 计时从「点下去」开始; 悬停期间已经发出的请求不计入本次 API 耗时
+    const beforePosts = window.__perf.posts.length
+    const beforeTasks = window.__perf.longtasks.length
+    const t0 = performance.now()
+    // 用 props.onClick 保证 transition 不被 3D 动画饿死 (与真人点击等价, 只是不受优先级影响)
     btn[pk].onClick?.({ preventDefault() {}, stopPropagation() {}, nativeEvent: {}, target: btn, currentTarget: btn })
 
     // URL 变化时刻
@@ -90,7 +97,13 @@ for (let i = 0; i < TABS.length; i++) {
       taskCount: tasks.length, taskMax: tasks.length ? Math.max(...tasks.map((x) => x.dur)) : 0,
       gs: document.querySelectorAll('g[data-ring][data-name]').length,
     }
-  }, tab)
+    }, tab)
+  } catch (e) {
+    // 部署切换瞬间页面可能被 chunk 自愈重载, 会打断 evaluate —— 跳过这一轮, 不整体崩掉
+    console.log(`${String(i + 1).padStart(2)} ${tab.padEnd(8)} ⚠️ 页面导航打断 (${String(e).slice(0, 60)})`)
+    await sleep(3000)
+    continue
+  }
 
   if (res.err) { console.log(`${i + 1}  ${res.err}`); continue }
   const apiCell = res.api > 0 ? `${res.api}ms` : '缓存命中'
