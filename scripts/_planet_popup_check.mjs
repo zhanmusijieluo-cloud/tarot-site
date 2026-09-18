@@ -63,6 +63,21 @@ function clickPlanetButton() {
 
   const clicked = await page.evaluate(clickPlanetButton);
   await sleep(900);
+
+  // ⚠️ 假绿陷阱 (2026-09-18): 本脚本扫的是 document.body 文本 —— 弹窗根本没开时就没有中文残留,
+  //    会「✅ 0 残留」静默通过。而弹窗开不出来正是真实发生过的 BUG (空心描边符号没有命中面积,
+  //    点盘面星体穿透 → 不弹窗)。所以必须先断言弹窗真的存在, 否则这次扫描毫无意义。
+  const popup = await page.evaluate(() => {
+    const el = document.querySelector('[data-planet-detail]')
+    return el ? el.getAttribute('data-planet-detail') : null
+  });
+  if (!popup) {
+    console.error(`\n❌ 弹窗没打开 (点了行星按钮: ${clicked || '(未找到)'}) — 本次三语扫描无效, 不能算通过。`);
+    console.error('   先跑 scripts/_repro_dyn_hit.mjs 查命中层 (真鼠标), scripts/_repro_dyn_popup.mjs 查逻辑层。');
+    await browser.close();
+    process.exit(1);
+  }
+
   const hits = await page.evaluate(scanEval, RE.source);
 
   // 去重

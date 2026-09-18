@@ -3,7 +3,8 @@
 import puppeteer from 'puppeteer-core'
 
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
-const BASE = 'http://localhost:3021/astrology/chart?y=1995&mo=6&d=15&h=14&mi=30&cid=beijing&sys=placidus'
+const HOST = process.env.BASE || 'http://localhost:3000'
+const BASE = `${HOST}/astrology/chart?y=1995&mo=6&d=15&h=14&mi=30&cid=beijing&sys=placidus`
 
 const b = await puppeteer.launch({ executablePath: EDGE, headless: true, args: ['--no-sandbox'] })
 const page = await b.newPage()
