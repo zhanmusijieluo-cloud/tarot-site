@@ -66,22 +66,36 @@ const nodes = (g.all || []).filter((n) => n !== 'DIRECT' && n !== 'REJECT').slic
 console.log(`组「${GROUP}」取 ${nodes.length} 个节点做矩阵测试, 每节点 ${PER_NODE} 次\n`)
 
 const results = []
-for (const node of nodes) {
-  const sw = await api(`/proxies/${encodeURIComponent(GROUP)}`, 'PUT', { name: node })
-  if (sw.s !== 204) {
-    console.log(`  ${node.padEnd(28)} 切换失败 (${sw.s})`)
-    continue
+// ⚠️ 记录进入时的节点, 结束时必须还原 —— 否则会把用户的代理留在死节点上,
+//    表现为「所有走该组的站点都打不开」, 极易被误判成网站故障。
+const originalNode = g.now
+const restore = async () => {
+  if (originalNode && originalNode !== 'DIRECT') {
+    await api(`/proxies/${encodeURIComponent(GROUP)}`, 'PUT', { name: originalNode })
+    console.log(`\n(已还原节点: ${originalNode})`)
   }
-  await new Promise((r) => setTimeout(r, 1200))
-  const rows = []
-  for (let i = 0; i < PER_NODE; i++) rows.push(probe())
-  const ch = rows.filter((r) => r.status === 403 && r.mit).length
-  const ok = rows.filter((r) => r.status === 200).length
-  const region = rows.map((r) => r.region).find(Boolean) || ''
-  results.push({ node, ok, ch, region })
-  console.log(
-    `  ${node.padEnd(28)} 200=${String(ok).padStart(2)}/${PER_NODE}  403挑战=${String(ch).padStart(2)}  边缘=${region}`,
-  )
+}
+
+try {
+  for (const node of nodes) {
+    const sw = await api(`/proxies/${encodeURIComponent(GROUP)}`, 'PUT', { name: node })
+    if (sw.s !== 204) {
+      console.log(`  ${node.padEnd(28)} 切换失败 (${sw.s})`)
+      continue
+    }
+    await new Promise((r) => setTimeout(r, 1200))
+    const rows = []
+    for (let i = 0; i < PER_NODE; i++) rows.push(probe())
+    const ch = rows.filter((r) => r.status === 403 && r.mit).length
+    const ok = rows.filter((r) => r.status === 200).length
+    const region = rows.map((r) => r.region).find(Boolean) || ''
+    results.push({ node, ok, ch, region })
+    console.log(
+      `  ${node.padEnd(28)} 200=${String(ok).padStart(2)}/${PER_NODE}  403挑战=${String(ch).padStart(2)}  边缘=${region}`,
+    )
+  }
+} finally {
+  await restore()
 }
 
 const anyCh = results.some((r) => r.ch > 0)
