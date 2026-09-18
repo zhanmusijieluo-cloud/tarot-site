@@ -359,6 +359,7 @@ const ja: Record<string, string> = {
   'custom.gridSubtitle': 'カードウォールの好きな位置を選んでスプレッドを構成。順番に番号が付き、各位置に名前を付けられます。',
   'custom.offlineSubtitle': '布陣ページで選んだ位置と質問内容はそのままです。引いたカードを1枚ずつ入力してください。',
   'lnflow.customTitle': 'ルノルマン・カスタムスプレッド',
+  'scene.cardBackLabel': 'カード裏 {n}',
   'custom.canvasLabel': '空きマスをタップしてカードを置く',
   'custom.canvasHint': '横にスクロール · ミニマップで移動',
   'custom.miniMap': '全体マップ',

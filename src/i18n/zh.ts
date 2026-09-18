@@ -359,6 +359,7 @@ const zh: Record<string, string> = {
   'custom.gridSubtitle': '在牌墙上点选位置布阵，按点击顺序编号，可命名每个牌位',
   'custom.offlineSubtitle': '已从布阵页带入真实位置与问题背景，逐张填入你的牌即可。',
   'lnflow.customTitle': '雷诺曼自定义牌阵',
+  'scene.cardBackLabel': '第{n}张牌背',
   'custom.canvasLabel': '点击牌墙空位放置牌背',
   'custom.canvasHint': '横向可拖动，迷你地图可定位',
   'custom.miniMap': '全阵地图',

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { TAROT_DECK } from '@/lib/tarot';
+import { useI18n } from '@/i18n';
 
 const TAP_SLOP = 6;
 const MAX_ZOOM = 1.22;
@@ -143,14 +144,17 @@ class TarotSceneEngine {
   root: HTMLDivElement;
   field: HTMLDivElement;
   nodes: HTMLButtonElement[] = [];
+  /** 牌背无障碍标签文案（按屏内槽位取，语言切换时由 setCardLabelOf 重刷） */
+  cardLabelOf: (slot: number) => string;
 
-  constructor(opts: { container: HTMLElement; totalCards: number; maxSelect: number; selectedIds: number[]; onToggleCard: (id: number) => void; deck?: 'tarot' | 'lenormand' }) {
+  constructor(opts: { container: HTMLElement; totalCards: number; maxSelect: number; selectedIds: number[]; onToggleCard: (id: number) => void; deck?: 'tarot' | 'lenormand'; cardLabelOf?: (slot: number) => string }) {
     this.container = opts.container;
     this.totalCards = opts.totalCards;
     this.deck = opts.deck || 'tarot';
     this.maxSelect = opts.maxSelect;
     this.selectedIds = new Set(opts.selectedIds);
     this.onToggleCard = opts.onToggleCard;
+    this.cardLabelOf = opts.cardLabelOf || ((slot) => `Card back ${slot}`);
     this.disabled = false;
     this.isMobile = window.matchMedia('(max-width: 767px)').matches;
     this.cards = buildCards(opts.totalCards, this.isMobile, shuffleIds(opts.totalCards, opts.deck), opts.deck);
@@ -162,7 +166,7 @@ class TarotSceneEngine {
     this.root.appendChild(this.field);
     this.container.appendChild(this.root);
 
-    this.nodes = this.cards.map(card => {
+    this.nodes = this.cards.map((card, slot) => {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'tarot-scene-card';
@@ -170,7 +174,7 @@ class TarotSceneEngine {
       button.style.setProperty('--card-alpha', String(card.alpha));
       // 鎏金流光相位：每张卡错开，避免全体同步闪烁
       button.style.setProperty('--gilt-phase', `${(card.id % 12) * -0.55}s`);
-      button.setAttribute('aria-label', `第 ${card.id + 1} 张牌背`);
+      button.setAttribute('aria-label', this.cardLabelOf(slot + 1));
       button.dataset.deckId = String(card.id);
       // 鎏金卡背图层
       const giltImg = document.createElement('img');
@@ -438,6 +442,11 @@ class TarotSceneEngine {
     });
   }
 
+  setCardLabelOf(fn: (slot: number) => string) {
+    this.cardLabelOf = fn;
+    this.nodes.forEach((node, slot) => node.setAttribute('aria-label', fn(slot + 1)));
+  }
+
   setDisabled(v: boolean) {
     this.disabled = v;
     this.nodes.forEach(node => {
@@ -472,6 +481,9 @@ class TarotSceneEngine {
 export default function TarotScene({ maxSelect, selectedIds, onToggleCard, disabled, deck = 'tarot' }: TarotSceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<TarotSceneEngine | null>(null);
+  const { lang, t } = useI18n();
+  // 牌背 aria-label 取词器: 引擎只初始化一次, 用 ref 持有最新 t, 语言切换时由 setCardLabelOf 重刷
+  const cardLabelOf = useRef((slot: number) => t('scene.cardBackLabel', { n: slot }));
 
   useEffect(() => {
     const container = containerRef.current;
@@ -483,6 +495,7 @@ export default function TarotScene({ maxSelect, selectedIds, onToggleCard, disab
       selectedIds,
       onToggleCard,
       deck,
+      cardLabelOf: (slot) => t('scene.cardBackLabel', { n: slot }),
     });
     engine.init();
     engineRef.current = engine;
@@ -490,6 +503,11 @@ export default function TarotScene({ maxSelect, selectedIds, onToggleCard, disab
     // 只初始化一次
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 牌背节点由引擎命令式创建、不随 React 重渲染，切语言后要手动重刷 aria-label
+  useEffect(() => {
+    engineRef.current?.setCardLabelOf((slot) => t('scene.cardBackLabel', { n: slot }));
+  }, [lang, t]);
 
   useEffect(() => {
     engineRef.current?.setSelected(selectedIds);

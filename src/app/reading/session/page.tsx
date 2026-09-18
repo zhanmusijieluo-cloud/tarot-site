@@ -15,7 +15,12 @@ import { getCrossIdx, solveSpreadLayout, solveCustomGridLayout, CARD_H_RATIO, ca
 import { supabaseBrowser } from '@/lib/supabase';
 import { upsertSessionSmart, rateSessionSmart } from '@/lib/account/sessions';
 import { getMcpClient } from '@/mcp/client';
-import { useI18n } from '@/i18n';
+import { useI18n, type Lang } from '@/i18n';
+
+/** 引号按语言取排版习惯：en 用弯引号，zh/ja 用直角引号 */
+function quote(text: string, lang: Lang): string {
+  return lang === 'en' ? `\u201C${text}\u201D` : `「${text}」`;
+}
 
 /** sessionStorage 会话结构（由 /online 抽牌流程写入） */
 interface ReadingSession {
@@ -651,7 +656,7 @@ export default function ReadingSessionPage() {
 
       {/* ═══ 窗口一：牌阵展示（按牌阵位置摆放） ═══ */}
       <section id="spread-window" className="pb-24">
-        <WindowHead no="01" icon={<Gem className="h-4 w-4" />} title={t('session.window.spread')} sub={question ? `「${question}」` : undefined} />
+        <WindowHead no="01" icon={<Gem className="h-4 w-4" />} title={t('session.window.spread')} sub={question ? quote(question, lang) : undefined} />
         <Reveal mount>
           <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-10 sm:px-7 sm:py-12">
             {/* 绝对定位容器：每张牌落在其牌阵坐标点上（高度由几何求解器精确计算） */}

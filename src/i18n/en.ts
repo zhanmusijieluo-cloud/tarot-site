@@ -366,6 +366,7 @@ const en: Record<string, string> = {
   'custom.gridSubtitle': 'Pick positions on the card wall, numbered in order; name each position if you like.',
   'custom.offlineSubtitle': 'Your grid positions and question carry over — just fill in each card you drew offline.',
   'lnflow.customTitle': 'Custom Lenormand Spread',
+  'scene.cardBackLabel': 'Card back {n}',
   'custom.canvasLabel': 'Tap an empty slot to place a card back',
   'custom.canvasHint': 'Drag sideways to scroll · mini-map to navigate',
   'custom.miniMap': 'Overview Map',
