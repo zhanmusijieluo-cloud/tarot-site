@@ -13,6 +13,8 @@ const ORIGIN = 'https://mustar.vip'
 
 const BASE = 'y=1977&mo=3&d=18&h=22&mi=30&lat=30.56&lng=104.27&tz=8&city=' + encodeURIComponent('成都龙泉驿')
 const TABS = ['三限盘', '次限盘', '行运盘', '三限盘', '次限盘', '行运盘', '日返盘', '三限盘']
+// 悬停到点击之间的停留时间 (真人的操作节奏约 300~800ms)
+const HOVER_MS = Number((process.argv.find((a) => a.startsWith('--hover=')) || '').split('=')[1] || 400)
 
 const dir = mkdtempSync(join(tmpdir(), 'perfsw-'))
 const browser = await puppeteer.launch({
@@ -55,7 +57,7 @@ for (let i = 0; i < TABS.length; i++) {
   const tab = TABS[i]
   let res
   try {
-    res = await page.evaluate(async (label) => {
+    res = await page.evaluate(async (label, hoverMs) => {
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
     const url0 = location.search
 
@@ -65,7 +67,7 @@ for (let i = 0; i < TABS.length; i++) {
     // 拟真: 鼠标先移到按钮上 (触发悬停预取), 停 400ms 再点 —— 真人的操作节奏就是这样
     const pk = Object.keys(btn).find((k) => k.startsWith('__reactProps'))
     btn[pk].onMouseEnter?.({ target: btn, currentTarget: btn })
-    await sleep(400)
+    await sleep(hoverMs)
 
     // 计时从「点下去」开始; 悬停期间已经发出的请求不计入本次 API 耗时
     const beforePosts = window.__perf.posts.length
@@ -97,7 +99,7 @@ for (let i = 0; i < TABS.length; i++) {
       taskCount: tasks.length, taskMax: tasks.length ? Math.max(...tasks.map((x) => x.dur)) : 0,
       gs: document.querySelectorAll('g[data-ring][data-name]').length,
     }
-    }, tab)
+    }, tab, HOVER_MS)
   } catch (e) {
     // 部署切换瞬间页面可能被 chunk 自愈重载, 会打断 evaluate —— 跳过这一轮, 不整体崩掉
     console.log(`${String(i + 1).padStart(2)} ${tab.padEnd(8)} ⚠️ 页面导航打断 (${String(e).slice(0, 60)})`)
