@@ -19,6 +19,7 @@ import type { DynamicChart } from '@/lib/astro/dynamic';
 import BandResult from '@/components/astro/BandResult';
 import TimeStepper from '@/components/astro/TimeStepper';
 import SynastryResult, { type SynData } from '@/components/astro/SynastryResult';
+import ChartBoundary from '@/components/astro/ChartBoundary';
 import { loadArchivesSmart, saveArchiveSmart, deleteArchiveSmart, type Archive } from '@/lib/astro/archives';
 import type { VChart } from '@/components/astro/ChartWheel';
 import { birthFromParams, paramsFromBirth, settingsFromParams, settingsToParams } from '@/lib/astro/chart-url';
@@ -267,6 +268,16 @@ function ChartPageInner() {
   // 合盘模式: 不能修改盘资料 → 去掉「编辑资料」按钮版 (爸爸)
   const cornerActionsNoEdit = housesSettingsBlock;
 
+  // 盘面错误边界的复位键: 盘种/宫制/生辰/目标日期任一变化 → 自动清掉上次的崩溃态,
+  // 否则用户切走再切回来会一直卡在错误卡片上。
+  const chartBoundaryKey = [
+    dpKey || 'natal',
+    syncId || '-',
+    data?.houseSystemUsed ?? birth.houseSystem ?? 'placidus',
+    `${birth.year}-${birth.month}-${birth.day}-${birth.hour}-${birth.minute}`,
+    `${dpy}-${dpm}-${dpd}`,
+  ].join('|');
+
 
   return (
     <PageShell
@@ -362,16 +373,18 @@ function ChartPageInner() {
           !arc ? (
             <p className="py-20 text-center text-[12px] text-muted">{lang === 'ja' ? 'アーカイブが見つかりません（削除された可能性）' : zhMode ? '档案不存在 (可能已删除) — 请重新选择' : 'Archive not found'}</p>
           ) : syn ? (
-            <SynastryResult
-              syn={syn}
-              zhMode={zhMode}
-              tab={stab}
-              onTab={(tt) => patchParams((p) => p.set('stab', tt))}
-              aLabel={birth?.label ?? (lang === 'ja' ? 'メイン' : zhMode ? '主盘' : 'Main')}
-              bLabel={arc.label}
-              onExit={() => patchParams((p) => { p.delete('sync'); p.delete('stab'); })}
-              cornerActions={cornerActionsNoEdit}
-            />
+            <ChartBoundary resetKey={`syn|${chartBoundaryKey}`} label={lang === 'ja' ? 'シナストリーを描けませんでした' : zhMode ? '这张合盘没能画出来' : 'This synastry chart failed to render'}>
+              <SynastryResult
+                syn={syn}
+                zhMode={zhMode}
+                tab={stab}
+                onTab={(tt) => patchParams((p) => p.set('stab', tt))}
+                aLabel={birth?.label ?? (lang === 'ja' ? 'メイン' : zhMode ? '主盘' : 'Main')}
+                bLabel={arc.label}
+                onExit={() => patchParams((p) => { p.delete('sync'); p.delete('stab'); })}
+                cornerActions={cornerActionsNoEdit}
+              />
+            </ChartBoundary>
           ) : synErr ? (
             <p className="mb-5 rounded-xl border border-[#e8a08a]/25 bg-[#e8a08a]/[0.05] px-4 py-3 text-center text-[12px] text-[#e8a08a]">{synErr}</p>
           ) : (
@@ -413,30 +426,42 @@ function ChartPageInner() {
               />
             </div>
             {sky ? (
-              <ChartResult chart={sky} zhMode={zhMode} hideStatus cornerActions={cornerActions} />
+              <ChartBoundary resetKey={`sky|${chartBoundaryKey}`} label={lang === 'ja' ? 'トランシット図を描けませんでした' : zhMode ? '这张天象盘没能画出来' : 'This sky chart failed to render'}>
+                <ChartResult chart={sky} zhMode={zhMode} hideStatus cornerActions={cornerActions} />
+              </ChartBoundary>
             ) : (
               <p className="py-20 text-center text-[12px] tracking-[0.3em] text-muted">{t('astro.form.casting')}</p>
             )}
           </div>
         ) : dpMode ? (
           dyn ? (
-            <DynResult
-              dyn={dyn}
-              zhMode={zhMode}
-              target={{ year: dpy, month: dpm, day: dpd, hour: dpHour, minute: dpMin }}
-              onDate={(y, m, d, h, mi) => patchParams((p) => { p.set('dpy', String(y)); p.set('dpm', String(m)); p.set('dpd', String(d)); if (h !== undefined) p.set('dph', String(h)); if (mi !== undefined) p.set('dpmi', String(mi)); })}
-              onNow={backToNow}
-              cornerActions={cornerActions}
-            />
+            <ChartBoundary resetKey={`dyn|${chartBoundaryKey}`} label={lang === 'ja' ? 'この図を描けませんでした' : zhMode ? '这张推运盘没能画出来' : 'This chart failed to render'}>
+              <DynResult
+                dyn={dyn}
+                zhMode={zhMode}
+                target={{ year: dpy, month: dpm, day: dpd, hour: dpHour, minute: dpMin }}
+                onDate={(y, m, d, h, mi) => patchParams((p) => { p.set('dpy', String(y)); p.set('dpm', String(m)); p.set('dpd', String(d)); if (h !== undefined) p.set('dph', String(h)); if (mi !== undefined) p.set('dpmi', String(mi)); })}
+                onNow={backToNow}
+                cornerActions={cornerActions}
+              />
+            </ChartBoundary>
           ) : dynErr ? (
             <p className="mb-5 rounded-xl border border-[#e8a08a]/25 bg-[#e8a08a]/[0.05] px-4 py-3 text-center text-[12px] text-[#e8a08a]">{dynErr}</p>
           ) : (
             <p className="py-20 text-center text-[12px] tracking-[0.3em] text-muted">{t('astro.form.casting')}</p>
           )
         ) : bandKind ? (
-          data && <BandResult chart={data} zhMode={zhMode} kind={bandKind} cornerActions={cornerActions} onBandDate={jumpToDate} />
+          data && (
+            <ChartBoundary resetKey={`band|${chartBoundaryKey}`} label={lang === 'ja' ? 'この図を描けませんでした' : zhMode ? '这张盘没能画出来' : 'This chart failed to render'}>
+              <BandResult chart={data} zhMode={zhMode} kind={bandKind} cornerActions={cornerActions} onBandDate={jumpToDate} />
+            </ChartBoundary>
+          )
         ) : (
-          data && <ChartResult chart={data} zhMode={zhMode} aspectMode={aspectMode} onAspectMode={(m) => patchParams((p) => { if (m === 'list') p.set('ag', 'list'); else p.delete('ag'); })} cornerActions={cornerActions} />
+          data && (
+            <ChartBoundary resetKey={`natal|${chartBoundaryKey}`} label={lang === 'ja' ? 'ネイタル図を描けませんでした' : zhMode ? '这张本命盘没能画出来' : 'This natal chart failed to render'}>
+              <ChartResult chart={data} zhMode={zhMode} aspectMode={aspectMode} onAspectMode={(m) => patchParams((p) => { if (m === 'list') p.set('ag', 'list'); else p.delete('ag'); })} cornerActions={cornerActions} />
+            </ChartBoundary>
+          )
         )}
         {synOpen && (
           <div className="fixed inset-0 z-[80] flex items-center justify-center p-4" onClick={() => setSynOpen(false)}>

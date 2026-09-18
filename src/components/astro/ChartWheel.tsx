@@ -16,6 +16,7 @@ import { AspectLegend } from '@/components/astro/AspectGrid';
 import ChartWheel2D from '@/components/astro/ChartWheel2D';
 
 import { ASPECT_SYMBOL_OF,  PLANET_ZH_OF } from '@/lib/astro/chart';
+import { safeChart, EMPTY_CHART } from '@/lib/astro/safe-chart';
 
 // ---------- 与 API 返回对齐的数据类型 ----------
 export interface VPlanet {
@@ -188,6 +189,8 @@ interface SceneProps {
 function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }: SceneProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<{ set: (n: string | null) => void; reset?: () => void; zoom?: (f: number) => void } | null>(null);
+  // WebGL 建不起来 / 上下文被系统回收 → 不抛错, 退化成"3D 不可用"提示 (页面其余部分照常可用)
+  const [glFail, setGlFail] = useState(false);
 
   const ascLon = chart.angles.ascendant?.longitude ?? 0;
   const DIR = disp?.dir ?? 'ccw';
@@ -196,16 +199,48 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
   const hasHouses = chart.timeKnown && !!chart.cusps;
   const aspects = useMemo(() => [...chart.aspects].sort((a, b) => a.orb - b.orb).slice(0, 14), [chart]);
 
+  // ⚠️ 3D 场景重建的真正依据 = 盘「数据」变没变, 而不是传进来的对象引用变没变。
+  //    DynResult / SynastryResult 里的 viewChart 是每次 render 现拼的对象字面量,
+  //    若直接拿 chart 当 effect 依赖, 父组件任何一次重渲染 (悬停、切双环、点按钮)
+  //    都会把整个 WebGL 场景拆了重搭一遍 —— 连带重新上传全部 2K 行星贴图。
+  //    这既是卡顿源, 也是显存堆积源。用数据指纹做依赖, 只有真换盘才重建。
+  const chartKey = useMemo(() => {
+    const p = chart.planets.map((x) => `${x.name}@${Number(x.longitude).toFixed(4)}`).join(',');
+    const c = chart.cusps ? chart.cusps.map((x) => Number(x).toFixed(2)).join(',') : '-';
+    const i = chart.input;
+    return `${i.year}-${i.month}-${i.day}-${i.hour}-${i.minute}|${chart.houseSystemUsed}|${chart.timeKnown ? 1 : 0}|${p}|${c}|${aspects.length}`;
+  }, [chart, aspects]);
+
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
     const mm = mount; // fitOrtho 提升函数闭包用, 保 TS 非空窄化
     const W = mount.clientWidth, H = mount.clientHeight;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    // ⚠️ WebGL 建不起来的可能性真实存在: 显卡驱动异常、硬件加速被关、
+    //    或"同页 WebGL 上下文过多"被浏览器拒绝。原来这里裸 new, 一抛错
+    //    就是整页白屏 —— 改成接住并降级成提示。
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    } catch (err) {
+      console.error('[chart-3d] WebGL 初始化失败', err);
+      setGlFail(true);
+      return;
+    }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(W, H);
     mount.appendChild(renderer.domElement);
+
+    // 上下文被浏览器/系统回收时: 阻止默认行为 (否则 canvas 进入不可恢复态,
+    // 部分浏览器会连带把渲染进程一起干掉 → 用户看到"此页面无法加载"),
+    // 然后降级成提示, 保证页面其余部分还能用。
+    const onCtxLost = (e: Event) => {
+      e.preventDefault();
+      console.error('[chart-3d] WebGL context lost');
+      setGlFail(true);
+    };
+    renderer.domElement.addEventListener('webglcontextlost', onCtxLost);
 
     const scene = new THREE.Scene();
     // 正交相机: 平行投影, 盘面上下边缘同大小 (透视投影会让下沿大 24%, 即"上小下大"错觉根源)
@@ -365,6 +400,30 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
 
     // ---------- 行星: 同高度平铺 + 近距错层防遮挡 ----------
     const texLoader = new THREE.TextureLoader();
+    // 显式关掉 three 的纹理缓存: 保证每次 load 拿到的是独立纹理实例,
+    // 这样我们 dispose 掉自己的那份, 不会误伤别的场景 (默认就是 false, 写明防后人改)
+    THREE.Cache.enabled = false;
+    // ⚠️⚠️ 显存泄漏根治 (2026-09-18) ⚠️⚠️
+    // 行星贴图是 2K jpg (单张在显存里约 16MB), 而且是【异步】加载的。
+    // 原来直接 texLoader.load(...) 拿到的纹理没有进 disposables 清单 →
+    // 每次切盘种重建 3D 场景, 这批贴图都留在显存里没人回收;
+    // 来回切几次就是几百 MB~上 GB 显存堆积 → 浏览器掐掉 WebGL 上下文,
+    // 严重时直接干掉渲染进程 = 用户看到的"此页面无法加载 / 突然崩溃"。
+    // 修法: ① 加载回来的纹理一律登记进 disposables;
+    //       ② 若回调在场景已清理之后才到货, 立刻 dispose 掉, 不挂到任何材质上。
+    let sceneDisposed = false;
+    const loadTex = (url: string, apply: (t: THREE.Texture) => void) => {
+      texLoader.load(
+        url,
+        (t) => {
+          if (sceneDisposed) { t.dispose(); return; }
+          track(t);
+          apply(t);
+        },
+        undefined,
+        () => { /* 贴图 404/失败: 静默保留纯色球体, 不影响盘面 */ },
+      );
+    };
     const planetObjs: { name: string; group: THREE.Group; mesh: THREE.Mesh | THREE.Sprite; r: number; a: number; vr: number; tScale: number; cScale: number; tDim: number; cDim: number; tEmi: number; cEmi: number }[] = [];
     const footGroups: { name: string; obj: THREE.Group }[] = [];
     {
@@ -437,7 +496,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
           g.add(m);
           mesh = m;
           if (kind !== 'asteroid' && TEX[p.name]) {
-            texLoader.load(TEX[p.name], (t) => {
+            loadTex(TEX[p.name], (t) => {
               t.colorSpace = THREE.SRGBColorSpace;
               (mat as THREE.MeshPhongMaterial).map = t;
               (mat as THREE.MeshPhongMaterial).needsUpdate = true;
@@ -470,7 +529,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
               uvA.setXY(i, (v3.length() - br * 1.4) / (br * 0.95), 0.5);
             }
             const ringMat = track(new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0 }));
-            texLoader.load('/textures/planet/2k_saturn_ring_alpha.png', (t) => {
+            loadTex('/textures/planet/2k_saturn_ring_alpha.png', (t) => {
               t.colorSpace = THREE.SRGBColorSpace;
               ringMat.map = t; ringMat.opacity = 0.9; ringMat.needsUpdate = true;
             });
@@ -694,6 +753,7 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
     ro.observe(mount);
 
     return () => {
+      sceneDisposed = true;   // 先立旗: 之后才到货的贴图回调会自我了断, 不挂上已销毁的材质
       cancelAnimationFrame(raf);
       ro.disconnect();
       window.removeEventListener('resize', onResize);
@@ -701,19 +761,48 @@ function ChartScene({ chart, zhMode, view, disp, sceneApi, selected, onSelect }:
       window.removeEventListener('pointerup', onUp);
       el.removeEventListener('pointerdown', onDown);
       el.removeEventListener('wheel', onWheel);
-      disposables.forEach((d) => d.dispose());
-      renderer.dispose();
+      renderer.domElement.removeEventListener('webglcontextlost', onCtxLost);
+      disposables.forEach((d) => { try { d.dispose(); } catch { /* 忽略 */ } });
+      // ⚠️ 关键: 只调 renderer.dispose() 不会归还 GPU 上下文 ——
+      //    切盘种会重建场景, 快速来回切就不断堆积上下文, 浏览器上限一到
+      //    就直接掐掉最早的 context, 极端情况连带渲染进程一起崩。
+      //    forceContextLoss() 显式释放, 是 three.js 官方推荐的销毁收尾。
+      try {
+        renderer.dispose();
+        renderer.forceContextLoss();
+      } catch { /* 忽略 */ }
       if (renderer.domElement.parentElement === mount) mount.removeChild(renderer.domElement);
       apiRef.current = null;
     };
+  // 依赖用 chartKey (数据指纹) 而非 chart (对象引用): 见上方注释
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chart, view]);
+  }, [chartKey, view]);
 
   // selected 变化 → 只改高亮, 不动盘
   useEffect(() => { apiRef.current?.set(selected); }, [selected]);
 
   // 俯视: 满高正方形(3D盘为透明层, 与背后相位网格同层 → 方圆相融, 网格四角可见); 侧视: 扁面板
   // 固定大小: 弹窗不再挤压盘面 (A方案定稿)
+  if (glFail) {
+    return (
+      <div className="flex h-[min(60vh,560px)] w-full flex-col items-center justify-center gap-2 rounded-xl border border-white/[0.1] bg-black/20 px-6 text-center">
+        <p className="text-[13px] text-frost/85">
+          {zhMode ? '3D 视图暂时不可用' : '3D view unavailable'}
+        </p>
+        <p className="max-w-sm text-[11.5px] leading-relaxed text-muted">
+          {zhMode
+            ? '可能是浏览器硬件加速被关闭或显存不足。切回「经典 · 线条盘」看同一张盘，内容完全一致。'
+            : 'Hardware acceleration may be off, or GPU memory is low. Switch back to the classic line chart — same data.'}
+        </p>
+        <button
+          onClick={() => setGlFail(false)}
+          className="mt-2 rounded-full border border-accent/50 bg-accent/[0.08] px-4 py-1.5 text-[11px] tracking-[0.15em] text-accent transition-colors hover:border-accent"
+        >
+          {zhMode ? '重试' : 'Retry'}
+        </button>
+      </div>
+    );
+  }
   return <div ref={mountRef} className="w-full cursor-grab active:cursor-grabbing h-[min(84vh,880px)]" />;
 }
 
@@ -869,7 +958,7 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual, sel }: {
 }
 
 // ---------- 对外入口 ----------
-export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect, gridSlot, cornerSlot, actions, dualRing, onDualToggle, outerBand, onBandDate, viewModes }: {
+export default function ChartWheel({ chart: chartRaw, zhMode, selected: selProp, onSelect, gridSlot, cornerSlot, actions, dualRing, onDualToggle, outerBand, onBandDate, viewModes }: {
   chart: VChart; zhMode: boolean;
   /** 受控选中 (相位网格行头共用): 不传则内部自管 */
   selected?: string | null; onSelect?: (name: string | null) => void;
@@ -892,6 +981,13 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
   viewModes?: readonly ChartView[];
 }) {
   // VChart.extraPoints 由 chart 自带 (推运盘: 本命端黄经)
+
+  // 盘数据兜底: 任何缺失的数组/对象字段都补成安全默认值。
+  // 缺一个字段不该让整页崩掉 (全站所有盘面渲染都经过这里)。
+  const chart: VChart = useMemo(
+    () => safeChart(chartRaw) ?? EMPTY_CHART,
+    [chartRaw],
+  );
 
   const { t, lang } = useI18n();
   const [viewRaw, setView] = useState<ChartView>('classic');   // 爸爸: 排完盘进来就是线条盘

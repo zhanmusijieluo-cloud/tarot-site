@@ -13,6 +13,7 @@ import ChartWheel, { type VChart, type VPlanet } from '@/components/astro/ChartW
 import AspectGrid, { AspectLegend, ASPECT_COLOR, fmtOrbDms, aspectMatrixPoints } from '@/components/astro/AspectGrid';
 import NatalCard from '@/components/astro/NatalCard';
 import StatusTabs from '@/components/astro/StatusTabs';
+import { safeChart, EMPTY_CHART } from '@/lib/astro/safe-chart';
 
 const RECEPTION_KIND_ZH: Record<string, string> = {
   domicile: '本垣', exaltation: '曜升', triplicity: '三分', detriment: '失势', fall: '落陷',
@@ -50,7 +51,7 @@ function Panel({ title, children, className = '' }: { title: string; children: R
   );
 }
 
-export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAspectMode, cornerActions, hideStatus }: {
+export default function ChartResult({ chart: chartRaw, zhMode, aspectMode: modeProp, onAspectMode, cornerActions, hideStatus }: {
   chart: VChart; zhMode: boolean;
   /** 相位区模式受控于页面 URL (ag=grid); 不传则内部自管 */
   aspectMode?: 'list' | 'grid';
@@ -60,6 +61,8 @@ export default function ChartResult({ chart, zhMode, aspectMode: modeProp, onAsp
   /** 天象盘模式: 隐藏底部状态区 (法达/小限等时序对本命才有意义) */
   hideStatus?: boolean;
 }) {
+  // 盘数据兜底: chart.planets / aspects / receptions / warnings 缺一个都不该让整页崩
+  const chart: VChart = React.useMemo(() => safeChart(chartRaw) ?? EMPTY_CHART, [chartRaw]);
   const { t, lang } = useI18n();
   const [selected, setSelected] = useState<string | null>(null);
   void modeProp; void onAspectMode; // 矩阵与清单同屏后不再需要切换 (URL ag 参数保留兼容旧链接)
