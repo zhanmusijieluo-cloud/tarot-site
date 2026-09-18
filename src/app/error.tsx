@@ -12,7 +12,7 @@
 //    用户看到的是「正在恢复…」而不是错误页。真故障 (第二次仍失败) 才显示错误页。
 
 import { useEffect, useState } from 'react';
-import { tryStaleAssetRecovery } from '@/lib/chunk-recovery';
+import { shouldStaleAssetRecover, reloadForStaleAsset } from '@/lib/chunk-recovery';
 
 type Lang = 'zh' | 'en' | 'ja';
 
@@ -77,8 +77,13 @@ export default function Error({
     // 留一份现场, 便于线上定位
     console.error('[route-error]', error?.name, error?.message, error?.digest, error?.stack);
     // 部署切换类错误 → 自动硬刷新一次 (冷却窗口内不再重复, 真故障会落到错误页)
-    if (tryStaleAssetRecovery(error)) setHealing(true);
+    if (shouldStaleAssetRecover(error)) setHealing(true);
   }, [error]);
+
+  // 先让「正在恢复…」渲染出来, 再硬刷新 —— 直接 reload 会变成白屏一闪
+  useEffect(() => {
+    if (healing) reloadForStaleAsset();
+  }, [healing]);
 
   const s = TEXT[lang];
   const msg = (() => {

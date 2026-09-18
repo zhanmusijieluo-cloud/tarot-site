@@ -14,7 +14,7 @@
 // ============================================================
 
 import { useEffect, useState } from 'react';
-import { tryStaleAssetRecovery } from '@/lib/chunk-recovery';
+import { shouldStaleAssetRecover, reloadForStaleAsset } from '@/lib/chunk-recovery';
 
 export default function GlobalError({
   error,
@@ -34,11 +34,16 @@ export default function GlobalError({
     }
     // 部署切换类错误 → 自动硬刷新一次 (冷却窗口内不再重复)
     try {
-      if (tryStaleAssetRecovery(error)) setHealing(true);
+      if (shouldStaleAssetRecover(error)) setHealing(true);
     } catch {
       /* 忽略: 兜底逻辑自身绝不能把白屏搞得更白 */
     }
   }, [error]);
+
+  // 先渲染过渡态再刷新
+  useEffect(() => {
+    if (healing) reloadForStaleAsset();
+  }, [healing]);
 
   const btn: React.CSSProperties = {
     display: 'inline-block',

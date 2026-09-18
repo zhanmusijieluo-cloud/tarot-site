@@ -30,6 +30,19 @@ page.on('console', (m) => { if (m.type() === 'error') errs.push('[console] ' + m
 page.on('requestfailed', (r) => failed.push(`${r.failure()?.errorText || '?'} ${r.url().slice(0, 100)}`))
 page.on('response', (r) => { if (r.status() >= 400) failed.push(`HTTP ${r.status()} ${r.url().slice(0, 100)}`) })
 
+// 页面内高频采样: 「正在恢复…」只显示几百毫秒, Node 侧 700ms 轮询必然漏掉。
+// 写 sessionStorage 而不是内存变量 —— reload 后还要能读到。
+await page.evaluateOnNewDocument(() => {
+  const tick = () => {
+    try {
+      const t = document.body ? document.body.innerText : '';
+      if (t.includes('正在恢复')) sessionStorage.setItem('__sawHealing', '1');
+      if (t.includes('页面出了点问题')) sessionStorage.setItem('__sawErrPage', '1');
+    } catch { /* 忽略 */ }
+  };
+  setInterval(tick, 40);
+});
+
 await page.goto('https://mustar.vip/', { waitUntil: 'domcontentloaded', timeout: 90000 })
 await page.evaluate(() => localStorage.setItem('oracle-lang', 'zh'))
 await page.goto('https://mustar.vip/astrology', { waitUntil: 'domcontentloaded', timeout: 90000 })
@@ -88,6 +101,15 @@ for (let k = 0; k < 60; k++) {
 }
 
 console.log(`\n落在: ${st.path}`)
+// 跨 reload 的持久化采样结果
+const persisted = await page
+  .evaluate(() => ({
+    healing: sessionStorage.getItem('__sawHealing') === '1',
+    errPage: sessionStorage.getItem('__sawErrPage') === '1',
+  }))
+  .catch(() => ({ healing: false, errPage: false }))
+if (persisted.healing) sawHealing = true
+if (persisted.errPage) sawErrPage = true
 console.log(`过程: 出现过错误页=${sawErrPage} · 出现过恢复态=${sawHealing}`)
 console.log(`终态: 错误页=${st.errPage} 盘面卡=${st.boundary} 行星组=${st.planetGs}`)
 console.log(`页面开头: ${st.bodyHead}`)

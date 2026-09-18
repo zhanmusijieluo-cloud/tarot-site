@@ -10,6 +10,7 @@ const MARKERS = [
   ['error.tsx（路由级错误边界）', '不是你的操作有问题'],
   ['ChartBoundary（盘面级边界）', '换一个盘种或宫制通常就能恢复'],
   ['错误页自报错 [route] 标记', '[route]'],
+  ['chunk-recovery（部署切换自动恢复）', '正在恢复'],
 ]
 
 const r = await fetch(PAGE, { signal: AbortSignal.timeout(25000) })

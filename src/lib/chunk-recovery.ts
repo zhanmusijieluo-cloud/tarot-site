@@ -28,10 +28,13 @@ export function isStaleAssetError(e: unknown): boolean {
 }
 
 /**
- * 尝试自动恢复: 命中且不在冷却窗口内 → 立即硬刷新并返回 true。
- * 调用方拿到 true 后应渲染「正在恢复…」而不是错误页。
+ * 判断是否该自动恢复: 命中且不在冷却窗口内 → 记下时间戳并返回 true。
+ *
+ * ⚠️ 这里**刻意不自己 reload** —— 早期版本直接 `location.reload()`, 结果是
+ *    浏览器重载抢在 React 渲染之前, 用户看到的是**白屏**而不是「正在恢复…」。
+ *    正确姿势: 调用方拿到 true → 先 setState 渲染过渡态 → 下一帧再 reload。
  */
-export function tryStaleAssetRecovery(e: unknown): boolean {
+export function shouldStaleAssetRecover(e: unknown): boolean {
   if (typeof window === 'undefined') return false;
   if (!isStaleAssetError(e)) return false;
   try {
@@ -41,6 +44,15 @@ export function tryStaleAssetRecovery(e: unknown): boolean {
   } catch {
     return false; // 隐私模式等拿不到 sessionStorage → 不冒险自动刷新
   }
-  window.location.reload();
   return true;
+}
+
+/** 渲染过渡态之后调用: 给浏览器一帧时间把「正在恢复…」画出来, 再硬刷新 */
+export function reloadForStaleAsset(delayMs = 450): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.setTimeout(() => window.location.reload(), delayMs);
+  } catch {
+    /* 忽略 */
+  }
 }
