@@ -87,13 +87,28 @@ export default function DynResult({ dyn, zhMode, target, onDate, onNow, cornerAc
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dyn]);
   // 盘面相位线 = 外盘「自身」相位 (推运星两两之间); 「推运 × 本命」的 cross 表仍在下方独立渲染
+  // ⚠️ 双环态例外 (木木 2026-09-18 抓 BUG): 双环 = 内环本命 + 外环推运的对比视图,
+  //    盘面弦线与弹窗相位都必须是「环间相位」(crossAspects 映射成 ·in/·out 环标)。
+  //    原方案双环下仍传 outerAspects(端名不带环标), 而弹窗按选中串 "Jupiter·out" 精确过滤 → 恒空,
+  //    木木点外环木星看不到「外环木星 合 内环木星」。(合盘 SynastryResult 早已做同样的 mapEnd, 此处补齐)
+  const progSfx = React.useMemo(() => {
+    for (const x of dyn.crossAspects) {
+      const m = /·([PTR])$/.exec(x.a) ?? /·([PTR])$/.exec(x.b);
+      if (m) return `·${m[1]}`;
+    }
+    return '·P';
+  }, [dyn.crossAspects]);
+  const crossMapped = React.useMemo(() => {
+    const mapEnd = (e: string) => (e.endsWith(progSfx) ? `${e.slice(0, -progSfx.length)}·out` : `${e}·in`);
+    return dyn.crossAspects.map((x) => ({ ...x, a: mapEnd(x.a), b: mapEnd(x.b) }));
+  }, [dyn.crossAspects, progSfx]);
   // 宫位圈/四轴: 日返/月返 = 独立全盘 → 用外盘自己的宫位与四轴 (太阳落在返照盘自己的宫位里);
   //             次限/三限/日弧/行运 = 沿用本命宫位 (推运盘标准画法, 四轴不动)
   const outerOwnHouses = !!outer?.cusps && outer.cusps.length >= 12;
   const viewChart: VChart = outer ? {
     ...natal,
     planets: outer.planets as unknown as VPlanet[],
-    aspects: (dyn.outerAspects ?? dyn.crossAspects) as unknown as VChart['aspects'],
+    aspects: (dual ? crossMapped : (dyn.outerAspects ?? dyn.crossAspects)) as unknown as VChart['aspects'],
     ...(outerOwnHouses ? {
       cusps: outer.cusps as number[],
       angles: outer.angles as unknown as VChart['angles'],

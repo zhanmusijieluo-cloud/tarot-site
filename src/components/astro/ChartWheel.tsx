@@ -740,8 +740,11 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual, sel }: {
   const otherOf = (a: { a: string; b: string }) => (nmS(a.a) === p.name ? a.b : a.a);
     // 相位列表: 先按对方星体重要度倒序 (BODY_IMP 模块级), 同级再按容许度
   const selRing = sel && (sel.endsWith('·in') || sel.endsWith('·out')) ? sel : null;
+  // 盘面 aspects 是否带环标记 ·in/·out (双环/合盘 = 是; 单环推运 = 否)
+  // (木木 2026-09-18 抓 BUG: 单环选中残留 ·out 后缀切回单环时, 精确环匹配会全落空 → 退化为按星名匹配)
+  const hasRingMarks = chart.aspects.some((a) => /·(?:in|out)$/.test(a.a) || /·(?:in|out)$/.test(a.b));
   const myAspects = [...chart.aspects]
-    .filter((a) => (selRing ? a.a === selRing || a.b === selRing : nmS(a.a) === p.name || nmS(a.b) === p.name))
+    .filter((a) => (selRing && hasRingMarks ? a.a === selRing || a.b === selRing : nmS(a.a) === p.name || nmS(a.b) === p.name))
     .sort((x, y) => impOf(nmS(otherOf(y))) - impOf(nmS(otherOf(x))) || x.orb - y.orb);
   // 木木体系(爸爸4讲P29-30): 接纳=须成相位的单向许可; 互容=双向同住无需相位; 与古典/IbnEzra完全一致
   // 按 pair 归并: 互容时双向记录合成一条 (此前只显示单向"互容", 漏掉本星对对方的接纳方向 — 爸爸抓到)
@@ -771,7 +774,7 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual, sel }: {
   })();
 
   return (
-    <div className="mt-3 rounded-2xl border border-white/[0.12] bg-[#0c101c]/[0.97] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.55)] backdrop-blur-md" style={{ animation: 'rise-in 0.35s cubic-bezier(0.16,1,0.3,1)' }}>
+    <div data-planet-detail={sel ?? p.name} className="mt-3 rounded-2xl border border-white/[0.12] bg-[#0c101c]/[0.97] p-5 shadow-[0_18px_50px_rgba(0,0,0,0.55)] backdrop-blur-md" style={{ animation: 'rise-in 0.35s cubic-bezier(0.16,1,0.3,1)' }}>
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           <span className="text-3xl text-accent">{p.symbol}</span>
