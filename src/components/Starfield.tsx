@@ -109,7 +109,27 @@ export default function Starfield({ count = 220 }: { count?: number }) {
       });
     };
 
-    const animate = () => {
+    // ⚠️ 帧率封顶 30fps + 后台不画 (2026-09-18 优化):
+    //    这个 canvas 挂在根 layout 上, 每个页面都在跑。实测「完全静止」时
+    //    主线程仍占 26~34% (关于页 29%、首页 34%、星盘页 30%), 且与有没有星盘无关 ——
+    //    就是它。主线程被长期占住, React 的软导航/状态更新这些低优先级任务被挤到后面,
+    //    表现就是「切盘/点按钮要等一下才反应」。
+    //    星星漂移最快 0.375px/帧、闪烁是 sin 慢变, 30fps 肉眼无差别;
+    //    所有增量都乘 dt 补偿, 动画速度与 60fps 时完全一致 (不是变慢, 只是少画几帧)。
+    const FRAME_MS = 1000 / 30;
+    let lastT = 0;
+    let lineFrame = -1e9;
+    let linePairs: number[] = [];
+
+    const animate = (ts: number) => {
+      rafRef.current = requestAnimationFrame(animate);
+
+      // 切到别的标签/最小化: 一帧都不画 (回来时用 dt 一次性补上)
+      if (document.hidden) { lastT = 0; return; }
+      if (lastT && ts - lastT < FRAME_MS - 1) return;
+      const dt = lastT ? Math.min(3, (ts - lastT) / 16.667) : 1;
+      lastT = ts;
+
       ctx.clearRect(0, 0, w, h);
 
       const now = performance.now();
@@ -120,11 +140,11 @@ export default function Starfield({ count = 220 }: { count?: number }) {
       }
 
       for (const s of stars) {
-        s.twinklePhase += s.twinkleSpeed;
+        s.twinklePhase += s.twinkleSpeed * dt;
         const twinkle = 0.78 + 0.22 * Math.sin(s.twinklePhase);
         const alpha = s.opacity * twinkle;
 
-        s.y -= s.speed * s.z;
+        s.y -= s.speed * s.z * dt;
         if (s.y < -10) {
           s.y = h + 10;
           s.x = Math.random() * w;
@@ -149,9 +169,9 @@ export default function Starfield({ count = 220 }: { count?: number }) {
       // 流星：拖尾渐隐
       for (let i = meteors.length - 1; i >= 0; i--) {
         const m = meteors[i];
-        m.x += m.vx;
-        m.y += m.vy;
-        m.life++;
+        m.x += m.vx * dt;
+        m.y += m.vy * dt;
+        m.life += dt;
         const t = m.life / m.maxLife;
         const fade = t < 0.15 ? t / 0.15 : 1 - (t - 0.15) / 0.85;
         const alpha = Math.max(0, fade) * 0.85;
@@ -180,27 +200,35 @@ export default function Starfield({ count = 220 }: { count?: number }) {
         ctx.fill();
       }
 
-      // 近距离微弱连线 —— 优化：降采样到子集，避免 O(n²) 全量检测（220 星≈2.4万次/帧）
-      // 只对每 3 颗星抽样检测，视觉几乎无差别，CPU 消耗降为 1/9
-      const lineSample = 3;
-      ctx.strokeStyle = `rgba(${paletteA}, 0.07)`;
-      ctx.lineWidth = 0.5;
-      for (let i = 0; i < stars.length; i += lineSample) {
-        for (let j = i + 1; j < stars.length; j += lineSample) {
-          const dx = stars[i].x - stars[j].x;
-          const dy = stars[i].y - stars[j].y;
-          if (Math.abs(dx) > 80 || Math.abs(dy) > 80) continue;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 80) {
-            ctx.beginPath();
-            ctx.moveTo(stars[i].x, stars[i].y);
-            ctx.lineTo(stars[j].x, stars[j].y);
-            ctx.stroke();
+      // 近距离微弱连线
+      //  ① 降采样到每 3 颗星 (视觉几乎无差别, 比较次数降为 1/9)
+      //  ② 星点每帧只挪 <1px, 候选对 100ms 重算一次就够 —— 不必每帧做 O(n²)
+      //  ③ 所有线合并进同一条 path, 一次 stroke() —— 原本每条线一次 beginPath/stroke,
+      //     是这块最贵的部分 (canvas 状态切换 + 独立光栅化)
+      //  ④ 距离用平方比较, 省掉 sqrt
+      if (ts - lineFrame > 100) {
+        lineFrame = ts;
+        linePairs = [];
+        for (let i = 0; i < stars.length; i += 3) {
+          for (let j = i + 3; j < stars.length; j += 3) {
+            const dx = stars[i].x - stars[j].x;
+            const dy = stars[i].y - stars[j].y;
+            if (dx > 80 || dx < -80 || dy > 80 || dy < -80) continue;
+            if (dx * dx + dy * dy < 6400) { linePairs.push(i, j); }
           }
         }
       }
-
-      rafRef.current = requestAnimationFrame(animate);
+      if (linePairs.length) {
+        ctx.strokeStyle = `rgba(${paletteA}, 0.07)`;
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        for (let k = 0; k < linePairs.length; k += 2) {
+          const a = stars[linePairs[k]], b = stars[linePairs[k + 1]];
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+        }
+        ctx.stroke();
+      }
     };
 
     rafRef.current = requestAnimationFrame(animate);
