@@ -17,8 +17,12 @@ const run = async (label, args, times) => {
       await sleep(2500)
       const wheel = await page.evaluate(() => !!document.querySelector('svg.select-none')).catch(() => false)
       const body = await page.evaluate(() => document.body.innerText.replace(/\s+/g, ' ').slice(0, 60)).catch(() => '')
-      if (r?.status() === 200 && wheel) ok++
-      else notes.push('#' + (i + 1) + ' status=' + r?.status() + ' 盘面=' + wheel + ' body=' + body)
+      // 注意: 第 2 次起浏览器命中缓存会返回 304, 不能只认 200。
+      // 判据以「盘面是否渲染出来」为准, 状态码 200/304 均可。
+      const st = r?.status()
+      const statusOk = st === 200 || st === 304 || r?.ok()
+      if (statusOk && wheel) ok++
+      else notes.push('#' + (i + 1) + ' status=' + st + ' 盘面=' + wheel + ' body=' + body)
     } catch (e) {
       notes.push('#' + (i + 1) + ' ' + String(e).slice(0, 80))
     }
