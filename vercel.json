@@ -1,12 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "regions": ["hnd1"],
-  "redirects": [
-    {
-      "source": "/:path*",
-      "has": [{ "type": "host", "value": "www.mustar.vip" }],
-      "destination": "https://mustar.vip/:path*",
-      "permanent": true
-    }
-  ]
+  "regions": ["hnd1"]
 }
