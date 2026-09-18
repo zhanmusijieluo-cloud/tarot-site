@@ -10,6 +10,7 @@ import LogoSpinner from '@/components/LogoSpinner';
 import { type DrawnCard, getCardImage, CARD_EN_NAMES, TAROT_DECK, SPREADS } from '@/lib/tarot';
 import { LN_DECK, lnImage, LN_SPREADS } from '@/lib/lenormand';
 import { localizedCardName, CARD_JA_NAMES } from '@/lib/card-names';
+import { CARD_KEYWORDS } from '@/lib/card-keywords';
 import { spreadPositions } from '@/lib/spread-i18n';
 import { getCrossIdx, solveSpreadLayout, solveCustomGridLayout, CARD_H_RATIO, cardWClassToPx } from '@/lib/spread-layout';
 import { supabaseBrowser } from '@/lib/supabase';
@@ -19,7 +20,20 @@ import { useI18n, type Lang } from '@/i18n';
 
 /** 引号按语言取排版习惯：en 用弯引号，zh/ja 用直角引号 */
 function quote(text: string, lang: Lang): string {
-  return lang === 'en' ? `\u201C${text}\u201D` : `「${text}」`;
+  return lang === 'en' ? `“${text}”` : `「${text}」`;
+}
+
+/**
+ * 牌名下方那行关键词。
+ * tarot.ts 的 upright/reversedMeaning 只有中文，en/ja 直接取会漏出中文，
+ * 故塔罗走 CARD_KEYWORDS；雷诺曼暂无三语短串（ln-details.json 只有整段 core），保持原样。
+ * 正/逆位信息本就标在上方牌名处，关键词行不再区分朝向。
+ */
+function cardKeywordLine(card: DrawnCard, lang: Lang, isLenormand: boolean): string {
+  if (!isLenormand && lang !== 'zh') {
+    return CARD_KEYWORDS[card.id]?.[lang] || card.upright;
+  }
+  return !isLenormand && card.isReversed ? card.reversedMeaning : card.upright;
 }
 
 /** sessionStorage 会话结构（由 /online 抽牌流程写入） */
@@ -740,7 +754,7 @@ export default function ReadingSessionPage() {
                 </p>
               )}
               <p className="mt-1.5 text-xs leading-relaxed text-muted">
-                {isLn ? cards[activeCard].upright : cards[activeCard].isReversed ? cards[activeCard].reversedMeaning : cards[activeCard].upright}
+                {cardKeywordLine(cards[activeCard], lang, isLn)}
               </p>
               {cards.length > 1 && (
                 <div className="mt-4 flex gap-1.5">

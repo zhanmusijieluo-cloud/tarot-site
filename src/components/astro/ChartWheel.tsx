@@ -726,6 +726,10 @@ const BODY_IMP: Record<string, number> = {
 };
 const impOf = (n: string) => BODY_IMP[n] ?? 0;
 
+// ---------- 视图档位 ----------
+export type ChartView = 'classic' | 'top' | 'side';
+const VIEW_ALL: readonly ChartView[] = ['classic', 'top', 'side'];
+
 function PlanetDetail({ p, chart, zhMode, onClose, dual, sel }: {
   p: VPlanet; chart: VChart; zhMode: boolean; onClose: () => void;
   /** 双环态 (爸爸: 相位解释要明确 内环X与外环Y) — 内环=本命, 外环=推运 */
@@ -865,7 +869,7 @@ function PlanetDetail({ p, chart, zhMode, onClose, dual, sel }: {
 }
 
 // ---------- 对外入口 ----------
-export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect, gridSlot, cornerSlot, actions, dualRing, onDualToggle, outerBand, onBandDate }: {
+export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect, gridSlot, cornerSlot, actions, dualRing, onDualToggle, outerBand, onBandDate, viewModes }: {
   chart: VChart; zhMode: boolean;
   /** 受控选中 (相位网格行头共用): 不传则内部自管 */
   selected?: string | null; onSelect?: (name: string | null) => void;
@@ -883,11 +887,16 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
   outerBand?: 'firdaria' | 'profection' | null;
   /** 外环分段点击 → 跳转排盘到该段起始日 (爱星盘同款交互) */
   onBandDate?: (year: number, month: number, day: number) => void;
+  /** 允许的视图档位 (木木 2026-09-18: 3D 俯视/侧视只留给本命盘;
+   *  推运盘/合盘/法达盘传 ['classic'] → 不渲染那两个切换按钮, 且残留档位自动回落线条盘) */
+  viewModes?: readonly ChartView[];
 }) {
   // VChart.extraPoints 由 chart 自带 (推运盘: 本命端黄经)
 
   const { t, lang } = useI18n();
-  const [view, setView] = useState<'top' | 'side' | 'classic'>('classic');   // 爸爸: 排完盘进来就是线条盘
+  const [viewRaw, setView] = useState<ChartView>('classic');   // 爸爸: 排完盘进来就是线条盘
+  const allowedViews: readonly ChartView[] = viewModes ?? VIEW_ALL;
+  const view: ChartView = allowedViews.includes(viewRaw) ? viewRaw : 'classic';
   const [selInner, setSelInner] = useState<string | null>(null);
   const selected = selProp !== undefined ? selProp : selInner;
   const setSelected = onSelect ?? setSelInner;
@@ -908,24 +917,15 @@ export default function ChartWheel({ chart, zhMode, selected: selProp, onSelect,
     <div className="relative rounded-2xl border border-white/[0.07] bg-black/20 p-2">
       <div className="flex flex-wrap items-center gap-2 px-3 py-2">
         <div className="flex gap-1.5">
-          <button
-            onClick={() => setView('classic')}
-            className={`rounded-full px-3.5 py-1.5 text-[11px] tracking-[0.15em] transition-colors ${view === 'classic' ? 'border border-accent/50 bg-accent/[0.08] text-accent' : 'border border-white/[0.1] text-muted hover:border-white/25'}`}
-          >
-            {t('astro.view.classic')}
-          </button>
-          <button
-            onClick={() => setView('top')}
-            className={`rounded-full px-3.5 py-1.5 text-[11px] tracking-[0.15em] transition-colors ${view === 'top' ? 'border border-accent/50 bg-accent/[0.08] text-accent' : 'border border-white/[0.1] text-muted hover:border-white/25'}`}
-          >
-            {t('astro.view.top')}
-          </button>
-          <button
-            onClick={() => setView('side')}
-            className={`rounded-full px-3.5 py-1.5 text-[11px] tracking-[0.15em] transition-colors ${view === 'side' ? 'border border-accent/50 bg-accent/[0.08] text-accent' : 'border border-white/[0.1] text-muted hover:border-white/25'}`}
-          >
-            {t('astro.view.side')}
-          </button>
+          {allowedViews.map((v) => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              className={`rounded-full px-3.5 py-1.5 text-[11px] tracking-[0.15em] transition-colors ${view === v ? 'border border-accent/50 bg-accent/[0.08] text-accent' : 'border border-white/[0.1] text-muted hover:border-white/25'}`}
+            >
+              {t(`astro.view.${v}`)}
+            </button>
+          ))}
         </div>
         {/* 星球快捷跳转 */}
         <div className="flex flex-wrap gap-1">

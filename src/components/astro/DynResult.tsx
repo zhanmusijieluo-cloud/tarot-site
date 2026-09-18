@@ -148,6 +148,7 @@ export default function DynResult({ dyn, zhMode, target, onDate, onNow, cornerAc
       <ChartWheel
         chart={viewChart}
         zhMode={zhMode}
+        viewModes={['classic'] as const}
         dualRing={dual && outer ? { inner: natal.planets, outer: outer.planets as unknown as VPlanet[] } : undefined}
         onDualToggle={() => setDual((v) => !v)}
         actions={

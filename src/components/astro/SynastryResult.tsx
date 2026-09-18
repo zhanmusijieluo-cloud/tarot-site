@@ -187,6 +187,7 @@ export default function SynastryResult({ syn, zhMode, tab, onTab, aLabel, bLabel
             <ChartWheel
               chart={viewChart}
               zhMode={zhMode}
+              viewModes={['classic'] as const}
               dualRing={{ inner: inner.planets, outer: outer.planets }}
               cornerSlot={duoCard}
             />
@@ -242,7 +243,7 @@ export default function SynastryResult({ syn, zhMode, tab, onTab, aLabel, bLabel
         );
         return (
           <>
-            <ChartWheel chart={c} zhMode={zhMode} cornerSlot={card} />
+            <ChartWheel chart={c} zhMode={zhMode} viewModes={['classic'] as const} cornerSlot={card} />
             <Panel title={`${aspTitle} — ${asp.length}`}>
               <ul className="grid grid-cols-1 gap-x-5 md:grid-cols-2 xl:grid-cols-3">
                 {asp.map((x, i) => (

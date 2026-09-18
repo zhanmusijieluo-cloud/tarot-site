@@ -148,7 +148,7 @@ export default function CardDetailPage() {
     <PageShell
       label={t('learn.detail.label')}
       title={displayName}
-      subtitle={card.name + (lang !== 'zh' ? ` · ${card.name}` : '')}
+      subtitle={displayName + (lang !== 'zh' ? ` · ${card.name}` : '')}
       wide
     >
       {/* 返回牌库 */}

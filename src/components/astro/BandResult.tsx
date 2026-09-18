@@ -96,6 +96,7 @@ export default function BandResult({ chart, zhMode, kind, cornerActions, onBandD
       <ChartWheel
         chart={chart}
         zhMode={zhMode}
+        viewModes={['classic'] as const}
         outerBand={kind}
         onBandDate={onBandDate}
         cornerSlot={
