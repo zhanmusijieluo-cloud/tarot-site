@@ -20,15 +20,19 @@ import { quote, type Lang, useI18n } from '@/i18n';
 
 /**
  * 牌名下方那行关键词。
- * tarot.ts 的 upright/reversedMeaning 只有中文，en/ja 直接取会漏出中文，
- * 故塔罗走 CARD_KEYWORDS；雷诺曼暂无三语短串（ln-details.json 只有整段 core），保持原样。
+ * tarot.ts / lenormand.ts 的 upright/reversedMeaning 只有中文，en/ja 直接取会漏出中文，
+ * 故塔罗走 CARD_KEYWORDS、雷诺曼走 ln.(id-1).kw 三语键；两处都取不到才退回中文原串。
  * 正/逆位信息本就标在上方牌名处，关键词行不再区分朝向。
  */
-function cardKeywordLine(card: DrawnCard, lang: Lang, isLenormand: boolean): string {
-  if (!isLenormand && lang !== 'zh') {
-    return CARD_KEYWORDS[card.id]?.[lang] || card.upright;
+function cardKeywordLine(card: DrawnCard, lang: Lang, isLenormand: boolean, t: (k: string) => string): string {
+  if (isLenormand) {
+    // 雷诺曼 id 从 1 开始，i18n 键索引用 id-1（与 ln.N.name 同一套）
+    const key = `ln.${card.id - 1}.kw`;
+    const v = t(key);
+    return v === key ? card.upright : v;
   }
-  return !isLenormand && card.isReversed ? card.reversedMeaning : card.upright;
+  if (lang !== 'zh') return CARD_KEYWORDS[card.id]?.[lang] || card.upright;
+  return card.isReversed ? card.reversedMeaning : card.upright;
 }
 
 /** sessionStorage 会话结构（由 /online 抽牌流程写入） */
@@ -755,7 +759,7 @@ export default function ReadingSessionPage() {
                 </p>
               )}
               <p className="mt-1.5 text-xs leading-relaxed text-muted">
-                {cardKeywordLine(cards[activeCard], lang, isLn)}
+                {cardKeywordLine(cards[activeCard], lang, isLn, t)}
               </p>
               {cards.length > 1 && (
                 <div className="mt-4 flex gap-1.5">
