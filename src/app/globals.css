@@ -1114,6 +1114,30 @@ body {
   filter: brightness(1.26);
 }
 
+/* 逐张翻牌揭示阶段的牌位网格。
+   原来是 flex-wrap + 写死 104px：牌越排越多就甩出 2+2+1 的孤牌，
+   三张时间流在 360px 手机上也会断成 2+1 —— 而这两个牌阵的读法就是「一行从左连读到右」。
+   窄屏列数由组件按张数算好（一行优先，放不下才均分成几行），桌面永远一行（维持原样）。
+   宽度用 1fr 自动收缩：max-width 卡住「列数 × 上限」，屏幕更窄时等比缩小而不是换行。 */
+.flip-grid {
+  --flip-cap: 88px;
+  --flip-gap: 16px;
+  --cols: var(--cols-narrow, 3);
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  gap: var(--flip-gap);
+  align-items: start;
+  justify-content: center;
+  max-width: calc(var(--cols) * var(--flip-cap) + (var(--cols) - 1) * var(--flip-gap));
+}
+@media (min-width: 640px) {
+  .flip-grid {
+    --cols: var(--cols-wide, var(--cols-narrow, 3));
+    --flip-cap: 128px;
+    --flip-gap: 24px;
+  }
+}
+
 .tarot-scene-host {
   width: 100%;
   /* 一屏内可见：保留放大尺寸(745px)，但视口不够高时自动收缩，保证底部按钮不被推出屏幕 */

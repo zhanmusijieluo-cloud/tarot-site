@@ -27,14 +27,25 @@ export default function CardFlipStage({ cards, flipped, onFlip, positions, deck 
   const showOrientation = deck !== 'lenormand';
   const cardRatio = deck === 'lenormand' ? '520 / 670' : '2 / 3.4';
 
+  /**
+   * 窄屏每行几张：≤5 张一律一行（三张时间流、雷诺曼题眼线的设计意图就是一行连读），
+   * 6 张以上拆成行数尽量均等的几行（7→4+3，9→3×3），避免 flex-wrap 甩出 2+2+1 的孤牌。
+   * 桌面永远一行，所以列数分两个变量给 CSS。
+   */
+  const n = cards.length;
+  const colsNarrow = n <= 5 ? Math.max(n, 1) : Math.ceil(n / Math.ceil(n / 4));
+
   return (
-    <div className="flex flex-wrap items-start justify-center gap-4 px-2 sm:gap-6">
+    <div
+      className="flip-grid mx-auto px-2"
+      style={{ ['--cols-narrow' as string]: colsNarrow, ['--cols-wide' as string]: n }}
+    >
       {cards.map((card, i) => {
         const open = !!flipped[i];
         const name = localizedCardName(card, lang);
         const orientation = showOrientation ? (card.isReversed ? t('online.reversed') : t('online.upright')) : '';
         return (
-          <div key={`${card.id}-${i}`} className="flex w-[104px] flex-col items-center sm:w-[128px]">
+          <div key={`${card.id}-${i}`} className="flex min-w-0 flex-col items-center">
             <button
               type="button"
               onClick={() => { if (!open) onFlip(i); }}

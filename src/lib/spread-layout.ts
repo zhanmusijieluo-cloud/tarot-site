@@ -50,8 +50,20 @@ export function cardWClassToPx(cls: string): number {
   return CARD_W_STEPS.find((s) => s.cls === cls)?.px ?? 64;
 }
 
-/** 两端设计视口下的容器宽（页面 max-w-2xl 减去内边距后的可用宽） */
-const CONTAINER_W = { mobile: 292, desktop: 672 };
+/**
+ * 手机端单牌宽度上限：容器宽的 24%（手机容器 292~360px，桌面 max-w-2xl 容器 672px）。
+ * 没有这条时，求解器只会「别越界、别撞上邻牌」，于是手机上永远挑到能塞下的最大档 ——
+ * 单张牌阵 96px 在 393px 屏上占 24.4%，而桌面同样 96px 只占 6.7%（容器 672 只占屏宽 47%），
+ * 客户看到的就是「手机上牌特别大」。桌面容器宽远超 480px，这条只在手机上生效。
+ */
+const MOBILE_CARD_RATIO = 0.24;
+const MOBILE_CONTAINER_PX = 480;
+
+/** 当前容器宽下允许的最大单牌宽（桌面不封顶，沿用注册档位；下限是最小档，保证永远有解） */
+function cardCeilingPx(containerW: number): number {
+  if (containerW >= MOBILE_CONTAINER_PX) return Infinity;
+  return Math.max(containerW * MOBILE_CARD_RATIO, CARD_W_STEPS[CARD_W_STEPS.length - 1].px);
+}
 
 interface RawLayout {
   coords: SpreadPoint[];
@@ -573,7 +585,12 @@ function requiredHeight(pts: SpreadPoint[], W: number, cw: number): number {
   for (let i = 0; i < pts.length; i++) {
     for (let j = i + 1; j < pts.length; j++) {
       const dxPx = Math.abs(pts[i].x - pts[j].x) * W / 100;
-      if (dxPx >= cw + COL_GAP) continue; // 不同列
+      // 同列判据只看牌宽，不能再加 COL_GAP：横向差哪怕只有 6px 也算「错开」，
+      // 两张牌的矩形就不可能重叠，没必要为此把容器撑高。
+      // 加了这 10px 余量之后，窄屏上「横向 6% 容器宽」会从小角度弧线牌阵（马蹄阵相邻两点）
+      // 被判成同列，于是按 dy=6% 反算出 1794px 的容器高——桌面同样牌阵只有 371px，
+      // 客户在手机上要滚两屏才走完一个马蹄阵。
+      if (dxPx >= cw) continue; // 不同列
       const dy = Math.abs(pts[i].y - pts[j].y);
       if (dy < 1) continue; // 同位叠牌
       H = Math.max(H, (ch + ROW_GAP) * (100 / dy));
@@ -589,7 +606,7 @@ export interface SolvedStyle {
 
 /**
  * 【核心 API】按容器实际宽度求解注册牌阵的布局样式。
- * 内部委托 solveCoordsLayout；卡宽取注册档位（不超过容器宽的 30%），
+ * 内部委托 solveCoordsLayout；卡宽取注册档位，并受手机端 24% 上限约束（见 cardCeilingPx），
  * 容器高按「所有牌完整可见 + 标签占位 + 同列净空」精确算出。
  */
 export function solveSpreadLayout(
@@ -617,19 +634,21 @@ export function solveCoordsLayout(
   crossIdx = -1
 ): { height: number; cardW: string } {
   // 卡宽求解：
+  // ⓪ 手机端上限：单牌 ≤ 容器宽 24%（见 cardCeilingPx），否则牌阵在手机上就是「牌太大」
   // ① 边缘约束：最靠边的牌不出界 → 每点有效宽的一半 ≤ 距容器边缘距离
   // ② 列间约束：同一水平带内相邻牌净隙 ≥ COL_GAP
   // ③ 横置交叉牌（crossIdx ≥ 0）有效宽 = cand × CARD_H_RATIO（高变宽，需一并计入约束），
   //    否则求解器按竖牌宽估算，会导致横牌横向溢出或压到相邻牌。
   // 从注册档位向下逐级尝试，取第一个满足的；都不满足则用最小档。
   const W = Math.max(containerW, 120);
+  const ceiling = cardCeilingPx(W);
   const effW = (i: number, cand: number) => (i === crossIdx ? cand * CARD_H_RATIO : cand);
   const edgeOk = (cand: number) =>
     coords.every((p, i) => Math.min(p.x, 100 - p.x) * W / 100 >= effW(i, cand) / 2);
   let px = CARD_W_STEPS[CARD_W_STEPS.length - 1].px;
   for (let i = stepIdx; i < CARD_W_STEPS.length; i++) {
     const cand = CARD_W_STEPS[i].px;
-    if (!edgeOk(cand)) continue;
+    if (cand > ceiling || !edgeOk(cand)) continue;
     // 检查同水平带（y 差换算 px 后 < 半张牌高，用「先按此卡宽估一版容器高」精确化）内任意两点的横向净隙
     const estH = requiredHeight(coords, W, cand);
     let ok = true;
@@ -679,9 +698,9 @@ export function solveCustomGridLayout(
 ): { height: number; cardW: string } {
   const W = Math.max(containerW, 120);
   const usedCols = Math.min(Math.max(...cells.map((c) => c.col)) + 1, CUSTOM_GRID_MAX_COLS);
-  // 列宽约束：卡宽 ≤ 列距 − 净隙；再与全局最小档兜底
+  // 列宽约束：卡宽 ≤ 列距 − 净隙，再压过手机端 24% 上限；最后与全局最小档兜底
   const colPitch = W / usedCols;
-  const maxByCol = colPitch - COL_GAP;
+  const maxByCol = Math.min(colPitch - COL_GAP, cardCeilingPx(W));
   const px = Math.min(
     CARD_W_STEPS[2].px, // 上限 w-24=96px，避免大画布牌过大
     ...CARD_W_STEPS.map((s) => s.px).filter((v) => v <= maxByCol),

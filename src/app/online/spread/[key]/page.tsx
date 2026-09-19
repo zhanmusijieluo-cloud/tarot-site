@@ -131,7 +131,10 @@ function SpreadDetailInner() {
                       {idx + 1}
                     </span>
                   </button>
-                  <p className="mx-auto mt-1.5 max-w-[5.5rem] truncate text-center text-[10px] leading-tight text-accent/75">
+                  {/* 牌位名悬挂在牌下方、不占布局宽：占位的话这个 absolute 包装会被标签撑宽，
+                      -translate-x-1/2 就把牌面往左挤出去十几 px，求解器算好的净隙当场作废（马蹄阵相邻两牌实测压 8px）。
+                      与解读室同一套画法。 */}
+                  <p className="absolute left-1/2 top-full mt-1.5 w-[8.5rem] -translate-x-1/2 truncate text-center text-[10px] leading-tight text-accent/75">
                     {spreadPositions(params.key, spread.positions, lang, t)[idx]}
                   </p>
                 </div>

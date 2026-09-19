@@ -743,7 +743,7 @@ export default function ReadingSessionPage() {
                             ? 'z-10 ring-1 ring-accent/80 shadow-lg shadow-accent/25'
                             : 'opacity-95 hover:opacity-100'
                           : isActive
-                            ? 'z-10 scale-[1.12] ring-1 ring-accent/80 shadow-lg shadow-accent/25'
+                            ? 'z-10 scale-[1.3] sm:scale-[1.12] ring-1 ring-accent/80 shadow-lg shadow-accent/25'
                             : 'opacity-95 hover:scale-[1.06] hover:opacity-100'
                       }`}
                     >
