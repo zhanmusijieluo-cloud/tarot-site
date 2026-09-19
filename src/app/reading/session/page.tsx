@@ -13,7 +13,7 @@ import { localizedCardName, CARD_JA_NAMES } from '@/lib/card-names';
 import { CARD_KEYWORDS } from '@/lib/card-keywords';
 import { spreadPositions } from '@/lib/spread-i18n';
 import { getCrossIdx, solveSpreadLayout, solveCustomGridLayout, CARD_H_RATIO, cardWClassToPx } from '@/lib/spread-layout';
-import { supabaseBrowser } from '@/lib/supabase';
+import { supabaseBrowser, aiAuthHeaders } from '@/lib/supabase';
 import { upsertSessionSmart, rateSessionSmart } from '@/lib/account/sessions';
 import { getMcpClient } from '@/mcp/client';
 import { quote, type Lang, useI18n } from '@/i18n';
@@ -559,7 +559,7 @@ export default function ReadingSessionPage() {
     try {
       const res = await fetch('/api/followup', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await aiAuthHeaders(),
         body: JSON.stringify({
           cards: allCardsForAI,
           question,

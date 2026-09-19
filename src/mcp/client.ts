@@ -1,4 +1,5 @@
 import { TarotReadingRequest, TarotReadingResponse } from './types';
+import { aiAuthHeaders } from '@/lib/supabase';
 
 /** 流式解读事件 */
 export interface TarotStreamEvent {
@@ -77,7 +78,7 @@ export class McpClient {
     try {
       const response = await fetch('/api/interpret/stream', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await aiAuthHeaders(),
         body: JSON.stringify({
           cards: params.cards,
           question: params.question || '',

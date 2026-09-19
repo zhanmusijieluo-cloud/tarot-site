@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { TarotMcpServer, TarotStreamEvent } from '@/mcp/server';
-import { rateLimit, clientKey, readJsonLimited, AI_LIMITS } from '@/lib/rate-limit';
+import { aiGuard, readJsonLimited, AI_LIMITS } from '@/lib/rate-limit';
 
 // 流式解读：允许函数运行到 Vercel Hobby 上限 300s（含一次重试预算）
 export const maxDuration = 300;
@@ -22,17 +22,17 @@ export async function POST(request: NextRequest) {
       headers: { 'Content-Type': 'application/json', ...(extra || {}) },
     });
 
-  // 防刷：流式解读同样消耗 AI 额度，与 /api/interpret 共用同一档限流
-  const rl = rateLimit(`interpret:${clientKey(request)}`, AI_LIMITS.interpret.limit, AI_LIMITS.interpret.windowMs);
-  if (!rl.ok) {
-    return jsonErr(`请求过于频繁，请 ${rl.retryAfter} 秒后再试`, 429, { 'Retry-After': String(rl.retryAfter) });
-  }
   // 防刷：请求体体积上限
   const limited = await readJsonLimited(request, AI_LIMITS.maxBodyBytes);
   if (!limited.ok) {
     return limited.reason === 'too_large'
       ? jsonErr('请求体过大', 413)
       : jsonErr('请求体解析失败', 400);
+  }
+  // 流式解读与非流式共用同一档限流；先读体才能按 lang 出撞限文案
+  const rl = await aiGuard('interpret', request, typeof limited.body?.lang === 'string' ? limited.body.lang : 'zh');
+  if (!rl.ok) {
+    return jsonErr(rl.message, 429, { 'Retry-After': String(rl.retryAfter) });
   }
 
   const body = limited.body;

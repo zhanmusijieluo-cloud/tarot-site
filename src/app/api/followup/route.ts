@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { localizedCardName, CARD_JA_NAMES } from '@/lib/card-names';
-import { rateLimit, clientKey, readJsonLimited, AI_LIMITS } from '@/lib/rate-limit';
+import { aiGuard, readJsonLimited, AI_LIMITS } from '@/lib/rate-limit';
 
 // 日语等长输出解读较慢：允许函数运行到 Vercel Hobby 上限 300s
 export const maxDuration = 300;
@@ -47,19 +47,19 @@ function normalizeJaCardDirection(text: string): string {
  * 整个 prompt 按站点语言生成（此前中文 prompt + 单行语言指令容易导致回答夹带中文）。
  */
 export async function POST(request: NextRequest) {
-  // 防刷：追问同样消耗 AI 额度
-  const rl = rateLimit(`followup:${clientKey(request)}`, AI_LIMITS.followup.limit, AI_LIMITS.followup.windowMs);
-  if (!rl.ok) {
-    return NextResponse.json(
-      { error: `请求过于频繁，请 ${rl.retryAfter} 秒后再试` },
-      { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
-    );
-  }
   const limited = await readJsonLimited(request, AI_LIMITS.maxBodyBytes);
   if (!limited.ok) {
     return NextResponse.json(
       { error: limited.reason === 'too_large' ? '请求体过大' : '请求体解析失败' },
       { status: limited.reason === 'too_large' ? 413 : 400 }
+    );
+  }
+  // 防刷：追问同样消耗 AI 额度；先读体才能按 lang 出撞限文案
+  const rl = await aiGuard('followup', request, typeof limited.body?.lang === 'string' ? limited.body.lang : 'zh');
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: rl.message },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
     );
   }
   try {

@@ -1,4 +1,5 @@
 import { DrawnCard } from '@/lib/tarot';
+import { aiAuthHeaders } from '@/lib/supabase';
 
 /**
  * AI 解读接口封装
@@ -41,7 +42,7 @@ export async function requestInterpret(payload: InterpretPayload): Promise<Inter
   // });
   const res = await fetch('/api/interpret', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: await aiAuthHeaders(),
     body: JSON.stringify({
       cards: payload.cards,
       question: payload.question,
