@@ -1,13 +1,16 @@
 'use client';
 
-import { getCardImage, type DrawnCard } from '@/lib/tarot';
+import { getCardImage } from '@/lib/tarot';
 import { localizedCardName } from '@/lib/card-names';
 import { useI18n } from '@/i18n';
 
 const CARD_BACK = '/cards/card-back-new.webp';
 
+/** 揭示阶段只需要这三项：塔罗 DrawnCard 与雷诺曼会话卡片都满足 */
+type FlipCard = { id: number; name: string; isReversed: boolean; arcana?: string };
+
 interface CardFlipStageProps {
-  cards: DrawnCard[];
+  cards: FlipCard[];
   /** flipped[i] 对应 cards[i]；翻开与否由父级持有，好在按钮上判"全部翻开才放行" */
   flipped: boolean[];
   onFlip: (index: number) => void;

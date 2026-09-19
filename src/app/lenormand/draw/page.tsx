@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * 雷诺曼占卜流程：问题 → 选牌阵(3线/5十字/9方阵) → 36张漂浮抽牌 → 解读室
+ * 雷诺曼占卜流程：问题 → 选牌阵(3线/5十字/9方阵) → 36张漂浮抽牌 → 逐张翻牌揭示 → 解读室
  * 复用塔罗链路的会话结构(tarot-reading-session), 以 arcana='lenormand' 标记牌组;
  * 雷诺曼无逆位: 翻牌只出正位, 牌意由「连线组合」决定。
  */
@@ -11,6 +11,7 @@ import { Suspense } from 'react';
 import { ChevronRight, HelpCircle, RotateCcw, Sparkles, User } from 'lucide-react';
 import PageShell, { Reveal } from '@/components/PageShell';
 import TarotScene from '@/components/TarotScene';
+import CardFlipStage from '@/components/CardFlipStage';
 import OfflineInterpretSection from '@/components/OfflineInterpretSection';
 import ArchiveSelect from '@/components/ArchiveSelect';
 import { LN_SPREADS, LN_SPREAD_KEYS, LN_DECK, type LnDrawnCard } from '@/lib/lenormand';
@@ -19,7 +20,7 @@ import { useI18n } from '@/i18n';
 import { loadArchivesSmart, type Archive } from '@/lib/astro/archives';
 import { archiveContext } from '@/lib/astro/birth-context';
 
-type Stage = 'question' | 'draw';
+type Stage = 'question' | 'draw' | 'flip';
 
 /** 与塔罗解读室 DrawnCard 对齐的会话卡片 */
 interface SessionCard {
@@ -62,6 +63,9 @@ function LenormandDrawInner() {
   const [selectedCount, setSelectedCount] = useState(0);
   const selectedRef = useRef<Set<number>>(new Set());
   const orderRef = useRef<number[]>([]);
+  /** 翻牌阶段：点选顺序已定格为牌阵位顺序，逐张点开只是揭示 */
+  const [drawnCards, setDrawnCards] = useState<SessionCard[]>([]);
+  const [flipped, setFlipped] = useState<boolean[]>([]);
   // 线下抽牌: 与塔罗 /online 同款——按钮并排在「开始抽牌」旁, 点击就地展开填牌区
   const [offline, setOffline] = useState(false);
   const offlineRef = useRef<HTMLDivElement>(null);
@@ -91,7 +95,7 @@ function LenormandDrawInner() {
     ? (t('lnflow.customTitle'))
     : (spread?.name[L] ?? '');
   const positionNames: readonly string[] = isCustom
-    ? customLayout!.map((c, i) => c.name || `位置${i + 1}`)
+    ? customLayout!.map((c, i) => c.name || t('custom.position', { n: i + 1 }))
     : (spread?.positions[L] ?? []);
 
   const toggleCard = (id: number) => {
@@ -106,16 +110,26 @@ function LenormandDrawInner() {
     setSelectedCount(s.size);
   };
 
-  const doReveal = () => {
+  const startFlip = () => {
     const drawn: SessionCard[] = orderRef.current.map((uid) => {
       const base = LN_DECK.find((c) => c.id === uid) as LnDrawnCard;
       return { ...base };
     });
+    setDrawnCards(drawn);
+    setFlipped(new Array(drawn.length).fill(false));
+    setStage('flip');
+  };
+
+  const allFlipped = flipped.length > 0 && flipped.every(Boolean);
+  const flipCard = (index: number) => setFlipped((prev) => prev.map((v, i) => (i === index ? true : v)));
+
+  /** 翻完才放行：写会话的牌 = 客户刚点开看过的那几张 */
+  const enterRoom = () => {
     try {
       window.sessionStorage.setItem(
         'tarot-reading-session',
         JSON.stringify({
-          cards: drawn,
+          cards: drawnCards,
           deck: 'lenormand',
           question,
           background: bgWithArchive,
@@ -137,7 +151,7 @@ function LenormandDrawInner() {
       label={t('page.lenormand.label')}
       title={t('lnflow.title')}
       subtitle={t('lnflow.subtitle')}
-      wide={stage === 'draw'}
+      wide={stage !== 'question'}
       compact={stage === 'draw'}
     >
       {/* 第1步: 问题+背景 */}
@@ -267,6 +281,8 @@ function LenormandDrawInner() {
                       selectedRef.current.clear();
                       orderRef.current = [];
                       setSelectedCount(0);
+                      setDrawnCards([]);
+                      setFlipped([]);
                       setStage('question');
                     }}
                     className="glass-btn text-sm"
@@ -274,13 +290,46 @@ function LenormandDrawInner() {
                     <RotateCcw className="mr-2 inline-block h-4 w-4" aria-hidden="true" />{t('online.flipBack')}
                   </button>
                   <button
-                    onClick={doReveal}
+                    onClick={startFlip}
                     disabled={selectedCount < drawCount}
                     className={`glass-btn-primary text-sm ${selectedCount < drawCount ? 'opacity-40' : ''}`}
                   >
                     {t('online.flip')} <ChevronRight className="ml-1 inline-block h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
+              </div>
+            </div>
+          </Reveal>
+        </section>
+      )}
+
+      {/* 第3步: 逐张翻牌揭示（与塔罗链路同款；雷诺曼只揭示正位） */}
+      {stage === 'flip' && (
+        <section className="py-2">
+          <Reveal>
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-5 py-10 sm:px-10">
+              <h2 className="font-display mb-2 text-center text-lg tracking-[0.15em] text-frost/90">{t('online.flip')}</h2>
+              <p className="mb-9 text-center text-[11px] leading-relaxed text-muted/70">
+                {allFlipped ? t('flip.allOpenHint') : t('flip.progress', { done: flipped.filter(Boolean).length, total: drawnCards.length })}
+              </p>
+              <CardFlipStage
+                cards={drawnCards}
+                flipped={flipped}
+                onFlip={flipCard}
+                positions={[...positionNames]}
+                deck="lenormand"
+              />
+              <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <button onClick={() => setStage('draw')} className="glass-btn w-full text-sm sm:w-auto sm:px-8">
+                  <RotateCcw className="mr-2 inline-block h-4 w-4" aria-hidden="true" />{t('flip.repick')}
+                </button>
+                <button
+                  onClick={enterRoom}
+                  disabled={!allFlipped}
+                  className={`glass-btn-primary w-full text-sm sm:w-auto sm:px-10 ${allFlipped ? '' : 'opacity-40'}`}
+                >
+                  {t('flip.enterRoom')} <ChevronRight className="ml-1 inline-block h-4 w-4" aria-hidden="true" />
+                </button>
               </div>
             </div>
           </Reveal>
