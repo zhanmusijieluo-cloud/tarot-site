@@ -14,7 +14,7 @@ import {
 } from '@/lib/tarot';
 import { CARD_JA_NAMES } from '@/lib/card-names';
 import { LN_DECK, LN_SPREADS, LN_SPREAD_KEYS, LN_EN_NAMES as LN_EN_NAMES_I, LN_JA_NAMES as LN_JA_NAMES_I, lnImage, lnLocalName } from '@/lib/lenormand';
-import { solveSpreadLayout, cardWClassToPx, customGridToCoords, solveCoordsLayout } from '@/lib/spread-layout';
+import { solveSpreadLayout, cardWClassToPx, customGridToCoords, solveCoordsLayout, heightBudgetPx } from '@/lib/spread-layout';
 import { spreadPositions, spreadSubtitle } from '@/lib/spread-i18n';
 import { useI18n } from '@/i18n';
 
@@ -81,8 +81,6 @@ export default function OfflineInterpretSection({
   const [question, setQuestion] = useState(presetQuestion);
   const [background, setBackground] = useState(presetBackground);
   const [error, setError] = useState('');
-  const [containerW, setContainerW] = useState(672);
-  const wrapRef = useRef<HTMLDivElement>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
 
   const gridCustom = useCustom && !!presetCustomCells && presetCustomCells.length > 0;
@@ -103,12 +101,32 @@ export default function OfflineInterpretSection({
     [theme, isLn]
   );
 
+  // 求解器必须拿到「牌阵盒自己的宽度」，不是外层 section 的：
+  // section 的 clientWidth 含 px-8 内边距，再往里还有 max-w-6xl 和 p-6 ——
+  // 393px 手机上牌阵盒实际只有 248px，而按 393 求解会让牌凸出盒子（实测右凸 1px 起）。
+  const layoutBoxRef = useRef<HTMLDivElement>(null);
+  const boundBoxEl = useRef<HTMLElement | null>(null);
+  const [boardW, setBoardW] = useState(672);
+  const [viewportH, setViewportH] = useState(0);
   useEffect(() => {
-    const measure = () => setContainerW(wrapRef.current?.clientWidth ?? 672);
-    measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-  }, []);
+    // 牌阵盒要等牌阵/步骤切出来才存在，所以每次渲染重新探测（同解读室的写法），但只在换节点时重绑
+    const el = layoutBoxRef.current;
+    if (!el || el === boundBoxEl.current) return;
+    boundBoxEl.current = el;
+    const update = () => {
+      setBoardW(el.clientWidth || 672);
+      setViewportH(window.innerHeight);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener('resize', update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', update);
+      boundBoxEl.current = null;
+    };
+  });
 
   // 牌阵/自定义变化 → 重置槽位
   useEffect(() => {
@@ -127,11 +145,11 @@ export default function OfflineInterpretSection({
   const layout = useMemo(() => {
     if (gridCustom) {
       const coords = customGridToCoords(presetCustomCells!);
-      const geom = solveCoordsLayout(coords, 4, containerW, -1);
+      const geom = solveCoordsLayout(coords, 4, boardW, -1, heightBudgetPx(boardW, viewportH));
       return { coords, height: geom.height, cardW: geom.cardW };
     }
-    return solveSpreadLayout(useCustom ? null : spreadKey, n, containerW);
-  }, [spreadKey, useCustom, n, containerW, gridCustom, presetCustomCells]);
+    return solveSpreadLayout(useCustom ? null : spreadKey, n, boardW, viewportH);
+  }, [spreadKey, useCustom, n, boardW, viewportH, gridCustom, presetCustomCells]);
 
   const filtered = useMemo(() => {
     const pool: { id: number; name: string }[] = isLn ? LN_DECK : TAROT_DECK;
@@ -218,7 +236,7 @@ export default function OfflineInterpretSection({
   };
 
   return (
-    <section ref={wrapRef} className="relative mx-auto max-w-[90rem] px-8 py-20 sm:px-12">
+    <section className="relative mx-auto max-w-[90rem] px-8 py-20 sm:px-12">
       <div className="mx-auto max-w-6xl">
         {/* 返回上一步（切换回在线抽牌/填问题背景那一步） */}
         {onBack && (
@@ -370,20 +388,32 @@ export default function OfflineInterpretSection({
             {t('offline.stepPlaceTitle')} <span className="ml-2 text-sm font-normal text-muted">{t('offline.stepPlaceHint')}</span>
           </h3>
           <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6">
-            <div style={{ position: 'relative', height: layout.height }}>
+            <div ref={layoutBoxRef} style={{ position: 'relative', height: layout.height }}>
               {positions.map((pos, i) => {
                 const slot = slots[i];
                 const coord = layout.coords[i];
-                const cardW = Math.max(52, Math.round(cardWClassToPx(layout.cardW) * 0.85));
+                // 直接用求解器算出的档宽，和解读室/详情页同一个尺寸。
+                // 原先还要乘 0.85 是给 in-flow 的牌位名腾地方，现在名字不占布局了，再乘就只是白缩一圈；
+                // 也不能再加「不小于 44px」这类下限——求解器是按它自己那档算的净隙，
+                // 牌比模型宽 4px 就会重新压上邻牌（实测马蹄阵牌×牌 108px²、维纳斯之爱标签×邻牌 261px²）。
+                const cardW = cardWClassToPx(layout.cardW);
                 const cardH = Math.round(cardW * (isLn ? 670 / 520 : 1.7));
                 return (
                   <div
                     key={i}
                     data-slot={i}
                     style={{ left: `${coord.x}%`, top: `${coord.y}%`, transform: 'translate(-50%,-50%)' }}
-                    className="absolute flex flex-col items-center"
+                    className="absolute"
                   >
-                    <p className="mb-1.5 whitespace-nowrap text-[11px] tracking-[0.12em] text-muted">{pos}</p>
+                    {/* 牌位名一律绝对定位：in-flow 的话这个包装会被长名字撑到 148px 宽（牌才 54px），
+                        相邻牌位的名子互相压字（维纳斯之爱实测压叠 1 万 px²）。与解读室同一套画法。 */}
+                    <p
+                      title={pos}
+                      className="absolute left-1/2 top-full mt-1.5 -translate-x-1/2 line-clamp-2 text-center text-[10px] leading-tight text-muted"
+                      style={{ width: cardW }}
+                    >
+                      {pos}
+                    </p>
                     {slot ? (
                       <div className="group relative">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -391,11 +421,13 @@ export default function OfflineInterpretSection({
                           src={isLn ? lnImage(slot.id) : getCardImage(slot.id)}
                           alt={cardName(slot.id, lang, deck)}
                           style={{ width: cardW, height: cardH }}
-                          className={`rounded-lg border border-accent/30 object-cover ${
+                          className={`block rounded-lg border border-accent/30 object-cover ${
                             slot.isReversed && !isLn ? 'rotate-180' : ''
                           }`}
                         />
-                        {!isLn && (
+                        {/* 正逆位胶囊只在牌宽装得下时显示：40px 的牌上这颗胶囊有 ~62px 宽，
+                            会溢出压到邻牌；而逆位本来就是整张牌转 180°，旋转自己就是标记。 */}
+                        {!isLn && cardW >= 56 && (
                         <span className="absolute top-1 left-1 rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] text-accent-soft">
                           {slot.isReversed ? t('online.reversed') : t('online.upright')}
                         </span>
@@ -410,7 +442,13 @@ export default function OfflineInterpretSection({
                             {t('offline.clearSlot')}
                           </button>
                         </div>
-                        <p className="mt-1.5 text-center text-xs text-frost">{cardName(slot.id, lang, deck)}</p>
+                        {/* 牌名压在牌面下沿：它原先也在 in-flow 里，同样会把包装撑宽 */}
+                        <p
+                          title={cardName(slot.id, lang, deck)}
+                          className="absolute inset-x-0 bottom-0 truncate rounded-b-lg bg-black/70 px-1 py-0.5 text-center text-[9px] leading-tight text-frost"
+                        >
+                          {cardName(slot.id, lang, deck)}
+                        </p>
                       </div>
                     ) : (
                       <button
