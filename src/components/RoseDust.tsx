@@ -16,6 +16,7 @@ export default function RoseDust({ className = '' }: { className?: string }) {
     if (!ctx) return;
 
     let raf = 0;
+    let onScreen = true;
     let w = 0;
     let h = 0;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -58,6 +59,9 @@ export default function RoseDust({ className = '' }: { className?: string }) {
     };
 
     const frame = (t: number) => {
+      raf = requestAnimationFrame(frame);
+      // 粒子层滚出视口就不必再画 (首页往下滑后完全看不见)
+      if (!onScreen) return;
       const time = t / 1000;
       ctx.clearRect(0, 0, w, h);
 
@@ -89,16 +93,19 @@ export default function RoseDust({ className = '' }: { className?: string }) {
         ctx.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},${alpha})`;
         ctx.fill();
       }
-
-      raf = requestAnimationFrame(frame);
     };
 
     resize();
     window.addEventListener('resize', resize);
     raf = requestAnimationFrame(frame);
+    const io = new IntersectionObserver((entries) => {
+      onScreen = entries[0]?.isIntersecting ?? true;
+    });
+    io.observe(canvas);
 
     return () => {
       cancelAnimationFrame(raf);
+      io.disconnect();
       window.removeEventListener('resize', resize);
     };
   }, []);

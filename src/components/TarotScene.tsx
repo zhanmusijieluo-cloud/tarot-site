@@ -139,6 +139,15 @@ function buildCards(totalCards: number, isMobile: boolean, slots: DeckSlot[], de
   return cards;
 }
 
+/** 逐节点缓存上次写进 DOM 的值: 只有真变化的属性才碰 style, 避免每帧全量重算样式 */
+interface CardCache {
+  alpha: number;
+  w: number;
+  zIndex: number;
+  sel: boolean;
+  hidden: boolean;
+}
+
 class TarotSceneEngine {
   container: HTMLElement;
   totalCards: number;
@@ -164,6 +173,21 @@ class TarotSceneEngine {
   root: HTMLDivElement;
   field: HTMLDivElement;
   nodes: HTMLButtonElement[] = [];
+  /**
+   * 视口几何量: 只与容器尺寸/牌数有关, 与帧时间无关 —— 全部预算好缓存起来。
+   * 原来 layout() 每帧读 root.clientWidth 并每帧重算这些量, 读操作会把上一帧的
+   * style 写入强制刷新成一次同步重排(78 节点 * 每帧), 是移动端卡顿的第一道来源。
+   */
+  viewW = 1;
+  viewH = 1;
+  sizeScale = 1;
+  span = 1;
+  bandLeft = 0;
+  safeTop = 14;
+  safeBottom = 1;
+  private cache: CardCache[] = [];
+  private geometryDirty = true;
+  private resizeObserver: ResizeObserver | null = null;
   /** 牌背无障碍标签文案（按屏内槽位取，语言切换时由 setCardLabelOf 重刷） */
   cardLabelOf: (slot: number) => string;
 
@@ -214,6 +238,9 @@ class TarotSceneEngine {
       this.field.appendChild(button);
       return button;
     });
+    this.cache = this.cards.map(() => ({
+      alpha: NaN, w: NaN, zIndex: NaN, sel: false, hidden: false,
+    }));
 
     this.onPointerDown = this.onPointerDown.bind(this);
     this.onPointerMove = this.onPointerMove.bind(this);
@@ -232,38 +259,65 @@ class TarotSceneEngine {
     this.root.addEventListener('click', this.onRootClick, true);
     this.root.addEventListener('wheel', this.onWheel, { passive: false });
     window.addEventListener('resize', this.onResize);
+    // 容器尺寸变化(旋转屏幕、抽屉键盘弹起)靠 resize 事件未必触发, 补一个观察者
+    if (typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => this.markGeometryDirty());
+      this.resizeObserver.observe(this.root);
+    }
   }
 
   init() {
     this.setSelected(Array.from(this.selectedIds));
+    this.measure();
     this.layout(0, 1);
     this.frame = requestAnimationFrame(this.animate);
     return this;
   }
 
+  markGeometryDirty() {
+    this.geometryDirty = true;
+  }
+
+  /**
+   * 量一次容器尺寸并把所有派生几何量算好。只在挂载/尺寸变化时调用,
+   * 不要放回每帧循环 —— 读 clientWidth 会强制同步重排。
+   */
+  measure() {
+    const width = this.root.clientWidth || window.innerWidth || 1;
+    const height = this.root.clientHeight || window.innerHeight || 1;
+    this.viewW = Math.max(1, width);
+    this.viewH = Math.max(1, height);
+    this.sizeScale = clamp(this.viewH / 440, 0.85, 2.1);
+    // 漂移带总宽按牌数等比缩放: 塔罗78张→4.85屏宽; 雷诺曼36张→2.24屏宽
+    this.span = this.viewW * 4.85 * (this.totalCards / 78);
+    this.bandLeft = -(this.span - this.viewW) / 2;
+    this.safeTop = this.isMobile ? 18 : 14;
+    this.safeBottom = this.viewH - (this.isMobile ? 18 : 16);
+    this.geometryDirty = false;
+  }
+
   getBounds() {
-    return {
-      width: Math.max(1, this.root.clientWidth),
-      height: Math.max(1, this.root.clientHeight),
-    };
+    return { width: this.viewW, height: this.viewH };
   }
 
   layout(elapsed: number, damping: number) {
-    const { width, height } = this.getBounds();
+    if (this.geometryDirty) this.measure();
+    const width = this.viewW;
+    const height = this.viewH;
     this.offset.x += (this.targetOffset.x - this.offset.x) * damping;
     this.offset.y += (this.targetOffset.y - this.offset.y) * damping;
     this.zoom += (this.targetZoom - this.zoom) * damping;
 
-    // 漂移带总宽按牌数等比缩放: 塔罗78张→4.85屏宽; 雷诺曼36张→2.24屏宽
-    // 屏内同排密度一致(≈16张/屏), 不再显得稀疏; 带子绕视口居中对折
-    const span = width * 4.85 * (this.totalCards / 78);
-    const left = -(span - width) / 2;
-    const safeTop = this.isMobile ? 18 : 14;
-    const safeBottom = height - (this.isMobile ? 18 : 16);
-    // 随场景高度自动放大牌尺寸（高度 745px 时约 1.69 倍，让放大后的场景不显稀疏）
-    const sizeScale = clamp(height / 440, 0.85, 2.1);
+    const sizeScale = this.sizeScale;
+    const span = this.span;
+    const left = this.bandLeft;
+    const safeTop = this.safeTop;
+    const safeBottom = this.safeBottom;
+    const zoomDelta = this.zoom - 1;
+    const cx = width / 2;
     this.cards.forEach((card, index) => {
       const node = this.nodes[index];
+      const c = this.cache[index];
       const flow = (card.t - elapsed * 0.0021 + 1) % 1;
       const float = Math.sin(elapsed * card.speed * 0.2 + card.phase) * 0.006;
       const path = (flow + float + 1) % 1;
@@ -276,9 +330,8 @@ class TarotSceneEngine {
         safeTop,
         safeBottom
       );
-      const lift = this.selectedIds.has(card.id) ? -10 : 0;
-      const selectedScale = this.selectedIds.has(card.id) ? 1.06 : 1;
-      const zoomDelta = this.zoom - 1;
+      const selected = this.selectedIds.has(card.id);
+      const selectedScale = selected ? 1.06 : 1;
       const zoomWeight = card.layer === 'back' ? 1.62 : card.layer === 'mid' ? 1.18 : 0.72;
       const layerZoom = clamp(1 + zoomDelta * zoomWeight, 0.76, card.layer === 'front' ? 1.18 : 1.58);
       const widthZoom = clamp(
@@ -289,19 +342,59 @@ class TarotSceneEngine {
       const s = card.scale * layerZoom * selectedScale;
       const z = card.z + zoomDelta * (card.layer === 'back' ? 230 : card.layer === 'mid' ? 150 : 76);
       const alphaLift = Math.max(0, zoomDelta) * (card.layer === 'back' ? 0.34 : card.layer === 'mid' ? 0.16 : 0.04);
-      const visualH = card.width * sizeScale * widthZoom * s * 1.5;
+      const w = card.width * sizeScale * widthZoom;
+      const visualH = w * s * 1.5;
       y = clamp(y, safeTop, safeBottom - visualH * 0.72);
-      node.style.setProperty('--x', `${x}px`);
-      node.style.setProperty('--y', `${y + lift}px`);
-      node.style.setProperty('--z', `${z}px`);
-      node.style.setProperty('--s', String(s));
-      node.style.setProperty('--card-w', `${card.width * sizeScale * widthZoom}px`);
-      node.style.setProperty('--card-alpha', String(clamp(card.alpha + alphaLift, card.alpha, 0.98)));
-      node.style.setProperty('--rx', `${card.rotateX + Math.sin(elapsed * 0.38 + card.phase) * 1.4}deg`);
-      node.style.setProperty('--ry', `${card.rotateY + Math.cos(elapsed * 0.31 + card.phase) * 2.2}deg`);
-      node.style.setProperty('--rz', `${card.rotateZ + Math.sin(elapsed * 0.27 + card.phase) * 1.8}deg`);
-      node.style.zIndex = String(Math.round(1000 + z));
-      node.style.pointerEvents = node.disabled ? 'none' : 'auto';
+      const alpha = clamp(card.alpha + alphaLift, card.alpha, 0.98);
+
+      /* 屏外剔除: 漂移带是 4.85 屏宽, 同屏最多两成牌可见, 其余七成的 style 写入
+         和合成层是纯浪费。按 perspective 放大后的实际落点判定(近层最多放大 ~1.5x),
+         留出牌宽裕量后仍出界的直接 display:none —— 不写 DOM, 也不参与绘制。 */
+      const ps = z < 880 ? 900 / Math.max(60, 900 - z) : 12;
+      const screenLeft = cx + (x + w / 2 - cx) * ps - (w * s) / 2;
+      const visible = screenLeft > -w * 1.6 && screenLeft < width + w * 0.6;
+      if (!visible) {
+        if (!c.hidden) {
+          node.style.display = 'none';
+          c.hidden = true;
+        }
+        return;
+      }
+      if (c.hidden) {
+        node.style.display = '';
+        c.hidden = false;
+        c.alpha = NaN; c.w = NaN; c.zIndex = NaN; // 重新入屏: 全量重写
+      }
+      // 每帧一次 transform 直写。
+      // 不再走 --x/--y/--z/--rx/... 这些自定义属性: 自定义属性是可继承的,
+      // 改一个就要连带重算整棵子树的样式(Blink 里比直接改 transform 贵得多),
+      // 而每帧每张牌原本要写 5 个。合并成 1 次 inline transform 后,
+      // 变化只影响这一个属性、且只走合成器路径。
+      node.style.transform =
+        `translate3d(${x.toFixed(2)}px,${(y + (selected ? -10 : 0)).toFixed(2)}px,${z.toFixed(2)}px)` +
+        ` rotateX(${(card.rotateX + Math.sin(elapsed * 0.38 + card.phase) * 1.4).toFixed(2)}deg)` +
+        ` rotateY(${(card.rotateY + Math.cos(elapsed * 0.31 + card.phase) * 2.2).toFixed(2)}deg)` +
+        ` rotateZ(${(card.rotateZ + Math.sin(elapsed * 0.27 + card.phase) * 1.8).toFixed(2)}deg)` +
+        ` scale(${s.toFixed(4)})`;
+      // 宽高由 --card-w 决定, 改它=触发整棵子树重排: 只在缩放真的改变它时才写
+      if (c.w !== w) {
+        node.style.setProperty('--card-w', `${w}px`);
+        c.w = w;
+      }
+      // 透明度只在缩放时变(近层变实), 同样只在变化时写
+      if (c.alpha !== alpha) {
+        node.style.setProperty('--card-alpha', alpha.toFixed(3));
+        c.alpha = alpha;
+      }
+      const zIndex = Math.round(1000 + z);
+      if (c.zIndex !== zIndex) {
+        node.style.zIndex = String(zIndex);
+        c.zIndex = zIndex;
+      }
+      if (c.sel !== selected) {
+        node.classList.toggle('selected', selected);
+        c.sel = selected;
+      }
     });
   }
 
@@ -422,7 +515,7 @@ class TarotSceneEngine {
     let best: HTMLButtonElement | null = null;
     let bestZ = -Infinity;
     for (const node of this.nodes) {
-      if (node.disabled || node.style.pointerEvents === 'none') continue;
+      if (node.disabled || node.style.display === 'none') continue;
       const rect = node.getBoundingClientRect();
       if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) continue;
       const z = Number(node.style.zIndex || 0);
@@ -440,6 +533,7 @@ class TarotSceneEngine {
   }
 
   onResize() {
+    this.measure();
     this.layout((performance.now() - this.startedAt) / 1000, 1);
   }
 
@@ -480,6 +574,8 @@ class TarotSceneEngine {
     if (this.destroyed) return;
     this.destroyed = true;
     cancelAnimationFrame(this.frame);
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
     this.root.removeEventListener('pointerdown', this.onPointerDown);
     this.root.removeEventListener('pointermove', this.onPointerMove);
     this.root.removeEventListener('pointerup', this.onPointerUp);

@@ -977,7 +977,9 @@ body {
     scale(var(--s));
   transform-origin: center;
   transform-style: preserve-3d;
-  will-change: transform, opacity, filter;
+  /* will-change 里不要写 filter: 每张牌都会因此常驻一块额外的滤镜层,
+     78 张牌在手机上就是 78 份显存。选中态的 brightness 只在被点时生效, 不值得预提升。 */
+  will-change: transform, opacity;
   transition: filter 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
   -webkit-tap-highlight-color: transparent;
   overflow: hidden;

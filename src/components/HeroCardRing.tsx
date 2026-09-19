@@ -277,10 +277,13 @@ export default function HeroCardRing({ onActiveChange }: { onActiveChange?: (act
     // ---- 动画循环 ----
     let raf = 0;
     let prev = performance.now();
+    /** 卡环滚出视口后不再空转: 首页往下滑就只剩一片白烧的电和主线程时间 */
+    let onScreen = true;
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
       const dt = Math.min((now - prev) / 1000, 0.05);
       prev = now;
+      if (!onScreen) return;
       targetRotY += AUTO_SPEED * dt;
       ring.rotation.y += (targetRotY - ring.rotation.y) * Math.min(dt * 8, 1);
       for (const g of groups) {
@@ -291,6 +294,11 @@ export default function HeroCardRing({ onActiveChange }: { onActiveChange?: (act
       renderer.render(scene, camera);
     };
     raf = requestAnimationFrame(tick);
+    // 卡环只在视口内转动 (mount 是那块容器, 离屏即停)
+    const io = new IntersectionObserver((entries) => {
+      onScreen = entries[0]?.isIntersecting ?? true;
+    });
+    io.observe(mount);
 
     const onResize = () => {
       camera.aspect = mount.clientWidth / mount.clientHeight;
@@ -301,6 +309,7 @@ export default function HeroCardRing({ onActiveChange }: { onActiveChange?: (act
 
     return () => {
       cancelAnimationFrame(raf);
+      io.disconnect();
       el.removeEventListener('pointerdown', onDown);
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
