@@ -736,6 +736,7 @@ const zh: Record<string, string> = {
   'learn.section.myth': '神话原型',
   'learn.desc.myth': '探索塔罗牌背后的神话故事与文化原型',
 
+  'lenormand.luckyTip': '🍀 雷诺曼小贴士：三张牌连读成一句话——比如「信 + 骑手 + 鹳」＝「一封改变处境的消息」',
   'lenormand.cardSection': '36 张符号之牌',
   'lenormand.cardSub': '每张牌都是一个生活意象：从「骑手」到「十字」，组合读牌时形成故事般的指引',
   'lenormand.methodSection': '读牌心法',

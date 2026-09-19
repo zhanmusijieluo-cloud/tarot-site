@@ -10,9 +10,6 @@ import { Sparkles } from 'lucide-react';
 import { useI18n } from '@/i18n';
 import { LN_CARDS, LN_SPREADS, LN_SPREAD_KEYS, lnImage } from '@/lib/lenormand';
 
-const LUCKY_TIP =
-  '🍀 雷诺曼小贴士：三张牌连读成一句话——比如「信 + 骑士 + 鹳」＝「一封改变处境的消息」';
-
 export default function LenormandPage() {
   const router = useRouter();
   const { t, lang } = useI18n();
@@ -78,7 +75,7 @@ export default function LenormandPage() {
                 </span>
               </div>
             </div>
-            <p className="mt-5 border-t border-white/[0.06] pt-4 text-[11px] leading-relaxed text-muted/70">{LUCKY_TIP}</p>
+            <p className="mt-5 border-t border-white/[0.06] pt-4 text-[11px] leading-relaxed text-muted/70">{t('lenormand.luckyTip')}</p>
           </button>
         </Reveal>
 

@@ -749,6 +749,7 @@ const en: Record<string, string> = {
   'learn.desc.myth': 'Explore the myths and cultural archetypes behind the cards.',
 
   // ===== Lenormand Page =====
+  'lenormand.luckyTip': '🍀 Lenormand tip: read three cards as one sentence — “Letter + Rider + Stork” = “a message that turns the situation around”.',
   'lenormand.cardSection': '36 Symbol Cards',
   'lenormand.cardSub': 'Each card is a life image: from "Rider" to "Cross" — combined readings form a story-like guide',
   'lenormand.methodSection': 'Reading Methods',

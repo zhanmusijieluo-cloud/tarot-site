@@ -736,6 +736,7 @@ const ja: Record<string, string> = {
   'learn.section.myth': '神話的元型',
   'learn.desc.myth': 'カードの背後にある神話と文化的元型を探る',
 
+  'lenormand.luckyTip': '🍀 ルノルマンのコツ：3枚をひとつの文につなげて読む——たとえば「手紙＋騎士＋コウノトリ」＝「状況を変える知らせ」',
   'lenormand.cardSection': '36枚のシンボルカード',
   'lenormand.cardSub': '各カードは生活のイメージ：「騎手」から「十字」まで。組み合わせて読むことで物語のような指針となる',
   'lenormand.methodSection': '読解の心得',
