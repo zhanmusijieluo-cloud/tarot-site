@@ -553,7 +553,7 @@ export default function ReadingSessionPage() {
         : '';
     setChat([
       ...history,
-      { role: 'user', content: extraCards?.length ? `${q}（附三张新牌）` : q },
+      { role: 'user', content: extraCards?.length ? t('session.chat.withNewCards', { question: q, count: extraCards.length }) : q },
     ]);
     setAsking(true);
     try {

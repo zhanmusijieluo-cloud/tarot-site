@@ -475,6 +475,7 @@ const zh: Record<string, string> = {
   'session.nav.followup': '追问',
   'session.generating': 'mumu 正在解读牌面…',
   'session.send': '发送追问',
+  'session.chat.withNewCards': '{question}（附 {count} 张新牌）',
   'session.modeLabel': 'mumu 的语气',
   'session.modeWarm': '温柔陪伴',
   'session.modeSassy': '毒舌吐槽',

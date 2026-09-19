@@ -475,6 +475,7 @@ const ja: Record<string, string> = {
   'session.nav.followup': '質問',
   'session.generating': 'mumu がカードを解釈しています…',
   'session.send': '質問を送信',
+  'session.chat.withNewCards': '{question}（新カード{count}枚）',
   'session.modeLabel': 'mumu の口調',
   'session.modeWarm': 'やさしい',
   'session.modeSassy': '毒舌',

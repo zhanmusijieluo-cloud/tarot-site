@@ -482,6 +482,7 @@ const en: Record<string, string> = {
   'session.nav.followup': 'Q&A',
   'session.generating': 'Mumu is reading the cards…',
   'session.send': 'Send follow-up',
+  'session.chat.withNewCards': '{question} (+{count} new cards)',
   'session.modeLabel': 'Mumu\'s tone',
   'session.modeWarm': 'Gentle',
   'session.modeSassy': 'Sarcastic',
