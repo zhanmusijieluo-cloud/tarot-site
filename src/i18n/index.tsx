@@ -82,3 +82,8 @@ export function useI18n(): I18nValue {
   if (!ctx) throw new Error('useI18n must be used within I18nProvider');
   return ctx;
 }
+
+/** 引号按语言取排版习惯：en 用弯引号，zh/ja 用直角引号 */
+export function quote(text: string, lang: Lang): string {
+  return lang === 'en' ? `\u201C${text}\u201D` : `「${text}」`;
+}

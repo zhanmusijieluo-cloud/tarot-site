@@ -75,7 +75,7 @@ function SpreadDetailInner() {
       <PageShell
         label={t(`spreadTheme.${spread.theme}`)}
         title={t(`spread.${params.key}`)}
-        subtitle="线下抽牌 · 逐张填入你的牌（问题与背景沿用上一步）"
+        subtitle={t('offline.fillStepSubtitle')}
       >
         <OfflineInterpretSection
           presetSpread={params.key}
@@ -218,7 +218,7 @@ function SpreadDetailInner() {
               className="liquid-glass w-full rounded-full px-8 py-4 text-sm tracking-[0.2em] text-frost transition-all hover:bg-white/[0.04] sm:px-10 sm:w-auto"
             >
               <HelpCircle className="mr-2 inline-block h-4 w-4" aria-hidden="true" />
-              线下抽牌
+              {t('custom.offlineBtn')}
             </button>
           </div>
           <p className="text-center text-[11px] leading-relaxed text-muted/60">

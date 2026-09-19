@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import PageShell from '@/components/PageShell';
 import OfflineInterpretSection from '@/components/OfflineInterpretSection';
+import { quote, useI18n } from '@/i18n';
 import { SPREADS } from '@/lib/tarot';
 
 // 我已抽牌 · 线下解读（落地页）
@@ -13,6 +14,7 @@ import { SPREADS } from '@/lib/tarot';
 //    自定义牌阵预设（从布阵页带入真实格子位置/牌名/问题背景），直接填牌
 function OfflineInner() {
   const s = useSearchParams();
+  const { lang, t } = useI18n();
   const spread = s.get('spread') || undefined;
   const count = Number(s.get('count')) || undefined;
   const positions = s.get('positions') || undefined;
@@ -28,12 +30,12 @@ function OfflineInner() {
 
   return (
     <PageShell
-      label="Manual Reading"
-      title={isCustomPreset ? (name || '自定义牌阵') : '线下抽牌 · 解读'}
+      label={t('offline.pageLabel')}
+      title={isCustomPreset ? (name || t('online.customSpread')) : t('offline.pageTitle')}
       subtitle={
         isCustomPreset
-          ? (name ? `「${name}」· ` : '') + '已从布阵页带入真实位置与问题背景，逐张填入你的牌即可。'
-          : '你已经在现实中摆好了牌？选择牌阵，把每张牌填进对应的真实位置，AI 为你展开深度解读。'
+          ? (name ? `${quote(name, lang)} · ` : '') + t('custom.offlineSubtitle')
+          : t('offline.pageSubtitle')
       }
     >
       <OfflineInterpretSection

@@ -91,10 +91,18 @@ function OnlineInner() {
     [spread, selectedSpread, customLayout]
   );
 
-  // 快速占卜：进入即预抽三张（无牌阵）；每日运势：单牌
+  // 快速占卜：进入即预抽三张（无牌阵）；每日运势：单牌。
+  // 牌阵名要进 AI prompt 和解读室标题，故走 t() 而非 tarot.ts 原文；custom 原先回落成英文 'Single'
   const spreadNameForResult = useMemo(
-    () => selectedSpread === 'quick' ? t('tarot.entries.quick') : selectedSpread === 'daily' ? t('page.daily.title') : spread?.name ?? 'Single',
-    [selectedSpread, spread, t]
+    () =>
+      selectedSpread === 'quick'
+        ? t('tarot.entries.quick')
+        : selectedSpread === 'daily'
+          ? t('page.daily.title')
+          : selectedSpread === 'custom'
+            ? t('online.customSpread')
+            : t(`spread.${selectedSpread}`),
+    [selectedSpread, t]
   );
 
   // 自定义牌阵牌位名：布阵时客户命名（未命名用「第 N 张」兜底），随站点语言微调

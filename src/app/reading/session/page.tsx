@@ -16,12 +16,7 @@ import { getCrossIdx, solveSpreadLayout, solveCustomGridLayout, CARD_H_RATIO, ca
 import { supabaseBrowser } from '@/lib/supabase';
 import { upsertSessionSmart, rateSessionSmart } from '@/lib/account/sessions';
 import { getMcpClient } from '@/mcp/client';
-import { useI18n, type Lang } from '@/i18n';
-
-/** 引号按语言取排版习惯：en 用弯引号，zh/ja 用直角引号 */
-function quote(text: string, lang: Lang): string {
-  return lang === 'en' ? `“${text}”` : `「${text}」`;
-}
+import { quote, type Lang, useI18n } from '@/i18n';
 
 /**
  * 牌名下方那行关键词。

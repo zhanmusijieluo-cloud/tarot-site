@@ -8,7 +8,6 @@ import { useRouter } from 'next/navigation';
 import {
   getCardImage,
   SPREADS,
-  SPREAD_THEMES,
   TAROT_DECK,
   CARD_EN_NAMES,
   type DrawnCard,
@@ -202,7 +201,7 @@ export default function OfflineInterpretSection({
       background,
       spreadName: isCustom
         ? customName || t('offline.customSpreadName', { positions: positions.join(lang === 'en' ? ', ' : '、') })
-        : isLn ? (LN_SPREADS[spreadKey]?.name[L3] ?? spreadKey) : SPREADS[spreadKey].name,
+        : isLn ? (LN_SPREADS[spreadKey]?.name[L3] ?? spreadKey) : t(`spread.${spreadKey}`),
       spreadKey: !isCustom && (isLn ? LN_SPREADS[spreadKey] : SPREADS[spreadKey]) ? spreadKey : null,
       positions: [...positions],
       customLayout: gridCustom ? presetCustomCells : undefined,
@@ -271,7 +270,7 @@ export default function OfflineInterpretSection({
                   theme === k ? 'border-accent/60 bg-accent/15 text-accent' : 'border-white/10 text-muted hover:border-accent/40'
                 }`}
               >
-                {SPREAD_THEMES[k]?.name ?? k}
+                {t(`spreadTheme.${k}`)}
               </button>
             ))}
           </div>
@@ -289,11 +288,11 @@ export default function OfflineInterpretSection({
                     active ? 'border-accent/50 bg-accent/[0.08] shadow-glow' : 'border-white/[0.06] bg-white/[0.02] hover:border-accent/30'
                   }`}
                 >
-                  <p className="font-display text-lg tracking-[0.12em] text-frost">{ln ? ln.name[L3] : sp.name}</p>
+                  <p className="font-display text-lg tracking-[0.12em] text-frost">{ln ? ln.name[L3] : t(`spread.${key}`)}</p>
                   <p className="mt-2 text-[11px] tracking-[0.2em] text-accent/70 uppercase">
                     {ln
                       ? t('offline.spreadCountLabel', { count: ln.count })
-                      : `${t('offline.spreadCountLabel', { count: sp.count })} · ${SPREAD_THEMES[sp.theme]?.name ?? sp.theme}`}
+                      : `${t('offline.spreadCountLabel', { count: sp.count })} · ${t(`spreadTheme.${sp.theme}`)}`}
                   </p>
                   <p className="mt-3 text-sm leading-relaxed text-muted">{ln ? ln.sub[L3] : spreadSubtitle(key, sp.subtitle, lang, t)}</p>
                 </button>
