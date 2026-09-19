@@ -3,11 +3,11 @@
 /**
  * 自定义牌阵 · 满铺网格布阵（塔罗/雷诺曼共用）
  * 画布竖向固定 8 行、横向按需扩展，点哪个格子哪张牌背出现，
- * 按点击顺序编号；点击牌背在画布下方钉出该牌位内容面板（命名/定位/移除）；
+ * 按点击顺序编号；点击牌背会在该牌所在行的正下方嵌出牌位内容面板（命名/定位/移除）；
  * 牌阵可命名保存（登录 → 云端同步，未登录 → 本机浏览器），下次一键载入复用。
  * 确定牌阵后直接进对应牌组的抽牌系统；「线下抽牌」切到同页填牌解读。
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BookmarkPlus, RotateCcw, Trash2, Undo2, X } from 'lucide-react';
 import PageShell, { Reveal } from '@/components/PageShell';
@@ -192,6 +192,67 @@ export default function CustomSpreadBuilder({ deck }: { deck: 'tarot' | 'lenorma
     );
   }
 
+  /**
+   * 牌位内容面板：嵌进网格，插在所点那张牌所在行的正下方。
+   * 画布是 12 列 ≈720px 的横向滚动区，屏幕只有 393px，所以面板用 sticky left-0 钉在滚动区左沿：
+   * 纵向紧跟那张牌（不用把视角挪到底部再滑回来），横向无论画布滚到哪都完整在屏幕里。
+   * 以前是绝对定位贴在牌的右侧 —— 实测点到第 4 张时面板落在 256~492，右半 99px 在屏幕外。
+   */
+  const panelEl =
+    active !== undefined && activeIdx !== null ? (
+      <div
+        ref={panelRef}
+        className="sticky left-0 z-20 mt-1.5 w-[min(360px,calc(100vw-2.5rem))] rounded-xl border border-accent/25 bg-[#14121f]/95 p-3.5 backdrop-blur-sm"
+      >
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <p className="font-display text-xs tracking-[0.1em] text-frost">
+            <span className="mr-1.5 text-accent">{String(activeIdx + 1).padStart(2, '0')}</span>
+            {t('custom.cellPos', { row: active.row + 1, col: active.col + 1 })}
+          </p>
+          <button
+            onClick={() => setActiveIdx(null)}
+            aria-label={t('common.close')}
+            className="rounded p-0.5 text-muted transition-colors hover:text-frost"
+          >
+            <X className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+        </div>
+        <input
+          value={nameDraft}
+          onChange={(e) => setNameDraft(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') saveName(); }}
+          maxLength={16}
+          placeholder={t('custom.namePlaceholder')}
+          className="w-full rounded-lg border border-white/[0.1] bg-black/25 px-2.5 py-1.5 text-xs text-frost placeholder:text-muted/40 focus:border-accent/40 focus:outline-none"
+        />
+        {/* 牌位解读提示：专业师自定的读法要点，解读时随牌位显示 */}
+        <textarea
+          value={hintDraft}
+          onChange={(e) => setHintDraft(e.target.value)}
+          rows={2}
+          maxLength={120}
+          placeholder={t('custom.cellHintPlaceholder')}
+          className="mt-1.5 w-full resize-none rounded-lg border border-white/[0.1] bg-black/25 px-2.5 py-1.5 text-[11px] leading-relaxed text-frost placeholder:text-muted/40 focus:border-accent/40 focus:outline-none"
+        />
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <button
+            onClick={saveName}
+            className="inline-flex h-7 min-w-0 flex-1 items-center justify-center whitespace-nowrap rounded-full border border-accent/40 bg-accent/15 px-3 text-[11px] font-medium leading-none text-frost transition-colors hover:bg-accent/25"
+          >
+            {t('custom.nameSave')}
+          </button>
+          <button
+            onClick={() => removeCell(activeIdx)}
+            aria-label={t('custom.removeCard')}
+            className="inline-flex h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg border border-red-500/25 bg-transparent px-2.5 text-[11px] leading-none text-red-400 transition-colors hover:bg-red-500/10"
+          >
+            <Trash2 className="h-3 w-3" aria-hidden="true" />
+            {t('custom.removeCard')}
+          </button>
+        </div>
+      </div>
+    ) : null;
+
   return (
     <PageShell
       label={t('custom.label')}
@@ -262,7 +323,8 @@ export default function CustomSpreadBuilder({ deck }: { deck: 'tarot' | 'lenorma
           <div className="overflow-x-auto pb-2">
             <div className="relative mx-auto w-max">
               {gridRows.map((row) => (
-                <div key={row} className="flex gap-1.5 sm:gap-2" style={{ paddingBottom: '0.375rem' }}>
+                <Fragment key={row}>
+                  <div className="flex gap-1.5 sm:gap-2" style={{ paddingBottom: '0.375rem' }}>
                   {gridCols.map((col) => {
                     const idx = pickedMap.get(cellKey(row, col));
                     const picked = idx !== undefined;
@@ -313,68 +375,13 @@ export default function CustomSpreadBuilder({ deck }: { deck: 'tarot' | 'lenorma
                       </button>
                     );
                   })}
-                </div>
+                  </div>
+                  {/* 面板嵌在这一行的下面：紧跟刚点的那张牌，不用把视角挪到画布底部再滑回来 */}
+                  {active?.row === row && panelEl}
+                </Fragment>
               ))}
-
             </div>
           </div>
-
-          {/* 牌位内容面板：钉在画布下方。
-              以前是绝对定位贴在所点牌的右侧，但这张画布是 12 列 ≈720px 的横向滚动区，
-              屏幕只有 393px —— 面板十有八九落在屏幕外，得手动往右滑才看得见。 */}
-          {active !== undefined && activeIdx !== null && (
-            <div
-              ref={panelRef}
-              className="mt-3 rounded-xl border border-accent/25 bg-[#14121f]/95 p-3.5 backdrop-blur-sm sm:max-w-md"
-            >
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <p className="font-display text-xs tracking-[0.1em] text-frost">
-                  <span className="mr-1.5 text-accent">{String(activeIdx + 1).padStart(2, '0')}</span>
-                  {t('custom.cellPos', { row: active.row + 1, col: active.col + 1 })}
-                </p>
-                <button
-                  onClick={() => setActiveIdx(null)}
-                  aria-label={t('common.close')}
-                  className="rounded p-0.5 text-muted transition-colors hover:text-frost"
-                >
-                  <X className="h-3.5 w-3.5" aria-hidden="true" />
-                </button>
-              </div>
-              <input
-                value={nameDraft}
-                onChange={(e) => setNameDraft(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') saveName(); }}
-                maxLength={16}
-                placeholder={t('custom.namePlaceholder')}
-                className="w-full rounded-lg border border-white/[0.1] bg-black/25 px-2.5 py-1.5 text-xs text-frost placeholder:text-muted/40 focus:border-accent/40 focus:outline-none"
-              />
-              {/* 牌位解读提示：专业师自定的读法要点，解读时随牌位显示 */}
-              <textarea
-                value={hintDraft}
-                onChange={(e) => setHintDraft(e.target.value)}
-                rows={2}
-                maxLength={120}
-                placeholder={t('custom.cellHintPlaceholder')}
-                className="mt-1.5 w-full resize-none rounded-lg border border-white/[0.1] bg-black/25 px-2.5 py-1.5 text-[11px] leading-relaxed text-frost placeholder:text-muted/40 focus:border-accent/40 focus:outline-none"
-              />
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <button
-                  onClick={saveName}
-                  className="inline-flex h-7 min-w-0 flex-1 items-center justify-center whitespace-nowrap rounded-full border border-accent/40 bg-accent/15 px-3 text-[11px] font-medium leading-none text-frost transition-colors hover:bg-accent/25"
-                >
-                  {t('custom.nameSave')}
-                </button>
-                <button
-                  onClick={() => removeCell(activeIdx)}
-                  aria-label={t('custom.removeCard')}
-                  className="inline-flex h-7 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg border border-red-500/25 bg-transparent px-2.5 text-[11px] leading-none text-red-400 transition-colors hover:bg-red-500/10"
-                >
-                  <Trash2 className="h-3 w-3" aria-hidden="true" />
-                  {t('custom.removeCard')}
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* 控制栏：撤销 / 清空 / 保存牌阵。
               padding 与字号必须用 ! 强制：.glass-btn 是不在任何 @layer 里的裸 CSS（padding 12px 32px、
