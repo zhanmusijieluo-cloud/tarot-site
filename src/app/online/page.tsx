@@ -5,6 +5,7 @@ import { ChevronRight, RotateCcw, Sparkles } from 'lucide-react';
 import PageShell, { Reveal } from '@/components/PageShell';
 import { useRouter, useSearchParams } from 'next/navigation';
 import TarotScene from '@/components/TarotScene';
+import CardFlipStage from '@/components/CardFlipStage';
 import OfflineInterpretSection from '@/components/OfflineInterpretSection';
 import ArchiveSelect from '@/components/ArchiveSelect';
 import { TAROT_DECK, SPREADS, type DrawnCard, type Spread } from '@/lib/tarot';
@@ -13,7 +14,7 @@ import { useI18n } from '@/i18n';
 import { loadArchivesSmart, type Archive } from '@/lib/astro/archives';
 import { archiveContext } from '@/lib/astro/birth-context';
 
-type Stage = 'catalogue' | 'draw';
+type Stage = 'catalogue' | 'draw' | 'flip';
 
 /** 自定义牌阵格位：与 /online/custom 布阵页、解读室共用结构 */
 interface CustomCell {
@@ -60,7 +61,9 @@ function OnlineInner() {
   const [cards, setCards] = useState<DrawnCard[]>([]);
   const [selectedCount, setSelectedCount] = useState(0);
   const [offline, setOffline] = useState(false);
-  const deckRef = useRef<number[]>([]);
+  const deckRef = useRef<{ id: number; reversed: boolean }[]>([]);
+  // 翻牌阶段：客户逐张点开才揭示，flipped[i] 对应 deckRef 第 i 张
+  const [flipped, setFlipped] = useState<boolean[]>([]);
   const offlineRef = useRef<HTMLDivElement>(null);
 
   // 出生档案（可选）：带入出生信息与太阳星座，让解读贴合本人
@@ -105,6 +108,9 @@ function OnlineInner() {
     [selectedSpread, t]
   );
 
+  // 自定义牌阵：只有带 layout 参数进来才算（'custom' 无格位时按普通流程处理）
+  const isCustomSpread = selectedSpread === 'custom' && !!customLayout?.length;
+
   // 自定义牌阵牌位名：布阵时客户命名（未命名用「第 N 张」兜底），随站点语言微调
   const customPositionNames = useMemo(() => {
     if (selectedSpread !== 'custom' || !customLayout) return [];
@@ -114,18 +120,13 @@ function OnlineInner() {
     });
   }, [customLayout, selectedSpread, lang, t]);
 
-  // 牌位名跟随站点语言（共享辅助：从 i18n 的 spreadPos.<key>.<i> 提取「」内牌位名，缺键回退原文）
-  const localizePositions = useMemo(() => {
-    return (positionsZh: readonly string[]): string[] =>
-      spreadPositions(selectedSpread, positionsZh, lang, t);
-  }, [lang, selectedSpread, t]);
-
   // 开始抽牌：清空牌池，直接进入抽牌阶段（牌序完全由 draw 阶段点选决定）
   const doShuffle = () => {
     deckRef.current = [];
     selectedRef.current.clear();
     setSelectedCount(0);
     setCards([]);
+    setFlipped([]);
     setStage('draw');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -146,34 +147,47 @@ function OnlineInner() {
   };
 
   // 选牌（quick 模式从空牌池直接点选，同步维护 deckRef）
-  const toggleCard = (id: number) => {
+  // reversed 由场景在洗牌时就随牌定好，点中即确定，后续阶段只搬运不再重掷
+  const toggleCard = (id: number, reversed: boolean) => {
     const s = selectedRef.current;
     if (s.has(id)) {
       s.delete(id);
-      deckRef.current = deckRef.current.filter((x) => x !== id);
+      deckRef.current = deckRef.current.filter((x) => x.id !== id);
     } else if (s.size < drawCount) {
       s.add(id);
-      if (!deckRef.current.includes(id)) deckRef.current.push(id);
+      if (!deckRef.current.some((x) => x.id === id)) deckRef.current.push({ id, reversed });
     }
     setSelectedCount(s.size);
-    setCards([...s].map((uid) => {
+    setCards(deckRef.current.map(({ id: uid, reversed: rev }) => {
       const base = TAROT_DECK.find((c) => c.id === uid)!;
-      return { ...base, isReversed: false } as DrawnCard;
+      return { ...base, isReversed: rev } as DrawnCard;
     }));
   };
 
-  // 选完牌：立即写入会话（正文留空）并跳转解读室，由解读室内流式生成解读
-  const doReveal = () => {
-    const drawn = deckRef.current.map((uid) => {
-      const base = TAROT_DECK.find((c) => c.id === uid)!;
-      return { ...base, isReversed: Math.random() < 0.5 } as DrawnCard;
-    });
-    const isCustom = selectedSpread === 'custom' && !!customLayout?.length;
-  try {
+  // 抽齐 → 进入翻牌阶段（牌已定，客户逐张翻开揭示）
+  const startFlip = () => {
+    if (selectedCount < drawCount) return;
+    setFlipped(new Array(deckRef.current.length).fill(false));
+    setStage('flip');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const flipCard = (index: number) => setFlipped((prev) => prev.map((v, i) => (i === index ? true : v)));
+  const allFlipped = flipped.length > 0 && flipped.every(Boolean);
+
+  // 牌位名：自定义牌阵用布阵时的命名，内置牌阵按语言取，与解读室拿到的是同一份
+  const positionNames = isCustomSpread
+    ? customPositionNames
+    : spreadPositions(selectedSpread, spread?.positions ?? [], lang, t);
+
+  // 翻完牌：写入会话（正文留空）并跳转解读室，由解读室内流式生成解读
+  const enterRoom = () => {
+    const isCustom = isCustomSpread;
+    try {
       window.sessionStorage.setItem(
         'tarot-reading-session',
         JSON.stringify({
-          cards: drawn.map((c) => ({
+          cards: cards.map((c) => ({
             id: c.id,
             name: c.name,
             isReversed: c.isReversed,
@@ -187,7 +201,7 @@ function OnlineInner() {
           background: bgWithArchive,
           spreadName: spreadNameForResult,
           spreadKey: !isCustom && selectedSpread !== 'quick' && SPREADS[selectedSpread] ? selectedSpread : null,
-          positions: isCustom ? customPositionNames : localizePositions(spread?.positions ?? []),
+          positions: positionNames,
           // 自定义牌阵格位：解读室按 row/col 原样还原客户摆放的位置
           customLayout: isCustom ? customLayout : undefined,
           interpretation: '',
@@ -327,13 +341,40 @@ function OnlineInner() {
                     <RotateCcw className="mr-2 inline-block h-4 w-4" aria-hidden="true" />{t('online.flipBack')}
                   </button>
                   <button
-                    onClick={doReveal}
+                    onClick={startFlip}
                     disabled={selectedCount < drawCount}
                     className={`glass-btn-primary text-sm ${selectedCount < drawCount ? 'opacity-40' : ''}`}
                   >
                     {t('online.flip')} <ChevronRight className="ml-1 inline-block h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
+              </div>
+            </div>
+          </Reveal>
+        </section>
+      )}
+
+      {/* 翻牌阶段：牌与正逆位在洗牌时已随位置定好，这里逐张点开只是揭示 */}
+      {stage === 'flip' && (
+        <section className="py-2">
+          <Reveal>
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-5 py-10 sm:px-10">
+              <h2 className="font-display mb-2 text-center text-lg tracking-[0.15em] text-frost/90">{t('online.flip')}</h2>
+              <p className="mb-9 text-center text-[11px] leading-relaxed text-muted/70">
+                {allFlipped ? t('flip.allOpenHint') : t('flip.progress', { done: flipped.filter(Boolean).length, total: cards.length })}
+              </p>
+              <CardFlipStage cards={cards} flipped={flipped} onFlip={flipCard} positions={positionNames} />
+              <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <button onClick={() => setStage('draw')} className="glass-btn w-full text-sm sm:w-auto sm:px-8">
+                  <RotateCcw className="mr-2 inline-block h-4 w-4" aria-hidden="true" />{t('flip.repick')}
+                </button>
+                <button
+                  onClick={enterRoom}
+                  disabled={!allFlipped}
+                  className={`glass-btn-primary w-full text-sm sm:w-auto sm:px-10 ${allFlipped ? '' : 'opacity-40'}`}
+                >
+                  {t('flip.enterRoom')} <ChevronRight className="ml-1 inline-block h-4 w-4" aria-hidden="true" />
+                </button>
               </div>
             </div>
           </Reveal>

@@ -134,6 +134,8 @@ export default function ReadingSessionPage() {
   // ═══ 后续问题抽牌状态 ═══
   const [showDrawScene, setShowDrawScene] = useState(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  /** 洗牌时定好的朝向：牌 id → 逆位。点牌即记下，确认抽牌时不再重新摇号 */
+  const poolReversedRef = useRef<Map<number, boolean>>(new Map());
   const [drawnCards, setDrawnCards] = useState<DrawnCard[]>([]);
   // 本场占卜中历次追问抽到的所有牌（累积），追问回答时与原牌阵一起交给 AI
   const [allExtraCards, setAllExtraCards] = useState<DrawnCard[]>([]);
@@ -607,8 +609,9 @@ export default function ReadingSessionPage() {
         return { ...base } as DrawnCard; // 雷诺曼无逆位
       }
       const base = TAROT_DECK.find((c) => c.id === uid)!;
-      return { ...base, isReversed: Math.random() < 0.5 } as DrawnCard;
+      return { ...base, isReversed: poolReversedRef.current.get(uid) === true } as DrawnCard;
     });
+    poolReversedRef.current.clear();
     setSelectedIds([]);
     setShowDrawScene(false);
     // 先在聊天窗口内亮出三张新牌面气泡，停留片刻让客户看清，再自动开始解读
@@ -622,7 +625,10 @@ export default function ReadingSessionPage() {
     }, 2600); // 约2.6秒：足够客户看清自己抽中了什么牌
   };
 
-  const togglePoolCard = (id: number) => {
+  const togglePoolCard = (id: number, reversed: boolean) => {
+    const drop = selectedIds.includes(id) || selectedIds.length >= 3;
+    if (drop) poolReversedRef.current.delete(id);
+    else poolReversedRef.current.set(id, reversed);
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : prev.length < 3 ? [...prev, id] : prev
     );
@@ -1098,7 +1104,7 @@ export default function ReadingSessionPage() {
               {/* 双功能按钮：抽牌解读 / 直接发送 */}
               <div className="mt-3 flex items-center justify-end gap-3">
                 <button
-                  onClick={() => { setSelectedIds([]); setShowDrawScene(true); }}
+                  onClick={() => { setSelectedIds([]); poolReversedRef.current.clear(); setShowDrawScene(true); }}
                   disabled={!followUp.trim() || asking}
                   className={`glass-btn inline-flex h-11 items-center gap-2 whitespace-nowrap text-xs ${!followUp.trim() || asking ? 'opacity-40' : ''}`}
                 >
@@ -1165,7 +1171,7 @@ export default function ReadingSessionPage() {
                 <span className="text-lg text-muted">3</span>
               </div>
               <button
-                onClick={() => { setShowDrawScene(false); setSelectedIds([]); }}
+                onClick={() => { setShowDrawScene(false); setSelectedIds([]); poolReversedRef.current.clear(); }}
                 className="glass-btn text-sm"
               >
                 <RotateCcw className="mr-2 inline-block h-4 w-4" aria-hidden="true" />{t('online.flipBack')}

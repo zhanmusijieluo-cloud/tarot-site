@@ -24,6 +24,8 @@ function seeded(seed: number) {
 
 interface CardSpec {
   id: number; // 打乱后的真实牌 id（0-77）
+  /** 洗牌时一次定好的朝向，客户点到即揭晓；雷诺曼恒为 false */
+  reversed: boolean;
   layer: 'back' | 'mid' | 'front';
   t: number;
   yBase: number;
@@ -44,21 +46,37 @@ interface CardSpec {
 interface TarotSceneProps {
   maxSelect: number;
   selectedIds: number[];
-  onToggleCard: (id: number) => void;
+  /** 点中牌背即揭晓该张牌：reversed 是洗牌时定好的朝向，翻牌阶段只负责展示 */
+  onToggleCard: (id: number, reversed: boolean) => void;
   disabled?: boolean;
   /** 牌组: tarot=78张(id 0-77, 默认) / lenormand=36张(id 1-36)。控制漂浮牌池与洗牌范围 */
   deck?: 'tarot' | 'lenormand';
 }
 
-function shuffleIds(totalCards: number, deck: 'tarot' | 'lenormand' = 'tarot'): number[] {
-  if (deck === 'lenormand') {
-    const ids = Array.from({ length: 36 }, (_, i) => i + 1); // 雷诺曼 id 1~36
-    return ids.sort(() => Math.random() - 0.5).slice(0, totalCards);
-  }
-  return [...TAROT_DECK].sort(() => Math.random() - 0.5).slice(0, totalCards).map(c => c.id);
+/**
+ * 洗牌：一次真·洗牌应该同时固定「位置」和「朝向」，所以这里洗出的是 {id, reversed} 序列，
+ * 客户点到哪个牌背就同时拿到那张牌和那个朝向；翻牌只是揭示，不再重掷。
+ * 用 Fisher-Yates——`sort(() => Math.random() - 0.5)` 分布是偏的（实测前排命中率 8%~26%，
+ * 而公平值是 16/78≈20.5%），会让小 id 的大阿卡纳系统性地沉进最难点的后层。
+ */
+interface DeckSlot {
+  id: number;
+  reversed: boolean;
 }
 
-function buildCards(totalCards: number, isMobile: boolean, ids: number[], deck: 'tarot' | 'lenormand' = 'tarot'): CardSpec[] {
+function shuffleDeck(totalCards: number, deck: 'tarot' | 'lenormand' = 'tarot'): DeckSlot[] {
+  const ids = deck === 'lenormand'
+    ? Array.from({ length: 36 }, (_, i) => i + 1) // 雷诺曼 id 1~36
+    : TAROT_DECK.map((c) => c.id);
+  for (let i = ids.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+  }
+  // 雷诺曼无逆位
+  return ids.slice(0, totalCards).map((id) => ({ id, reversed: deck === 'lenormand' ? false : Math.random() < 0.5 }));
+}
+
+function buildCards(totalCards: number, isMobile: boolean, slots: DeckSlot[], deck: 'tarot' | 'lenormand' = 'tarot'): CardSpec[] {
   const random = seeded(0x79657969);
   const cards: CardSpec[] = [];
   const yNudge: Record<string, number[]> = {
@@ -94,8 +112,10 @@ function buildCards(totalCards: number, isMobile: boolean, ids: number[], deck: 
       const width = band.width + (random() - 0.5) * (band.layer === 'front' ? 4 : 3);
       const tilt = (random() - 0.5) * (band.layer === 'back' ? 7 : 9);
       const side = random() < 0.16 ? (random() < 0.5 ? -1 : 1) : 0;
+      const slot = slots[deckIndex % slots.length];
       cards.push({
-        id: ids[deckIndex % ids.length],
+        id: slot.id,
+        reversed: slot.reversed,
         layer: band.layer,
         t,
         yBase: band.y + stagger + sideBias,
@@ -125,7 +145,7 @@ class TarotSceneEngine {
   deck: 'tarot' | 'lenormand';
   maxSelect: number;
   selectedIds: Set<number>;
-  onToggleCard: (id: number) => void;
+  onToggleCard: (id: number, reversed: boolean) => void;
   disabled: boolean;
   isMobile: boolean;
   destroyed = false;
@@ -147,7 +167,7 @@ class TarotSceneEngine {
   /** 牌背无障碍标签文案（按屏内槽位取，语言切换时由 setCardLabelOf 重刷） */
   cardLabelOf: (slot: number) => string;
 
-  constructor(opts: { container: HTMLElement; totalCards: number; maxSelect: number; selectedIds: number[]; onToggleCard: (id: number) => void; deck?: 'tarot' | 'lenormand'; cardLabelOf?: (slot: number) => string }) {
+  constructor(opts: { container: HTMLElement; totalCards: number; maxSelect: number; selectedIds: number[]; onToggleCard: (id: number, reversed: boolean) => void; deck?: 'tarot' | 'lenormand'; cardLabelOf?: (slot: number) => string }) {
     this.container = opts.container;
     this.totalCards = opts.totalCards;
     this.deck = opts.deck || 'tarot';
@@ -157,7 +177,7 @@ class TarotSceneEngine {
     this.cardLabelOf = opts.cardLabelOf || ((slot) => `Card back ${slot}`);
     this.disabled = false;
     this.isMobile = window.matchMedia('(max-width: 767px)').matches;
-    this.cards = buildCards(opts.totalCards, this.isMobile, shuffleIds(opts.totalCards, opts.deck), opts.deck);
+    this.cards = buildCards(opts.totalCards, this.isMobile, shuffleDeck(opts.totalCards, opts.deck), opts.deck);
 
     this.root = document.createElement('div');
     this.root.className = 'tarot-scene-root';
@@ -176,6 +196,7 @@ class TarotSceneEngine {
       button.style.setProperty('--gilt-phase', `${(card.id % 12) * -0.55}s`);
       button.setAttribute('aria-label', this.cardLabelOf(slot + 1));
       button.dataset.deckId = String(card.id);
+      button.dataset.reversed = card.reversed ? '1' : '0';
       // 鎏金卡背图层
       const giltImg = document.createElement('img');
       giltImg.src = '/cards/card-back-new.webp';
@@ -189,7 +210,7 @@ class TarotSceneEngine {
       giltSheen.setAttribute('aria-hidden', 'true');
       button.appendChild(giltSheen);
       // 在 button 上直接绑定 click（最稳，不依赖冒泡与事件代理）
-      button.addEventListener('click', (e) => this.onCardClick(e as MouseEvent, card.id));
+      button.addEventListener('click', (e) => this.onCardClick(e as MouseEvent, card.id, card.reversed));
       this.field.appendChild(button);
       return button;
     });
@@ -365,7 +386,7 @@ class TarotSceneEngine {
   }
 
   // click 兜底：处理真实点击/触屏 tap/自动化工具派发的 click
-  onCardClick(event: MouseEvent, cardId: number) {
+  onCardClick(event: MouseEvent, cardId: number, reversed: boolean) {
     if (this.disabled) return;
     // 拖动刚结束（80ms 内）→ 视为 drag 末端，忽略
     if (performance.now() - this.lastDragAt < 80) {
@@ -375,7 +396,7 @@ class TarotSceneEngine {
     }
     event.preventDefault();
     event.stopPropagation();
-    this.onToggleCard(cardId);
+    this.onToggleCard(cardId, reversed);
   }
 
   // root 上的兜底（处理 button 被包一层的情况）：根据事件坐标找最近牌背
@@ -389,13 +410,12 @@ class TarotSceneEngine {
     // 优先用 DOM closest；触屏上 setPointerCapture 会把 click 目标重定向到 root，
     // 此时 closest 找不到牌背，改用坐标拾取兜底。
     const target = (event.target as Element)?.closest?.('.tarot-scene-card') as HTMLElement | null;
-    const deckId = target
-      ? Number(target.dataset.deckId)
-      : Number(this.pickCardAt(event.clientX, event.clientY)?.dataset.deckId);
+    const node = target ?? this.pickCardAt(event.clientX, event.clientY);
+    const deckId = Number(node?.dataset.deckId);
     if (!Number.isFinite(deckId) || deckId < 0) return;
     event.preventDefault();
     event.stopPropagation();
-    this.onToggleCard(deckId);
+    this.onToggleCard(deckId, node?.dataset.reversed === '1');
   }
 
   pickCardAt(clientX: number, clientY: number): HTMLButtonElement | null {
