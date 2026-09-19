@@ -13,6 +13,21 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 天
     remotePatterns: [],
   },
+  // 牌面图：线上实测此前是 max-age=0, must-revalidate，每次回访每张牌都要回源校验一次。
+  // 取 1 天 + 7 天 SWR：回访当天零请求，万一换图最多 24 小时后生效（文件名不带 hash，不敢上 immutable）
+  async headers() {
+    return [
+      {
+        source: "/cards/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+      },
+      {
+        // 只给 .webp 牌面图，别把 /lenormand/draw 这些页面也罩进长缓存
+        source: "/lenormand/:file.webp",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" }],
+      },
+    ];
+  },
   // 实验性：静态导入图片自动优化
   experimental: {
     optimizePackageImports: ["three", "@react-spring/web", "framer-motion", "lucide-react"],

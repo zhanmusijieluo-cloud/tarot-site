@@ -15,6 +15,13 @@ const ENGINES = [
 
 const ELEMENT_EN: Record<string, string> = { '风':'Air','火':'Fire','水':'Water','土':'Earth','未知':'Unknown' };
 
+/** 客户没给牌位名时的占位：三语各写各的，此前 ja 落到中文串里污染提示词 */
+const NO_POSITION_LABEL: Record<'zh' | 'en' | 'ja', string> = {
+  zh: '（无固定牌位）',
+  en: '(no fixed position)',
+  ja: '（固定した位置なし）',
+};
+
 interface StructuredReading {
   cards: { position: string; traits?: string; summary: string }[];
   elementEnergy: string; links: string; rootCause: string; trend: string; conclusion: string; advice: string;
@@ -355,7 +362,7 @@ async function buildReadingInputs(args: TarotReadingRequest): Promise<ReadingCtx
   };
 
   const cardsContext = args.cards.map((card: any, index: number) => {
-    const position = positions[index] || card.position || (useEn ? '(No fixed position)' : '（无固定牌位）');
+    const position = positions[index] || card.position || NO_POSITION_LABEL[lang];
     const cardId = typeof card.id === 'number' ? card.id : -1;
     // 牌名按语言本地化：ja 用日语名、en 用英文名、zh 用原名（此前 ja 误用英文名导致混杂）
     const cardName = localizedCardName(card, lang);
@@ -582,7 +589,7 @@ async function buildLenormandInputs(
     const id = typeof card.id === 'number' ? card.id : -1;
     const det = lnData.get(id)?.[lang] || lnData.get(id)?.zh || {};
     const cardName = localizedCardName(card, lang);
-    const position = positions[index] || (useEn ? '(no fixed position)' : '（无固定牌位）');
+    const position = positions[index] || NO_POSITION_LABEL[lang];
     const kw = typeof card.upright === 'string' ? card.upright : '';
     const dom = det.domains || {};
     const pieces: string[] = [];
