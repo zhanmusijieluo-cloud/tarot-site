@@ -16,6 +16,54 @@
 import { useEffect, useState } from 'react';
 import { shouldStaleAssetRecover, reloadForStaleAsset } from '@/lib/chunk-recovery';
 
+type Lang = 'zh' | 'en' | 'ja';
+
+/** 与 app/error.tsx 同一套路：语言只能从 localStorage / <html lang> 探，探测失败回中文 */
+function detectLang(): Lang {
+  try {
+    const saved = localStorage.getItem('oracle-lang');
+    if (saved === 'en' || saved === 'ja' || saved === 'zh') return saved;
+    const html = document.documentElement.lang;
+    if (html === 'en' || html === 'ja') return html;
+  } catch {
+    /* 忽略: 探测失败就用中文 */
+  }
+  return 'zh';
+}
+
+const TEXT: Record<Lang, {
+  title: string; desc: string; retry: string; home: string; detail: string;
+  healing: string; healingDesc: string;
+}> = {
+  zh: {
+    title: '页面出了点问题',
+    desc: '不是你的操作有问题，重新加载一下通常就能恢复。',
+    retry: '重新加载',
+    home: '回首页',
+    detail: '错误详情',
+    healing: '正在恢复…',
+    healingDesc: '刚刚发布过新版本，正在载入最新内容。',
+  },
+  en: {
+    title: 'Something went wrong',
+    desc: 'Nothing you did — reloading usually fixes it.',
+    retry: 'Reload',
+    home: 'Home',
+    detail: 'Error detail',
+    healing: 'Restoring…',
+    healingDesc: 'A new version just shipped — loading the latest.',
+  },
+  ja: {
+    title: 'ページで問題が発生しました',
+    desc: '操作の問題ではありません。再読み込みで通常は復帰します。',
+    retry: '再読み込み',
+    home: 'ホーム',
+    detail: 'エラー詳細',
+    healing: '復帰中…',
+    healingDesc: '新バージョンが公開されたため、最新の内容を読み込んでいます。',
+  },
+};
+
 export default function GlobalError({
   error,
   reset,
@@ -24,6 +72,13 @@ export default function GlobalError({
   reset: () => void;
 }) {
   const [healing, setHealing] = useState(false);
+  const [lang, setLang] = useState<Lang>('zh');
+
+  useEffect(() => {
+    // 渲染期读 localStorage 会与 SSR 结果不一致，只能放 effect；读失败仍停在中文，不会二次抛错
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLang(detectLang());
+  }, []);
 
   useEffect(() => {
     // 留现场, 便于线上定位 (Vercel 日志里能按 digest 捞)
@@ -92,7 +147,7 @@ export default function GlobalError({
   // 部署切换类错误: 正在自动重载, 给一个安静的过渡态
   if (healing) {
     return (
-      <html lang="zh">
+      <html lang={lang === 'zh' ? 'zh-CN' : lang}>
         <body style={shell}>
           <div style={{ textAlign: 'center' }}>
             <div
@@ -107,9 +162,9 @@ export default function GlobalError({
               }}
             />
             <style>{'@keyframes oracle-spin{to{transform:rotate(360deg)}}'}</style>
-            <p style={{ fontSize: 15, margin: 0, color: '#e8e6f0' }}>正在恢复…</p>
+            <p style={{ fontSize: 15, margin: 0, color: '#e8e6f0' }}>{TEXT[lang].healing}</p>
             <p style={{ marginTop: 8, fontSize: 12, margin: '8px 0 0', color: 'rgba(232,230,240,0.55)' }}>
-              刚刚发布过新版本，正在载入最新内容。
+              {TEXT[lang].healingDesc}
             </p>
           </div>
         </body>
@@ -118,7 +173,7 @@ export default function GlobalError({
   }
 
   return (
-    <html lang="zh">
+    <html lang={lang === 'zh' ? 'zh-CN' : lang}>
       <body
         style={{
           margin: 0,
@@ -151,9 +206,9 @@ export default function GlobalError({
           >
             ✦
           </div>
-          <h1 style={{ fontSize: 20, fontWeight: 600, margin: '0 0 12px' }}>页面出了点问题</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 600, margin: '0 0 12px' }}>{TEXT[lang].title}</h1>
           <p style={{ fontSize: 13.5, lineHeight: 1.7, color: 'rgba(232,230,240,0.62)', margin: 0 }}>
-            不是你的操作有问题，重新加载一下通常就能恢复。
+            {TEXT[lang].desc}
           </p>
 
           {/* 报错摘要 (排查用): 一行, 便于截图反馈 */}
@@ -187,7 +242,7 @@ export default function GlobalError({
                   color: 'rgba(232,230,240,0.32)',
                 }}
               >
-                错误详情
+                {TEXT[lang].detail}
               </summary>
               <pre
                 style={{
@@ -226,12 +281,12 @@ export default function GlobalError({
           ) : null}
           <div style={{ marginTop: 28, display: 'flex', gap: 12, justifyContent: 'center' }}>
             <button onClick={() => reset()} style={btn}>
-              重新加载
+              {TEXT[lang].retry}
             </button>
             {/* global-error 替换了根布局, 没有 router context, 只能用 <a> 硬导航 */}
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a href="/" style={{ ...btn, border: '1px solid rgba(255,255,255,0.14)', background: 'transparent', color: 'rgba(232,230,240,0.62)' }}>
-              回首页
+              {TEXT[lang].home}
             </a>
           </div>
         </div>

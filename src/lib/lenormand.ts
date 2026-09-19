@@ -112,7 +112,7 @@ export function lnLocalName(id: number, lang: string, t?: (k: string) => string)
   const viaI18n = t ? t(`ln.${id - 1}.name`) : '';
   if (viaI18n && !viaI18n.startsWith('ln.')) return viaI18n;
   if (lang === 'en') return LN_EN_NAMES[id] || '';
-  if (lang === 'ja') return LN_ZH_NAMES[id] || ''; // 日文牌名走 i18n 兜底(汉字相近)
+  if (lang === 'ja') return LN_JA_NAMES[id] || LN_ZH_NAMES[id] || '';
   return LN_ZH_NAMES[id] || '';
 }
 
