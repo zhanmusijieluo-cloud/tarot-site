@@ -204,7 +204,7 @@ function OnlineInner() {
           {/* 三张无牌阵 · 卡背预览（横排摆好） */}
           <Reveal>
             <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-6 py-10 sm:px-10">
-              <h2 className="font-display mb-8 text-center text-lg tracking-[0.15em] text-frost/90">三张无牌阵</h2>
+              <h2 className="font-display mb-8 text-center text-lg tracking-[0.15em] text-frost/90">{t('online.noSpreadTitle')}</h2>
               <div className="flex items-center justify-center gap-5 sm:gap-7">
                 {[0, 1, 2].map((i) => (
                   /* eslint-disable-next-line @next/next/no-img-element */
@@ -258,7 +258,7 @@ function OnlineInner() {
                 <Sparkles className="mr-2 inline-block h-4 w-4" aria-hidden="true" />{t('quick.start')}
               </button>
               <button onClick={startOffline} className="liquid-glass w-full rounded-full px-8 py-4 text-sm tracking-[0.2em] text-frost transition-all hover:bg-white/[0.04] sm:w-auto sm:px-10">
-                线下抽牌
+                {t('custom.offlineBtn')}
               </button>
             </div>
           </Reveal>
@@ -268,8 +268,8 @@ function OnlineInner() {
             <div ref={offlineRef} className="mt-2">
               <OfflineInterpretSection
                 presetCustomCount={3}
-                presetCustomPositions="第一张,第二张,第三张"
-                customName="三张无牌阵"
+                presetCustomPositions={[1, 2, 3].map((n) => t('custom.position', { n })).join(',')}
+                customName={t('online.noSpreadTitle')}
                 presetQuestion={question}
                 presetBackground={bgWithArchive}
                 hideCustomSettings

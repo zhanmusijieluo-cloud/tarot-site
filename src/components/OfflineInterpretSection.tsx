@@ -16,7 +16,7 @@ import {
 import { CARD_JA_NAMES } from '@/lib/card-names';
 import { LN_DECK, LN_SPREADS, LN_SPREAD_KEYS, LN_EN_NAMES as LN_EN_NAMES_I, LN_JA_NAMES as LN_JA_NAMES_I, lnImage, lnLocalName } from '@/lib/lenormand';
 import { solveSpreadLayout, cardWClassToPx, customGridToCoords, solveCoordsLayout } from '@/lib/spread-layout';
-import { spreadPositions } from '@/lib/spread-i18n';
+import { spreadPositions, spreadSubtitle } from '@/lib/spread-i18n';
 import { useI18n } from '@/i18n';
 
 const THEME_KEYS = ['general', 'love', 'career', 'wealth', 'choice', 'growth'];
@@ -70,7 +70,10 @@ export default function OfflineInterpretSection({
   const [theme, setTheme] = useState<'all' | (typeof THEME_KEYS)[number]>('all');
   const [useCustom, setUseCustom] = useState(hasCustomPreset);
   const [customCount, setCustomCount] = useState(presetCustomCount || 3);
-  const [customPositions, setCustomPositions] = useState(presetCustomPositions || '过去,现在,未来');
+  // 默认牌位名不进 state：切语言时重新取词，避免用户没碰过输入框就固化成挂载那一刻的语言
+  const [customPositions, setCustomPositions] = useState<string | null>(presetCustomPositions || null);
+  const defaultPositions = t('offline.positionsDefault');
+  const customPosValue = customPositions ?? defaultPositions;
   const [saveSpread, setSaveSpread] = useState(false);
   const [saveName, setSaveName] = useState(customName || '');
   const [slots, setSlots] = useState<(Slot)[]>([]);
@@ -89,9 +92,9 @@ export default function OfflineInterpretSection({
     ? presetCustomCells!.length
     : useCustom ? Math.max(1, Math.min(10, customCount)) : (isLn ? LN_SPREADS[spreadKey]?.count : SPREADS[spreadKey]?.count) ?? 1;
   const positions: readonly string[] = gridCustom
-    ? presetCustomCells!.map((c, i) => c.name || `位置${i + 1}`)
+    ? presetCustomCells!.map((c, i) => c.name || t('custom.position', { n: i + 1 }))
     : useCustom
-      ? customPositions.split(/[,，、]/).filter(Boolean)
+      ? customPosValue.split(/[,，、]/).filter(Boolean)
       : isLn
         ? (LN_SPREADS[spreadKey]?.positions[L3] ?? [])
         : spreadPositions(spreadKey, SPREADS[spreadKey].positions, lang, t);
@@ -170,7 +173,7 @@ export default function OfflineInterpretSection({
   // 「开始解读」→ 写入解读会话 → 跳解读室（流式）
   const doInterpret = () => {
     if (!allFilled) {
-      setError('还有牌位没填，请先填满再解读');
+      setError(t('offline.incompleteError'));
       return;
     }
     const cards = slots.map((s) => {
@@ -198,7 +201,7 @@ export default function OfflineInterpretSection({
       question,
       background,
       spreadName: isCustom
-        ? customName || `自定义牌阵（${positions.join('、')}）`
+        ? customName || t('offline.customSpreadName', { positions: positions.join(lang === 'en' ? ', ' : '、') })
         : isLn ? (LN_SPREADS[spreadKey]?.name[L3] ?? spreadKey) : SPREADS[spreadKey].name,
       spreadKey: !isCustom && (isLn ? LN_SPREADS[spreadKey] : SPREADS[spreadKey]) ? spreadKey : null,
       positions: [...positions],
@@ -224,7 +227,7 @@ export default function OfflineInterpretSection({
             onClick={onBack}
             className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-sm tracking-[0.15em] text-muted transition-all hover:border-accent/40 hover:text-accent"
           >
-            <span aria-hidden="true">←</span> 切换在线抽牌
+            <span aria-hidden="true">←</span> {t('offline.switchToOnline')}
           </button>
         )}
 
@@ -233,13 +236,13 @@ export default function OfflineInterpretSection({
           <div className="mb-8 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-6 py-4">
             {question && (
               <div>
-                <p className="text-[11px] tracking-[0.2em] text-accent/70">问题</p>
+                <p className="text-[11px] tracking-[0.2em] text-accent/70">{t('offline.questionLabel')}</p>
                 <p className="mt-1 text-sm leading-relaxed text-frost">{question}</p>
               </div>
             )}
             {background && (
               <div className={question ? 'mt-3' : ''}>
-                <p className="text-[11px] tracking-[0.2em] text-accent/70">背景</p>
+                <p className="text-[11px] tracking-[0.2em] text-accent/70">{t('offline.backgroundLabel')}</p>
                 <p className="mt-1 text-sm leading-relaxed text-muted">{background}</p>
               </div>
             )}
@@ -249,7 +252,7 @@ export default function OfflineInterpretSection({
         {/* 一、选牌阵（仅在无预选、直接进入 /offline 时显示；自定义预设时也不显示网格） */}
         {!presetSpread && !hasCustomPreset && (
         <div className="mb-14 text-left">
-          <h3 className="font-display mb-6 text-xl tracking-[0.15em] text-frost/90">一、选择牌阵</h3>
+          <h3 className="font-display mb-6 text-xl tracking-[0.15em] text-frost/90">{t('offline.stepSpreadTitle')}</h3>
           {!isLn && (
           <div className="mb-8 flex flex-wrap gap-3">
             <button
@@ -258,7 +261,7 @@ export default function OfflineInterpretSection({
                 theme === 'all' ? 'border-accent/60 bg-accent/15 text-accent' : 'border-white/10 text-muted hover:border-accent/40'
               }`}
             >
-              全部
+              {t('spreads.filterAll')}
             </button>
             {THEME_KEYS.map((k) => (
               <button
@@ -288,9 +291,11 @@ export default function OfflineInterpretSection({
                 >
                   <p className="font-display text-lg tracking-[0.12em] text-frost">{ln ? ln.name[L3] : sp.name}</p>
                   <p className="mt-2 text-[11px] tracking-[0.2em] text-accent/70 uppercase">
-                    {ln ? `${ln.count} 张牌` : `${sp.count} 张牌 · ${SPREAD_THEMES[sp.theme]?.name ?? sp.theme}`}
+                    {ln
+                      ? t('offline.spreadCountLabel', { count: ln.count })
+                      : `${t('offline.spreadCountLabel', { count: sp.count })} · ${SPREAD_THEMES[sp.theme]?.name ?? sp.theme}`}
                   </p>
-                  <p className="mt-3 text-sm leading-relaxed text-muted">{ln ? ln.sub[L3] : sp.subtitle}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-muted">{ln ? ln.sub[L3] : spreadSubtitle(key, sp.subtitle, lang, t)}</p>
                 </button>
               );
             })}
@@ -300,9 +305,9 @@ export default function OfflineInterpretSection({
                 useCustom ? 'border-accent/60 bg-accent/[0.08] shadow-glow' : 'border-accent/25 hover:border-accent/50'
               }`}
             >
-              <p className="font-display text-lg tracking-[0.12em] text-accent">自定义牌阵</p>
-              <p className="mt-2 text-[11px] tracking-[0.2em] text-muted uppercase">Custom</p>
-              <p className="mt-3 text-sm leading-relaxed text-muted">自由设置张数与牌位含义</p>
+              <p className="font-display text-lg tracking-[0.12em] text-accent">{t('online.customSpread')}</p>
+              <p className="mt-2 text-[11px] tracking-[0.2em] text-muted uppercase">{t('offline.customEyebrow')}</p>
+              <p className="mt-3 text-sm leading-relaxed text-muted">{t('offline.customDesc')}</p>
             </button>
           </div>
         </div>
@@ -312,7 +317,7 @@ export default function OfflineInterpretSection({
         {useCustom && (
           <div className="mb-14 rounded-2xl border border-accent/20 bg-white/[0.02] p-8">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <h3 className="font-display text-xl tracking-[0.15em] text-frost">{customName || '自定义牌阵'} · {n} 张</h3>
+              <h3 className="font-display text-xl tracking-[0.15em] text-frost">{customName || t('online.customSpread')} · {t('common.cardsCount', { count: n })}</h3>
               {!hideCustomSettings && (
                 <label className="flex items-center gap-2 text-xs text-muted">
                   <input
@@ -321,7 +326,7 @@ export default function OfflineInterpretSection({
                     onChange={(e) => setSaveSpread(e.target.checked)}
                     className="h-4 w-4 rounded border-white/20 bg-black/30 accent-accent"
                   />
-                  保存此牌阵
+                  {t('custom.saveSpreadBtn')}
                 </label>
               )}
             </div>
@@ -329,14 +334,14 @@ export default function OfflineInterpretSection({
               <input
                 value={saveName}
                 onChange={(e) => setSaveName(e.target.value)}
-                placeholder="给这个牌阵取个名字（例如：复合关系）"
+                placeholder={t('offline.saveNamePlaceholder')}
                 className="mt-4 w-full rounded-xl border border-white/10 bg-black/30 px-5 py-3 text-sm text-frost focus:border-accent/50 focus:outline-none"
               />
             )}
             {!hideCustomSettings && (
               <div className="mt-6 grid gap-6 sm:grid-cols-2">
                 <div>
-                  <label className="mb-3 block text-sm text-muted">张数（1-10）</label>
+                  <label className="mb-3 block text-sm text-muted">{t('offline.countLabel')}</label>
                   <input
                     type="number"
                     min={1}
@@ -347,11 +352,11 @@ export default function OfflineInterpretSection({
                   />
                 </div>
                 <div>
-                  <label className="mb-3 block text-sm text-muted">牌位含义（逗号分隔）</label>
+                  <label className="mb-3 block text-sm text-muted">{t('offline.positionsLabel')}</label>
                   <input
-                    value={customPositions}
+                    value={customPosValue}
                     onChange={(e) => setCustomPositions(e.target.value)}
-                    placeholder="例如：现状,阻碍,建议"
+                    placeholder={t('offline.positionsPlaceholder')}
                     className="w-full rounded-xl border border-white/10 bg-black/30 px-5 py-4 text-sm text-frost focus:border-accent/50 focus:outline-none"
                   />
                 </div>
@@ -363,7 +368,7 @@ export default function OfflineInterpretSection({
         {/* 二、摆牌（真实位置槽位） */}
         <div className="mb-14">
           <h3 className="font-display mb-8 text-xl tracking-[0.15em] text-frost/90">
-            二、填入你的牌 <span className="ml-2 text-sm font-normal text-muted">（按真实牌位摆放，点槽位搜索选牌）</span>
+            {t('offline.stepPlaceTitle')} <span className="ml-2 text-sm font-normal text-muted">{t('offline.stepPlaceHint')}</span>
           </h3>
           <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6">
             <div style={{ position: 'relative', height: layout.height }}>
@@ -393,17 +398,17 @@ export default function OfflineInterpretSection({
                         />
                         {!isLn && (
                         <span className="absolute top-1 left-1 rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] text-accent-soft">
-                          {slot.isReversed ? '逆位' : '正位'}
+                          {slot.isReversed ? t('online.reversed') : t('online.upright')}
                         </span>
                         )}
                         <div className="absolute inset-0 flex items-center justify-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                           {!isLn && (
                           <button onClick={() => toggleRev(i)} className="rounded-full bg-black/80 px-2 py-1 text-[10px] text-frost">
-                            翻转
+                            {t('offline.flip')}
                           </button>
                           )}
                           <button onClick={() => clearSlot(i)} className="rounded-full bg-black/80 px-2 py-1 text-[10px] text-frost">
-                            清除
+                            {t('offline.clearSlot')}
                           </button>
                         </div>
                         <p className="mt-1.5 text-center text-xs text-frost">{cardName(slot.id, lang, deck)}</p>
@@ -426,11 +431,13 @@ export default function OfflineInterpretSection({
               <div ref={pickerRef} className="mt-8 rounded-2xl border border-accent/25 bg-black/40 p-6">
                 <div className="mb-4 flex items-start justify-between gap-4">
                   <p className="text-sm text-muted">
-                    搜索牌名给「<span className="text-accent">{positions[activePicker]}</span>」位置选牌（可输中文/英文/数字）
+                    {t('offline.searchHintPre')}
+                    <span className="text-accent">{positions[activePicker]}</span>
+                    {t('offline.searchHintPost')}
                   </p>
                   <button
                     onClick={() => setActivePicker(null)}
-                    aria-label="关闭"
+                    aria-label={t('common.close')}
                     className="shrink-0 rounded-full border border-white/10 px-2.5 py-1 text-xs text-muted transition-colors hover:border-accent/40 hover:text-frost"
                   >
                     ✕
@@ -440,7 +447,7 @@ export default function OfflineInterpretSection({
                   autoFocus
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder={isLn ? '例如：骑手 · rider · 狐狸 · 14' : '例如：教皇 · hierophant · 圣杯五 · cups 5'}
+                  placeholder={isLn ? t('offline.searchPlaceholderLn') : t('offline.searchPlaceholderTarot')}
                   className="mb-5 w-full rounded-xl border border-white/10 bg-black/30 px-5 py-4 text-sm text-frost placeholder:text-muted/50 focus:border-accent/50 focus:outline-none"
                 />
                 <div className="grid max-h-64 grid-cols-3 gap-3 overflow-y-auto sm:grid-cols-4 md:grid-cols-6">
@@ -460,7 +467,7 @@ export default function OfflineInterpretSection({
             )}
 
             <p className="mt-6 text-center text-sm text-muted">
-              已填 <span className="text-accent">{filledCount}</span> / {n} 张
+              {t('offline.filledLabel')} <span className="text-accent">{filledCount}</span> / {t('common.cardsCount', { count: n })}
             </p>
           </div>
         </div>
@@ -469,24 +476,24 @@ export default function OfflineInterpretSection({
         {!hideQuestionInput && (
         <div className="mb-14 grid gap-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-10 lg:grid-cols-2">
           <div>
-            <label className="mb-4 block text-sm text-muted">二、问题（可选）</label>
+            <label className="mb-4 block text-sm text-muted">{t('offline.stepQuestionLabel')}</label>
             <textarea
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               maxLength={200}
               rows={4}
-              placeholder="例如：这段关系接下来会如何发展？"
+              placeholder={t('offline.stepQuestionPlaceholder')}
               className="w-full resize-none rounded-xl border border-white/10 bg-black/30 px-5 py-4 text-sm text-frost placeholder:text-muted/50 focus:border-accent/50 focus:outline-none"
             />
           </div>
           <div>
-            <label className="mb-4 block text-sm text-muted">三、补充背景（可选，解读更贴）</label>
+            <label className="mb-4 block text-sm text-muted">{t('offline.stepBackgroundLabel')}</label>
             <textarea
               value={background}
               onChange={(e) => setBackground(e.target.value)}
               maxLength={400}
               rows={4}
-              placeholder="例如：分手三个月，我放不下，想问复合。"
+              placeholder={t('offline.stepBackgroundPlaceholder')}
               className="w-full resize-none rounded-xl border border-white/10 bg-black/30 px-5 py-4 text-sm text-frost placeholder:text-muted/50 focus:border-accent/50 focus:outline-none"
             />
           </div>
@@ -503,9 +510,9 @@ export default function OfflineInterpretSection({
               !allFilled ? 'opacity-40' : ''
             }`}
           >
-            开始解读 →
+            {t('online.startInterpret')} →
           </button>
-          <p className="mt-4 text-xs text-muted/60">{allFilled ? '将进入解读室查看完整解读' : `还差 ${n - filledCount} 张`}</p>
+          <p className="mt-4 text-xs text-muted/60">{allFilled ? t('offline.enterRoomHint') : t('offline.stillMissing', { count: n - filledCount })}</p>
         </div>
       </div>
     </section>

@@ -482,8 +482,6 @@ export default function TarotScene({ maxSelect, selectedIds, onToggleCard, disab
   const containerRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<TarotSceneEngine | null>(null);
   const { lang, t } = useI18n();
-  // 牌背 aria-label 取词器: 引擎只初始化一次, 用 ref 持有最新 t, 语言切换时由 setCardLabelOf 重刷
-  const cardLabelOf = useRef((slot: number) => t('scene.cardBackLabel', { n: slot }));
 
   useEffect(() => {
     const container = containerRef.current;
