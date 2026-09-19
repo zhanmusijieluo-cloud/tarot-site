@@ -110,6 +110,10 @@ function loadSession(): ReadingSession | null {
 export default function ReadingSessionPage() {
   const router = useRouter();
   const { t, lang } = useI18n();
+  // 报错文案（前端 client.ts 与服务端下发的）都是中文，EN/JA 界面不能直接贴上去：
+  // 遇到中文就退到本地化通用文案；中文界面保留原文，细节对用户有用。
+  const localizeError = (raw?: string) =>
+    (raw && (lang === 'zh' || !/[㐀-鿿]/.test(raw)) ? raw : t('online.interpretError'));
   const [session, setSession] = useState<ReadingSession | null>(null);
   const [checked, setChecked] = useState(false);
   const [activeCard, setActiveCard] = useState(0);
@@ -147,6 +151,14 @@ export default function ReadingSessionPage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   /** 解读历史的记录 id：首次保存后回填，后续追问/重生成回写同一条 */
   const savedRecordIdRef = useRef<{ id: string; cloud?: boolean } | null>(null);
+  /** 追问抽牌后「先看清牌再解读」的 2.6s 定时器：客户在这 2.6 秒内离开页面必须取消，
+   *  否则人走了请求照发 —— 白烧一次 AI 额度，结果也无处可放。
+   *  （声明放在条件 return 之前：React 要求每次渲染 hook 数量与顺序一致） */
+  const pendingAskRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (pendingAskRef.current) clearTimeout(pendingAskRef.current);
+  }, []);
 
   useEffect(() => {
     const s = loadSession();
@@ -234,6 +246,22 @@ export default function ReadingSessionPage() {
     // 旧会话无 lang 字段且已有正文：视为与站点语言一致，不重新生成
     if (!needInitial && (!session.lang || session.lang === lang)) return;
     let cancelled = false;
+    // SSE 每个 token 触发一次 setState = 每个 token 把整篇 Markdown 重解析、重排、重绘一次。
+    // 增量先攒在 ref 里，最多 100ms 落地一次：打字机观感不变，主线程开销降一个量级。
+    let pending = '';
+    let flushTimer: ReturnType<typeof setTimeout> | null = null;
+    const flushDelta = () => {
+      flushTimer = null;
+      if (!pending) return;
+      const chunk = pending;
+      pending = '';
+      if (!cancelled) setRegenText((prev) => prev + chunk);
+    };
+    const stopDelta = () => {
+      if (flushTimer) clearTimeout(flushTimer);
+      flushTimer = null;
+      pending = '';
+    };
     const run = async () => {
       setRegenerating(true);
       setRegenText('');
@@ -265,8 +293,15 @@ export default function ReadingSessionPage() {
             deck: session.deck,
             spreadKey: session.spreadKey ?? null,
           },
-          { onDelta: (text) => setRegenText((prev) => prev + text), onRetry: () => setRegenText('') }
+          {
+            onDelta: (text) => {
+              pending += text;
+              if (!flushTimer) flushTimer = setTimeout(flushDelta, 100);
+            },
+            onRetry: () => { stopDelta(); setRegenText(''); }
+          }
         );
+        flushDelta();
         if (cancelled) return;
         if (result.success && result.narrative) {
           const updated = { ...session, interpretation: result.narrative, lang };
@@ -275,7 +310,7 @@ export default function ReadingSessionPage() {
             window.sessionStorage.setItem(SESSION_KEY, JSON.stringify(updated));
           } catch { /* ignore */ }
         } else {
-          setRegenerateError(result.error || t('online.interpretError'));
+          setRegenerateError(localizeError(result.error));
         }
       } catch (e) {
         if (cancelled) return;
@@ -285,7 +320,7 @@ export default function ReadingSessionPage() {
       }
     };
     void run();
-    return () => { cancelled = true; };
+    return () => { cancelled = true; stopDelta(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.lang, session?.savedAt, lang, checked]);
 
@@ -385,16 +420,23 @@ export default function ReadingSessionPage() {
   const sessionN = session?.cards.length ?? 0;
   const layoutRef = useRef<HTMLDivElement>(null);
   const [layoutW, setLayoutW] = useState(0);
+  const boundLayoutEl = useRef<HTMLElement | null>(null);
   useEffect(() => {
     // 注意：不能用空依赖——首帧渲染的是条件 return 的占位 div（ref 为 null），
     // 牌阵容器是 session 加载后才出现的，必须每次渲染后重新探测绑定。
+    // 但重新探测 ≠ 重新测量：解读室流式生成时每个 token 都渲染一次，
+    // 这里若每帧 getBoundingClientRect()，就是「刚改完 DOM 立刻强制全量重排」+ 反复拆装 ResizeObserver。
     const el = layoutRef.current;
-    if (!el) return;
+    if (!el || el === boundLayoutEl.current) return;
+    boundLayoutEl.current = el;
     const update = () => setLayoutW(el.getBoundingClientRect().width);
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
-    return () => ro.disconnect();
+    return () => {
+      ro.disconnect();
+      boundLayoutEl.current = null;
+    };
   });
   // 自定义牌阵：格位坐标按实际用到的行列归一化（去掉空行空列留白），专用求解器保证互不遮挡
   const isCustomLayout = !!(session?.customLayout?.length && session.customLayout.length === sessionN && !session.spreadKey);
@@ -589,7 +631,7 @@ export default function ReadingSessionPage() {
         if (extraCards?.length) setAllExtraCards(mergedExtra);
         setDrawnCards([]);
       } else {
-        setAskError(data.error || t('online.interpretError'));
+        setAskError(localizeError(data.error));
         setChat((prev) => prev.slice(0, -1)); // 移除失败的追问，让用户重发
         setFollowUp(q);
       }
@@ -624,7 +666,8 @@ export default function ReadingSessionPage() {
     setTimeout(() => {
       chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 300);
-    setTimeout(() => {
+    pendingAskRef.current = setTimeout(() => {
+      pendingAskRef.current = null;
       void askFollowUp(q, drawn);
     }, 2600); // 约2.6秒：足够客户看清自己抽中了什么牌
   };

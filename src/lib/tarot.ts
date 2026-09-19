@@ -183,6 +183,20 @@ export function getCardImage(id: number, deck?: 'tarot' | 'lenormand'): string {
   return `/cards/card_${String(id).padStart(2, '0')}.jpg`;
 }
 
+/**
+ * 选中牌背的那一刻就把对应牌面图拉进缓存。
+ * 实测：牌面图原本要等进翻牌阶段才发起请求（塔罗 350~450ms，雷诺曼单张 44~78KB、最长 560ms），
+ * 客户点「翻牌」后对着空白牌面等一次下载。选完牌就有空闲时间，把它用掉。
+ */
+export function preloadCardArt(ids: number[], deck?: 'tarot' | 'lenormand'): void {
+  if (typeof window === 'undefined') return;
+  for (const id of ids) {
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = getCardImage(id, deck);
+  }
+}
+
 /** 78 张韦特标准英文名（id → 英文名）。服务端拼装解读与前端匹配牌名共用。 */
 export const CARD_EN_NAMES: Record<number, string> = {
   0:'The Fool',1:'The Magician',2:'The High Priestess',3:'The Empress',4:'The Emperor',

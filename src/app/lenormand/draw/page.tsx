@@ -15,6 +15,7 @@ import CardFlipStage from '@/components/CardFlipStage';
 import OfflineInterpretSection from '@/components/OfflineInterpretSection';
 import ArchiveSelect from '@/components/ArchiveSelect';
 import { LN_SPREADS, LN_SPREAD_KEYS, LN_DECK, type LnDrawnCard } from '@/lib/lenormand';
+import { preloadCardArt } from '@/lib/tarot';
 import type { CustomCell } from '@/components/CustomSpreadBuilder';
 import { useI18n } from '@/i18n';
 import { loadArchivesSmart, type Archive } from '@/lib/astro/archives';
@@ -106,6 +107,7 @@ function LenormandDrawInner() {
     } else if (s.size < drawCount) {
       s.add(id);
       orderRef.current.push(id); // 记录点选顺序 = 牌阵位顺序
+      preloadCardArt([id], 'lenormand');
     }
     setSelectedCount(s.size);
   };

@@ -980,7 +980,9 @@ body {
   /* will-change 里不要写 filter: 每张牌都会因此常驻一块额外的滤镜层,
      78 张牌在手机上就是 78 份显存。选中态的 brightness 只在被点时生效, 不值得预提升。 */
   will-change: transform, opacity;
-  transition: filter 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+  /* 不要 transition opacity: layout() 每帧直写 --card-alpha, 180ms 的过渡会被
+     下一帧重新起跳 —— 缩放时不是「平滑淡入」, 而是每张牌每帧重开一次动画。 */
+  transition: filter 180ms ease, box-shadow 180ms ease;
   -webkit-tap-highlight-color: transparent;
   overflow: hidden;
 }
@@ -1022,6 +1024,15 @@ body {
   0%   { transform: translateX(-130%) rotate(0.001deg); }
   55%  { transform: translateX(130%) rotate(0.001deg); }
   100% { transform: translateX(130%) rotate(0.001deg); }
+}
+
+/* 减少动态偏好：流光停在原位不再扫。
+   必须写在上面那条规则之后 —— 同特异度下后出现的赢，放进文件头部的通用 reduced-motion 块里是无效的。 */
+@media (prefers-reduced-motion: reduce) {
+  .tarot-scene-card-sheen {
+    animation: none;
+    transform: translateX(-120%);
+  }
 }
 
 .tarot-scene-card::before {

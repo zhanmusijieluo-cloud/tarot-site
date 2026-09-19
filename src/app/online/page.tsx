@@ -8,7 +8,7 @@ import TarotScene from '@/components/TarotScene';
 import CardFlipStage from '@/components/CardFlipStage';
 import OfflineInterpretSection from '@/components/OfflineInterpretSection';
 import ArchiveSelect from '@/components/ArchiveSelect';
-import { TAROT_DECK, SPREADS, type DrawnCard, type Spread } from '@/lib/tarot';
+import { TAROT_DECK, SPREADS, preloadCardArt, type DrawnCard, type Spread } from '@/lib/tarot';
 import { spreadPositions } from '@/lib/spread-i18n';
 import { useI18n } from '@/i18n';
 import { loadArchivesSmart, type Archive } from '@/lib/astro/archives';
@@ -156,6 +156,7 @@ function OnlineInner() {
     } else if (s.size < drawCount) {
       s.add(id);
       if (!deckRef.current.some((x) => x.id === id)) deckRef.current.push({ id, reversed });
+      preloadCardArt([id]);
     }
     setSelectedCount(s.size);
     setCards(deckRef.current.map(({ id: uid, reversed: rev }) => {

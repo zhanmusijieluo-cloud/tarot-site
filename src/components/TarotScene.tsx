@@ -635,5 +635,12 @@ export default function TarotScene({ maxSelect, selectedIds, onToggleCard, disab
     engineRef.current?.setDisabled(!!disabled);
   }, [disabled]);
 
-  return <div ref={containerRef} className="tarot-scene-root" />;
+  return (
+    <>
+      {/* 卡背图 92KB：写在场景这一层，牌池一开始挂载就去取图，
+          而不是等 effect 里建出 78 个 <img> 才被浏览器发现（实测那已是加载后 3~5s）。 */}
+      <link rel="preload" as="image" href="/cards/card-back-new.webp" />
+      <div ref={containerRef} className="tarot-scene-root" />
+    </>
+  );
 }
