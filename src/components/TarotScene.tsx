@@ -6,6 +6,8 @@ import { useI18n } from '@/i18n';
 
 const TAP_SLOP = 6;
 const MAX_ZOOM = 1.22;
+/** 系统建议的最小可点目标边长（触屏拾取用，见 pickCardAt） */
+const MIN_TAP_PX = 44;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -188,6 +190,11 @@ class TarotSceneEngine {
   private cache: CardCache[] = [];
   private geometryDirty = true;
   private resizeObserver: ResizeObserver | null = null;
+  /** 交互中标记的收尾计时器（抬手后延迟摘掉，别在一次拖拽里反复起停） */
+  private interactTimer: ReturnType<typeof setTimeout> | null = null;
+  /** 当前按住的牌背 + 摘掉 pressed 的计时器 */
+  private pressedNode: HTMLButtonElement | null = null;
+  private pressedTimer: ReturnType<typeof setTimeout> | null = null;
   /** 牌背无障碍标签文案（按屏内槽位取，语言切换时由 setCardLabelOf 重刷） */
   cardLabelOf: (slot: number) => string;
 
@@ -287,7 +294,13 @@ class TarotSceneEngine {
     const height = this.root.clientHeight || window.innerHeight || 1;
     this.viewW = Math.max(1, width);
     this.viewH = Math.max(1, height);
-    this.sizeScale = clamp(this.viewH / 440, 0.85, 2.1);
+    // 尺寸基准是场景高度, 但手机上「高度不输桌面、屏宽只有桌面的 1/3.7」,
+    // 于是同一套牌在手机上占屏宽 17.2%, 桌面只占 5.7% —— 看着就是大。
+    // 窄屏额外收一档(393px → 0.756), 前层牌压到实测 51.7px(桌面 81.6px 不受影响)。
+    // 再往下就碰系统建议的 44px 最小可点目标了, 所以不是无脑照搬桌面比例;
+    // 中/后层低于 44px 的部分由 pickCardAt 按 44px 下限补可点范围。
+    const narrow = clamp(this.viewW / 520, 0.72, 1);
+    this.sizeScale = clamp(this.viewH / 440, 0.85, 2.1) * narrow;
     // 漂移带总宽按牌数等比缩放: 塔罗78张→4.85屏宽; 雷诺曼36张→2.24屏宽
     this.span = this.viewW * 4.85 * (this.totalCards / 78);
     this.bandLeft = -(this.span - this.viewW) / 2;
@@ -405,8 +418,62 @@ class TarotSceneEngine {
     this.layout(elapsed, 0.09);
   }
 
+  /**
+   * 交互期间暂停鎏金流光。实测它是场景里唯一还能收回帧的开销：
+   * 拖拽中 4x 降频下 28fps → 34fps。手指按住的时候正是最需要每一帧的时候
+   * ——选中高亮要等下一帧才画得出来。抬手 420ms 后恢复，一次拖拽里不会反复起停。
+   */
+  markInteracting() {
+    this.root.classList.add('interacting');
+    if (this.interactTimer) clearTimeout(this.interactTimer);
+    this.interactTimer = setTimeout(() => {
+      this.interactTimer = null;
+      this.root.classList.remove('interacting');
+    }, 420);
+  }
+
+  /**
+   * 按下瞬间给那张牌一个高亮。
+   * 这条链路上第一个可见变化本来要等 touchend → click → React setState → effect →
+   * 下一帧，393px + 4x 降频实测 +233ms 才亮，也就是「点了要等一下」。
+   * :active 顶不上：Chromium 触屏要到抬手后才挂上它，鼠标分支又被
+   * onPointerDown 里的 preventDefault 挡掉了，所以「按下」这件事自己来标。
+   */
+  markPressed(event: PointerEvent) {
+    // closest 命中不到时回退到坐标拾取 —— 触屏的可点范围比视觉矩形大一圈（见 pickCardAt），
+    // 落在这一圈里的按下也必须给出反馈。一次手势只付一次，代价可接受。
+    const node = ((event.target as Element | null)?.closest?.('.tarot-scene-card') as HTMLButtonElement | null)
+      ?? this.pickCardAt(event.clientX, event.clientY);
+    if (this.pressedNode === node) return;
+    this.clearPressed();
+    if (!node || node.disabled) return;
+    this.pressedNode = node;
+    node.classList.add('pressed');
+  }
+
+  /** 0ms=立刻（手势变成拖拽了）；给一个短停留则是让快速轻点也能被看见 */
+  clearPressed(hold = 0) {
+    if (this.pressedTimer) {
+      clearTimeout(this.pressedTimer);
+      this.pressedTimer = null;
+    }
+    const node = this.pressedNode;
+    if (!node) return;
+    if (hold <= 0) {
+      node.classList.remove('pressed');
+      this.pressedNode = null;
+      return;
+    }
+    this.pressedTimer = setTimeout(() => {
+      this.pressedTimer = null;
+      node.classList.remove('pressed');
+      if (this.pressedNode === node) this.pressedNode = null;
+    }, hold);
+  }
+
   onPointerDown(event: PointerEvent) {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
+    this.markInteracting();
     // 注意：触屏（touch）这里【不要】调用 event.preventDefault()，
     // 否则浏览器会抑制后续 click 事件生成，导致点牌失灵。
     // 触屏的滚动/双指缩放已由 CSS touch-action:none 阻止，无需 JS 干预。
@@ -421,10 +488,12 @@ class TarotSceneEngine {
         distance: Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y),
         zoom: this.targetZoom,
       };
+      this.clearPressed();
       this.pointer = null;
       return;
     }
     if (event.isPrimary) {
+      this.markPressed(event);
       this.pointer = {
         id: event.pointerId,
         startX: event.clientX,
@@ -440,6 +509,8 @@ class TarotSceneEngine {
     if (this.activePointers.has(event.pointerId)) {
       this.activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
     }
+    // 长拖拽会超过 420ms，按住期间要续着
+    if (this.pointer || this.pinch) this.markInteracting();
     if (this.pinch && this.activePointers.size >= 2) {
       event.preventDefault();
       const points = Array.from(this.activePointers.values()).slice(0, 2);
@@ -456,6 +527,7 @@ class TarotSceneEngine {
     this.pointer.lastX = event.clientX;
     this.pointer.lastY = event.clientY;
     if (Math.hypot(event.clientX - this.pointer.startX, event.clientY - this.pointer.startY) > TAP_SLOP) {
+      if (!this.pointer.moved) this.clearPressed(); // 手势变成拖拽了，按下高亮立即让位
       this.pointer.moved = true;
     }
     if (!this.pointer.moved) return;
@@ -469,6 +541,8 @@ class TarotSceneEngine {
 
   onPointerUp(event: PointerEvent) {
     this.activePointers.delete(event.pointerId);
+    // 松手后留住 140ms：selected 要等 click→React→effect 才落地，中间不能有一段「暗下去」
+    this.clearPressed(140);
     if (this.activePointers.size < 2) this.pinch = null;
     if (!this.pointer || this.pointer.id !== event.pointerId) return;
     const wasDrag = this.pointer.moved;
@@ -517,7 +591,14 @@ class TarotSceneEngine {
     for (const node of this.nodes) {
       if (node.disabled || node.style.display === 'none') continue;
       const rect = node.getBoundingClientRect();
-      if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) continue;
+      /* 触屏的可点范围按 44px 系统建议下限补偿。
+         窄屏把牌收小后中/后层只有 34~41px 宽，按视觉矩形判定会点空。
+         只在拾取时把矩形撑开、牌面视觉不变；仍是 z 最大的那张赢。
+         高度方向天然 >44，所以实际只会横向各补几像素。 */
+      const padX = Math.max(0, (MIN_TAP_PX - rect.width) / 2);
+      const padY = Math.max(0, (MIN_TAP_PX - rect.height) / 2);
+      if (clientX < rect.left - padX || clientX > rect.right + padX) continue;
+      if (clientY < rect.top - padY || clientY > rect.bottom + padY) continue;
       const z = Number(node.style.zIndex || 0);
       if (z > bestZ) {
         bestZ = z;
@@ -529,6 +610,7 @@ class TarotSceneEngine {
 
   onWheel(event: WheelEvent) {
     event.preventDefault();
+    this.markInteracting();
     this.targetZoom = clamp(this.targetZoom + (event.deltaY > 0 ? -0.07 : 0.07), 0.78, MAX_ZOOM);
   }
 
@@ -574,6 +656,11 @@ class TarotSceneEngine {
     if (this.destroyed) return;
     this.destroyed = true;
     cancelAnimationFrame(this.frame);
+    if (this.interactTimer) {
+      clearTimeout(this.interactTimer);
+      this.interactTimer = null;
+    }
+    this.clearPressed();
     this.resizeObserver?.disconnect();
     this.resizeObserver = null;
     this.root.removeEventListener('pointerdown', this.onPointerDown);

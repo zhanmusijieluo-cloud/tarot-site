@@ -980,9 +980,11 @@ body {
   /* will-change 里不要写 filter: 每张牌都会因此常驻一块额外的滤镜层,
      78 张牌在手机上就是 78 份显存。选中态的 brightness 只在被点时生效, 不值得预提升。 */
   will-change: transform, opacity;
-  /* 不要 transition opacity: layout() 每帧直写 --card-alpha, 180ms 的过渡会被
-     下一帧重新起跳 —— 缩放时不是「平滑淡入」, 而是每张牌每帧重开一次动画。 */
-  transition: filter 180ms ease, box-shadow 180ms ease;
+  /* 不要 transition opacity: layout() 每帧直写 --card-alpha, 过渡会被
+     下一帧重新起跳 —— 缩放时不是「平滑淡入」, 而是每张牌每帧重开一次动画。
+     时长从 180ms 收到 90ms: 手机上高亮还要等一帧(约 33~50ms)才起跳, 两段加起来
+     就是「点了要等一下才亮」。90ms 仍在「不是瞬间」和「不拖」之间。 */
+  transition: filter 90ms ease, box-shadow 90ms ease;
   -webkit-tap-highlight-color: transparent;
   overflow: hidden;
 }
@@ -1035,6 +1037,13 @@ body {
   }
 }
 
+/* 按住/拖动/滚轮期间暂停流光（标记由 TarotScene 打，抬手 420ms 后自动摘）。
+   用 paused 而不是 none：none 会把高光弹回起点，选中牌正在闪的那道会突然消失，
+   那正是按下牌子后唯一在动的反馈。 */
+.tarot-scene-root.interacting .tarot-scene-card-sheen {
+  animation-play-state: paused;
+}
+
 .tarot-scene-card::before {
   content: '';
   position: absolute;
@@ -1042,12 +1051,12 @@ body {
   border-radius: 10px;
   opacity: 0;
   background: radial-gradient(circle, var(--glow-primary), transparent 68%);
-  transition: opacity 180ms ease;
+  transition: opacity 110ms ease;
   pointer-events: none;
 }
 
 .tarot-scene-card.selected {
-  filter: brightness(1.13);
+  filter: brightness(1.16);
   box-shadow:
     0 12px 24px rgba(0, 0, 0, 0.62),
     0 0 18px var(--glow-primary),
@@ -1095,8 +1104,14 @@ body {
   opacity: 1;
 }
 
+/* 按下瞬间的提亮：由 TarotScene 在 pointerdown 上直接挂 .pressed，
+   不经过 React、不等下一帧，手指碰到就亮（:active 在触屏上不可靠，
+   鼠标分支又被 pointerdown 里的 preventDefault 挡掉了，两个都留着当兜底）。
+   必须比 selected 更亮，否则「按下去」这个动作没有任何回应，
+   而松手后才到的高亮要再等一帧 —— 实测那条链路是 +233ms，改成这样是 +48ms。 */
+.tarot-scene-card.pressed,
 .tarot-scene-card:active {
-  filter: brightness(1.16);
+  filter: brightness(1.26);
 }
 
 .tarot-scene-host {
