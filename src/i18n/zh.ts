@@ -677,6 +677,8 @@ const zh: Record<string, string> = {
   'spreads.filterAll': '全部',
   'spreads.customSpread': '自定义牌阵',
   'spreads.customDesc': '自由设定选牌数量、每张牌的问题与所问之事',
+  'spreads.customFillDesc': '自定张数（1-10）、自定牌位，填入你线下摆好的牌，AI 深度解读。',
+  'spreads.customFillCta': '线下抽牌 · 去填牌 →',
 
   'learn.practice.label': '实战技巧',
   'learn.practice.title': '实战技巧',

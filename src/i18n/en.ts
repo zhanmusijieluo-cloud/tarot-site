@@ -688,6 +688,8 @@ const en: Record<string, string> = {
   'spreads.filterAll': 'All',
   'spreads.customSpread': 'Custom Spread',
   'spreads.customDesc': 'Freely set the number of cards, each card\'s question, and what you seek to know',
+  'spreads.customFillDesc': 'Set your own card count (1-10) and positions, then fill in the cards you laid out by hand for an in-depth AI reading.',
+  'spreads.customFillCta': 'Manual reading · Fill in your cards →',
 
   // ===== Learn Page =====
   'learn.practice.label': 'Practical Skills',

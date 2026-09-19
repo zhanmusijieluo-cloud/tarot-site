@@ -112,11 +112,15 @@ export default function SpreadsPage() {
               onClick={() => router.push('/offline')}
               className="flex h-full w-full cursor-pointer flex-col rounded-2xl border border-dashed border-accent/30 p-5 text-left transition-all duration-300 hover:border-accent/60 hover:bg-accent/[0.04]"
             >
-              <span className="text-[10px] tracking-[0.25em] text-accent/70 uppercase">自定义</span>
-              <h3 className="font-display mt-2.5 text-base tracking-[0.1em] text-accent">自定义牌阵</h3>
-              <p className="mt-1 text-xs text-muted">自由设置张数与牌位含义</p>
-              <p className="mt-3 text-[12px] leading-relaxed text-muted/90">自定张数（1-10）、自定牌位，填入你线下摆好的牌，AI 深度解读。</p>
-              <span className="mt-4 text-xs tracking-[0.15em] text-accent/80">线下抽牌 · 去填牌 →</span>
+              <span className="text-[10px] tracking-[0.25em] text-accent/70 uppercase">
+                {t('offline.customEyebrow')}
+              </span>
+              <h3 className="font-display mt-2.5 text-base tracking-[0.1em] text-accent">
+                {t('spreads.customSpread')}
+              </h3>
+              <p className="mt-1 text-xs text-muted">{t('offline.customDesc')}</p>
+              <p className="mt-3 text-[12px] leading-relaxed text-muted/90">{t('spreads.customFillDesc')}</p>
+              <span className="mt-4 text-xs tracking-[0.15em] text-accent/80">{t('spreads.customFillCta')}</span>
             </button>
           </Reveal>
         </div>

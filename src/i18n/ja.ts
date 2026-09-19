@@ -677,6 +677,8 @@ const ja: Record<string, string> = {
   'spreads.filterAll': 'すべて',
   'spreads.customSpread': 'カスタムスプレッド',
   'spreads.customDesc': 'カード枚数、各カードの質問、知りたいことを自由に設定',
+  'spreads.customFillDesc': '枚数（1-10）とポジションを自分で決め、手で並べたカードを入力すると AI が深く読み解きます。',
+  'spreads.customFillCta': 'オフライン抽牌 · 入力する →',
 
   'learn.practice.label': '実践テクニック',
   'learn.practice.title': '実践テクニック',
