@@ -31,6 +31,7 @@ function SpreadDetailInner() {
   const n = spread?.count ?? 1;
   const layoutRef = useRef<HTMLDivElement>(null);
   const [layoutW, setLayoutW] = useState(672);
+  const [viewportH, setViewportH] = useState(0);
   useEffect(() => {
     const el = layoutRef.current;
     if (!el) return;
@@ -38,13 +39,19 @@ function SpreadDetailInner() {
       const w = el.getBoundingClientRect().width;
       // 只采纳有效宽度（>50 且有限），避免往返切换时测量闪成 0/小值导致布局塌成一坨
       if (w > 50 && Number.isFinite(w)) setLayoutW(Math.round(w));
+      // 视口高是「整阵装进一屏」的预算输入；地址栏收起/转屏不会改容器宽，所以另听 resize
+      setViewportH(window.innerHeight);
     };
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
-    return () => ro.disconnect();
+    window.addEventListener('resize', update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', update);
+    };
   }, []);
-  const solved = solveSpreadLayout(params.key, n, layoutW || 672);
+  const solved = solveSpreadLayout(params.key, n, layoutW || 672, viewportH);
   const coords = solved.coords;
   const cardWClass = solved.cardW;
   const cardWPx = cardWClassToPx(cardWClass);
@@ -133,8 +140,13 @@ function SpreadDetailInner() {
                   </button>
                   {/* 牌位名悬挂在牌下方、不占布局宽：占位的话这个 absolute 包装会被标签撑宽，
                       -translate-x-1/2 就把牌面往左挤出去十几 px，求解器算好的净隙当场作废（马蹄阵相邻两牌实测压 8px）。
-                      与解读室同一套画法。 */}
-                  <p className="absolute left-1/2 top-full mt-1.5 w-[8.5rem] -translate-x-1/2 truncate text-center text-[10px] leading-tight text-accent/75">
+                      宽度必须跟着牌宽走：写死 8.5rem 时相邻两行的牌位名会互相压字（维纳斯之爱底部 7/5/8 三张实测叠在一起），
+                      而求解器保证同带两牌至少差一个牌宽 + 10px，所以按牌宽裁就永远不会撞。与解读室同一套画法。 */}
+                  <p
+                    title={spreadPositions(params.key, spread.positions, lang, t)[idx]}
+                    className="absolute left-1/2 top-full mt-1.5 -translate-x-1/2 line-clamp-2 text-center text-[10px] leading-tight text-accent/75"
+                    style={{ width: cardWPx }}
+                  >
                     {spreadPositions(params.key, spread.positions, lang, t)[idx]}
                   </p>
                 </div>

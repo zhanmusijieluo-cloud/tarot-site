@@ -12,7 +12,7 @@ import { LN_DECK, lnImage, LN_SPREADS } from '@/lib/lenormand';
 import { localizedCardName, CARD_JA_NAMES } from '@/lib/card-names';
 import { CARD_KEYWORDS } from '@/lib/card-keywords';
 import { spreadPositions } from '@/lib/spread-i18n';
-import { getCrossIdx, solveSpreadLayout, solveCustomGridLayout, CARD_H_RATIO, cardWClassToPx } from '@/lib/spread-layout';
+import { getCrossIdx, solveSpreadLayout, solveCustomGridLayout, CARD_H_RATIO, cardWClassToPx, heightBudgetPx } from '@/lib/spread-layout';
 import { supabaseBrowser, aiAuthHeaders } from '@/lib/supabase';
 import { upsertSessionSmart, rateSessionSmart } from '@/lib/account/sessions';
 import { getMcpClient } from '@/mcp/client';
@@ -420,6 +420,7 @@ export default function ReadingSessionPage() {
   const sessionN = session?.cards.length ?? 0;
   const layoutRef = useRef<HTMLDivElement>(null);
   const [layoutW, setLayoutW] = useState(0);
+  const [viewportH, setViewportH] = useState(0);
   const boundLayoutEl = useRef<HTMLElement | null>(null);
   useEffect(() => {
     // 注意：不能用空依赖——首帧渲染的是条件 return 的占位 div（ref 为 null），
@@ -429,12 +430,19 @@ export default function ReadingSessionPage() {
     const el = layoutRef.current;
     if (!el || el === boundLayoutEl.current) return;
     boundLayoutEl.current = el;
-    const update = () => setLayoutW(el.getBoundingClientRect().width);
+    const update = () => {
+      setLayoutW(el.getBoundingClientRect().width);
+      // 牌阵盒要装得进一屏，所以视口高也是求解输入（转屏/地址栏收起都要重算）
+      setViewportH(window.innerHeight);
+    };
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
+    // 手机上地址栏收起/转屏只改视口高、不改容器宽，ResizeObserver 不会触发，得单独听 resize
+    window.addEventListener('resize', update);
     return () => {
       ro.disconnect();
+      window.removeEventListener('resize', update);
       boundLayoutEl.current = null;
     };
   });
@@ -455,15 +463,15 @@ export default function ReadingSessionPage() {
         y: ((c.row + 0.5) / usedRows) * 100,
       })),
       // 高度按归一化后的实际行列求解，与坐标使用同一起点，保证行距一致
-      layout: solveCustomGridLayout(cells, layoutW || 672),
+      layout: solveCustomGridLayout(cells, layoutW || 672, heightBudgetPx(layoutW || 672, viewportH)),
       usedRows,
       usedCols,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCustomLayout, session, layoutW]);
+  }, [isCustomLayout, session, layoutW, viewportH]);
   const solved = isCustomLayout && customGeom
     ? { coords: customGeom.coords, ...customGeom.layout }
-    : solveSpreadLayout(session?.spreadKey ?? null, sessionN, layoutW || 672);
+    : solveSpreadLayout(session?.spreadKey ?? null, sessionN, layoutW || 672, viewportH);
   const cardWPx = cardWClassToPx(solved.cardW);
 
   // 牌位名按站点语言实时本地化：会话里存的是抽牌时语言的牌位名，切语言后需从中文源重取
@@ -763,11 +771,14 @@ export default function ReadingSessionPage() {
                         {idx + 1}
                       </span>
                     </button>
-                    {/* 牌位名称：绝对定位悬挂在牌下方，不占布局高度，保证同行各牌对齐 */}
+                    {/* 牌位名称：绝对定位悬挂在牌下方，不占布局高度，保证同行各牌对齐。
+                        宽度跟着牌宽走（写死 8.5rem 时大牌阵相邻两行的牌位名会互相压字），
+                        放不下就折两行截断，长按/悬停看全称。 */}
                     {localizedPositions[idx] && (
                       <p
                         title={customLayoutCells[idx]?.hint || undefined}
-                        className="absolute left-1/2 top-full mt-1.5 w-[8.5rem] -translate-x-1/2 truncate text-center text-[10px] leading-tight text-accent/75"
+                        className="absolute left-1/2 top-full mt-1.5 -translate-x-1/2 line-clamp-2 text-center text-[10px] leading-tight text-accent/75"
+                        style={{ width: cardWPx }}
                       >
                         {localizedPositions[idx]}
                       </p>

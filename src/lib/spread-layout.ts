@@ -30,7 +30,7 @@ export const CARD_H_RATIO = 3.4 / 2;
 
 /** 几何约束常量（px，按两端视口统一取保守值） */
 const LABEL_SPACE = 24; // 牌位名称占位（mt-1.5 + 一行文字）
-const ROW_GAP = 26; // 同列相邻两牌之间除标签外的净空
+const ROW_GAP = 32; // 同列相邻两牌之间除标签外的净空（牌位名现在按牌宽折两行，两行需要 ~30px）
 const COL_GAP = 10; // 横向相邻两牌之间的净隙
 
 /** 单卡宽度档位（Tailwind class → px）。求解时从大到小尝试。 */
@@ -43,6 +43,7 @@ export const CARD_W_STEPS: { cls: string; px: number }[] = [
   { cls: 'w-16', px: 64 },
   { cls: 'w-14', px: 56 },
   { cls: 'w-12', px: 48 },
+  { cls: 'w-10', px: 40 },
 ];
 
 /** Tailwind 卡宽 class → 像素值（横置交叉牌需按 px 计算横向尺寸） */
@@ -63,6 +64,26 @@ const MOBILE_CONTAINER_PX = 480;
 function cardCeilingPx(containerW: number): number {
   if (containerW >= MOBILE_CONTAINER_PX) return Infinity;
   return Math.max(containerW * MOBILE_CARD_RATIO, CARD_W_STEPS[CARD_W_STEPS.length - 1].px);
+}
+
+/**
+ * 一屏装得下：手机端牌阵盒的高度预算。
+ * 求解器原先只约束宽（不出界、不相撞），容器高是拿最终牌宽反算出来的，于是牌多的阵
+ * 在手机上要滚两三屏才走完 —— 维纳斯之爱(8 张) 963px、吉普赛十字(5 张) 767px，
+ * 而视口只有 851px。加这条约束后求解器会主动降档到装得进一屏的最大牌宽。
+ *
+ * 预算 = 视口高 − 牌阵盒之外必然占掉的 196px：
+ *   吸顶导航 72 + 窗口标题 44 + 牌阵盒自己的 py-10 上下 80。
+ * 也就是「把牌阵盒顶推到吸顶导航下面」这个滚动位置上，整阵刚好一眼收完。
+ * 851 视口 → 655px，667 小屏 → 471px，932 大屏 → 736px（大屏自动允许更大的牌）。
+ * 桌面（容器 ≥480）不施加：同一牌阵在 900px 高的桌面视口里本来就装得下，不该被牵连。
+ */
+const SPREAD_OUTSIDE_CHROME_PX = 196;
+
+export function heightBudgetPx(containerW: number, viewportH: number): number {
+  if (containerW >= MOBILE_CONTAINER_PX || viewportH <= 0) return Infinity;
+  const smallestSpread = CARD_W_STEPS[CARD_W_STEPS.length - 1].px * CARD_H_RATIO + LABEL_SPACE * 2;
+  return Math.max(smallestSpread, viewportH - SPREAD_OUTSIDE_CHROME_PX);
 }
 
 interface RawLayout {
@@ -612,14 +633,15 @@ export interface SolvedStyle {
 export function solveSpreadLayout(
   key: string | null | undefined,
   n: number,
-  containerW: number
+  containerW: number,
+  viewportH = 0
 ): { coords: SpreadPoint[]; height: number; cardW: string } {
   const layout = key ? SPREAD_RAW[key] : undefined;
   const registered = layout && layout.coords.length === n;
   const coords = registered ? layout!.coords : fallbackCoords(n);
   const stepIdx = registered ? (layout!.step ?? 4) : 4;
   // 若有横置交叉牌（crossIdx ≥ 0）传 crossIdx 让求解器按 1.7 倍有效宽处理
-  const geom = solveCoordsLayout(coords, stepIdx, containerW, getCrossIdx(key, n));
+  const geom = solveCoordsLayout(coords, stepIdx, containerW, getCrossIdx(key, n), heightBudgetPx(containerW, viewportH));
   return { coords, ...geom };
 }
 
@@ -631,7 +653,8 @@ export function solveCoordsLayout(
   coords: SpreadPoint[],
   stepIdx: number,
   containerW: number,
-  crossIdx = -1
+  crossIdx = -1,
+  maxHeightPx = Infinity
 ): { height: number; cardW: string } {
   // 卡宽求解：
   // ⓪ 手机端上限：单牌 ≤ 容器宽 24%（见 cardCeilingPx），否则牌阵在手机上就是「牌太大」
@@ -639,6 +662,7 @@ export function solveCoordsLayout(
   // ② 列间约束：同一水平带内相邻牌净隙 ≥ COL_GAP
   // ③ 横置交叉牌（crossIdx ≥ 0）有效宽 = cand × CARD_H_RATIO（高变宽，需一并计入约束），
   //    否则求解器按竖牌宽估算，会导致横牌横向溢出或压到相邻牌。
+  // ④ 高度预算：牌阵盒要装进一屏（见 heightBudgetPx），装不进就继续降档
   // 从注册档位向下逐级尝试，取第一个满足的；都不满足则用最小档。
   const W = Math.max(containerW, 120);
   const ceiling = cardCeilingPx(W);
@@ -651,6 +675,7 @@ export function solveCoordsLayout(
     if (cand > ceiling || !edgeOk(cand)) continue;
     // 检查同水平带（y 差换算 px 后 < 半张牌高，用「先按此卡宽估一版容器高」精确化）内任意两点的横向净隙
     const estH = requiredHeight(coords, W, cand);
+    if (estH > maxHeightPx) continue;
     let ok = true;
     for (let a = 0; a < coords.length && ok; a++) {
       for (let b = a + 1; b < coords.length; b++) {
@@ -694,22 +719,21 @@ export const CUSTOM_GRID_MAX_COLS = 12;
  */
 export function solveCustomGridLayout(
   cells: { row: number; col: number; cols: number }[],
-  containerW: number
+  containerW: number,
+  maxHeightPx = Infinity
 ): { height: number; cardW: string } {
   const W = Math.max(containerW, 120);
   const usedCols = Math.min(Math.max(...cells.map((c) => c.col)) + 1, CUSTOM_GRID_MAX_COLS);
   // 列宽约束：卡宽 ≤ 列距 − 净隙，再压过手机端 24% 上限；最后与全局最小档兜底
   const colPitch = W / usedCols;
   const maxByCol = Math.min(colPitch - COL_GAP, cardCeilingPx(W));
-  const px = Math.min(
-    CARD_W_STEPS[2].px, // 上限 w-24=96px，避免大画布牌过大
-    ...CARD_W_STEPS.map((s) => s.px).filter((v) => v <= maxByCol),
-    CARD_W_STEPS[CARD_W_STEPS.length - 1].px
-  );
-  const ch = px * CARD_H_RATIO;
-  // 每行独立高度带：牌高 + 标签占位，行间自然分离，标签永不压到下一行牌面
   const rows = CUSTOM_GRID_ROWS_MAX_ROW(cells);
-  const height = Math.ceil(rows * (ch + LABEL_SPACE));
+  const rowBand = (px: number) => rows * (px * CARD_H_RATIO + LABEL_SPACE);
+  const limit = Math.min(CARD_W_STEPS[2].px, maxByCol); // 上限 w-24=96px，避免大画布牌过大
+  // 从大到小取第一个「列宽放得下 + 整阵装得进一屏」的档位；都不满足则用最小档
+  const fit = CARD_W_STEPS.find((s) => s.px <= limit && rowBand(s.px) <= maxHeightPx);
+  const px = fit?.px ?? CARD_W_STEPS[CARD_W_STEPS.length - 1].px;
+  const height = Math.ceil(rowBand(px));
   const cls = CARD_W_STEPS.find((s) => s.px === px)!.cls;
   return { height, cardW: cls };
 }
